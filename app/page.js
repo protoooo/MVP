@@ -1,28 +1,26 @@
-
 // app/page.js
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
+// --- Fonts ---
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
+// --- Config ---
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
-// eslint-disable-next-line no-unused-vars
-const isAdmin = false
-
+// --- Icons ---
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
@@ -33,7 +31,7 @@ const Icons = {
     </svg>
   ),
   X: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
@@ -41,25 +39,6 @@ const Icons = {
   Check: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <polyline points="20 6 9 17 4 12" />
-    </svg>
-  ),
-  LogOut: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  ),
-  Settings: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  ),
-  Plus: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
   Shield: () => (
@@ -74,92 +53,9 @@ const Icons = {
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </svg>
   ),
-  Spark: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
-      <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
-    </svg>
-  ),
-  ChevronDown: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  ArrowRight: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  Zap: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  ),
-  Eye: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ),
-  FileText: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  ),
-  CheckCircle: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-  ),
-  AlertTriangle: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  ),
-  TrendingUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-      <polyline points="17 6 23 6 23 12" />
-    </svg>
-  ),
-  DollarSign: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <line x1="12" y1="1" x2="12" y2="23" />
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-    </svg>
-  ),
-  Clock: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  ),
-  Users: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  ),
-  Document: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-  ),
-  Chat: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  ),
 }
 
+// --- Demo Data ---
 const DEMO_DOCUMENTS = [
   'Washtenaw County Enforcement Actions',
   'Washtenaw County Violation Types',
@@ -181,8 +77,6 @@ const DEMO_DOCUMENTS = [
   'Norovirus Environmental Cleaning',
   'Procedures for the Michigan Food Code',
   'Retail Food Establishments Emergency Action Plan',
-  'Summary Chart for Minimum Cooking Food Temperatures',
-  'USDA Safe Minimum Internal Temperature Chart',
 ]
 
 const TYPEWRITER_LINES = [
@@ -192,153 +86,7 @@ const TYPEWRITER_LINES = [
   'Ask anything about Washtenaw County food safety and regulations.',
 ]
 
-// Subtle animated wave background - light theme
-function WaveBackground() {
-  return (
-    <div className="wave-bg-container">
-      <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.06" />
-          </linearGradient>
-          <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#2F5D8A" stopOpacity="0.10" />
-            <stop offset="100%" stopColor="#55D6B2" stopOpacity="0.04" />
-          </linearGradient>
-          <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-        
-        {/* Wave 1 - starts higher, flows through hero */}
-        <path className="wave wave-1" fill="url(#wave-gradient-1)">
-          <animate
-            attributeName="d"
-            dur="25s"
-            repeatCount="indefinite"
-            values="
-              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z;
-              M0,150 C150,200 350,150 500,200 C650,250 750,200 900,150 C1050,100 1150,150 1300,200 C1450,250 1440,150 1440,150 L1440,800 L0,800 Z;
-              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-        
-        {/* Wave 2 - middle layer */}
-        <path className="wave wave-2" fill="url(#wave-gradient-2)">
-          <animate
-            attributeName="d"
-            dur="20s"
-            repeatCount="indefinite"
-            values="
-              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z;
-              M0,300 C200,350 400,300 600,350 C800,400 1000,350 1200,300 C1400,250 1440,350 1440,350 L1440,800 L0,800 Z;
-              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-        
-        {/* Wave 3 - lower layer */}
-        <path className="wave wave-3" fill="url(#wave-gradient-3)">
-          <animate
-            attributeName="d"
-            dur="30s"
-            repeatCount="indefinite"
-            values="
-              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z;
-              M0,450 C180,500 360,450 540,500 C720,550 900,500 1080,450 C1260,400 1440,500 1440,500 L1440,800 L0,800 Z;
-              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-      </svg>
-      
-      {/* Subtle grid overlay */}
-      <div className="grid-overlay" />
-    </div>
-  )
-}
-
-function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {}) {
-  const ref = useRef(null)
-  const [inView, setInView] = useState(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el || inView) return
-
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const e = entries?.[0]
-        if (e?.isIntersecting) {
-          setInView(true)
-          obs.disconnect()
-        }
-      },
-      { threshold, rootMargin }
-    )
-
-    obs.observe(el)
-    return () => {
-      try {
-        obs.disconnect()
-      } catch {}
-    }
-  }, [inView, threshold, rootMargin])
-
-  return [ref, inView]
-}
-
-function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
-  const [ref, inView] = useInViewOnce()
-  return (
-    <div
-      ref={ref}
-      className={`rv ${inView ? 'is-inview' : ''} rv-${direction} ${className}`}
-      style={{ '--d': `${delay}ms` }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function CountUp({ value, prefix = '', suffix = '', duration = 2000, className = '', animate = true }) {
-  const [ref, inView] = useInViewOnce({ threshold: 0.3 })
-  const [n, setN] = useState(animate ? 0 : value)
-
-  useEffect(() => {
-    if (!animate) {
-      setN(value)
-      return
-    }
-    if (!inView) return
-    let raf = 0
-    const start = performance.now()
-    const from = 0
-    const to = Number(value || 0)
-
-    const tick = (t) => {
-      const p = Math.min(1, (t - start) / duration)
-      const eased = 1 - Math.pow(1 - p, 4)
-      const next = Math.round(from + (to - from) * eased)
-      setN(next)
-      if (p < 1) raf = requestAnimationFrame(tick)
-    }
-
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [inView, value, duration, animate])
-
-  return (
-    <span ref={ref} className={className}>
-      {prefix}
-      {n.toLocaleString()}
-      {suffix}
-    </span>
-  )
-}
+// --- Helper Components ---
 
 function useConsoleTypewriter(lines) {
   const [output, setOutput] = useState('')
@@ -371,8 +119,7 @@ function useConsoleTypewriter(lines) {
         if (makeMistake) {
           mistakesUsed += 1
           const alphabet = 'abcdefghijklmnopqrstuvwxyz'
-          const wrongChar = alphabet[Math.floor(Math.random() * alphabet.length)]
-          buffer += wrongChar
+          buffer += alphabet[Math.floor(Math.random() * alphabet.length)]
           deleteCountdown = 1
           deleting = true
           setOutput([...printed, buffer].join('\n'))
@@ -397,25 +144,21 @@ function useConsoleTypewriter(lines) {
           }
           return schedule(400)
         }
-
         return schedule(28 + Math.random() * 18)
       }
 
       buffer = buffer.slice(0, -1)
       deleteCountdown -= 1
       setOutput([...printed, buffer].join('\n'))
-
       if (deleteCountdown <= 0) deleting = false
       schedule(40 + Math.random() * 50)
     }
 
     schedule(400)
-
     return () => {
       isCancelled = true
       if (timeoutId) clearTimeout(timeoutId)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lines])
 
   return { output, done }
@@ -425,7 +168,6 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   const [visible, setVisible] = useState(false)
   const [progress, setProgress] = useState(0)
   const [phase, setPhase] = useState('Starting…')
-
   const refs = useRef({ pct: 0, timer: null, startedAt: 0, hideTimer: null })
 
   const cfg = useMemo(() => {
@@ -445,24 +187,21 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
 
       refs.current.pct = 0
       refs.current.startedAt = Date.now()
-
       if (refs.current.timer) clearInterval(refs.current.timer)
 
       refs.current.timer = setInterval(() => {
         const elapsed = (Date.now() - refs.current.startedAt) / 1000
-
         const cap = elapsed < 1.5 ? cfg.baseCap - 8 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
         const next = refs.current.pct + (cap - refs.current.pct) * cfg.k
         refs.current.pct = Math.max(refs.current.pct, next)
-
         const pctInt = Math.min(99, Math.floor(refs.current.pct))
         setProgress(pctInt)
 
         const p = pctInt
         if (p < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading question…')
-        else if (p < 45) setPhase('Searching Washtenaw excerpts…')
-        else if (p < 70) setPhase('Cross-checking requirements…')
-        else if (p < 90) setPhase('Building the best answer…')
+        else if (p < 45) setPhase('Searching regulations…')
+        else if (p < 70) setPhase('Checking requirements…')
+        else if (p < 90) setPhase('Formulating answer…')
         else setPhase('Finalizing…')
       }, 120)
 
@@ -475,75 +214,49 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
     if (!active && visible) {
       if (refs.current.timer) clearInterval(refs.current.timer)
       refs.current.timer = null
-
       setProgress(100)
       setPhase('Done')
-
       refs.current.hideTimer = setTimeout(() => {
         setVisible(false)
         setProgress(0)
       }, 350)
-
       return () => {
         if (refs.current.hideTimer) clearTimeout(refs.current.hideTimer)
         refs.current.hideTimer = null
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, requestKey, cfg, mode, visible])
 
   if (!visible) return null
 
   return (
-    <div className="smart-progress">
-      <div className={`smart-progress-header ${inter.className}`}>
+    <div className={`smart-progress ${ibmMono.className}`}>
+      <div className="smart-progress-header">
         <span className="smart-progress-phase">{phase}</span>
         <span className="smart-progress-pct">{progress}%</span>
       </div>
       <div className="smart-progress-track">
-        <div
-          className="smart-progress-bar"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="smart-progress-bar" style={{ width: `${progress}%` }} />
       </div>
     </div>
   )
 }
 
-function FAQItem({ q, a, isOpen, onToggle, index }) {
-  return (
-    <Reveal delay={index * 80}>
-      <div className={`faq-item ${isOpen ? 'is-open' : ''}`}>
-        <button type="button" onClick={onToggle} className="faq-trigger" aria-expanded={isOpen}>
-          <span className={`faq-question ${inter.className}`}>{q}</span>
-          <span className="faq-icon">
-            <Icons.ChevronDown />
-          </span>
-        </button>
-        <div className="faq-content">
-          <div className={`faq-answer ${inter.className}`}>{a}</div>
-        </div>
-      </div>
-    </Reveal>
-  )
-}
-
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const [openFaq, setOpenFaq] = useState(null)
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
-  const documentRows = useMemo(() => [...DEMO_DOCUMENTS], [])
-  const documentScrollRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS], [])
+  // Tripled list to prevent blank spaces during scroll
+  const documentScrollRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS], [])
   const [showPricingMenu, setShowPricingMenu] = useState(false)
 
   return (
     <div className={`${ibmMono.className} ibm-landing`}>
       <div className="ibm-landing-topbar">
-        <div />
+        <div /> {/* Spacer */}
         <div className="ibm-top-actions">
           <div className="pricing-menu-wrapper">
             <button
               type="button"
-              className="ibm-cta secondary"
+              className="ibm-cta secondary compact"
               onClick={() => setShowPricingMenu((v) => !v)}
             >
               Pricing
@@ -557,7 +270,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 </ul>
                 <button
                   type="button"
-                  className="ibm-cta block"
+                  className="ibm-cta block compact"
                   onClick={() => {
                     setShowPricingMenu(false)
                     onShowPricing()
@@ -568,10 +281,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               </div>
             )}
           </div>
-          <button onClick={onShowPricing} className="ibm-cta">
+          <button onClick={onShowPricing} className="ibm-cta compact">
             Start trial
           </button>
-          <button onClick={onShowAuth} className="ibm-cta secondary">
+          <button onClick={onShowAuth} className="ibm-cta secondary compact">
             Sign in
           </button>
         </div>
@@ -608,7 +321,6 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [messageKind, setMessageKind] = useState('info')
@@ -623,30 +335,17 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   }, [isOpen, initialMode])
 
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault()
+    e.preventDefault()
     if (loading) return
-
     setLoading(true)
     setMessage('')
-    setMessageKind('info')
-
+    
     try {
       const captchaToken = await executeRecaptcha(mode)
-      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-        setMessageKind('err')
-        setMessage('Security verification failed. Please try again.')
-        return
-      }
+      if (!captchaToken) throw new Error('Security verification failed.')
 
-      let endpoint = ''
-      const body = { email, captchaToken }
-
-      if (mode === 'reset') {
-        endpoint = '/api/auth/reset-password'
-      } else {
-        body.password = password
-        endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
-      }
+      const body = { email, captchaToken, ...(mode !== 'reset' && { password }) }
+      const endpoint = mode === 'reset' ? '/api/auth/reset-password' : mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -655,39 +354,20 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
       })
 
       const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Authentication failed.')
 
-      if (!res.ok) {
-        setMessageKind('err')
-        setMessage(data.error || 'Authentication failed.')
-        return
-      }
-
-      if (mode === 'reset') {
-        setMessageKind('ok')
-        setMessage('Check your email for reset instructions.')
-        setTimeout(() => {
-          setMode('signin')
-          setMessage('')
-        }, 2000)
-      } else if (mode === 'signup') {
-        setMessageKind('ok')
-        setMessage('Account created. Check your email to verify.')
-        setTimeout(() => {
-          setMode('signin')
-          setMessage('')
-        }, 2000)
-      } else {
-        setMessageKind('ok')
-        setMessage('Signed in. Redirecting…')
+      setMessageKind('ok')
+      setMessage(mode === 'reset' ? 'Check your email.' : 'Success. Redirecting...')
+      
+      if (mode === 'signin' || mode === 'signup') {
         setTimeout(() => {
           onClose()
           window.location.reload()
-        }, 450)
+        }, 500)
       }
     } catch (error) {
-      console.error('Auth error:', error)
       setMessageKind('err')
-      setMessage('Unexpected issue. Please try again.')
+      setMessage(error.message)
     } finally {
       setLoading(false)
     }
@@ -698,125 +378,33 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-wrapper" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-card">
-          <button onClick={onClose} className="modal-close-btn" aria-label="Close">
-            <Icons.X />
-          </button>
-
+        <div className="modal-card retro-modal">
+          <button onClick={onClose} className="modal-close-btn"><Icons.X /></button>
           <div className="modal-header">
-            <div className="modal-icon">
-              {mode === 'reset' ? <Icons.Lock /> : <Icons.Shield />}
-            </div>
-            <h2 className={`modal-title ${outfit.className}`}>
-              {mode === 'signin' && 'Welcome back'}
-              {mode === 'signup' && 'Create your account'}
-              {mode === 'reset' && 'Reset password'}
+            <h2 className={`${ibmMono.className} modal-title`}>
+              {mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
             </h2>
-            <p className={`modal-subtitle ${inter.className}`}>
-              {mode === 'signin' && 'Sign in to access your compliance dashboard'}
-              {mode === 'signup' && 'Start your 7-day free trial today'}
-              {mode === 'reset' && "Enter your email and we'll send reset instructions"}
-            </p>
           </div>
-
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-field">
-              <label className={`form-label ${inter.className}`}>Email address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@restaurant.com"
-                required
-                className={`form-input ${inter.className}`}
-                autoComplete="email"
-              />
+              <label className={ibmMono.className}>Email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={`form-input ${ibmMono.className}`} />
             </div>
-
             {mode !== 'reset' && (
               <div className="form-field">
-                <label className={`form-label ${inter.className}`}>Password</label>
-                <div className="form-input-group">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    required
-                    className={`form-input ${inter.className}`}
-                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className={`form-toggle ${inter.className}`}
-                  >
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                </div>
+                <label className={ibmMono.className}>Password</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className={`form-input ${ibmMono.className}`} />
               </div>
             )}
-
-            <button
-              type="submit"
-              disabled={loading || !isLoaded}
-              className="btn-form-submit"
-            >
-              {loading && <span className="btn-spinner" />}
-              <span className={`btn-label ${inter.className}`}>
-                {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-              </span>
+            <button type="submit" disabled={loading || !isLoaded} className={`btn-form-submit ${ibmMono.className}`}>
+              {loading ? 'Processing...' : 'Submit'}
             </button>
           </form>
-
-          {message && (
-            <div className={`modal-alert ${messageKind}`}>
-              <span className="alert-icon">
-                {messageKind === 'err' ? <Icons.X /> : messageKind === 'ok' ? <Icons.Check /> : <Icons.Spark />}
-              </span>
-              <span className={`alert-text ${inter.className}`}>{message}</span>
-            </div>
-          )}
-
+          {message && <div className={`modal-alert ${messageKind} ${ibmMono.className}`}>{message}</div>}
           <div className="modal-footer">
-            {mode === 'signin' && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setMode('reset')}
-                  className={`modal-link ${inter.className}`}
-                >
-                  Forgot your password?
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMode('signup')}
-                  className={`modal-link ${inter.className}`}
-                >
-                  Need an account? <strong>Sign up free</strong>
-                </button>
-              </>
-            )}
-            {mode === 'signup' && (
-              <button
-                type="button"
-                onClick={() => setMode('signin')}
-                className={`modal-link ${inter.className}`}
-              >
-                Already have an account? <strong>Sign in</strong>
-              </button>
-            )}
-            {mode === 'reset' && (
-              <button
-                type="button"
-                onClick={() => setMode('signin')}
-                className={`modal-link ${inter.className}`}
-              >
-                ← Back to sign in
-              </button>
-            )}
+            {mode === 'signin' && <button onClick={() => setMode('signup')} className={`modal-link ${ibmMono.className}`}>Need an account?</button>}
+            {mode === 'signup' && <button onClick={() => setMode('signin')} className={`modal-link ${ibmMono.className}`}>Have an account?</button>}
           </div>
-
           <RecaptchaBadge />
         </div>
       </div>
@@ -826,65 +414,24 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
 function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
-
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-wrapper modal-wrapper-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-card">
-          <button onClick={onClose} className="modal-close-btn" aria-label="Close">
-            <Icons.X />
-          </button>
-
-          <div className="modal-header">
-            <div className="pricing-modal-badge">
-              <Icons.Shield />
-              <span className={inter.className}>Site License</span>
-            </div>
-            <h2 className={`modal-title ${outfit.className}`}>protocolLM Access</h2>
-            <p className={`modal-subtitle ${inter.className}`}>
-              $100/month · unlimited usage
-            </p>
+      <div className="modal-wrapper" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-card retro-modal">
+          <button onClick={onClose} className="modal-close-btn"><Icons.X /></button>
+          <h2 className={`${ibmMono.className} modal-title`} style={{ textAlign: 'center' }}>Site License</h2>
+          <div className={`pricing-display ${ibmMono.className}`}>
+            <span className="amount">$100</span>/month
           </div>
-
-          <div className="pricing-modal-amount">
-            <span className={`pricing-currency ${inter.className}`}>$</span>
-            <span className={`pricing-number-lg ${outfit.className}`}>100</span>
-            <span className={`pricing-period ${inter.className}`}>/month</span>
-          </div>
-
-          <div className="pricing-modal-features">
-            {['Unlimited usage'].map((f, i) => (
-              <div key={i} className={`pricing-modal-feature ${inter.className}`}>
-                <Icons.Check />
-                <span>{f}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="pricing-modal-actions">
-            <button
-              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-              disabled={!!loading}
-              className="btn-pricing-modal-primary"
-            >
-              {loading === 'monthly' && <span className="btn-spinner" />}
-              <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
+          <div className="pricing-actions">
+            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className={`btn-form-submit ${ibmMono.className}`}>
+              {loading === 'monthly' ? 'Processing...' : 'Start 7-Day Trial'}
             </button>
-
-            <button
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading}
-              className="btn-pricing-modal-secondary"
-            >
-              {loading === 'annual' && <span className="btn-spinner" />}
-              <span className={`btn-label ${inter.className}`}>Annual plan · $1,000/year</span>
-              <span className={`btn-badge ${inter.className}`}>Save $200</span>
+            <div style={{ height: 8 }} />
+            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className={`btn-form-submit ${ibmMono.className}`} style={{ background: 'transparent', color: '#fff', border: '1px solid #333' }}>
+              Annual Plan ($1000/yr)
             </button>
           </div>
-
-          <p className={`pricing-modal-note ${inter.className}`}>
-            7-day free trial · Cancel anytime · One license per restaurant location
-          </p>
         </div>
       </div>
     </div>
@@ -895,82 +442,39 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
   const searchParams = useSearchParams()
-
   const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
 
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
-
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authInitialMode, setAuthInitialMode] = useState('signin')
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
-
-  const [currentChatId, setCurrentChatId] = useState(null)
+  
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
-
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
-
-  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [currentChatId, setCurrentChatId] = useState(null)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
-  const userMenuRef = useRef(null)
-  const textAreaRef = useRef(null)
-
-  const shouldAutoScrollRef = useRef(true)
-
   const isAuthenticated = !!session
 
   useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
-    const splineContainer = document.getElementById('plm-spline-bg')
-    if (splineContainer) {
-      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
-    }
+    if (typeof document !== 'undefined') document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
   }, [isAuthenticated])
 
-  const scrollToBottom = useCallback((behavior = 'auto') => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior })
-  }, [])
+  const scrollToBottom = () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' })
 
-  const handleScroll = () => {
-    const el = scrollRef.current
-    if (!el) return
-    const threshold = 120
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
-    shouldAutoScrollRef.current = distanceFromBottom < threshold
-  }
-
-  useEffect(() => {
-    requestAnimationFrame(() => scrollToBottom('auto'))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [messages, scrollToBottom])
-
-  useEffect(() => {
-    const showPricing = searchParams?.get('showPricing')
-    if (showPricing === 'true') setShowPricingModal(true)
-  }, [searchParams])
-
+  // --- Session & Subscription Logic (Restored) ---
   useEffect(() => {
     let isMounted = true
-
     async function loadSessionAndSub(s) {
       if (!isMounted) return
       setSession(s)
-
       if (!s) {
         setHasActiveSubscription(false)
         setShowPricingModal(false)
@@ -978,43 +482,16 @@ export default function Page() {
         return
       }
 
+      // 1. Check Terms
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('accepted_terms, accepted_privacy')
-          .eq('id', s.user.id)
-          .maybeSingle()
-
-        if (!profile) {
-          setHasActiveSubscription(false)
-          setIsLoading(false)
+        const { data: profile } = await supabase.from('user_profiles').select('accepted_terms, accepted_privacy').eq('id', s.user.id).maybeSingle()
+        if (!profile?.accepted_terms || !profile?.accepted_privacy) {
           router.replace('/accept-terms')
           return
         }
+      } catch (e) { console.error(e) }
 
-        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
-        if (!accepted) {
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        if (profileError) {
-          console.error('❌ Profile check error:', profileError)
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-      } catch (e) {
-        console.error('❌ Policy check exception:', e)
-        setHasActiveSubscription(false)
-        setIsLoading(false)
-        router.replace('/accept-terms')
-        return
-      }
-
+      // 2. Check Subscription
       let active = false
       try {
         const { data: sub } = await supabase
@@ -1026,163 +503,80 @@ export default function Page() {
           .limit(1)
           .maybeSingle()
 
-        if (sub && sub.current_period_end) {
-          const end = new Date(sub.current_period_end)
-          if (end > new Date()) active = true
-        }
-      } catch (e) {
-        console.error('Subscription check error', e)
-      }
+        if (sub?.current_period_end && new Date(sub.current_period_end) > new Date()) active = true
+      } catch (e) { console.error(e) }
 
-      if (!isMounted) return
-      setHasActiveSubscription(active)
-      setIsLoading(false)
+      if (isMounted) {
+        setHasActiveSubscription(active)
+        setIsLoading(false)
+      }
     }
 
     async function init() {
-      try {
-        const { data } = await supabase.auth.getSession()
-        await loadSessionAndSub(data.session || null)
-      } catch (e) {
-        console.error('Auth init error', e)
-        if (isMounted) setIsLoading(false)
-      }
+      const { data } = await supabase.auth.getSession()
+      loadSessionAndSub(data.session)
     }
-
     init()
-
-    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      loadSessionAndSub(newSession)
-    })
-
-    return () => {
-      isMounted = false
-      data.subscription?.unsubscribe()
-    }
-  }, [supabase, searchParams, router])
+    const { data: authListener } = supabase.auth.onAuthStateChange((_e, s) => loadSessionAndSub(s))
+    return () => { isMounted = false; authListener.subscription.unsubscribe() }
+  }, [supabase, router])
 
   useEffect(() => {
-    function handleClick(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false)
-    }
-    function handleKey(event) {
-      if (event.key === 'Escape') setShowUserMenu(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('mousedown', handleClick)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [])
+    if (messages.length) scrollToBottom()
+  }, [messages])
+
+  useEffect(() => {
+    if (searchParams?.get('showPricing') === 'true') setShowPricingModal(true)
+  }, [searchParams])
+
+  // --- Action Handlers (Restored) ---
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setMessages([])
+    setCurrentChatId(null)
+    setSession(null)
+    window.location.reload()
+  }
 
   const handleCheckout = async (priceId, planName) => {
+    if (!session) {
+      setShowPricingModal(false); setShowAuthModal(true); return
+    }
+    if (!captchaLoaded) return
+    setCheckoutLoading(planName)
+
     try {
-      const { data } = await supabase.auth.getSession()
-      if (!data.session) {
-        setShowPricingModal(false)
-        setAuthInitialMode('signup')
-        setShowAuthModal(true)
-        return
-      }
-      if (!priceId) {
-        alert('Invalid price selected.')
-        return
-      }
-
-      if (!captchaLoaded) {
-        alert('Security verification is still loading. Please try again in a moment.')
-        return
-      }
-
-      setCheckoutLoading(planName)
-
       const captchaToken = await executeRecaptcha('checkout')
-      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-        throw new Error('Security verification failed. Please refresh and try again.')
-      }
+      if (!captchaToken) throw new Error('Security check failed.')
 
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${data.session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ priceId, captchaToken }),
-        credentials: 'include',
       })
-
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(payload.error || 'Checkout failed')
-
-      if (payload.url) window.location.href = payload.url
-      else throw new Error('No checkout URL returned')
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      if (data.url) window.location.href = data.url
+    } catch (e) {
+      alert(e.message || 'Checkout failed')
     } finally {
       setCheckoutLoading(null)
     }
   }
 
   const handleManageBilling = async () => {
-    setShowUserMenu(false)
-
-    let loadingToast = null
+    if (!session) return
     try {
-      loadingToast = document.createElement('div')
-      loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
-      document.body.appendChild(loadingToast)
-
-      const { data } = await supabase.auth.getSession()
-      const accessToken = data?.session?.access_token
-
       const res = await fetch('/api/create-portal-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       })
-
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        alert(payload.error || 'Failed to open billing portal')
-        return
-      }
-      if (payload.url) window.location.href = payload.url
-      else alert('No billing portal URL returned')
-    } catch (error) {
-      console.error('Billing portal error:', error)
-      alert('Failed to open billing portal')
-    } finally {
-      try {
-        if (loadingToast) document.body.removeChild(loadingToast)
-      } catch {}
-    }
-  }
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut()
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      if (data.url) window.location.href = data.url
     } catch (e) {
-      console.error('Sign out error', e)
-    } finally {
-      setMessages([])
-      setCurrentChatId(null)
-      router.replace('/')
+      alert(e.message || 'Billing portal failed')
     }
-  }
-
-  const handleNewChat = () => {
-    setMessages([])
-    setInput('')
-    setSelectedImage(null)
-    setCurrentChatId(null)
-    shouldAutoScrollRef.current = true
-    requestAnimationFrame(() => scrollToBottom('auto'))
   }
 
   const handleSend = async (e) => {
@@ -1191,32 +585,22 @@ export default function Page() {
 
     const question = input.trim()
     const image = selectedImage
-
     setSendMode(image ? 'vision' : 'text')
-    setSendKey((k) => k + 1)
+    setSendKey(p => p + 1)
 
-    const newUserMessage = { role: 'user', content: question, image }
-    setMessages((prev) => [...prev, newUserMessage, { role: 'assistant', content: '' }])
+    const newUserMsg = { role: 'user', content: question, image }
+    setMessages(prev => [...prev, newUserMsg, { role: 'assistant', content: '' }])
     setInput('')
     setSelectedImage(null)
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
-    shouldAutoScrollRef.current = true
-
     let activeChatId = currentChatId
 
     try {
+      // Create chat if doesn't exist
       if (session && !activeChatId) {
-        const { data: created } = await supabase
-          .from('chats')
-          .insert({
-            user_id: session.user.id,
-            title: (question || 'New chat').slice(0, 40),
-          })
-          .select()
-          .single()
-
+        const { data: created } = await supabase.from('chats').insert({ user_id: session.user.id, title: (question || 'New Chat').slice(0,40) }).select().single()
         if (created) {
           activeChatId = created.id
           setCurrentChatId(created.id)
@@ -1226,41 +610,26 @@ export default function Page() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, newUserMessage],
-          image,
-          chatId: activeChatId,
-        }),
+        body: JSON.stringify({ messages: [...messages, newUserMsg], image, chatId: activeChatId }),
       })
 
       if (!res.ok) {
-        if (res.status === 402) {
-          setShowPricingModal(true)
-          throw new Error('Subscription required for additional questions.')
-        }
-        if (res.status === 429) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Rate limit exceeded.')
-        }
-        if (res.status === 503) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Service temporarily unavailable.')
-        }
-        throw new Error(`Server error (${res.status})`)
+        if (res.status === 402) { setShowPricingModal(true); throw new Error('Subscription required.') }
+        const err = await res.json()
+        throw new Error(err.error || 'Request failed.')
       }
 
       const data = await res.json()
-      setMessages((prev) => {
-        const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
-        return updated
+      setMessages(prev => {
+        const up = [...prev]
+        up[up.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
+        return up
       })
-    } catch (error) {
-      console.error('Chat error:', error)
-      setMessages((prev) => {
-        const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
-        return updated
+    } catch (err) {
+      setMessages(prev => {
+        const up = [...prev]
+        up[up.length - 1] = { role: 'assistant', content: `Error: ${err.message}` }
+        return up
       })
     } finally {
       setIsSending(false)
@@ -1269,2599 +638,334 @@ export default function Page() {
 
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      const compressed = await compressImage(file)
-      setSelectedImage(compressed)
-    } catch (error) {
-      console.error('Image compression error', error)
-      alert('Failed to process image.')
+    if (file) {
+      try {
+        const comp = await compressImage(file)
+        setSelectedImage(comp)
+      } catch (e) { alert('Image error') }
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-content">
-          <div className="loading-spinner" />
-          <span className={`loading-text ${inter.className}`}>Loading protocolLM...</span>
-        </div>
-      </div>
-    )
-  }
+  if (isLoading) return <div className="loading-screen"><div className="loading-spinner" /></div>
 
   return (
     <>
       <style jsx global>{`
         /* ═══════════════════════════════════════════════════════════════════════
-           PREMIUM LIGHT THEME - protocolLM
-           Modern Government Tech × FinTech × Health Tech Design
-           Color Palette: Spearmint + Matte Blue
+           RETRO DARK THEME - ProtocolLM
+           Strict Monospace & Dark Console Aesthetic
            ═══════════════════════════════════════════════════════════════════════ */
-
-        /* ─── Design Tokens ─── */
         :root {
-          /* Core Colors */
-          --color-bg: #F6FAF9;
-          --color-surface: #FFFFFF;
-          --color-card: #F2FBF7;
-          --color-border: #D7E6E2;
-          --color-border-subtle: #E8F0ED;
-          --color-border-hover: #B8CFC8;
-          --color-border-focus: #55D6B2;
-          
-          /* Text Colors */
-          --color-text: #0B1220;
-          --color-text-secondary: #3D4F5F;
-          --color-text-tertiary: #52637A;
-          --color-text-muted: #8A9BAD;
-          
-          /* Brand Colors */
-          --color-primary: #2F5D8A;
-          --color-primary-hover: #1F4E7A;
-          --color-primary-light: #3A6B99;
-          --color-accent: #55D6B2;
-          --color-accent-hover: #45C6A2;
-          --color-accent-light: #E8FAF4;
-          
-          /* Status Colors */
-          --color-success: #10B981;
-          --color-success-bg: #ECFDF5;
-          --color-warning: #F59E0B;
-          --color-warning-bg: #FFFBEB;
-          --color-error: #EF4444;
-          --color-error-bg: #FEF2F2;
-          
-          /* Shadows */
-          --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.04);
-          --shadow-sm: 0 1px 3px rgba(11, 18, 32, 0.06), 0 1px 2px rgba(11, 18, 32, 0.04);
-          --shadow-md: 0 4px 6px -1px rgba(11, 18, 32, 0.06), 0 2px 4px -1px rgba(11, 18, 32, 0.04);
-          --shadow-lg: 0 10px 15px -3px rgba(11, 18, 32, 0.08), 0 4px 6px -2px rgba(11, 18, 32, 0.04);
-          --shadow-xl: 0 20px 25px -5px rgba(11, 18, 32, 0.08), 0 10px 10px -5px rgba(11, 18, 32, 0.03);
-          --shadow-card: 0 1px 3px rgba(11, 18, 32, 0.04), 0 0 0 1px rgba(215, 230, 226, 0.5);
-          --shadow-card-hover: 0 8px 24px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(85, 214, 178, 0.3);
-          --shadow-glass: 0 8px 32px rgba(11, 18, 32, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
-          
-          /* Radii */
-          --radius-xs: 4px;
-          --radius-sm: 6px;
-          --radius-md: 8px;
-          --radius-lg: 12px;
-          --radius-xl: 16px;
-          --radius-2xl: 20px;
-          --radius-3xl: 24px;
-          --radius-full: 9999px;
-          
-          /* Transitions */
-          --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-          --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
-          --duration-fast: 150ms;
-          --duration-normal: 250ms;
-          --duration-slow: 400ms;
-          
-          /* Z-index */
-          --z-base: 0;
-          --z-elevated: 10;
-          --z-sticky: 100;
-          --z-modal: 1000;
+          --bg-main: #0e0e11;
+          --bg-card: #15151a;
+          --border: #2a2a32;
+          --border-hover: #40404a;
+          --text-main: #f2f2f2;
+          --text-muted: #888890;
+          --accent: #2F5D8A;
+          --accent-green: #55D6B2;
+          --font-mono: 'IBM Plex Mono', monospace;
         }
 
-        /* ─── Base Reset ─── */
-        *, *::before, *::after {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
-
-        html {
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        html, body {
+          background: var(--bg-main);
+          color: var(--text-main);
           height: 100%;
-          scroll-behavior: smooth;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          background: var(--color-bg);
+          overflow: hidden; /* App-like feel */
         }
 
-        body {
-          min-height: 100%;
-          background: var(--color-bg);
-          color: var(--color-text);
-          overflow-x: hidden;
-          line-height: 1.6;
-        }
-
-        ::selection {
-          background: rgba(85, 214, 178, 0.25);
-          color: var(--color-text);
-        }
-
-        /* ─── Scrollbar ─── */
-        ::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: var(--color-border);
-          border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-          background: var(--color-border-hover);
-        }
-
-        /* ─── Loading Screen ─── */
-        .loading-screen {
-          position: fixed;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--color-bg);
-          z-index: var(--z-modal);
-        }
-
-        .loading-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .loading-spinner {
-          width: 32px;
-          height: 32px;
-          border: 2.5px solid var(--color-border);
-          border-top-color: var(--color-primary);
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-
-        .loading-text {
-          font-size: 14px;
-          color: var(--color-text-tertiary);
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        /* ─── App Container ─── */
-        .app-container {
-          min-height: 100dvh;
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          background: #0b1018;
-          color: #e9f1ff;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           WAVE BACKGROUND
-           ═══════════════════════════════════════════════════════════════════════ */
-        .wave-bg-container {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 0;
-          overflow: hidden;
-        }
-
-        .wave-svg {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
-        }
-
-        .wave {
-          opacity: 1;
-        }
-
-        .grid-overlay {
-          position: absolute;
-          inset: 0;
-          background-image: 
-            linear-gradient(rgba(47, 93, 138, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(47, 93, 138, 0.02) 1px, transparent 1px);
-          background-size: 60px 60px;
-          mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           IBM Console Landing
-           ═══════════════════════════════════════════════════════════════════════ */
-        .ibm-landing {
-          position: relative;
-          z-index: 1;
-          padding: 32px 20px 80px;
-          min-height: calc(100dvh - 0px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #0e0e11;
-          color: #f2f2f2;
-        }
-
-        .ibm-landing-topbar {
-          position: absolute;
-          top: 14px;
-          left: 0;
-          right: 0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-          z-index: 3;
-        }
-
-        .ibm-top-actions {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .pricing-menu-wrapper {
-          position: relative;
-        }
-
-        .pricing-menu {
-          position: absolute;
-          right: 0;
-          margin-top: 8px;
-          background: #15151a;
-          border: 1px solid #2a2a32;
-          border-radius: 10px;
-          padding: 12px;
-          min-width: 200px;
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .pricing-menu-title {
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: #f2f2f2;
-        }
-
-        .pricing-menu-price {
-          font-size: 18px;
-          font-weight: 700;
-          color: #f2f2f2;
-        }
-
-        .pricing-menu-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          color: #d9d9df;
-          font-size: 14px;
-        }
-
-        .pricing-menu .ibm-cta.block {
-          width: 100%;
-          justify-content: center;
-          text-align: center;
-        }
-
-        .ibm-landing-bg {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(48, 48, 54, 0.28), transparent 52%),
-            radial-gradient(circle at 80% 0%, rgba(48, 48, 54, 0.2), transparent 44%),
-            linear-gradient(90deg, rgba(14, 14, 17, 0.95) 0%, rgba(16, 16, 20, 0.92) 100%);
-          opacity: 0.9;
-          pointer-events: none;
-        }
-
-        .ibm-landing-grid {
-          position: relative;
-          z-index: 2;
-          width: 100%;
-          max-width: 1200px;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 20px;
-          align-items: stretch;
-        }
-
-        .ibm-console-text {
-          background: transparent;
-          border: none;
-          border-radius: 0;
-          padding: 18px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          min-height: 340px;
-        }
-
-        .ibm-console-type {
-          margin: 0;
-          white-space: pre-wrap;
-          color: #e2e8f5;
-          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-          line-height: 1.45;
-          font-size: 15px;
-        }
-
-        .type-cursor {
-          display: inline-block;
-          width: 10px;
-          animation: cursor-blink 1s steps(2, end) infinite;
-        }
-
-        @keyframes cursor-blink {
-          0%, 50% { opacity: 1; }
-          50.01%, 100% { opacity: 0; }
-        }
-
-        .ibm-doc-card {
-          gap: 12px;
-          background: #121218;
-          border: 1px solid #24242d;
-          border-radius: 12px;
-          padding: 18px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        }
-
-        .ibm-doc-title {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          color: #f2f2f2;
-          text-transform: uppercase;
-        }
-
-        .ibm-doc-meta {
-          color: #c3c3cf;
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-        }
-
-        .ibm-doc-window {
-          position: relative;
-          background: #0d0d12;
-          border: 1px solid #25252d;
-          border-radius: 12px;
-          padding: 12px;
-          overflow: hidden;
-          height: 320px;
-        }
-
-        .ibm-doc-gradient {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(180deg, #0d0d12 0%, transparent 16%, transparent 84%, #0d0d12 100%);
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        .ibm-doc-scroll {
-          position: absolute;
-          inset: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          padding-right: 8px;
-          overflow: hidden;
-        }
-
-        .ibm-doc-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: #f2f2f2;
-          font-size: 14px;
-          letter-spacing: -0.01em;
-          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-        }
-
-        .ibm-doc-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 999px;
-          background: #c3c3cf;
-          box-shadow: none;
-        }
-
-        .ibm-doc-name {
-          white-space: nowrap;
-        }
-
-        .animate-doc-scroll {
-          animation: doc-scroll 22s linear infinite;
-        }
-
-        @keyframes doc-scroll {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-50%); }
-        }
-
-        @media (max-width: 768px) {
-          .ibm-landing {
-            padding: 32px 16px 48px;
-          }
-
-          .ibm-landing-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .ibm-console-card,
-          .ibm-doc-card {
-            padding: 16px;
-          }
-
-          .ibm-doc-name {
-            white-space: normal;
-          }
-        }
-
-        .ibm-landing-actions {
-          position: relative;
-          z-index: 2;
-          margin-top: 18px;
-          display: flex;
-          gap: 12px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-
+        /* ─── Shared Retro UI ─── */
         .ibm-cta {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           padding: 10px 16px;
           background: #1d1d22;
           color: #f2f2f2;
           border: 1px solid #2a2a32;
-          border-radius: 12px;
+          border-radius: 4px; /* Sharper corners */
           text-transform: uppercase;
-          letter-spacing: 0.12em;
-          font-weight: 700;
-          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .ibm-cta.secondary {
-          background: transparent;
-          color: #d9d9df;
-        }
-
-        .ibm-cta.small {
-          padding: 8px 12px;
-          font-size: 12px;
-          letter-spacing: 0.1em;
-        }
-
-        .ibm-cta:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           HEADER
-           ═══════════════════════════════════════════════════════════════════════ */
-        .app-header {
-          position: sticky;
-          top: 0;
-          z-index: var(--z-sticky);
-          background: rgba(246, 250, 249, 0.85);
-          backdrop-filter: blur(16px) saturate(180%);
-          -webkit-backdrop-filter: blur(16px) saturate(180%);
-          border-bottom: 1px solid var(--color-border-subtle);
-        }
-
-        .header-inner {
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 14px 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        @media (max-width: 640px) {
-          .header-inner {
-            padding: 12px 16px;
-          }
-        }
-
-        .header-left {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-
-        .logo {
-          display: flex;
-          align-items: baseline;
-          text-decoration: none;
-          transition: opacity var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .logo:hover {
-          opacity: 0.8;
-        }
-
-        .logo-text {
-          font-size: 20px;
-          font-weight: 700;
-          letter-spacing: -0.03em;
-          color: var(--color-text);
-        }
-
-        .logo-accent {
-          font-weight: 800;
-          color: var(--color-text);
-        }
-
-        .header-meta {
-          display: none;
-        }
-
-        @media (min-width: 768px) {
-          .header-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            padding-left: 20px;
-            border-left: 1px solid var(--color-border);
-          }
-
-          .header-meta-primary {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-          }
-
-          .header-meta-secondary {
-            font-size: 11px;
-            color: var(--color-text-muted);
-          }
-        }
-
-        .header-right {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .header-status {
-          display: none;
-          font-size: 12px;
+          font-family: var(--font-mono);
           font-weight: 600;
-          color: var(--color-success);
-          padding: 6px 14px;
-          background: var(--color-success-bg);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          border-radius: var(--radius-full);
-        }
-
-        @media (min-width: 1024px) {
-          .header-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-          }
-
-          .header-status::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--color-success);
-            border-radius: 50%;
-          }
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           BUTTONS
-           ═══════════════════════════════════════════════════════════════════════ */
-        .btn-hero-primary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          height: 52px;
-          padding: 0 28px;
-          background: var(--color-primary);
-          color: white;
-          border: none;
-          border-radius: var(--radius-lg);
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-md), 0 0 0 1px rgba(47, 93, 138, 0.1);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .btn-hero-primary::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
-          opacity: 0;
-          transition: opacity var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .btn-hero-primary:hover {
-          background: var(--color-primary-hover);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(47, 93, 138, 0.15);
-        }
-
-        .btn-hero-primary:hover::before {
-          opacity: 1;
-        }
-
-        .btn-hero-primary:active {
-          transform: translateY(0);
-        }
-
-        .btn-hero-secondary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          height: 52px;
-          padding: 0 24px;
-          background: var(--color-surface);
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .btn-hero-secondary:hover {
-          background: var(--color-card);
-          border-color: var(--color-border-hover);
-          transform: translateY(-1px);
-          box-shadow: var(--shadow-sm);
-        }
-
-        .btn-secondary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          height: 44px;
-          padding: 0 20px;
-          background: var(--color-surface);
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .btn-secondary:hover {
-          background: var(--color-card);
-          border-color: var(--color-border-hover);
-        }
-
-        .btn-icon {
-          width: 44px;
-          height: 44px;
-          padding: 0;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          color: var(--color-text-secondary);
-          cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .btn-icon:hover {
-          background: var(--color-card);
-          color: var(--color-text);
-          border-color: var(--color-border-hover);
-        }
-
-        .btn-icon-right {
-          display: flex;
-          transition: transform var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .btn-hero-primary:hover .btn-icon-right {
-          transform: translateX(3px);
-        }
-
-        .btn-spinner {
-          width: 18px;
-          height: 18px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
-          border-radius: 50%;
-          animation: spin 0.6s linear infinite;
-        }
-
-        /* ─── Avatar & User Menu ─── */
-        .avatar-btn {
-          width: 44px;
-          height: 44px;
-          border-radius: var(--radius-md);
-          background: linear-gradient(135deg, var(--color-accent-light) 0%, var(--color-card) 100%);
-          border: 1px solid var(--color-border);
-          color: var(--color-primary);
-          font-size: 15px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: var(--shadow-xs);
-        }
-
-        .avatar-btn:hover {
-          transform: scale(1.05);
-          border-color: var(--color-accent);
-          box-shadow: var(--shadow-sm);
-        }
-
-        .user-menu-wrapper {
-          position: relative;
-        }
-
-        .user-menu {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          width: 280px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          box-shadow: var(--shadow-xl);
-          overflow: hidden;
-          animation: menuReveal 200ms var(--ease-out-expo);
-          transform-origin: top right;
-        }
-
-        @keyframes menuReveal {
-          from {
-            opacity: 0;
-            transform: translateY(-8px) scale(0.96);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        .user-menu-header {
-          padding: 16px 20px;
-          border-bottom:-border-subtle);
-          background: var(--color-card);
-        }
-
-        .user-menu-email {
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--color-text);
-          word-break: break-all;
-        }
-
-        .user-menu-status {
-          font-size: 11px;
-          color: var(--color-text-muted);
-          text-transform: uppercase;
+          font-size: 13px;
           letter-spacing: 0.05em;
-          margin-top: 4px;
-        }
-
-        .user-menu-item {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 20px;
-          background: none;
-          border: none;
-          color: var(--color-text-secondary);
-          font-size: 14px;
-          font-weight: 500;
           cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          text-align: left;
-        }
-
-        .user-menu-item:hover {
-          background: var(--color-card);
-          color: var(--color-text);
-        }
-
-        .user-menu-item-icon {
-          opacity: 0.6;
-        }
-
-        .user-menu-item-danger {
-          color: var(--color-error);
-        }
-
-        .user-menu-item-danger:hover {
-          background: var(--color-error-bg);
-          color: var(--color-error);
-        }
-
-        .user-menu-divider {
-          height: 1px;
-          background: var(--color-border-subtle);
-          margin: 4px 0;
-        }
-
-        .user-menu-footer {
-          padding: 12px 20px;
-          border-top: 1px solid var(--color-border-subtle);
-          background: var(--color-card);
-        }
-
-        .user-menu-hint {
-          font-size: 11px;
-          color: var(--color-text-muted);
-          text-align: center;
-          display: block;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           LANDING PAGE
-           ═══════════════════════════════════════════════════════════════════════ */
-        .landing-wrapper {
-          flex: 1;
-          position: relative;
-          overflow-x: hidden;
-        }
-
-        /* ─── Reveal Animations ─── */
-        .rv {
-          opacity: 0;
-          transition: 
-            opacity 700ms var(--ease-out-expo),
-            transform 700ms var(--ease-out-expo);
-          transition-delay: var(--d, 0ms);
-          will-change: opacity, transform;
-        }
-
-        .rv-up {
-          transform: translateY(32px);
-        }
-
-        .rv-scale {
-          transform: scale(0.96);
-        }
-
-        .rv.is-inview {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           HERO SECTION
-           ═══════════════════════════════════════════════════════════════════════ */
-        .hero-section {
-          position: relative;
-          z-index: 1;
-          padding: 60px 24px 100px;
-          min-height: calc(100vh - 80px);
-          display: flex;
-          align-items: center;
-        }
-
-        @media (min-width: 1024px) {
-          .hero-section {
-            padding: 40px 48px 80px;
-          }
-        }
-
-        .hero-container {
-          max-width: 960px;
-          margin: 0 auto;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 40px;
-          align-items: center;
-          text-align: center;
-        }
-
-        .hero-content {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-          position: relative;
-          z-index: 2;
-          align-items: center;
-        }
-
-        .hero-title-animated {
-          display: inline-flex;
-          flex-direction: column;
-          gap: 6px;
-          text-align: center;
-        }
-
-        .hero-title-line {
-          display: block;
-          opacity: 0;
-          transform: translateY(18px);
-          animation: titleLift 720ms var(--ease-out-expo) forwards;
-        }
-
-        .hero-title-line:nth-child(2) {
-          animation-delay: 120ms;
-        }
-
-        @keyframes titleLift {
-          0% { opacity: 0; transform: translateY(18px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-
-        .hero-title {
-          font-size: clamp(40px, 6vw, 64px);
-          font-weight: 800;
-          line-height: 1.05;
-          letter-spacing: -0.035em;
-          color: var(--color-text);
-        }
-
-        .hero-title-gradient {
-          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-accent) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .hero-description {
-          font-size: 18px;
-          line-height: 1.7;
-          color: var(--color-text-secondary);
-          max-width: 520px;
-        }
-
-        @media (max-width: 640px) {
-          .hero-description {
-            font-size: 16px;
-          }
-        }
-
-        .hero-actions {
-          display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
-          padding-top: 8px;
-        }
-
-        /* Hero visual removed for simplified, centered hero */
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           PROOF SECTION
-           ═══════════════════════════════════════════════════════════════════════ */
-        .proof-section {
-          position: relative;
-          z-index: 1;
-          padding: 0 24px 80px;
-        }
-
-        .proof-container {
-          max-width: 800px;
-          margin: 0 auto;
-        }
-
-        .proof-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
-          overflow: hidden;
-          box-shadow: var(--shadow-card);
-        }
-
-        .proof-item {
-          padding: 28px 24px;
-          text-align: center;
-          border-right: 1px solid var(--color-border-subtle);
-        }
-
-        .proof-item:last-child {
-          border-right: none;
-        }
-
-        @media (max-width: 640px) {
-          .proof-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .proof-item {
-            border-right: none;
-            border-bottom: 1px solid var(--color-border-subtle);
-            padding: 20px;
-          }
-          
-          .proof-item:last-child {
-            border-bottom: none;
-          }
-        }
-
-        .proof-value {
-          font-size: 32px;
-          font-weight: 700;
-          letter-spacing: -0.03em;
-          color: var(--color-text);
-          margin-bottom: 4px;
-        }
-
-        .proof-label {
-          font-size: 13px;
-          color: var(--color-text-muted);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           SECTION STYLES
-           ═══════════════════════════════════════════════════════════════════════ */
-        .section-header {
-          text-align: center;
-          max-width: 600px;
-          margin: 0 auto 48px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .section-label {
-          display: inline-block;
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--color-accent);
-          margin-bottom: 12px;
-        }
-
-        .section-title {
-          font-size: clamp(28px, 4vw, 40px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: var(--color-text);
-          line-height: 1.15;
-          margin-bottom: 16px;
-        }
-
-        .section-description {
-          font-size: 16px;
-          line-height: 1.7;
-          color: var(--color-text-secondary);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           FEATURES SECTION
-           ═══════════════════════════════════════════════════════════════════════ */
-        .features-section {
-          position: relative;
-          z-index: 1;
-          padding: 80px 24px;
-        }
-
-        .features-container {
-          max-width: 1100px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .features-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 20px;
-        }
-
-        @media (min-width: 768px) {
-          .features-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        .feature-card {
-          position: relative;
-          padding: 32px 28px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
-          transition: all var(--duration-slow) var(--ease-out-expo);
-          overflow: hidden;
-          box-shadow: var(--shadow-card);
-          display: flex;
-          flex-direction: column;
-          min-height: 220px;
-        }
-
-        .feature-card-border {
-          position: absolute;
-          inset: 0;
-          border-radius: var(--radius-2xl);
-          padding: 1px;
-          background: linear-gradient(135deg, transparent 0%, transparent 50%, var(--color-accent) 100%);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          opacity: 0;
-          transition: opacity var(--duration-slow) var(--ease-out-expo);
-        }
-
-        .feature-card:hover {
-          border-color: var(--color-border-hover);
-          transform: translateY(-4px);
-          box-shadow: var(--shadow-card-hover);
-        }
-
-        .feature-card:hover .feature-card-border {
-          opacity: 1;
-        }
-
-        .feature-icon-wrapper {
-          position: relative;
-          width: 52px;
-          height: 52px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
-          border-radius: var(--radius-lg);
-          margin-bottom: 20px;
-          color: var(--color-primary);
-        }
-
-        .feature-title {
-          position: relative;
-          font-size: 17px;
-          font-weight: 700;
-          color: var(--color-text);
-          margin-bottom: 8px;
-        }
-
-        .feature-description {
-          position: relative;
-          font-size: 14px;
-          line-height: 1.65;
-          color: var(--color-text-secondary);
-          flex: 1;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           RISK SECTION
-           ═══════════════════════════════════════════════════════════════════════ */
-        .risk-section {
-          position: relative;
-          z-index: 1;
-          padding: 80px 24px;
-          background: var(--color-card);
-        }
-
-        .risk-container {
-          max-width: 1000px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .risk-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          margin-bottom: 32px;
-        }
-
-        @media (min-width: 768px) {
-          .risk-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-        }
-
-        .risk-card {
-          position: relative;
-          padding: 24px 20px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          text-align: center;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          overflow: hidden;
-          box-shadow: var(--shadow-card);
-          display: flex;
-          flex-direction: column;
-          min-height: 180px;
-        }
-
-        .risk-card-border {
-          position: absolute;
-          inset: 0;
-          border-radius: var(--radius-xl);
-          padding: 1px;
-          background: linear-gradient(180deg, var(--color-accent) 0%, transparent 50%);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          opacity: 0;
-          transition: opacity var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .risk-card:hover {
-          border-color: var(--color-border-hover);
-          transform: translateY(-3px);
-        }
-
-        .risk-card:hover .risk-card-border {
-          opacity: 1;
-        }
-
-        .risk-icon {
-          position: relative;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--color-card);
-          border-radius: var(--radius-md);
-          margin: 0 auto 14px;
-          color: var(--color-text-secondary);
-        }
-
-        .risk-value {
-          position: relative;
-          font-size: 26px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: var(--color-text);
-          margin-bottom: 6px;
-        }
-
-        .risk-label {
-          position: relative;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--color-text-secondary);
-          line-height: 1.4;
-          flex: 1;
-        }
-
-        .risk-sources {
-          text-align: center;
-          font-size: 12px;
-          color: var(--color-text-muted);
-          line-height: 1.6;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           PRICING SECTION
-           ═══════════════════════════════════════════════════════════════════════ */
-        .pricing-section {
-          position: relative;
-          z-index: 1;
-          padding: 80px 24px;
-        }
-
-        .pricing-container {
-          max-width: 480px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .pricing-card {
-          position: relative;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-3xl);
-          overflow: hidden;
-          box-shadow: var(--shadow-lg);
-        }
-
-        .pricing-card-border {
-          position: absolute;
-          inset: 0;
-          border-radius: var(--radius-3xl);
-          padding: 2px;
-          background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 50%, var(--color-accent) 100%);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          animation: borderRotate 8s linear infinite;
-          background-size: 300% 300%;
-        }
-
-        @keyframes borderRotate {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
-        .pricing-card-inner {
-          position: relative;
-          padding: 44px 36px;
-          z-index: 1;
-          background: var(--color-surface);
-          border-radius: var(--radius-3xl);
-        }
-
-        @media (max-width: 640px) {
-          .pricing-card-inner {
-            padding: 32px 24px;
-          }
-        }
-
-        .pricing-badge-wrapper {
-          display: flex;
-          justify-content: center;
-          margin-bottom: 24px;
-        }
-
-        .pricing-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.3);
-          border-radius: var(--radius-full);
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--color-primary);
-        }
-
-        .pricing-amount {
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 4px;
-          margin-bottom: 6px;
-        }
-
-        .pricing-currency {
-          font-size: 24px;
-          font-weight: 600;
-          color: var(--color-text-secondary);
-        }
-
-        .pricing-number {
-          font-size: 64px;
-          font-weight: 800;
-          letter-spacing: -0.04em;
-          color: var(--color-text);
-          line-height: 1;
-        }
-
-        .pricing-number-lg {
-          font-size: 72px;
-        }
-
-        .pricing-period {
-          font-size: 16px;
-          color: var(--color-text-tertiary);
-          margin-left: 4px;
-        }
-
-        .pricing-annual {
-          text-align: center;
-          font-size: 14px;
-          color: var(--color-text-tertiary);
-          margin-bottom: 32px;
-        }
-
-        .pricing-savings {
-          color: var(--color-success);
-          font-weight: 600;
-        }
-
-        .pricing-features {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-bottom: 32px;
-        }
-
-        .pricing-feature {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 14px;
-          color: var(--color-text-secondary);
-        }
-
-        .pricing-check {
-          width: 20px;
-          height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--color-success-bg);
-          border-radius: var(--radius-xs);
-          color: var(--color-success);
-          flex-shrink: 0;
-        }
-
-        .pricing-check svg {
-          width: 12px;
-          height: 12px;
-        }
-
-        .pricing-cta {
-          margin-bottom: 16px;
-        }
-
-        .btn-pricing-primary {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          height: 54px;
-          background: var(--color-primary);
-          color: white;
-          border: none;
-          border-radius: var(--radius-lg);
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-md);
-        }
-
-        .btn-pricing-primary:hover {
-          background: var(--color-primary-hover);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-lg);
-        }
-
-        .pricing-note {
-          text-align: center;
-          font-size: 13px;
-          color: var(--color-text-muted);
-        }
-
-        .pricing-comparison {
-          text-align: center;
-          margin-top: 32px;
-          font-size: 13px;
-          color: var(--color-text-tertiary);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           FAQ SECTION
-           ═══════════════════════════════════════════════════════════════════════ */
-        .faq-section {
-          position: relative;
-          z-index: 1;
-          padding: 60px 24px 80px;
-          background: var(--color-card);
-        }
-
-        .faq-container {
-          max-width: 680px;
-          margin: 0 auto;
-        }
-
-        .faq-list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .faq-item {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          overflow: hidden;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .faq-item:hover {
-          border-color: var(--color-border-hover);
-        }
-
-        .faq-item.is-open {
-          border-color: var(--color-accent);
-          box-shadow: var(--shadow-sm), 0 0 0 1px rgba(85, 214, 178, 0.1);
-        }
-
-        .faq-trigger {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 20px 22px;
-          background: none;
-          border: none;
-          color: var(--color-text);
-          cursor: pointer;
-          text-align: left;
-        }
-
-        .faq-question {
-          font-size: 15px;
-          font-weight: 600;
-          line-height: 1.4;
-        }
-
-        .faq-icon {
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--color-card);
-          border-radius: var(--radius-sm);
-          color: var(--color-text-tertiary);
-          flex-shrink: 0;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .faq-item.is-open .faq-icon {
-          transform: rotate(180deg);
-          background: var(--color-accent-light);
-          color: var(--color-primary);
-        }
-
-        .faq-content {
-          display: grid;
-          grid-template-rows: 0fr;
-          transition: grid-template-rows var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .faq-item.is-open .faq-content {
-          grid-template-rows: 1fr;
-        }
-
-        .faq-answer {
-          overflow: hidden;
-          padding: 0 22px;
-          font-size: 14px;
-          line-height: 1.7;
-          color: var(--color-text-secondary);
-        }
-
-        .faq-item.is-open .faq-answer {
-          padding: 0 22px 20px;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           CTA SECTION
-           ═══════════════════════════════════════════════════════════════════════ */
-        .cta-section {
-          position: relative;
-          z-index: 1;
-          padding: 80px 24px 100px;
-          overflow: hidden;
-        }
-
-        .cta-container {
-          max-width: 660px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta-content {
-          text-align: center;
-        }
-
-        .cta-title {
-          font-size: clamp(26px, 4vw, 38px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: var(--color-text);
-          margin-bottom: 16px;
-          line-height: 1.2;
-        }
-
-        .cta-description {
-          font-size: 16px;
-          line-height: 1.7;
-          color: var(--color-text-secondary);
-          margin-bottom: 32px;
-        }
-
-        .cta-actions {
-          display: flex;
-          gap: 12px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-
-        .btn-cta-primary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          height: 54px;
-          padding: 0 32px;
-          background: var(--color-primary);
-          color: white;
-          border: none;
-          border-radius: var(--radius-lg);
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-md);
-        }
-
-        .btn-cta-primary:hover {
-          background: var(--color-primary-hover);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-lg);
-        }
-
-        .btn-cta-secondary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          height: 54px;
-          padding: 0 28px;
-          background: var(--color-surface);
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .btn-cta-secondary:hover {
-          background: var(--color-card);
-          border-color: var(--color-border-hover);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           FOOTER
-           ═══════════════════════════════════════════════════════════════════════ */
-        .landing-footer {
-          position: relative;
-          z-index: 1;
-          padding: 40px 24px 48px;
-          border-top: 1px solid var(--color-border-subtle);
-          background: var(--color-surface);
-        }
-
-        .footer-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          text-align: center;
-        }
-
-        .footer-links {
-          display: flex;
-          gap: 6px;
-          justify-content: center;
-          align-items: center;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-        }
-
-        .footer-link {
-          font-size: 14px;
-          color: var(--color-text-secondary);
-          text-decoration: none;
+          transition: all 0.2s;
+        }
+        .ibm-cta:hover { border-color: #555; background: #25252a; }
+        
+        .ibm-cta.secondary { background: transparent; color: #aaa; border-color: transparent; }
+        .ibm-cta.secondary:hover { color: #fff; }
+        
+        .ibm-cta.compact {
           padding: 6px 12px;
-          border-radius: var(--radius-sm);
-          transition: all var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .footer-link:hover {
-          color: var(--color-primary);
-          background: var(--color-card);
-        }
-
-        .footer-divider {
-          color: var(--color-text-muted);
-        }
-
-        .footer-api-note {
-          font-size: 12px;
-          color: var(--color-text-muted);
-          margin-bottom: 10px;
-        }
-
-        .footer-copyright {
-          font-size: 13px;
-          color: var(--color-text-tertiary);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           MODALS
-           ═══════════════════════════════════════════════════════════════════════ */
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: var(--z-modal);
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(8px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-          animation: fadeIn 200ms var(--ease-out-expo);
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .modal-wrapper {
-          width: 100%;
-          max-width: 420px;
-          animation: modalSlideUp 300ms var(--ease-out-expo);
-        }
-
-        .modal-wrapper-lg {
-          max-width: 480px;
-        }
-
-        @keyframes modalSlideUp {
-          from {
-            opacity: 0;
-            transform: translateY(16px) scale(0.98);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        .modal-card {
-          position: relative;
-          background: #121218;
-          border: 1px solid #2a2a32;
-          border-radius: var(--radius-2xl);
-          box-shadow: 0 16px 50px rgba(0, 0, 0, 0.55);
-          padding: 32px;
-          overflow: hidden;
-          color: #f2f2f2;
-        }
-
-        @media (max-width: 480px) {
-          .modal-card {
-            padding: 24px 20px;
-          }
-        }
-
-        .modal-close-btn {
-          position: absolute;
-          top: 16px;
-          right: 16px;
-          width: 32px;
+          font-size: 11px; /* Smaller as requested */
           height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #1c1c22;
-          border: 1px solid #2a2a32;
-          border-radius: var(--radius-sm);
-          color: #d9d9df;
-          cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          z-index: 10;
         }
 
-        .modal-close-btn:hover {
-          background: #22222a;
-          color: #f2f2f2;
-          border-color: #2f2f38;
+        /* ─── Landing Page Specifics ─── */
+        .ibm-landing {
+          position: absolute; inset: 0; overflow-y: auto;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--bg-main);
         }
-
-        .modal-header {
-          text-align: center;
-          margin-bottom: 24px;
+        .ibm-landing-topbar {
+          position: absolute; top: 0; left: 0; right: 0;
+          padding: 16px 24px; display: flex; justify-content: space-between; z-index: 10;
         }
-
-        .modal-icon {
-          width: 52px;
-          height: 52px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #1c1c22;
-          border: 1px solid #2a2a32;
-          border-radius: var(--radius-lg);
-          margin: 0 auto 18px;
-          color: #f2f2f2;
+        .ibm-top-actions { display: flex; gap: 8px; align-items: center; }
+        
+        .pricing-menu-wrapper { position: relative; }
+        .pricing-menu {
+          position: absolute; right: 0; top: 100%; margin-top: 8px;
+          background: var(--bg-card); border: 1px solid var(--border);
+          padding: 16px; min-width: 220px; z-index: 20;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+        .pricing-menu-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .pricing-menu-price { font-size: 20px; color: #fff; margin-bottom: 12px; }
+        .pricing-menu-list { list-style: none; color: #ccc; font-size: 13px; margin-bottom: 16px; }
 
-        .modal-title {
-          font-size: 24px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: #f2f2f2;
-          margin-bottom: 8px;
+        .ibm-landing-grid {
+          width: 100%; max-width: 1100px;
+          display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+          padding: 24px;
         }
+        @media (max-width: 768px) { .ibm-landing-grid { grid-template-columns: 1fr; } }
 
-        .modal-subtitle {
-          font-size: 14px;
-          color: #d9d9df;
-          line-height: 1.5;
+        .ibm-console-type {
+          font-family: var(--font-mono); color: var(--text-main);
+          font-size: 15px; line-height: 1.6; min-height: 120px;
         }
+        .type-cursor { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        .modal-form {
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
+        /* ─── Demo Database Retro Styling ─── */
+        .ibm-doc-window {
+          height: 340px; overflow: hidden; position: relative;
+          background: #0a0a0d; border: 1px solid #333;
+          border-radius: 6px;
         }
-
-        .form-field {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
+        .ibm-doc-gradient {
+          position: absolute; inset: 0; pointer-events: none; z-index: 2;
+          background: linear-gradient(180deg, #0a0a0d 0%, transparent 10%, transparent 90%, #0a0a0d 100%);
         }
-
-        .form-label {
-          font-size: 13px;
-          font-weight: 600;
-          color: #d9d9df;
+        .ibm-doc-scroll { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .ibm-doc-row { 
+          display: flex; align-items: center; gap: 12px; 
+          font-family: var(--font-mono); font-size: 13px; color: #889;
         }
+        .ibm-doc-dot { width: 4px; height: 4px; background: #445; border-radius: 50%; }
+        
+        /* Faster scroll (19s) */
+        .animate-doc-scroll { animation: doc-scroll 19s linear infinite; }
+        @keyframes doc-scroll { 0% { transform: translateY(0); } 100% { transform: translateY(-33.33%); } }
 
-        .form-input {
-          width: 100%;
-          height: 48px;
-          padding: 0 16px;
-          background: #1a1a20;
-          border: 1px solid #2a2a32;
-          border-radius: var(--radius-md);
-          color: #f2f2f2;
-          font-size: 15px;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          outline: none;
-        }
-
-        .form-input::placeholder {
-          color: #8c8c93;
-        }
-
-        .form-input:focus {
-          border-color: #3a3a42;
-          box-shadow: none;
-        }
-
-        .form-input-group {
-          position: relative;
-        }
-
-        .form-toggle {
-          position: absolute;
-          right: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          color: var(--color-text-tertiary);
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: color var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .form-toggle:hover {
-          color: #f2f2f2;
-        }
-
-        .btn-form-submit {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          height: 48px;
-          background: #2a2a32;
-          color: #f2f2f2;
-          border: none;
-          border-radius: var(--radius-md);
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          margin-top: 4px;
-        }
-
-        .btn-form-submit:hover:not(:disabled) {
-          background: #34343c;
-          transform: translateY(-1px);
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-        }
-
-        .btn-form-submit:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .modal-alert {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          padding: 12px 14px;
-          background: var(--color-card);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          margin-top: 18px;
-        }
-
-        .modal-alert.ok {
-          border-color: rgba(16, 185, 129, 0.3);
-          background: var(--color-success-bg);
-        }
-
-        .modal-alert.err {
-          border-color: rgba(239, 68, 68, 0.3);
-          background: var(--color-error-bg);
-        }
-
-        .alert-icon {
-          flex-shrink: 0;
-          color: var(--color-text-secondary);
-        }
-
-        .modal-alert.ok .alert-icon {
-          color: var(--color-success);
-        }
-
-        .modal-alert.err .alert-icon {
-          color: var(--color-error);
-        }
-
-        .alert-text {
-          font-size: 13px;
-          color: var(--color-text-secondary);
-          line-height: 1.5;
-        }
-
-        .modal-footer {
-          margin-top: 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .modal-link {
-          background: none;
-          border: none;
-          font-size: 14px;
-          color: var(--color-text-tertiary);
-          cursor: pointer;
-          transition: color var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .modal-link:hover {
-          color: var(--color-primary);
-        }
-
-        .modal-link strong {
-          color: var(--color-primary);
-          font-weight: 600;
-        }
-
-        /* ─── Pricing Modal ─── */
-        .pricing-modal-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 14px;
-          background: #1c1c22;
-          border: 1px solid #2a2a32;
-          border-radius: var(--radius-full);
-          font-size: 13px;
-          font-weight: 600;
-          color: #f2f2f2;
-          margin-bottom: 16px;
-        }
-
-        .pricing-modal-amount {
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 4px;
-          margin-bottom: 24px;
-        }
-
-        .pricing-modal-features {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px 20px;
-          justify-content: center;
-          margin-bottom: 24px;
-          padding: 20px;
-          background: #1a1a20;
-          border-radius: var(--radius-lg);
-        }
-
-        .pricing-modal-feature {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          color: #d9d9df;
-        }
-
-        .pricing-modal-feature svg {
-          color: #f2f2f2;
-          width: 14px;
-          height: 14px;
-        }
-
-        .pricing-modal-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-
-        .btn-pricing-modal-primary {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          height: 48px;
-          background: #2a2a32;
-          color: #f2f2f2;
-          border: none;
-          border-radius: var(--radius-md);
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .btn-pricing-modal-primary:hover:not(:disabled) {
-          background: #34343c;
-          transform: translateY(-1px);
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-        }
-
-        .btn-pricing-modal-primary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .btn-pricing-modal-secondary {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          height: 48px;
-          background: #1c1c22;
-          color: #f2f2f2;
-          border: 1px solid #2a2a32;
-          border-radius: var(--radius-md);
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .btn-pricing-modal-secondary:hover:not(:disabled) {
-          background: #22222a;
-          border-color: #2f2f38;
-        }
-
-        .btn-pricing-modal-secondary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .btn-badge {
-          font-size: 10px;
-          font-weight: 700;
-          color: #f2f2f2;
-          background: #2a2a32;
-          padding: 3px 8px;
-          border-radius: var(--radius-xs);
-        }
-
-        .pricing-modal-note {
-          text-align: center;
-          font-size: 12px;
-          color: #d9d9df;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           CHAT INTERFACE
-           ═══════════════════════════════════════════════════════════════════════ */
+        /* ─── Chat App Layout ─── */
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+        
         .chat-container {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-height: 0;
-          background: #0e0e11;
-          color: #f2f2f2;
+          flex: 1; display: flex; flex-direction: column; min-height: 0;
+          background: var(--bg-main); position: relative;
+        }
+        
+        .chat-topbar {
+          display: flex; justify-content: flex-end; padding: 12px 20px;
+          border-bottom: none; background: var(--bg-main);
         }
 
         .chat-messages {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
-          overscroll-behavior: contain;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 24px 16px 18px;
-          gap: 14px;
+          flex: 1; overflow-y: auto; padding: 20px;
+          display: flex; flex-direction: column; gap: 20px;
         }
-
-        .chat-topbar {
-          width: 100%;
-          max-width: 960px;
-          margin: 0 auto;
-          padding: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 10px;
-        }
-
-        .chat-top-actions {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .chat-top-actions .ibm-cta {
-          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-        }
-
+        
         .chat-empty {
-          width: 100%;
-          max-width: 960px;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-        }
-
-        .chat-empty-content {
-          max-width: 560px;
-          width: 100%;
-          text-align: center;
-          padding: 0 18px 28px;
-          background: transparent;
-          border: none;
-          border-radius: 0;
-          box-shadow: none;
-          backdrop-filter: none;
-          color: #f2f2f2;
-        }
-
-        .chat-empty-icon {
-          display: none;
-        }
-
-        .chat-empty-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #f2f2f2;
-          margin-bottom: 8px;
-        }
-
-        .chat-empty-text {
-          font-size: 14px;
-          line-height: 1.6;
-          color: #d9d9df;
-          margin-bottom: 18px;
-        }
-
-        .chat-empty-actions {
-          display: flex;
-          gap: 10px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-
-        .ibm-chat-launchers { display: none; }
-
-        .chat-history {
-          max-width: 800px;
-          margin: 0 auto;
-          width: 100%;
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          background: transparent;
-          border: none;
-          border-radius: 0;
-          box-shadow: none;
-        }
-
-        .chat-message {
-          display: flex;
-          width: 100%;
-          padding: 2px 4px;
-        }
-
-        .chat-message-user {
-          justify-content: flex-end;
-        }
-
-        .chat-message-assistant {
-          justify-content: flex-start;
+          flex: 1; display: flex; align-items: center; justify-content: center;
+          text-align: center; color: var(--text-muted); opacity: 0.6;
         }
 
         .chat-bubble {
-          max-width: 90%;
-          padding: 0;
-          border-radius: 0;
-          font-size: 15px;
-          line-height: 1.65;
-          position: relative;
-          background: transparent;
-          border: none;
-          box-shadow: none;
-          color: #f2f2f2;
+          max-width: 85%; padding: 12px 16px; font-size: 15px; line-height: 1.5;
+          color: var(--text-main);
         }
-
-        .chat-bubble-user {
-          color: #f2f2f2;
-        }
-
-        .chat-message:hover .chat-bubble {
-          transform: none;
-          box-shadow: none;
-        }
-
-        .chat-bubble-image {
-          border-radius: var(--radius-md);
-          overflow: hidden;
-          margin-bottom: 10px;
-        }
-
+        .chat-message-user { align-self: flex-end; }
+        .chat-message-user .chat-bubble { background: #222; border-radius: 8px 8px 0 8px; border: 1px solid #333; }
+        .chat-message-assistant { align-self: flex-start; }
+        .chat-message-assistant .chat-bubble { padding-left: 0; }
+        
         .chat-bubble-image img {
-          display: block;
-          max-width: 100%;
-          max-height: 300px;
-          object-fit: contain;
+          max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid #333; margin-bottom: 8px;
         }
 
-        .chat-thinking {
-          color: var(--color-text-tertiary);
-          font-style: italic;
-        }
-
-        /* ─── Chat Input Area ─── */
+        /* ─── Chat Input (Retro) ─── */
         .chat-input-area {
-          flex-shrink: 0;
-          background: #0b1018;
-          backdrop-filter: none;
-          border-top: 1px solid #1d2c45;
-          box-shadow: none;
+          background: var(--bg-main);
+          border-top: none;
+          padding: 20px;
+        }
+        .chat-input-inner { max-width: 800px; margin: 0 auto; width: 100%; }
+        
+        .chat-attachment-badge {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-family: var(--font-mono); font-size: 12px; color: var(--accent-green);
+          margin-bottom: 8px; border: 1px dashed var(--border); padding: 4px 8px;
         }
 
-        .chat-input-inner {
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 18px 24px 28px;
-          padding-bottom: max(18px, env(safe-area-inset-bottom));
-        }
-
-        .smart-progress {
-          padding: 0 4px 14px;
-        }
-
-        .smart-progress-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 6px;
-        }
-
-        .smart-progress-phase {
-          font-size: 12px;
-          color: #c3c3cf;
-        }
-
-        .smart-progress-pct {
-          font-size: 12px;
-          font-variant-numeric: tabular-nums;
-          color: #f2f2f2;
-        }
-
-        .smart-progress-track {
-          height: 3px;
-          background: #2a2a32;
-          border-radius: 2px;
-          overflow: hidden;
-        }
-
-        .smart-progress-bar {
-          height: 100%;
-          background: linear-gradient(90deg, #4a4a52, #6a6a74);
-          border-radius: 2px;
-          transition: width 150ms linear;
-        }
-
-        .chat-attachment {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 14px;
-          background: #16161c;
-          border: 1px dashed #3a3a3d;
-          border-radius: var(--radius-md);
-          font-size: 13px;
-          color: #f2f2f2;
-          margin-bottom: 12px;
-          box-shadow: none;
-        }
-
-        .chat-input-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
+        .chat-input-row { display: flex; gap: 12px; align-items: flex-end; }
+        
+        /* Input Textarea - IBM Font required */
         .chat-textarea {
-          flex: 1;
-          min-height: 48px;
-          max-height: 160px;
-          padding: 12px 4px;
-          background: transparent;
-          border: none;
-          border-bottom: 1px dashed #3a3a3d;
-          border-radius: 0;
-          color: #e2e8f5;
-          font-size: 15px;
-          line-height: 1.5;
-          resize: none;
-          outline: none;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          box-shadow: none;
+          flex: 1; background: transparent; border: none; outline: none;
+          color: #fff; font-family: var(--font-mono); font-size: 14px;
+          resize: none; min-height: 24px; max-height: 120px;
+          padding-bottom: 8px; border-bottom: 1px solid #333;
+          transition: border-color 0.2s;
         }
+        .chat-textarea:focus { border-bottom-color: #777; }
+        .chat-textarea::placeholder { color: #555; }
 
-        .chat-textarea::placeholder {
-          color: #5f7397;
+        /* Camera & Send Buttons - Retro Style */
+        .btn-retro-icon {
+          width: 36px; height: 36px;
+          display: flex; align-items: center; justify-content: center;
+          background: #111; border: 1px solid #333; color: #888;
+          border-radius: 4px; cursor: pointer; transition: all 0.2s;
         }
+        .btn-retro-icon:hover { border-color: #666; color: #fff; }
+        .btn-retro-icon:disabled { opacity: 0.3; }
 
-        .chat-textarea:focus {
-          border-color: #6a6a74;
-          box-shadow: none;
+        /* Progress Bar */
+        .smart-progress { margin-bottom: 12px; }
+        .smart-progress-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--accent-green); margin-bottom: 4px; }
+        .smart-progress-track { height: 2px; background: #222; }
+        .smart-progress-bar { height: 100%; background: var(--accent-green); transition: width 0.2s; }
+
+        /* ─── Modals (Dark) ─── */
+        .modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100;
+          display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);
         }
-
-        .chat-send-btn {
-          width: 48px;
-          height: 48px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #2a2a32;
-          border: none;
-          border-radius: 10px;
-          color: #f2f2f2;
-          cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          flex-shrink: 0;
-          box-shadow: 0 0 18px rgba(0, 0, 0, 0.35);
+        .retro-modal {
+          background: #111; border: 1px solid #333; padding: 32px;
+          width: 100%; max-width: 400px; color: #fff; position: relative;
         }
-
-        .chat-send-btn:hover:not(:disabled) {
-          background: #34343c;
-          transform: translateY(-1px);
+        .modal-close-btn {
+          position: absolute; top: 12px; right: 12px;
+          background: none; border: none; color: #555; cursor: pointer;
         }
-
-        .chat-send-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
+        .modal-close-btn:hover { color: #fff; }
+        .modal-title { font-size: 20px; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .form-field { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .form-field label { font-size: 12px; color: #888; text-transform: uppercase; }
+        .form-input {
+          background: #000; border: 1px solid #333; color: #fff;
+          padding: 10px; font-size: 14px; outline: none;
         }
-
-        .chat-disclaimer {
-          margin-top: 12px;
-          text-align: center;
-          font-size: 12px;
-          color: var(--color-text-muted);
+        .form-input:focus { border-color: var(--accent-green); }
+        
+        .btn-form-submit {
+          width: 100%; background: #fff; color: #000; border: none;
+          padding: 12px; font-weight: 700; text-transform: uppercase;
+          cursor: pointer; margin-top: 8px;
         }
+        .btn-form-submit:hover:not(:disabled) { background: #ccc; }
+        
+        .modal-alert { margin-top: 16px; font-size: 12px; padding: 10px; border: 1px solid; }
+        .modal-alert.err { border-color: red; color: #faa; }
+        .modal-alert.ok { border-color: green; color: #afa; }
+        
+        .pricing-display { text-align: center; margin: 30px 0; font-size: 14px; color: #888; }
+        .pricing-display .amount { font-size: 48px; color: #fff; font-weight: 400; }
+        
+        .modal-footer { margin-top: 20px; text-align: center; }
+        .modal-link { background: none; border: none; color: #666; font-size: 12px; cursor: pointer; text-decoration: underline; }
+        .modal-link:hover { color: #fff; }
 
-        /* ─── Responsive Chat ─── */
-        @media (max-width: 640px) {
-          .chat-input-inner {
-            padding: 14px 16px;
-          }
-
-          .chat-history {
-            padding: 18px 14px;
-          }
-
-          .chat-bubble {
-            max-width: 88%;
-          }
-
-          .chat-empty-content {
-            padding: 32px 20px;
-          }
-        }
-
-        /* ─── Reduced Motion ─── */
-        @media (prefers-reduced-motion: reduce) {
-          *,
-          *::before,
-          *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-          }
-          
-          .wave path {
-            animation: none !important;
-          }
-        }
+        .loading-screen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; }
+        .loading-spinner { width: 20px; height: 20px; border: 2px solid #333; border-top-color: #fff; border-radius: 50%; animation: spin 1s infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="app-container">
-        {/* Main Content */}
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {!isAuthenticated ? (
             <LandingPage
               onShowPricing={() => setShowPricingModal(true)}
-              onShowAuth={() => {
-                setAuthInitialMode('signin')
-                setShowAuthModal(true)
-              }}
+              onShowAuth={() => setShowAuthModal(true)}
             />
           ) : (
             <div className="chat-container">
               <div className="chat-topbar">
-                <div />
                 <div className="chat-top-actions">
                   {hasActiveSubscription && (
-                    <button onClick={handleManageBilling} className="ibm-cta secondary small" type="button">
+                    <button onClick={handleManageBilling} className={`ibm-cta secondary compact ${ibmMono.className}`}>
                       Billing
                     </button>
                   )}
-                  <button onClick={handleSignOut} className="ibm-cta secondary small" type="button">
+                  <button onClick={handleSignOut} className={`ibm-cta secondary compact ${ibmMono.className}`}>
                     Log out
                   </button>
                 </div>
               </div>
 
-              <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
+              <div ref={scrollRef} className="chat-messages">
                 {messages.length === 0 ? (
                   <div className="chat-empty">
-                    <div className="chat-empty-content">
-                      <div className="chat-empty-icon">
-                        <Icons.Shield />
-                      </div>
-                      <h2 className={`chat-empty-title ${inter.className}`}>
-                        Upload a photo or ask a question
-                      </h2>
-                      <p className={`chat-empty-text ${inter.className}`}>
-                        Run quick photo checks to spot likely issues, or search the 
-                        Washtenaw-focused database when you need a clear answer.
+                    <div>
+                      <Icons.Shield />
+                      <p className={ibmMono.className} style={{ marginTop: 16, fontSize: 14 }}>
+                        PROTOCOL_LM v1.0 <br/> READY FOR INPUT
                       </p>
-                      <div className="chat-empty-actions" />
                     </div>
                   </div>
                 ) : (
-                  <div className="chat-history">
-                    {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
-                      >
-                        <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'} ${inter.className}`}>
-                          {msg.image && (
-                            <div className="chat-bubble-image">
-                              <img src={msg.image} alt="Uploaded" />
-                            </div>
-                          )}
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <span className="chat-thinking">Analyzing…</span>
-                          ) : (
-                            <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
-                          )}
-                        </div>
+                  messages.map((msg, idx) => (
+                    <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
+                      <div className={`chat-bubble ${ibmMono.className}`}>
+                        {msg.image && (
+                          <div className="chat-bubble-image">
+                            <img src={msg.image} alt="Uploaded" />
+                          </div>
+                        )}
+                        <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))
                 )}
               </div>
 
               <div className="chat-input-area">
-              <div className="chat-input-inner">
-                <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+                <div className="chat-input-inner">
+                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                {selectedImage && (
-                  <div className={`chat-attachment ${inter.className}`}>
-                    <Icons.Camera />
-                    <span>Image attached</span>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="btn-icon"
-                        style={{ width: 28, height: 28 }}
-                        aria-label="Remove"
-                      >
-                        <Icons.X />
-                      </button>
+                  {selectedImage && (
+                    <div className={`${ibmMono.className} chat-attachment-badge`}>
+                      <Icons.Camera />
+                      <span>IMAGE_ATTACHED.JPG</span>
+                      <button onClick={() => setSelectedImage(null)} style={{background:'none', border:'none', color:'inherit', cursor:'pointer', marginLeft: 4}}><Icons.X /></button>
                     </div>
                   )}
 
                   <div className="chat-input-row">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleImageChange}
-                    />
-
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="btn-icon"
-                      aria-label="Attach image"
-                    >
+                    <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                    
+                    <button onClick={() => fileInputRef.current?.click()} className="btn-retro-icon" aria-label="Camera">
                       <Icons.Camera />
                     </button>
 
-                    <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', gap: 10 }}>
+                    <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', gap: 10, alignItems: 'flex-end' }}>
                       <textarea
-                        ref={textAreaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask a question or attach a photo…"
+                        placeholder="Ask a question or attach a photo..."
                         rows={1}
-                        className={`chat-textarea ${inter.className}`}
+                        className={`chat-textarea ${ibmMono.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -3869,21 +973,11 @@ export default function Page() {
                           }
                         }}
                       />
-
-                      <button
-                        type="submit"
-                        disabled={(!input.trim() && !selectedImage) || isSending}
-                        className="chat-send-btn"
-                        aria-label="Send"
-                      >
-                        {isSending ? <div className="loading-spinner" style={{ width: 18, height: 18 }} /> : <Icons.ArrowUp />}
+                      <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className="btn-retro-icon">
+                        {isSending ? <div className="loading-spinner" style={{ width: 14, height: 14, borderTopColor: '#888' }} /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
-
-                  <p className={`chat-disclaimer ${inter.className}`}>
-                    protocolLM may make mistakes. Verify critical decisions with official regulations.
-                  </p>
                 </div>
               </div>
             </div>
