@@ -1096,7 +1096,7 @@ export default function Page() {
           text-decoration: none;
           font-weight: 700;
           letter-spacing: 0.04em;
-          font-size: 16px;
+          font-size: 22px;
           padding: 6px 6px;
           border-radius: 10px;
           display: inline-flex;
