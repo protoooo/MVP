@@ -45,8 +45,6 @@ const PINNED_TOPK = 8
 const PINNED_QUERIES = [
   'Washtenaw County Violation Types Priority Priority Foundation Core corrected immediately or within 10 days within 90 days',
   'Washtenaw County Enforcement Action summary enforcement action imminent health hazard progressive enforcement office conference informal hearing formal hearing appeal',
-
-  // These help “stove / grease / residue / surfaces”
   'Michigan Modified Food Code 4-601 clean to sight and touch food-contact surfaces equipment utensils',
   'Michigan Modified Food Code 4-602 cleaning frequency nonfood-contact surfaces',
   'FDA Food Code 4-601.11 clean to sight and touch food-contact surfaces',
@@ -165,11 +163,32 @@ function dedupeByText(items) {
   return out
 }
 
-function buildExcerptContext(docs) {
-  const MAX_CHARS = 36000
+function stableDocSort(a, b) {
+  const tierA = getSourceTier(a?.source)
+  const tierB = getSourceTier(b?.source)
+  if (tierA !== tierB) return tierA - tierB
+
+  const sa = safeLine(a?.source || '')
+  const sb = safeLine(b?.source || '')
+  if (sa !== sb) return sa.localeCompare(sb)
+
+  const pa = Number(a?.page || 0)
+  const pb = Number(b?.page || 0)
+  if (pa !== pb) return pa - pb
+
+  const ta = safeText(a?.text || '').slice(0, 120)
+  const tb = safeText(b?.text || '').slice(0, 120)
+  return ta.localeCompare(tb)
+}
+
+function buildExcerptContext(docs, opts = {}) {
+  const prefix = typeof opts.prefix === 'string' ? opts.prefix : 'EXCERPT'
+  const MAX_CHARS = typeof opts.maxChars === 'number' ? opts.maxChars : 36000
+  const startAt = typeof opts.startAt === 'number' ? opts.startAt : 1
+
   const excerpts = []
   let buf = ''
-  let id = 1
+  let n = startAt
 
   for (const d of docs || []) {
     const source = safeLine(d?.source || 'Unknown Source')
@@ -177,19 +196,21 @@ function buildExcerptContext(docs) {
     const text = safeText(d?.text || '')
     if (!text) continue
 
-    const header = `[EXCERPT_${id}] SOURCE: ${source}${page}\n`
+    const id = `${prefix}_${n}`
+    const header = `[${id}] SOURCE: ${source}${page}\n`
     const chunk = `${header}${text}\n\n`
+
     if (buf.length + chunk.length > MAX_CHARS) break
 
     excerpts.push({
-      id: `EXCERPT_${id}`,
+      id,
       source,
       page: d?.page || null,
       tier: getSourceTier(source),
     })
 
     buf += chunk
-    id++
+    n++
   }
 
   return {
@@ -200,6 +221,7 @@ function buildExcerptContext(docs) {
 
 function sanitizePlainText(text) {
   let out = safeText(text || '')
+  // no emojis, no markdown-ish chars
   out = out.replace(/[`#*]/g, '')
   out = out.replace(/\u2022/g, '')
   out = out.replace(/\n{3,}/g, '\n\n')
@@ -209,7 +231,7 @@ function sanitizePlainText(text) {
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
-  // Remove numbered list prefixes but keep line breaks
+  // remove numbered list prefixes but keep line breaks
   out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
 
   const HARD_LIMIT = 2600
@@ -275,41 +297,42 @@ function pickSourcesFromIds(sourceIds, excerptIndex) {
   return out
 }
 
-function renderDoNowBlock(doNow, photoRequests) {
+function renderDoNowBlock(doNow, photoRequests, style = 'standard') {
   const dn = Array.isArray(doNow) ? doNow.map(safeLine).filter(Boolean) : []
   const pr = Array.isArray(photoRequests) ? photoRequests.map(safeLine).filter(Boolean) : []
 
   const out = []
+
   if (dn.length) {
-    out.push('Do now (safe, no assumptions):')
+    out.push(style === 'clear' ? 'Optional quick double-check:' : 'Do now (safe, no assumptions):')
     for (const x of dn.slice(0, 6)) out.push(`- ${x}`)
   }
+
   if (pr.length) {
     out.push('')
-    out.push('Best follow-up photo:')
+    out.push(style === 'clear' ? 'If you want extra confidence, send a close-up of:' : 'Best follow-up photo:')
     for (const x of pr.slice(0, 4)) out.push(`- ${x}`)
   }
+
   return out.length ? out.join('\n') : ''
 }
 
 function renderAuditPlainText(payload, excerptIndex, maxItems) {
   const opening = sanitizePlainText(payload?.opening_line || '')
   const findings = Array.isArray(payload?.findings) ? payload.findings : []
-  const questions = Array.isArray(payload?.clarifying_questions)
-    ? payload.clarifying_questions
-    : []
+  const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
   const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
   const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
+  const auditStatus = safeLine(payload?.audit_status || 'unknown') // clear | findings | needs_info | unknown
 
   const out = []
   out.push(opening || 'Here is what I can tell from what was provided.')
 
-  // Always show helpful “do now” block if present
-  const doNowBlock = renderDoNowBlock(doNow, photoRequests)
+  const doNowStyle = auditStatus === 'clear' ? 'clear' : 'standard'
+  const doNowBlock = renderDoNowBlock(doNow, photoRequests, doNowStyle)
   if (doNowBlock) out.push('\n' + doNowBlock)
 
   if (findings.length === 0) {
-    // No excerpt-backed findings, but we still helped via do_now + questions
     if (questions.length > 0) {
       out.push('\nTo confirm:')
       for (const q of questions.slice(0, 3)) {
@@ -360,15 +383,13 @@ function renderAuditPlainText(payload, excerptIndex, maxItems) {
   return sanitizePlainText(out.join('\n'))
 }
 
-function renderGuidancePlainText(payload, excerptIndex) {
+function renderGuidancePlainText(payload) {
   const opening = sanitizePlainText(payload?.opening_line || '')
   const steps = Array.isArray(payload?.guidance_steps) ? payload.guidance_steps : []
-  const questions = Array.isArray(payload?.clarifying_questions)
-    ? payload.clarifying_questions
-    : []
+  const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
 
   const out = []
-  out.push(opening || 'Here is the safest way to handle that.')
+  out.push(opening || 'Here is the safest way to handle that:')
 
   for (const s of steps.slice(0, 7)) {
     const line = sanitizePlainText(s)
@@ -397,23 +418,38 @@ async function safeLogUsage(payload) {
   }
 }
 
+function buildCacheStats(usage) {
+  if (!usage) return null
+  const inputTokens = usage.input_tokens || 0
+  const cacheCreate = usage.cache_creation_input_tokens || 0
+  const cacheRead = usage.cache_read_input_tokens || 0
+  const outputTokens = usage.output_tokens || 0
+  const cacheHit = cacheRead > 0
+  // rough pct: how much of the prompt came from cache reads vs total prompt tokens (read+new)
+  const denom = inputTokens + cacheRead
+  const savingsPct = denom > 0 ? Math.round((cacheRead / denom) * 100) : 0
+
+  return {
+    input_tokens: inputTokens,
+    cache_creation_input_tokens: cacheCreate,
+    cache_read_input_tokens: cacheRead,
+    output_tokens: outputTokens,
+    cache_hit: cacheHit,
+    cache_savings_pct: savingsPct,
+  }
+}
+
 export async function POST(request) {
   const startedAt = Date.now()
 
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
       logger.error('ANTHROPIC_API_KEY not configured')
-      return NextResponse.json(
-        { error: 'AI service not configured. Please contact support.' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'AI service not configured. Please contact support.' }, { status: 500 })
     }
 
     if (!isServiceEnabled()) {
-      return NextResponse.json(
-        { error: getMaintenanceMessage() || 'Service temporarily unavailable.' },
-        { status: 503 }
-      )
+      return NextResponse.json({ error: getMaintenanceMessage() || 'Service temporarily unavailable.' }, { status: 503 })
     }
 
     try {
@@ -433,8 +469,7 @@ export async function POST(request) {
     const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
 
     const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt =
-      lastUserText || (hasImage ? 'Analyze this photo for food safety issues.' : '')
+    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for food safety issues.' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
@@ -447,24 +482,18 @@ export async function POST(request) {
     let userId = null
     try {
       const cookieStore = await cookies()
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll()
-            },
-            setAll(cookiesToSet) {
-              try {
-                cookiesToSet.forEach(({ name, value, options }) =>
-                  cookieStore.set(name, value, options)
-                )
-              } catch {}
-            },
+      const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
           },
-        }
-      )
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+            } catch {}
+          },
+        },
+      })
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
     } catch (e) {
@@ -498,11 +527,7 @@ export async function POST(request) {
                 content: [
                   {
                     type: 'image',
-                    source: {
-                      type: 'base64',
-                      media_type: imageMediaType,
-                      data: imageBase64,
-                    },
+                    source: { type: 'base64', media_type: imageMediaType, data: imageBase64 },
                   },
                   {
                     type: 'text',
@@ -511,7 +536,7 @@ export async function POST(request) {
 Rules:
 - Only describe what is clearly visible.
 - Do NOT claim a code violation.
-- Provide helpful "do_now" actions that are safe and do not assume a violation (ex: wipe test, re-clean, re-photo).
+- Provide helpful "do_now" actions that are safe and do not assume a violation (example: wipe test, re-clean, re-photo).
 - Keep it short. No emojis.
 
 Return ONLY valid JSON:
@@ -546,18 +571,12 @@ Return ONLY valid JSON:
           vision.search_terms = safeLine(parsed.search_terms || '')
 
           if (Array.isArray(parsed.visible_facts)) {
-            vision.visible_facts = parsed.visible_facts
-              .map((x) => safeLine(x))
-              .filter(Boolean)
-              .slice(0, 10)
+            vision.visible_facts = parsed.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
           }
 
           if (Array.isArray(parsed.possible_issues)) {
             vision.possible_issues = parsed.possible_issues
-              .map((i) => ({
-                issue: safeLine(i?.issue || ''),
-                needs_check: safeLine(i?.needs_check || ''),
-              }))
+              .map((i) => ({ issue: safeLine(i?.issue || ''), needs_check: safeLine(i?.needs_check || '') }))
               .filter((i) => i.issue)
               .slice(0, 8)
           }
@@ -567,10 +586,7 @@ Return ONLY valid JSON:
           }
 
           if (Array.isArray(parsed.photo_requests)) {
-            vision.photo_requests = parsed.photo_requests
-              .map((x) => safeLine(x))
-              .filter(Boolean)
-              .slice(0, 6)
+            vision.photo_requests = parsed.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
           }
 
           if (Array.isArray(parsed.unclear)) {
@@ -584,7 +600,7 @@ Return ONLY valid JSON:
       }
     }
 
-    // 2) Retrieval
+    // 2) Retrieval (main + pinned tracked separately so we can cache pinned more reliably)
     const visionHints = [
       vision.search_terms,
       ...(vision.visible_facts || []),
@@ -594,68 +610,82 @@ Return ONLY valid JSON:
       .join(' ')
       .slice(0, 600)
 
-    const retrievalQuery = [
-      effectiveUserPrompt,
-      visionHints,
-      'Washtenaw County Michigan food service',
-    ]
+    const retrievalQuery = [effectiveUserPrompt, visionHints, 'Washtenaw County Michigan food service']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
 
-    let docs = []
+    let mainDocs = []
+    let pinnedDocs = []
     try {
-      const main = withTimeout(
-        searchDocumentsFn(retrievalQuery, county, TOPK),
-        RETRIEVAL_TIMEOUT_MS,
-        'RETRIEVAL_TIMEOUT_MAIN'
-      )
+      const mainPromise = withTimeout(searchDocumentsFn(retrievalQuery, county, TOPK), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_MAIN')
 
-      const pinned = Promise.all(
+      const pinnedPromise = Promise.all(
         PINNED_QUERIES.map((q) =>
-          withTimeout(
-            searchDocumentsFn(q, county, PINNED_TOPK),
-            RETRIEVAL_TIMEOUT_MS,
-            'RETRIEVAL_TIMEOUT_PINNED'
-          ).catch(() => [])
+          withTimeout(searchDocumentsFn(q, county, PINNED_TOPK), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(() => [])
         )
       )
 
-      const [mainDocs, pinnedDocsList] = await Promise.all([main.catch(() => []), pinned])
-      docs = [...(mainDocs || []), ...((pinnedDocsList || []).flat() || [])]
-      docs = dedupeByText(docs)
+      const [m, pList] = await Promise.all([mainPromise.catch(() => []), pinnedPromise])
+      mainDocs = Array.isArray(m) ? m : []
+      pinnedDocs = Array.isArray(pList) ? pList.flat() : []
+      mainDocs = dedupeByText(mainDocs)
+      pinnedDocs = dedupeByText(pinnedDocs)
     } catch (e) {
       logger.warn('Retrieval failed (continuing)', { error: e?.message })
     }
 
-    docs.sort((a, b) => {
+    // Keep pinned stable + remove duplicates from main if pinned already has them
+    pinnedDocs.sort(stableDocSort)
+    const pinnedKeys = new Set(pinnedDocs.map((d) => (d?.text || '').slice(0, 1600)).filter(Boolean))
+    mainDocs = (mainDocs || []).filter((d) => {
+      const k = (d?.text || '').slice(0, 1600)
+      if (!k) return false
+      return !pinnedKeys.has(k)
+    })
+    mainDocs.sort((a, b) => {
+      // prefer Washtenaw-tier first, then score
       const tierA = getSourceTier(a?.source)
       const tierB = getSourceTier(b?.source)
       if (tierA !== tierB) return tierA - tierB
       return (b?.score || 0) - (a?.score || 0)
     })
 
-    const { excerptIndex, contextText } = buildExcerptContext(docs)
+    // Build two contexts:
+    // - Dynamic excerpts (not cached)
+    // - Pinned excerpts (cached)  ✅
+    const pinnedCtx = buildExcerptContext(pinnedDocs, { prefix: 'EXCERPT_P', maxChars: 24000, startAt: 1 })
+    const mainCtx = buildExcerptContext(mainDocs, { prefix: 'EXCERPT_D', maxChars: 16000, startAt: 1 })
+    const excerptIndex = [...pinnedCtx.excerptIndex, ...mainCtx.excerptIndex]
 
-    // 3) Final answer (strictly excerpt-backed findings) + we inject vision do_now into output either way
+    const pinnedContextText = pinnedCtx.contextText
+    const dynamicContextText = mainCtx.contextText
+
+    // 3) Final answer (strictly excerpt-backed findings)
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-Goals:
-- Be actionable and short.
-- Be conservative about calling violations.
-- Plain language. No emojis. No markdown. No numbered lists.
+You help restaurant owners and GMs catch problems before an inspector does.
+Be professional, plain language, and easy to follow.
+No emojis. No markdown. No asterisks. No hashtags. No numbered lists.
 
 Grounding rules (strict):
-- You may ONLY cite rules from the provided "Relevant excerpts".
-- Any item in audit.findings MUST include at least one valid EXCERPT id in source_ids.
+- You may ONLY use rules from the provided "Relevant excerpts".
+- Any item in audit.findings MUST include at least one valid excerpt id in source_ids.
 - If you cannot cite it, do NOT put it in findings. Put it in clarifying_questions instead.
+
+If there are no excerpt-backed findings:
+- Set audit.status to "clear" if the photo/question looks fine.
+- The opening_line should be a simple positive line like: "Everything looks great here. Great job."
+- Keep clarifying_questions empty unless you truly need one check to confirm.
 
 Washtenaw framing:
 ${WASHTENAW_RULES}
 
-Return ONLY valid JSON:
+Return ONLY valid JSON in one of these shapes:
+
+AUDIT MODE:
 {
-  "mode": "audit" | "guidance",
+  "mode": "audit",
   "opening_line": "one short sentence",
   "audit": {
     "status": "clear" | "findings" | "needs_info",
@@ -667,10 +697,18 @@ Return ONLY valid JSON:
         "why": "one short sentence",
         "fix": "one short sentence",
         "deadline": "Immediately or within 10 days" | "Within 90 days" | "Unclear",
-        "source_ids": ["EXCERPT_1"]
+        "source_ids": ["EXCERPT_P_1"]
       }
     ]
   },
+  "clarifying_questions": ["up to 3 short questions only if needed"]
+}
+
+GUIDANCE MODE (for general Q&A that is not a photo audit):
+{
+  "mode": "guidance",
+  "opening_line": "one short sentence",
+  "guidance_steps": ["up to 7 short steps (plain language)"],
   "clarifying_questions": ["up to 3 short questions only if needed"]
 }
 
@@ -685,52 +723,81 @@ Hard caps:
 
     const possibleIssuesBlock =
       vision.possible_issues?.length > 0
-        ? `Possible issues needing verification:\n${vision.possible_issues
+        ? `Possible things to verify:\n${vision.possible_issues
             .map((x) => `- ${x.issue}${x.needs_check ? ` (Verify: ${x.needs_check})` : ''}`)
             .join('\n')}`
-        : 'Possible issues: None listed.'
+        : 'Possible things to verify: None listed.'
 
-    const userPrompt = `User request:
+    // Uncached: question + photo summary + dynamic excerpts (varies per request)
+    const questionBlock = `User request:
 ${effectiveUserPrompt || (hasImage ? 'Analyze photo.' : '')}
 
-Photo summary:
-${vision.summary || (hasImage ? 'No summary available.' : 'No photo provided.')}
+${hasImage ? `Photo summary:
+${vision.summary || 'No summary available.'}
 
-${hasImage ? `${factsBlock}\n\n${possibleIssuesBlock}` : ''}
+${factsBlock}
 
-Relevant excerpts (cite by EXCERPT id only):
-${contextText || 'No excerpts retrieved.'}`
+${possibleIssuesBlock}` : ''}`.trim()
+
+    const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
+${dynamicContextText || 'No dynamic excerpts retrieved.'}`
+
+    // Cached: pinned references (more stable across requests)
+    const pinnedBlock = `Pinned reference excerpts (stable; cite by excerpt id only):
+${pinnedContextText || 'No pinned excerpts retrieved.'}`
 
     let modelText = ''
     let parsed = null
+    let cacheStats = null
 
     try {
       const finalMessages = []
+
       if (hasImage && imageBase64) {
+        // ✅ Image message: last content block (pinned excerpts) is cached
         finalMessages.push({
           role: 'user',
           content: [
             {
               type: 'image',
-              source: {
-                type: 'base64',
-                media_type: imageMediaType,
-                data: imageBase64,
-              },
+              source: { type: 'base64', media_type: imageMediaType, data: imageBase64 },
             },
-            { type: 'text', text: userPrompt },
+            { type: 'text', text: `${questionBlock}\n\n${dynamicBlock}` },
+            {
+              type: 'text',
+              text: pinnedBlock,
+              cache_control: { type: 'ephemeral' },
+            },
           ],
         })
       } else {
-        finalMessages.push({ role: 'user', content: userPrompt })
+        // ✅ Text-only: last content block (pinned excerpts) is cached
+        finalMessages.push({
+          role: 'user',
+          content: [
+            { type: 'text', text: `${questionBlock}\n\n${dynamicBlock}` },
+            {
+              type: 'text',
+              text: pinnedBlock,
+              cache_control: { type: 'ephemeral' },
+            },
+          ],
+        })
       }
 
+      // ✅ System prompt as array with cache_control (cached separately)
       const answerResp = await withTimeout(
         anthropic.messages.create({
           model: CLAUDE_MODEL,
           temperature: 0.2,
           max_tokens: fullAudit ? 1400 : 1000,
-          system: systemPrompt,
+          system: [
+            {
+              type: 'text',
+              text: systemPrompt,
+              cache_control: { type: 'ephemeral' },
+            },
+          ],
           messages: finalMessages,
         }),
         ANSWER_TIMEOUT_MS,
@@ -743,6 +810,9 @@ ${contextText || 'No excerpts retrieved.'}`
         .join('')
 
       parsed = extractJsonObject(modelText)
+
+      cacheStats = buildCacheStats(answerResp.usage)
+      if (cacheStats) logger.info('Prompt cache stats', cacheStats)
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
     }
@@ -755,7 +825,7 @@ ${contextText || 'No excerpts retrieved.'}`
       const auditPayload = parsed.audit || {}
       const findingsRaw = Array.isArray(auditPayload.findings) ? auditPayload.findings : []
       const questions = Array.isArray(parsed.clarifying_questions) ? parsed.clarifying_questions : []
-      const opening = safeLine(parsed.opening_line || '') || 'Here’s what I can tell from this photo.'
+      const modelOpening = safeLine(parsed.opening_line || '')
 
       // Keep ONLY excerpt-backed findings
       const supportedFindings = []
@@ -763,6 +833,7 @@ ${contextText || 'No excerpts retrieved.'}`
         const srcIds = Array.isArray(f?.source_ids) ? f.source_ids : []
         const usable = pickSourcesFromIds(srcIds, excerptIndex)
         if (!usable.length) continue
+
         supportedFindings.push({
           class: normalizeClass(f?.class),
           title: safeLine(f?.title || 'Possible issue'),
@@ -774,45 +845,72 @@ ${contextText || 'No excerpts retrieved.'}`
         })
       }
 
-      // Always include “do now” even if no findings
-      const payloadForRender = {
-        opening_line: opening,
-        findings: supportedFindings,
-        clarifying_questions: questions,
-        do_now: vision.do_now || [],
-        photo_requests: vision.photo_requests || [],
-      }
+      const hasAnyChecks = (vision.possible_issues || []).length > 0 || (vision.unclear || []).length > 0 || questions.length > 0
 
-      status = supportedFindings.length ? 'findings' : 'findings'
-      message = renderAuditPlainText(payloadForRender, excerptIndex, maxFindings)
+      if (supportedFindings.length > 0) {
+        status = 'findings'
+        const payloadForRender = {
+          audit_status: 'findings',
+          opening_line: modelOpening || 'Here is what I see that could cost you during an inspection.',
+          findings: supportedFindings,
+          clarifying_questions: questions,
+          do_now: vision.do_now || [],
+          photo_requests: vision.photo_requests || [],
+        }
+        message = renderAuditPlainText(payloadForRender, excerptIndex, maxFindings)
+      } else {
+        // No excerpt-backed findings
+        if (!hasAnyChecks) {
+          status = 'clear'
+          const payloadForRender = {
+            audit_status: 'clear',
+            opening_line: modelOpening || 'Everything looks great here. Great job.',
+            findings: [],
+            clarifying_questions: [],
+            do_now: [], // keep it clean when clear
+            photo_requests: [],
+          }
+          message = renderAuditPlainText(payloadForRender, excerptIndex, maxFindings)
+        } else {
+          status = 'needs_info'
+          const payloadForRender = {
+            audit_status: 'needs_info',
+            opening_line:
+              modelOpening ||
+              'I do not see a clear, excerpt-backed violation from this photo alone. Here is what I would check next.',
+            findings: [],
+            clarifying_questions: questions,
+            // only show “do now” when we actually have checks/uncertainty
+            do_now: vision.do_now || [],
+            photo_requests: vision.photo_requests || [],
+          }
+          message = renderAuditPlainText(payloadForRender, excerptIndex, maxFindings)
+        }
+      }
     } else if (parsed && parsed.mode === 'guidance') {
       status = 'guidance'
-      message = renderGuidancePlainText(
-        {
-          opening_line: parsed.opening_line || '',
-          guidance_steps: [],
-          clarifying_questions: Array.isArray(parsed.clarifying_questions)
-            ? parsed.clarifying_questions
-            : [],
-        },
-        excerptIndex
-      )
+      message = renderGuidancePlainText({
+        opening_line: parsed.opening_line || '',
+        guidance_steps: Array.isArray(parsed.guidance_steps) ? parsed.guidance_steps : [],
+        clarifying_questions: Array.isArray(parsed.clarifying_questions) ? parsed.clarifying_questions : [],
+      })
     } else {
-      status = hasImage ? 'findings' : 'guidance'
+      status = hasImage ? 'needs_info' : 'guidance'
       const fallback = modelText || (hasImage ? 'Analysis timed out. Please try again.' : 'Please try again.')
-      // Even on fallback, still show do_now if we have it
-      const doNowBlock = renderDoNowBlock(vision.do_now, vision.photo_requests)
+      const doNowBlock = renderDoNowBlock(vision.do_now, vision.photo_requests, 'standard')
       message = sanitizePlainText(doNowBlock ? `${fallback}\n\n${doNowBlock}` : fallback)
     }
 
     logger.info('Response complete', {
       hasImage,
       status,
-      totalDocsRetrieved: docs.length,
-      washtenawDocsUsed: docs.filter((d) => getSourceTier(d?.source) === 1).length,
       durationMs: Date.now() - startedAt,
       model: CLAUDE_MODEL,
       fullAudit,
+      mainDocsRetrieved: mainDocs.length,
+      pinnedDocsRetrieved: pinnedDocs.length,
+      cache_hit: cacheStats?.cache_hit || false,
+      cache_read_input_tokens: cacheStats?.cache_read_input_tokens || 0,
     })
 
     await safeLogUsage({
@@ -830,8 +928,10 @@ ${contextText || 'No excerpts retrieved.'}`
           hasImage,
           status,
           fullAudit,
-          totalDocsRetrieved: docs.length,
+          mainDocsRetrieved: mainDocs.length,
+          pinnedDocsRetrieved: pinnedDocs.length,
           durationMs: Date.now() - startedAt,
+          cache: cacheStats || null,
         },
       },
       { status: 200 }
