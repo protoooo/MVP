@@ -540,22 +540,12 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </div>
 
           <div className="pricing-modal-actions">
-            <button
-              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-              disabled={!!loading}
-              className="btn-pricing-modal-primary"
-              type="button"
-            >
+            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-modal-primary" type="button">
               {loading === 'monthly' && <span className="btn-spinner" />}
               <span className="btn-label">Start 7-day free trial</span>
             </button>
 
-            <button
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading}
-              className="btn-pricing-modal-secondary"
-              type="button"
-            >
+            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className="btn-pricing-modal-secondary" type="button">
               {loading === 'annual' && <span className="btn-spinner" />}
               <span className="btn-label">Annual plan · $1,000/year</span>
               <span className="btn-badge">Save $200</span>
@@ -984,19 +974,42 @@ export default function Page() {
           width: 100%;
           max-width: 100%;
           margin: 0;
-          background: var(--bg-0) !important;
+
+          /* ✅ Use background-color (iOS rubber-band respects this more reliably) */
+          background-color: var(--bg-0) !important;
           color: var(--ink-0);
+
+          /* ✅ Kill horizontal drift (right-side white strip) */
           overflow-x: hidden;
+        }
+
+        /* ✅ Even stronger horizontal clamp where supported */
+        @supports (overflow: clip) {
+          html,
+          body {
+            overflow-x: clip;
+          }
+        }
+
+        /* ✅ The REAL iOS fix:
+           paint a fixed dark backdrop behind everything so bounce can't reveal white */
+        body::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background: var(--bg-0);
+          z-index: -1;
+          pointer-events: none;
         }
 
         @supports (-webkit-touch-callout: none) {
           html {
             height: -webkit-fill-available;
-            background: var(--bg-0) !important;
+            background-color: var(--bg-0) !important;
           }
           body {
             min-height: -webkit-fill-available;
-            background: var(--bg-0) !important;
+            background-color: var(--bg-0) !important;
           }
         }
 
@@ -1089,8 +1102,7 @@ export default function Page() {
           align-items: center;
         }
         .plm-brand {
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-            monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
           color: var(--ink-0);
           text-decoration: none;
           font-weight: 700;
@@ -1119,17 +1131,17 @@ export default function Page() {
           flex: 0 0 auto;
         }
         .plm-brand-mark img {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  object-fit: contain;
-  display: block;
-}
+          width: 100% !important;
+          height: 100% !important;
+          max-width: none !important;
+          object-fit: contain;
+          display: block;
+        }
 
         .plm-brand-text {
           display: inline-block;
           line-height: 1;
-          transform: translateY(1px); /* tiny optical alignment */
+          transform: translateY(1px);
         }
 
         /* ==========================================================================
@@ -1202,8 +1214,7 @@ export default function Page() {
           cursor: pointer;
           box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
           transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-            monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
         }
         .ibm-cta:hover {
           transform: translateY(-1px);
@@ -1308,8 +1319,7 @@ export default function Page() {
           margin: 0;
           white-space: pre-wrap;
           color: #e2e8f5;
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-            monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
           line-height: 1.45;
           font-size: 15px;
           width: min(62ch, 100%);
@@ -1353,8 +1363,9 @@ export default function Page() {
           font-size: 11px;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          max-width: calc(100vw - 28px);
-          max-width: calc(100dvw - 28px);
+
+          /* ✅ IMPORTANT: do NOT use 100vw/100dvw (causes right-side overflow on iOS) */
+          max-width: calc(100% - 28px);
         }
         .doc-pill-label {
           opacity: 0.75;
@@ -1466,7 +1477,7 @@ export default function Page() {
           text-transform: uppercase;
           font-weight: 800;
           cursor: pointer;
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: transparent;
           color: rgba(242, 242, 242, 0.9);
           white-space: nowrap;
@@ -1496,7 +1507,6 @@ export default function Page() {
             display: none;
           }
 
-          /* ✅ Hide desktop actions; show bottom actions */
           .desktop-only {
             display: none !important;
           }
@@ -2136,7 +2146,12 @@ export default function Page() {
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
@@ -2169,9 +2184,7 @@ export default function Page() {
                 {messages.length === 0 ? (
                   <div className="chat-empty-content">
                     <h2 className="chat-empty-title">Upload a photo or ask a question</h2>
-                    <p className="chat-empty-text">
-                      One-click photo checks for likely issues, or query the Washtenaw-focused database for a clear answer.
-                    </p>
+                    <p className="chat-empty-text">One-click photo checks for likely issues, or query the Washtenaw-focused database for a clear answer.</p>
                   </div>
                 ) : (
                   <div className="chat-history">
