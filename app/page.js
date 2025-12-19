@@ -163,28 +163,26 @@ const Icons = {
 const DEMO_DOCUMENTS = [
   '3compsink',
   'Consumer Advisory',
-  'ConsumerAdvisory',
   'Cooling Foods',
-  'Cross contamination',
-  'date_marking_guide',
+  'Cross Contamination',
+  'Date Marking Guide',
   'Enforcement Action | Washtenaw County, MI',
-  'FDA_FOOD_CODE_2022',
+  'FDA Food Code 2022',
   'FOG',
   'Food Allergy Information | Washtenaw County, MI',
   'Food Service Inspection Program | Washtenaw County, MI',
-  'Food Service Inspection Program | Washtenaw County, MI – Official Website',
-  'food_labeling_guide',
-  'FoodTemperatures',
-  'Inspection Report Types | Washtenaw County, MI – Official Website',
-  'Internal_Cooking_Temperatures',
-  'mcl_act_92_of_2000',
-  'MI_MODIFIED_FOOD_CODE',
-  'new-business-information-packet',
-  'NorovirusEnvironCleaning',
-  'PROCEDURES_FOR_THE_ADMINISTRATION_AND_ENFORCEMENT_OF_THE_MICHIGAN_FO',
-  'retail_food_establishments_emergency_action_plan',
+  'Food Labeling Guide',
+  'Food Temperatures',
+  'Inspection Report Types | Washtenaw County, MI',
+  'Internal Cooking Temperatures',
+  'MCL Act 92 of 2000',
+  'MI Modified Food Code',
+  'New Business Information Packet',
+  'Norovirus Environ Cleaning',
+  'Procedures for the Administration and Enforcement of the Michigan Food Code',
+  'Retail Food Establishments Emergency Action Plan',
   'Summary Chart for Minimum Cooking Food Temperatures and Holding Time',
-  'USDA_Safe_Minimum_Internal_Temperature_Chart',
+  'USDA Safe Minimum Internal Temperature Chart',
 ]
 
 const TYPEWRITER_LINES = [
@@ -344,6 +342,7 @@ function CountUp({ value, prefix = '', suffix = '', duration = 2000, className =
 
 function useConsoleTypewriter(lines) {
   const [output, setOutput] = useState('')
+  const [done, setDone] = useState(false)
 
   useEffect(() => {
     let isCancelled = false
@@ -354,7 +353,7 @@ function useConsoleTypewriter(lines) {
     let deleting = false
     let deleteCountdown = 0
     let mistakesUsed = 0
-    const mistakeLimit = 2
+    const mistakeLimit = 1
     let timeoutId
 
     const schedule = (delay) => {
@@ -367,7 +366,7 @@ function useConsoleTypewriter(lines) {
 
       if (!deleting) {
         const allowMistake = mistakesUsed < mistakeLimit
-        const makeMistake = allowMistake && Math.random() < 0.06 && charIndex > 4 && charIndex < current.length - 4
+        const makeMistake = allowMistake && Math.random() < 0.04 && charIndex > 4 && charIndex < current.length - 6
 
         if (makeMistake) {
           mistakesUsed += 1
@@ -377,7 +376,7 @@ function useConsoleTypewriter(lines) {
           deleteCountdown = 1
           deleting = true
           setOutput([...printed, buffer].join('\n'))
-          return schedule(120 + Math.random() * 60)
+          return schedule(90 + Math.random() * 40)
         }
 
         buffer += current[charIndex]
@@ -388,12 +387,18 @@ function useConsoleTypewriter(lines) {
           printed = [...printed, buffer]
           buffer = ''
           charIndex = 0
-          lineIndex = (lineIndex + 1) % lines.length
+          lineIndex += 1
           mistakesUsed = 0
-          return schedule(650)
+
+          if (lineIndex >= lines.length) {
+            setOutput(printed.join('\n'))
+            setDone(true)
+            return
+          }
+          return schedule(400)
         }
 
-        return schedule(40 + Math.random() * 30)
+        return schedule(28 + Math.random() * 18)
       }
 
       buffer = buffer.slice(0, -1)
@@ -413,7 +418,7 @@ function useConsoleTypewriter(lines) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lines])
 
-  return output
+  return { output, done }
 }
 
 function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
@@ -525,37 +530,74 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
-  const typewriter = useConsoleTypewriter(TYPEWRITER_LINES)
-  const documentRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS.slice(0, 5)], [])
+  const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
+  const documentRows = useMemo(() => [...DEMO_DOCUMENTS], [])
+  const [showPricingMenu, setShowPricingMenu] = useState(false)
 
   return (
     <div className={`${ibmMono.className} ibm-landing`}>
+      <div className="ibm-landing-topbar">
+        <div />
+        <div className="ibm-top-actions">
+          <div className="pricing-menu-wrapper">
+            <button
+              type="button"
+              className="ibm-cta secondary"
+              onClick={() => setShowPricingMenu((v) => !v)}
+            >
+              Pricing
+            </button>
+            {showPricingMenu && (
+              <div className="pricing-menu">
+                <div className="pricing-menu-title">Site License</div>
+                <div className="pricing-menu-price">$100 / month</div>
+                <ul className="pricing-menu-list">
+                  <li>Unlimited photo checks</li>
+                  <li>Unlimited Q&A</li>
+                  <li>Washtenaw-specific guidance</li>
+                  <li>Full team access</li>
+                </ul>
+                <button
+                  type="button"
+                  className="ibm-cta block"
+                  onClick={() => {
+                    setShowPricingMenu(false)
+                    onShowPricing()
+                  }}
+                >
+                  Start trial
+                </button>
+              </div>
+            )}
+          </div>
+          <button onClick={onShowPricing} className="ibm-cta">
+            Start trial
+          </button>
+          <button onClick={onShowAuth} className="ibm-cta secondary">
+            Sign in
+          </button>
+        </div>
+      </div>
+
       <div className="ibm-landing-bg" />
       <div className="ibm-landing-grid">
-        <section className="ibm-console-card">
-          <div className="ibm-console-topline">
-            <span className="ibm-led" />
-            <span className="ibm-label">Protocol LM</span>
-          </div>
-          <div className="ibm-console-shell">
-            <div className="ibm-console-heading">IBM Console Feed</div>
-            <div className="ibm-console-body">
-              <pre className="ibm-console-type">{typewriter}</pre>
-            </div>
-          </div>
+        <section className="ibm-console-text">
+          <pre className="ibm-console-type">
+            {typewriter}
+            {typewriterDone && <span className="type-cursor">▌</span>}
+          </pre>
         </section>
 
         <section className="ibm-doc-card">
           <div className="ibm-doc-topline">
             <div className="ibm-doc-title">
-              <span className="ibm-led" />
-              Ingested Documents
+              Knowledge Base
             </div>
             <span className="ibm-doc-meta">Live Scroll</span>
           </div>
-          <div className="ibm-doc-window">
-            <div className="ibm-doc-gradient" />
-            <div className="ibm-doc-scroll animate-doc-scroll">
+            <div className="ibm-doc-window">
+              <div className="ibm-doc-gradient" />
+            <div className="ibm-doc-scroll">
               {documentRows.map((doc, idx) => (
                 <div key={`${doc}-${idx}`} className="ibm-doc-row">
                   <span className="ibm-doc-dot" />
@@ -565,15 +607,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
         </section>
-      </div>
-
-      <div className="ibm-landing-actions">
-        <button onClick={onShowPricing} className="ibm-cta">
-          Start trial
-        </button>
-        <button onClick={onShowAuth} className="ibm-cta secondary">
-          Sign in
-        </button>
       </div>
     </div>
   )
@@ -1472,21 +1505,89 @@ export default function Page() {
         .ibm-landing {
           position: relative;
           z-index: 1;
-          padding: 48px 20px 80px;
+          padding: 32px 20px 80px;
           min-height: calc(100dvh - 0px);
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #0c111a;
+          background: #0e0e11;
+          color: #f2f2f2;
+        }
+
+        .ibm-landing-topbar {
+          position: absolute;
+          top: 14px;
+          left: 0;
+          right: 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 24px;
+          z-index: 3;
+        }
+
+        .ibm-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .pricing-menu-wrapper {
+          position: relative;
+        }
+
+        .pricing-menu {
+          position: absolute;
+          right: 0;
+          margin-top: 8px;
+          background: #15151a;
+          border: 1px solid #2a2a32;
+          border-radius: 10px;
+          padding: 12px;
+          min-width: 200px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .pricing-menu-title {
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #f2f2f2;
+        }
+
+        .pricing-menu-price {
+          font-size: 18px;
+          font-weight: 700;
+          color: #f2f2f2;
+        }
+
+        .pricing-menu-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          color: #d9d9df;
+          font-size: 14px;
+        }
+
+        .pricing-menu .ibm-cta.block {
+          width: 100%;
+          justify-content: center;
+          text-align: center;
         }
 
         .ibm-landing-bg {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(42, 63, 98, 0.24), transparent 50%),
-            radial-gradient(circle at 80% 0%, rgba(42, 63, 98, 0.18), transparent 42%),
-            linear-gradient(90deg, rgba(12, 17, 26, 0.9) 0%, rgba(13, 16, 23, 0.92) 100%);
-          opacity: 0.8;
+          background: radial-gradient(circle at 20% 20%, rgba(48, 48, 54, 0.28), transparent 52%),
+            radial-gradient(circle at 80% 0%, rgba(48, 48, 54, 0.2), transparent 44%),
+            linear-gradient(90deg, rgba(14, 14, 17, 0.95) 0%, rgba(16, 16, 20, 0.92) 100%);
+          opacity: 0.9;
           pointer-events: none;
         }
 
@@ -1501,69 +1602,15 @@ export default function Page() {
           align-items: stretch;
         }
 
-        .ibm-console-card,
-        .ibm-doc-card {
-          background: #0f1623;
-          border: 1px solid #1c2638;
-          border-radius: 16px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        .ibm-console-text {
+          background: transparent;
+          border: none;
+          border-radius: 0;
           padding: 18px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-        }
-
-        .ibm-console-topline,
-        .ibm-doc-topline {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          color: #9fb3d1;
-          text-transform: uppercase;
-          letter-spacing: 0.24em;
-          font-size: 11px;
-        }
-
-        .ibm-led {
-          width: 8px;
-          height: 8px;
-          border-radius: 999px;
-          background: #5c6f8d;
-          box-shadow: 0 0 4px rgba(92, 111, 141, 0.8);
-          display: inline-block;
-          margin-right: 10px;
-        }
-
-        .ibm-label {
-          color: #c3d1e8;
-        }
-
-        .ibm-console-shell {
-          background: #0d1320;
-          border: 1px solid #1c2940;
-          border-radius: 12px;
-          padding: 14px;
-          color: #d6deed;
-          min-height: 260px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .ibm-console-heading {
-          color: #9fb3d1;
-          font-size: 12px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-        }
-
-        .ibm-console-body {
-          flex: 1;
-          background: #0b101b;
-          border: 1px dashed #28354c;
-          border-radius: 10px;
-          padding: 14px;
-          box-shadow: inset 0 0 0 1px rgba(40, 53, 76, 0.4);
+          justify-content: center;
+          min-height: 340px;
         }
 
         .ibm-console-type {
@@ -1575,8 +1622,24 @@ export default function Page() {
           font-size: 15px;
         }
 
+        .type-cursor {
+          display: inline-block;
+          width: 10px;
+          animation: cursor-blink 1s steps(2, end) infinite;
+        }
+
+        @keyframes cursor-blink {
+          0%, 50% { opacity: 1; }
+          50.01%, 100% { opacity: 0; }
+        }
+
         .ibm-doc-card {
           gap: 12px;
+          background: #121218;
+          border: 1px solid #24242d;
+          border-radius: 12px;
+          padding: 18px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         }
 
         .ibm-doc-title {
@@ -1585,12 +1648,12 @@ export default function Page() {
           gap: 10px;
           font-weight: 700;
           letter-spacing: 0.08em;
-          color: #9fb3d1;
+          color: #f2f2f2;
           text-transform: uppercase;
         }
 
         .ibm-doc-meta {
-          color: #8c9ebc;
+          color: #c3c3cf;
           font-size: 11px;
           letter-spacing: 0.18em;
           text-transform: uppercase;
@@ -1598,18 +1661,18 @@ export default function Page() {
 
         .ibm-doc-window {
           position: relative;
-          background: #0d1320;
-          border: 1px solid #1c2940;
+          background: #0d0d12;
+          border: 1px solid #25252d;
           border-radius: 12px;
           padding: 12px;
-          overflow: hidden;
+          overflow-y: auto;
           height: 320px;
         }
 
         .ibm-doc-gradient {
           position: absolute;
           inset: 0;
-          background: linear-gradient(180deg, #0d1320 0%, transparent 16%, transparent 84%, #0d1320 100%);
+          background: linear-gradient(180deg, #0d0d12 0%, transparent 16%, transparent 84%, #0d0d12 100%);
           z-index: 2;
           pointer-events: none;
         }
@@ -1621,13 +1684,14 @@ export default function Page() {
           flex-direction: column;
           gap: 10px;
           padding-right: 8px;
+          overflow: hidden;
         }
 
         .ibm-doc-row {
           display: flex;
           align-items: center;
           gap: 12px;
-          color: #d6deed;
+          color: #f2f2f2;
           font-size: 14px;
           letter-spacing: -0.01em;
         }
@@ -1636,21 +1700,12 @@ export default function Page() {
           width: 6px;
           height: 6px;
           border-radius: 999px;
-          background: #5c6f8d;
-          box-shadow: 0 0 6px rgba(92, 111, 141, 0.8);
+          background: #c3c3cf;
+          box-shadow: none;
         }
 
         .ibm-doc-name {
           white-space: nowrap;
-        }
-
-        .animate-doc-scroll {
-          animation: doc-scroll 22s linear infinite;
-        }
-
-        @keyframes doc-scroll {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-50%); }
         }
 
         @media (max-width: 768px) {
@@ -1684,9 +1739,9 @@ export default function Page() {
 
         .ibm-cta {
           padding: 10px 16px;
-          background: #2a3e5a;
-          color: #e2e8f5;
-          border: 1px solid #344863;
+          background: #1d1d22;
+          color: #f2f2f2;
+          border: 1px solid #2a2a32;
           border-radius: 12px;
           text-transform: uppercase;
           letter-spacing: 0.12em;
@@ -1698,7 +1753,7 @@ export default function Page() {
 
         .ibm-cta.secondary {
           background: transparent;
-          color: #c3d1e8;
+          color: #d9d9df;
         }
 
         .ibm-cta:hover {
@@ -3359,8 +3414,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: #0b1018;
-          color: #e2e8f5;
+          background: #0e0e11;
+          color: #f2f2f2;
         }
 
         .chat-messages {
@@ -3373,6 +3428,23 @@ export default function Page() {
           align-items: center;
           padding: 24px 16px 18px;
           gap: 14px;
+        }
+
+        .chat-topbar {
+          width: 100%;
+          max-width: 960px;
+          margin: 0 auto;
+          padding: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+
+        .chat-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
 
         .chat-empty {
@@ -3389,39 +3461,31 @@ export default function Page() {
           max-width: 560px;
           width: 100%;
           text-align: center;
-          padding: 48px 38px;
-          background: #0e1320;
-          border: 1px dashed #23458b;
-          border-radius: var(--radius-3xl);
-          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+          padding: 0 18px 28px;
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          box-shadow: none;
           backdrop-filter: none;
+          color: #f2f2f2;
         }
 
         .chat-empty-icon {
-          width: 60px;
-          height: 60px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
-          border-radius: var(--radius-xl);
-          color: var(--color-primary);
-          margin: 0 auto 20px;
+          display: none;
         }
 
         .chat-empty-title {
           font-size: 18px;
           font-weight: 700;
-          color: #e2e8f5;
+          color: #f2f2f2;
           margin-bottom: 8px;
         }
 
         .chat-empty-text {
           font-size: 14px;
           line-height: 1.6;
-          color: #c3d1e8;
-          margin-bottom: 24px;
+          color: #d9d9df;
+          margin-bottom: 18px;
         }
 
         .chat-empty-actions {
@@ -3447,7 +3511,7 @@ export default function Page() {
           justify-content: center;
           background: #11192a;
           border: 1px solid #2c3c58;
-          color: #c3d1e8;
+          color: #f2f2f2;
           border-radius: 14px;
           box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
           cursor: pointer;
@@ -3497,11 +3561,11 @@ export default function Page() {
           background: transparent;
           border: none;
           box-shadow: none;
-          color: #e9f1ff;
+          color: #f2f2f2;
         }
 
         .chat-bubble-user {
-          color: #c5d9ff;
+          color: #f2f2f2;
         }
 
         .chat-message:hover .chat-bubble {
@@ -3556,25 +3620,25 @@ export default function Page() {
 
         .smart-progress-phase {
           font-size: 12px;
-          color: #7f9ccf;
+          color: #c3c3cf;
         }
 
         .smart-progress-pct {
           font-size: 12px;
           font-variant-numeric: tabular-nums;
-          color: #c5d9ff;
+          color: #f2f2f2;
         }
 
         .smart-progress-track {
           height: 3px;
-          background: #1d2c45;
+          background: #2a2a32;
           border-radius: 2px;
           overflow: hidden;
         }
 
         .smart-progress-bar {
           height: 100%;
-          background: linear-gradient(90deg, #2f4f99, #3a78c2);
+          background: linear-gradient(90deg, #4a4a52, #6a6a74);
           border-radius: 2px;
           transition: width 150ms linear;
         }
@@ -3584,11 +3648,11 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           padding: 10px 14px;
-          background: #0e1320;
-          border: 1px dashed #23458b;
+          background: #16161c;
+          border: 1px dashed #3a3a3d;
           border-radius: var(--radius-md);
           font-size: 13px;
-          color: #c5d9ff;
+          color: #f2f2f2;
           margin-bottom: 12px;
           box-shadow: none;
         }
@@ -3606,7 +3670,7 @@ export default function Page() {
           padding: 12px 4px;
           background: transparent;
           border: none;
-          border-bottom: 1px dashed #2c3c58;
+          border-bottom: 1px dashed #3a3a3d;
           border-radius: 0;
           color: #e2e8f5;
           font-size: 15px;
@@ -3622,7 +3686,7 @@ export default function Page() {
         }
 
         .chat-textarea:focus {
-          border-color: #3a78c2;
+          border-color: #6a6a74;
           box-shadow: none;
         }
 
@@ -3632,18 +3696,18 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #3a78c2;
+          background: #2a2a32;
           border: none;
           border-radius: 10px;
-          color: #0b1018;
+          color: #f2f2f2;
           cursor: pointer;
           transition: all var(--duration-fast) var(--ease-out-expo);
           flex-shrink: 0;
-          box-shadow: 0 0 18px rgba(58, 120, 194, 0.35);
+          box-shadow: 0 0 18px rgba(0, 0, 0, 0.35);
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          background: #4d8fe0;
+          background: #34343c;
           transform: translateY(-1px);
         }
 
@@ -3710,6 +3774,20 @@ export default function Page() {
             />
           ) : (
             <div className="chat-container">
+              <div className="chat-topbar">
+                <div />
+                <div className="chat-top-actions">
+                  {hasActiveSubscription && (
+                    <button onClick={handleManageBilling} className="ibm-cta secondary" type="button">
+                      Billing
+                    </button>
+                  )}
+                  <button onClick={handleSignOut} className="ibm-cta secondary" type="button">
+                    Log out
+                  </button>
+                </div>
+              </div>
+
               <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
                 {messages.length === 0 ? (
                   <div className="chat-empty">
