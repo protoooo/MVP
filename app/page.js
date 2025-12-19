@@ -1119,6 +1119,14 @@ export default function Page() {
           justify-content: center;
           flex: 0 0 auto;
         }
+        .plm-brand-mark img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: contain;
+  display: block;
+}
+
         .plm-brand-text {
           display: inline-block;
           line-height: 1;
