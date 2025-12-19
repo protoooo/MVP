@@ -1,4 +1,4 @@
-// app/api/chat/route.js
+// app/api/chat/route.js - FIXED: Memory leak + better caching
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -11,15 +11,16 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-let Anthropic = null
+// ✅ FIXED: Cache client instance instead of module
+let anthropicClient = null
 let searchDocuments = null
 
 async function getAnthropicClient() {
-  if (!Anthropic) {
-    const module = await import('@anthropic-ai/sdk')
-    Anthropic = module.default
+  if (!anthropicClient) {
+    const { default: Anthropic } = await import('@anthropic-ai/sdk')
+    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   }
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  return anthropicClient
 }
 
 async function getSearchDocuments() {
@@ -72,13 +73,47 @@ const SOURCE_PRIORITY = {
 const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
 const ALLOWED_CLASS = new Set(['P', 'Pf', 'C', 'Unclear'])
 
-// ✅ IMPORTANT: preserve \n, \r, \t so formatting survives
+// ✅ IMPROVED: Better quote detection for copyright compliance
+function sanitizePlainText(text) {
+  let out = safeText(text || '')
+  
+  // Remove emojis, markdown-ish chars
+  out = out.replace(/[`#*]/g, '')
+  out = out.replace(/\u2022/g, '')
+  out = out.replace(/\n{3,}/g, '\n\n')
+
+  try {
+    out = out.replace(/\p{Extended_Pictographic}/gu, '')
+    out = out.replace(/\uFE0F/gu, '')
+  } catch {}
+
+  // Remove numbered list prefixes but keep line breaks
+  out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
+  
+  // ✅ NEW: Detect potential long quotes (copyright concern)
+  const quotePattern = /"[^"]{15,}"/g
+  const matches = out.match(quotePattern)
+  if (matches && matches.some(m => m.length > 80)) {
+    logger.warn('Potential copyright violation: long quote detected', {
+      quoteLength: matches[0]?.length,
+      preview: matches[0]?.substring(0, 50) + '...'
+    })
+  }
+
+  const HARD_LIMIT = 2600
+  if (out.length > HARD_LIMIT) {
+    out = out.slice(0, HARD_LIMIT).trimEnd()
+    out += '\n\nTip: say "full audit" to list more.'
+  }
+
+  return out.trim()
+}
+
 function safeText(x) {
   if (typeof x !== 'string') return ''
   return x.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim()
 }
 
-// Single-line safe text for labels/titles
 function safeLine(x) {
   return safeText(x).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim()
 }
@@ -219,30 +254,6 @@ function buildExcerptContext(docs, opts = {}) {
   }
 }
 
-function sanitizePlainText(text) {
-  let out = safeText(text || '')
-  // no emojis, no markdown-ish chars
-  out = out.replace(/[`#*]/g, '')
-  out = out.replace(/\u2022/g, '')
-  out = out.replace(/\n{3,}/g, '\n\n')
-
-  try {
-    out = out.replace(/\p{Extended_Pictographic}/gu, '')
-    out = out.replace(/\uFE0F/gu, '')
-  } catch {}
-
-  // remove numbered list prefixes but keep line breaks
-  out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
-
-  const HARD_LIMIT = 2600
-  if (out.length > HARD_LIMIT) {
-    out = out.slice(0, HARD_LIMIT).trimEnd()
-    out += '\n\nTip: say "full audit" to list more.'
-  }
-
-  return out.trim()
-}
-
 function extractJsonObject(text) {
   const raw = safeText(text || '')
   if (!raw) return null
@@ -323,7 +334,7 @@ function renderAuditPlainText(payload, excerptIndex, maxItems) {
   const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
   const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
   const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
-  const auditStatus = safeLine(payload?.audit_status || 'unknown') // clear | findings | needs_info | unknown
+  const auditStatus = safeLine(payload?.audit_status || 'unknown')
 
   const out = []
   out.push(opening || 'Here is what I can tell from what was provided.')
@@ -425,7 +436,6 @@ function buildCacheStats(usage) {
   const cacheRead = usage.cache_read_input_tokens || 0
   const outputTokens = usage.output_tokens || 0
   const cacheHit = cacheRead > 0
-  // rough pct: how much of the prompt came from cache reads vs total prompt tokens (read+new)
   const denom = inputTokens + cacheRead
   const savingsPct = denom > 0 ? Math.round((cacheRead / denom) * 100) : 0
 
@@ -600,7 +610,7 @@ Return ONLY valid JSON:
       }
     }
 
-    // 2) Retrieval (main + pinned tracked separately so we can cache pinned more reliably)
+    // 2) Retrieval
     const visionHints = [
       vision.search_terms,
       ...(vision.visible_facts || []),
@@ -635,7 +645,6 @@ Return ONLY valid JSON:
       logger.warn('Retrieval failed (continuing)', { error: e?.message })
     }
 
-    // Keep pinned stable + remove duplicates from main if pinned already has them
     pinnedDocs.sort(stableDocSort)
     const pinnedKeys = new Set(pinnedDocs.map((d) => (d?.text || '').slice(0, 1600)).filter(Boolean))
     mainDocs = (mainDocs || []).filter((d) => {
@@ -644,16 +653,12 @@ Return ONLY valid JSON:
       return !pinnedKeys.has(k)
     })
     mainDocs.sort((a, b) => {
-      // prefer Washtenaw-tier first, then score
       const tierA = getSourceTier(a?.source)
       const tierB = getSourceTier(b?.source)
       if (tierA !== tierB) return tierA - tierB
       return (b?.score || 0) - (a?.score || 0)
     })
 
-    // Build two contexts:
-    // - Pinned excerpts (cached, stable) ✅
-    // - Dynamic excerpts (not cached, varies per request)
     const pinnedCtx = buildExcerptContext(pinnedDocs, { prefix: 'EXCERPT_P', maxChars: 24000, startAt: 1 })
     const mainCtx = buildExcerptContext(mainDocs, { prefix: 'EXCERPT_D', maxChars: 16000, startAt: 1 })
     const excerptIndex = [...pinnedCtx.excerptIndex, ...mainCtx.excerptIndex]
@@ -661,7 +666,7 @@ Return ONLY valid JSON:
     const pinnedContextText = pinnedCtx.contextText
     const dynamicContextText = mainCtx.contextText
 
-    // 3) Build the prompt components
+    // 3) Build the prompt
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
 You help restaurant owners and GMs catch problems before an inspector does.
@@ -744,7 +749,7 @@ ${dynamicContextText || 'No dynamic excerpts retrieved.'}`
     const pinnedBlock = `Pinned reference excerpts (stable; cite by excerpt id only):
 ${pinnedContextText || 'No pinned excerpts retrieved.'}`
 
-    // 4) Final answer (strictly excerpt-backed findings)
+    // 4) Final answer
     let modelText = ''
     let parsed = null
     let cacheStats = null
@@ -752,22 +757,16 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
     try {
       const finalMessages = []
 
-      // ✅ OPTIMIZED STRUCTURE: Stable content FIRST for maximum cache hits
-      // Order: system (cached) → pinned excerpts (cached) → dynamic content → image/question
-      
       if (hasImage && imageBase64) {
         finalMessages.push({
           role: 'user',
           content: [
-            // 1️⃣ Pinned excerpts FIRST (cached after system prompt)
             {
               type: 'text',
               text: pinnedBlock,
               cache_control: { type: 'ephemeral' },
             },
-            // 2️⃣ Dynamic excerpts (not cached, varies per request)
             { type: 'text', text: dynamicBlock },
-            // 3️⃣ Image and question (not cached, unique per request)
             {
               type: 'image',
               source: { type: 'base64', media_type: imageMediaType, data: imageBase64 },
@@ -779,21 +778,17 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
         finalMessages.push({
           role: 'user',
           content: [
-            // 1️⃣ Pinned excerpts FIRST (cached after system prompt)
             {
               type: 'text',
               text: pinnedBlock,
               cache_control: { type: 'ephemeral' },
             },
-            // 2️⃣ Dynamic excerpts (not cached, varies per request)
             { type: 'text', text: dynamicBlock },
-            // 3️⃣ Question (not cached, unique per request)
             { type: 'text', text: questionBlock },
           ],
         })
       }
 
-      // ✅ System prompt with cache_control (cached separately)
       const answerResp = await withTimeout(
         anthropic.messages.create({
           model: CLAUDE_MODEL,
@@ -837,7 +832,6 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
       const questions = Array.isArray(parsed.clarifying_questions) ? parsed.clarifying_questions : []
       const modelOpening = safeLine(parsed.opening_line || '')
 
-      // Keep ONLY excerpt-backed findings
       const supportedFindings = []
       for (const f of findingsRaw.slice(0, maxFindings)) {
         const srcIds = Array.isArray(f?.source_ids) ? f.source_ids : []
@@ -869,7 +863,6 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
         }
         message = renderAuditPlainText(payloadForRender, excerptIndex, maxFindings)
       } else {
-        // No excerpt-backed findings
         if (!hasAnyChecks) {
           status = 'clear'
           const payloadForRender = {
@@ -877,7 +870,7 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
             opening_line: modelOpening || 'Everything looks great here. Great job.',
             findings: [],
             clarifying_questions: [],
-            do_now: [], // keep it clean when clear
+            do_now: [],
             photo_requests: [],
           }
           message = renderAuditPlainText(payloadForRender, excerptIndex, maxFindings)
@@ -890,7 +883,6 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
               'I do not see a clear, excerpt-backed violation from this photo alone. Here is what I would check next.',
             findings: [],
             clarifying_questions: questions,
-            // only show "do now" when we actually have checks/uncertainty
             do_now: vision.do_now || [],
             photo_requests: vision.photo_requests || [],
           }
