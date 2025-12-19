@@ -50,7 +50,6 @@ const DEMO_DOCUMENTS = [
   'Food Labeling Guide',
   'Food Temperatures',
   'Internal Cooking Temperatures',
-  'FDA Food Code',
   'MI Modified Food Code',
   'MCL Act 92 of 2000',
   'Inspection Report Types',
