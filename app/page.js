@@ -64,11 +64,12 @@ const DEMO_DOCUMENTS = [
   'USDA Safe Minimum Internal Temperature Chart',
 ]
 
+// ✅ Shorter lines to avoid awkward wrapping + look visually centered on mobile
 const TYPEWRITER_LINES = [
-  'Welcome to Protocol LM.',
-  'Where you catch violations before they cost you.',
-  'Upload an image to check compliance in seconds.',
-  'Ask anything about Washtenaw County food safety and regulations.',
+  'Welcome to protocolLM.',
+  'Catch violations before they cost you.',
+  'Upload a photo — check compliance fast.',
+  'Ask about Washtenaw County regulations.',
 ]
 
 function useConsoleTypewriter(lines) {
@@ -362,7 +363,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       <div className="ibm-landing-bg" />
 
-      {/* EXACT CENTER — the pre is left-aligned but the block is centered */}
       <div className="ibm-landing-grid">
         <section className="ibm-console-text">
           <pre className="ibm-console-type">
@@ -985,9 +985,10 @@ export default function Page() {
         /* ==========================================================================
            protocolLM — Minimal IBM Console
            Updates in this version:
-           - LANDING: exact center hero (desktop + mobile), left-aligned text within centered block
-           - LANDING: move rotating Indexed Docs pill to top-middle header
-           - LANDING: keep pill width fixed to longest document name (no resizing per item)
+           - LANDING: center the *text itself* (not just the block) so it looks truly centered on mobile
+           - LANDING: shorten typewriter lines to prevent awkward wrapping gaps
+           - CHAT: textarea placeholder no longer clips + placeholder text shortened
+           - CHAT: footer links center properly (Safari/iOS) by making the chat footer pill block-level
            ========================================================================== */
 
         :root {
@@ -1013,6 +1014,7 @@ export default function Page() {
         body {
           height: 100%;
           width: 100%;
+          max-width: 100%;
           margin: 0;
           background: var(--bg-0) !important;
           color: var(--ink-0);
@@ -1136,7 +1138,9 @@ export default function Page() {
            ========================================================================== */
         .ibm-landing {
           position: relative;
-          padding: 0 20px; /* IMPORTANT: remove vertical padding so hero centers perfectly */
+          padding: 0; /* keep vertical perfect */
+          padding-left: max(20px, env(safe-area-inset-left));
+          padding-right: max(20px, env(safe-area-inset-right));
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
@@ -1156,7 +1160,8 @@ export default function Page() {
           display: grid;
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
-          padding: 0 18px;
+          padding-left: max(18px, env(safe-area-inset-left));
+          padding-right: max(18px, env(safe-area-inset-right));
           z-index: 6;
           pointer-events: none;
         }
@@ -1288,7 +1293,6 @@ export default function Page() {
           align-items: center;
         }
 
-        /* Exact center: remove big min-height + extra padding */
         .ibm-console-text {
           width: 100%;
           display: flex;
@@ -1296,6 +1300,8 @@ export default function Page() {
           justify-content: center;
           padding: 0;
         }
+
+        /* ✅ Make the *text itself* centered, so it doesn’t “feel” shifted on mobile */
         .ibm-console-type {
           margin: 0;
           white-space: pre-wrap;
@@ -1304,9 +1310,12 @@ export default function Page() {
             monospace;
           line-height: 1.45;
           font-size: 15px;
-          width: min(720px, 100%);
-          text-align: left; /* left-aligned relative to itself */
+          width: min(62ch, 100%);
+          text-align: center;
+          margin-left: auto;
+          margin-right: auto;
         }
+
         .type-cursor {
           display: inline-block;
           width: 10px;
@@ -1346,7 +1355,9 @@ export default function Page() {
           font-size: 11px;
           letter-spacing: 0.1em;
           text-transform: uppercase;
+          /* avoid 100vw scrollbar math causing tiny horizontal offsets */
           max-width: calc(100vw - 28px);
+          max-width: calc(100dvw - 28px);
         }
         .doc-pill-label {
           opacity: 0.75;
@@ -1361,17 +1372,11 @@ export default function Page() {
           letter-spacing: 0.02em;
           opacity: 0.92;
           display: inline-block;
-
-          /* the key: fixed width to the longest doc name (constant per item) */
           width: var(--doc-pill-item-width, auto);
-
-          /* safety for smaller screens */
           max-width: 60vw;
-
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-
           animation: pillFade 2200ms ease both;
         }
         @keyframes pillFade {
@@ -1399,9 +1404,9 @@ export default function Page() {
           left: 50%;
           transform: translateX(-50%);
           z-index: 6;
-          display: inline-flex;
+          display: flex; /* ✅ block-level flex fixes centering issues on iOS when position becomes static */
           align-items: center;
-          justify-content: center; /* ensure centered inside the pill */
+          justify-content: center;
           gap: 10px;
           padding: 8px 12px;
           border-radius: 999px;
@@ -1415,9 +1420,9 @@ export default function Page() {
         }
         .plm-footer-links.chat {
           position: static;
+          left: auto;
           transform: none;
           margin-top: 10px;
-          justify-content: center;
           width: fit-content;
           margin-left: auto;
           margin-right: auto;
@@ -1440,19 +1445,24 @@ export default function Page() {
 
         @media (max-width: 768px) {
           .ibm-landing {
-            padding: 0 16px;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
           }
 
-          /* prevent header crowding on small screens if needed */
           .ibm-landing-topbar {
             grid-template-columns: 1fr auto;
             column-gap: 10px;
           }
           .ibm-top-center {
-            display: none; /* keeps mobile clean; footer + hero are already centered */
+            display: none;
           }
           .ibm-top-actions {
             grid-column: 2;
+          }
+
+          .ibm-console-type {
+            font-size: 14px;
+            width: min(54ch, 100%);
           }
         }
 
@@ -1784,7 +1794,7 @@ export default function Page() {
         }
 
         /* ==========================================================================
-           Chat (unchanged)
+           Chat
            ========================================================================== */
         .chat-container {
           flex: 1;
@@ -1818,6 +1828,8 @@ export default function Page() {
           max-width: 960px;
           margin: 0 auto;
           padding: 14px 16px 10px;
+          padding-left: max(16px, env(safe-area-inset-left));
+          padding-right: max(16px, env(safe-area-inset-right));
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -1945,6 +1957,8 @@ export default function Page() {
           max-width: 820px;
           margin: 0 auto;
           padding: 14px 16px 18px;
+          padding-left: max(16px, env(safe-area-inset-left));
+          padding-right: max(16px, env(safe-area-inset-right));
           padding-bottom: max(14px, env(safe-area-inset-bottom));
         }
 
@@ -2023,17 +2037,18 @@ export default function Page() {
           color: var(--ink-0);
         }
 
+        /* ✅ Fix iOS placeholder/text clipping by slightly reducing vertical padding + line-height */
         .chat-textarea {
           flex: 1;
           min-height: 44px;
           max-height: 160px;
-          padding: 12px 12px;
+          padding: 11px 12px;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 12px;
           color: var(--ink-0);
           font-size: 14px;
-          line-height: 1.5;
+          line-height: 1.35;
           resize: none;
           outline: none !important;
           box-shadow: none !important;
@@ -2093,6 +2108,8 @@ export default function Page() {
         @media (max-width: 640px) {
           .chat-input-inner {
             padding: 12px 14px 14px;
+            padding-left: max(14px, env(safe-area-inset-left));
+            padding-right: max(14px, env(safe-area-inset-right));
           }
           .chat-history {
             padding: 10px 4px 10px;
@@ -2207,7 +2224,7 @@ export default function Page() {
                         ref={textAreaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask a question or attach a photo…"
+                        placeholder="Ask a question…"
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
