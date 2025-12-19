@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
+import SmartProgress from '@/components/SmartProgress'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
@@ -151,91 +152,6 @@ function useConsoleTypewriter(lines) {
   }, [lines])
 
   return { output, done }
-}
-
-function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
-  const [visible, setVisible] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [phase, setPhase] = useState('Starting…')
-
-  const refs = useRef({ pct: 0, timer: null, startedAt: 0, hideTimer: null })
-
-  const cfg = useMemo(() => {
-    return mode === 'vision' ? { baseCap: 88, finalCap: 94, k: 0.03 } : { baseCap: 90, finalCap: 96, k: 0.04 }
-  }, [mode])
-
-  useEffect(() => {
-    if (refs.current.hideTimer) {
-      clearTimeout(refs.current.hideTimer)
-      refs.current.hideTimer = null
-    }
-
-    if (active) {
-      setVisible(true)
-      setProgress(0)
-      setPhase(mode === 'vision' ? 'Uploading image…' : 'Sending…')
-
-      refs.current.pct = 0
-      refs.current.startedAt = Date.now()
-
-      if (refs.current.timer) clearInterval(refs.current.timer)
-
-      refs.current.timer = setInterval(() => {
-        const elapsed = (Date.now() - refs.current.startedAt) / 1000
-        const cap = elapsed < 1.5 ? cfg.baseCap - 8 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
-        const next = refs.current.pct + (cap - refs.current.pct) * cfg.k
-        refs.current.pct = Math.max(refs.current.pct, next)
-
-        const pctInt = Math.min(99, Math.floor(refs.current.pct))
-        setProgress(pctInt)
-
-        const p = pctInt
-        if (p < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading question…')
-        else if (p < 45) setPhase('Searching Washtenaw excerpts…')
-        else if (p < 70) setPhase('Cross-checking requirements…')
-        else if (p < 90) setPhase('Building the best answer…')
-        else setPhase('Finalizing…')
-      }, 120)
-
-      return () => {
-        if (refs.current.timer) clearInterval(refs.current.timer)
-        refs.current.timer = null
-      }
-    }
-
-    if (!active && visible) {
-      if (refs.current.timer) clearInterval(refs.current.timer)
-      refs.current.timer = null
-
-      setProgress(100)
-      setPhase('Done')
-
-      refs.current.hideTimer = setTimeout(() => {
-        setVisible(false)
-        setProgress(0)
-      }, 350)
-
-      return () => {
-        if (refs.current.hideTimer) clearTimeout(refs.current.hideTimer)
-        refs.current.hideTimer = null
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, requestKey, cfg, mode, visible])
-
-  if (!visible) return null
-
-  return (
-    <div className="smart-progress">
-      <div className={`smart-progress-header ${ibmMono.className}`}>
-        <span className="smart-progress-phase">{phase}</span>
-        <span className="smart-progress-pct">{progress}%</span>
-      </div>
-      <div className="smart-progress-track">
-        <div className="smart-progress-bar" style={{ width: `${progress}%` }} />
-      </div>
-    </div>
-  )
 }
 
 function RotatingDocPill({ items, intervalMs = 2200, location = 'header' }) {
@@ -525,9 +441,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
             <button type="submit" disabled={loading || !isLoaded} className="btn-form-submit">
               {loading && <span className="btn-spinner" />}
-              <span className="btn-label">
-                {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-              </span>
+              <span className="btn-label">{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}</span>
             </button>
           </form>
 
@@ -586,12 +500,22 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </div>
 
           <div className="pricing-modal-actions">
-            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-modal-primary" type="button">
+            <button
+              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+              disabled={!!loading}
+              className="btn-pricing-modal-primary"
+              type="button"
+            >
               {loading === 'monthly' && <span className="btn-spinner" />}
               <span className="btn-label">Start 7-day free trial</span>
             </button>
 
-            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className="btn-pricing-modal-secondary" type="button">
+            <button
+              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
+              disabled={!!loading}
+              className="btn-pricing-modal-secondary"
+              type="button"
+            >
               {loading === 'annual' && <span className="btn-spinner" />}
               <span className="btn-label">Annual plan · $1,000/year</span>
               <span className="btn-badge">Save $200</span>
@@ -617,6 +541,7 @@ export default function Page() {
   const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
 
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingStage, setLoadingStage] = useState('auth')
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
 
@@ -756,8 +681,11 @@ export default function Page() {
 
     async function init() {
       try {
+        setLoadingStage('auth')
         const { data } = await supabase.auth.getSession()
+        setLoadingStage('subscription')
         await loadSessionAndSub(data.session || null)
+        setLoadingStage('ready')
       } catch (e) {
         console.error('Auth init error', e)
         if (isMounted) setIsLoading(false)
@@ -888,6 +816,12 @@ export default function Page() {
     setMessages((prev) => [...prev, newUserMessage, { role: 'assistant', content: '' }])
     setInput('')
     setSelectedImage(null)
+
+    // Reset textarea height after send
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = 'auto'
+    }
+
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
@@ -973,7 +907,11 @@ export default function Page() {
       <div className="loading-screen">
         <div className="loading-content">
           <div className="loading-spinner" />
-          <span className={`loading-text ${ibmMono.className}`}>Loading protocolLM…</span>
+          <span className={`loading-text ${ibmMono.className}`}>
+            {loadingStage === 'auth' && 'Checking authentication…'}
+            {loadingStage === 'subscription' && 'Loading subscription…'}
+            {loadingStage === 'ready' && 'Almost there…'}
+          </span>
         </div>
       </div>
     )
@@ -1120,7 +1058,8 @@ export default function Page() {
           align-items: center;
         }
         .plm-brand {
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+            monospace;
           color: var(--ink-0);
           text-decoration: none;
           font-weight: 700;
@@ -2223,7 +2162,14 @@ export default function Page() {
                       <textarea
                         ref={textAreaRef}
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        onChange={(e) => {
+                          setInput(e.target.value)
+                          // Auto-resize
+                          if (textAreaRef.current) {
+                            textAreaRef.current.style.height = 'auto'
+                            textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
+                          }
+                        }}
                         placeholder="Ask a question…"
                         rows={1}
                         className="chat-textarea"
