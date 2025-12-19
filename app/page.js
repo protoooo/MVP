@@ -237,8 +237,13 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   )
 }
 
-function RotatingDocPill({ items, intervalMs = 2200, position = 'bottom' }) {
+function RotatingDocPill({ items, intervalMs = 2200, location = 'header' }) {
   const [idx, setIdx] = useState(0)
+
+  const maxLen = useMemo(() => {
+    if (!items?.length) return 0
+    return items.reduce((m, s) => Math.max(m, (s || '').length), 0)
+  }, [items])
 
   useEffect(() => {
     if (!items?.length) return
@@ -249,8 +254,8 @@ function RotatingDocPill({ items, intervalMs = 2200, position = 'bottom' }) {
   if (!items?.length) return null
 
   return (
-    <div className={`doc-pill-wrap ${position === 'top' ? 'top' : 'bottom'}`} aria-hidden="true">
-      <div className="doc-pill">
+    <div className={`doc-pill-wrap ${location}`} aria-hidden="true">
+      <div className="doc-pill" style={{ ['--doc-pill-item-width']: `${maxLen}ch` }}>
         <span className="doc-pill-label">Indexed docs</span>
         <span className="doc-pill-dot">•</span>
         <span key={idx} className="doc-pill-item" title={items[idx]}>
@@ -306,6 +311,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </Link>
         </div>
 
+        {/* TOP MIDDLE — fixed-size rotating docs pill */}
+        <div className="ibm-top-center">
+          <RotatingDocPill items={DEMO_DOCUMENTS} location="header" />
+        </div>
+
         <div className="ibm-top-actions">
           <div className="pricing-menu-wrapper" ref={menuRef}>
             <button
@@ -352,6 +362,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       <div className="ibm-landing-bg" />
 
+      {/* EXACT CENTER — the pre is left-aligned but the block is centered */}
       <div className="ibm-landing-grid">
         <section className="ibm-console-text">
           <pre className="ibm-console-type">
@@ -361,7 +372,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         </section>
       </div>
 
-      <RotatingDocPill items={DEMO_DOCUMENTS} position="bottom" />
       <FooterLinks variant="landing" />
     </div>
   )
@@ -515,7 +525,9 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
             <button type="submit" disabled={loading || !isLoaded} className="btn-form-submit">
               {loading && <span className="btn-spinner" />}
-              <span className="btn-label">{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}</span>
+              <span className="btn-label">
+                {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+              </span>
             </button>
           </form>
 
@@ -973,13 +985,9 @@ export default function Page() {
         /* ==========================================================================
            protocolLM — Minimal IBM Console
            Updates in this version:
-           - Fix iOS/desktop “white leak” (html/body background + iOS fill-available)
-           - Add bottom Terms/Privacy/Contact links
-           - Landing doc card -> subtle rotating pill
-           - Top-left protocolLM wordmark (white, IBM)
-           - Pricing modal: remove “Site License” pill + remove redundant “Unlimited usage” feature block
-           - Remove auth modal header icon/emoji vibes
-           - Kill iOS green focus ring on textarea/buttons
+           - LANDING: exact center hero (desktop + mobile), left-aligned text within centered block
+           - LANDING: move rotating Indexed Docs pill to top-middle header
+           - LANDING: keep pill width fixed to longest document name (no resizing per item)
            ========================================================================== */
 
         :root {
@@ -1006,12 +1014,11 @@ export default function Page() {
           height: 100%;
           width: 100%;
           margin: 0;
-          background: var(--bg-0) !important; /* key: prevents “white leak” behind bounce */
+          background: var(--bg-0) !important;
           color: var(--ink-0);
           overflow-x: hidden;
         }
 
-        /* iOS Safari viewport/bounce helpers */
         @supports (-webkit-touch-callout: none) {
           html {
             height: -webkit-fill-available;
@@ -1030,7 +1037,6 @@ export default function Page() {
           -webkit-overflow-scrolling: touch;
         }
 
-        /* Remove tap highlight + focus rings (yes, this is what removes the green box) */
         a,
         button,
         input,
@@ -1048,7 +1054,6 @@ export default function Page() {
           color: var(--ink-0);
         }
 
-        /* Scrollbar (subtle) */
         ::-webkit-scrollbar {
           width: 8px;
           height: 8px;
@@ -1064,7 +1069,6 @@ export default function Page() {
           background: rgba(217, 217, 223, 0.2);
         }
 
-        /* Loading */
         .loading-screen {
           position: fixed;
           inset: 0;
@@ -1100,7 +1104,6 @@ export default function Page() {
           }
         }
 
-        /* App shell */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
@@ -1109,9 +1112,6 @@ export default function Page() {
           background: var(--bg-0);
         }
 
-        /* ==========================================================================
-           Brand
-           ========================================================================== */
         .plm-brand-wrap {
           pointer-events: auto;
           display: flex;
@@ -1132,11 +1132,11 @@ export default function Page() {
         }
 
         /* ==========================================================================
-           IBM Landing
+           IBM Landing — exact-center hero
            ========================================================================== */
         .ibm-landing {
           position: relative;
-          padding: 34px 20px 74px;
+          padding: 0 20px; /* IMPORTANT: remove vertical padding so hero centers perfectly */
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
@@ -1147,19 +1147,27 @@ export default function Page() {
           overflow: hidden;
         }
 
+        /* Header becomes 3-column grid: left brand / center pill / right actions */
         .ibm-landing-topbar {
           position: absolute;
           top: 14px;
           left: 0;
           right: 0;
-          display: flex;
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
           align-items: center;
-          justify-content: space-between;
           padding: 0 18px;
           z-index: 6;
           pointer-events: none;
         }
+        .ibm-top-center {
+          justify-self: center;
+          display: flex;
+          justify-content: center;
+          pointer-events: none;
+        }
         .ibm-top-actions {
+          justify-self: end;
           display: flex;
           gap: 10px;
           align-items: center;
@@ -1186,7 +1194,8 @@ export default function Page() {
           cursor: pointer;
           box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
           transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+            monospace;
         }
         .ibm-cta:hover {
           transform: translateY(-1px);
@@ -1268,7 +1277,6 @@ export default function Page() {
           pointer-events: none;
         }
 
-        /* Centered hero only */
         .ibm-landing-grid {
           position: relative;
           z-index: 2;
@@ -1278,25 +1286,26 @@ export default function Page() {
           grid-template-columns: 1fr;
           justify-items: center;
           align-items: center;
-          gap: 0;
         }
 
+        /* Exact center: remove big min-height + extra padding */
         .ibm-console-text {
-          padding: 18px;
-          min-height: 340px;
+          width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 100%;
+          padding: 0;
         }
         .ibm-console-type {
           margin: 0;
           white-space: pre-wrap;
           color: #e2e8f5;
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+            monospace;
           line-height: 1.45;
           font-size: 15px;
           width: min(720px, 100%);
+          text-align: left; /* left-aligned relative to itself */
         }
         .type-cursor {
           display: inline-block;
@@ -1314,22 +1323,14 @@ export default function Page() {
           }
         }
 
-        /* Rotating docs pill */
+        /* Rotating docs pill — FIXED WIDTH (based on longest doc) */
         .doc-pill-wrap {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 6;
-          width: min(920px, calc(100% - 28px));
-          pointer-events: none;
           display: flex;
           justify-content: center;
+          pointer-events: none;
         }
-        .doc-pill-wrap.bottom {
-          bottom: max(56px, calc(env(safe-area-inset-bottom) + 56px));
-        }
-        .doc-pill-wrap.top {
-          top: 66px;
+        .doc-pill-wrap.header {
+          position: static;
         }
         .doc-pill {
           pointer-events: none;
@@ -1345,21 +1346,32 @@ export default function Page() {
           font-size: 11px;
           letter-spacing: 0.1em;
           text-transform: uppercase;
+          max-width: calc(100vw - 28px);
         }
         .doc-pill-label {
           opacity: 0.75;
+          white-space: nowrap;
         }
         .doc-pill-dot {
           opacity: 0.45;
+          white-space: nowrap;
         }
         .doc-pill-item {
           text-transform: none;
           letter-spacing: 0.02em;
           opacity: 0.92;
-          max-width: min(560px, 64vw);
+          display: inline-block;
+
+          /* the key: fixed width to the longest doc name (constant per item) */
+          width: var(--doc-pill-item-width, auto);
+
+          /* safety for smaller screens */
+          max-width: 60vw;
+
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+
           animation: pillFade 2200ms ease both;
         }
         @keyframes pillFade {
@@ -1389,6 +1401,7 @@ export default function Page() {
           z-index: 6;
           display: inline-flex;
           align-items: center;
+          justify-content: center; /* ensure centered inside the pill */
           gap: 10px;
           padding: 8px 12px;
           border-radius: 999px;
@@ -1427,7 +1440,19 @@ export default function Page() {
 
         @media (max-width: 768px) {
           .ibm-landing {
-            padding: 32px 16px 48px;
+            padding: 0 16px;
+          }
+
+          /* prevent header crowding on small screens if needed */
+          .ibm-landing-topbar {
+            grid-template-columns: 1fr auto;
+            column-gap: 10px;
+          }
+          .ibm-top-center {
+            display: none; /* keeps mobile clean; footer + hero are already centered */
+          }
+          .ibm-top-actions {
+            grid-column: 2;
           }
         }
 
@@ -1665,7 +1690,6 @@ export default function Page() {
           font-weight: 800;
         }
 
-        /* Pricing modal (no “Site License” pill) */
         .pricing-title {
           color: var(--ink-0);
         }
@@ -1683,7 +1707,6 @@ export default function Page() {
           font-size: 16px;
           color: var(--ink-2);
         }
-        /* Fix dotted zeros: use Outfit for numerals */
         .pricing-number-lg {
           font-size: 56px;
           font-weight: 900;
@@ -1761,7 +1784,7 @@ export default function Page() {
         }
 
         /* ==========================================================================
-           Chat
+           Chat (unchanged)
            ========================================================================== */
         .chat-container {
           flex: 1;
@@ -1771,10 +1794,9 @@ export default function Page() {
           background: var(--bg-0);
           color: var(--ink-0);
           position: relative;
-          overflow: hidden; /* helps prevent side “leaks” */
+          overflow: hidden;
         }
 
-        /* subtle scanlines */
         .chat-container::before {
           content: '';
           position: absolute;
@@ -1823,7 +1845,7 @@ export default function Page() {
           z-index: 2;
         }
         .chat-messages.empty {
-          justify-content: center; /* center-center empty state */
+          justify-content: center;
           padding-top: 0;
         }
 
@@ -2001,7 +2023,6 @@ export default function Page() {
           color: var(--ink-0);
         }
 
-        /* Key: prevent iOS green focus box by forcing appearance + no shadow */
         .chat-textarea {
           flex: 1;
           min-height: 44px;
@@ -2124,11 +2145,7 @@ export default function Page() {
                 </div>
               </div>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
+              <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
                 {messages.length === 0 ? (
                   <div className="chat-empty-content">
                     <h2 className="chat-empty-title">Upload a photo or ask a question</h2>
