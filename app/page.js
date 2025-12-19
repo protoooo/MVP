@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
+import AppIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
@@ -223,8 +225,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     <div className={`${ibmMono.className} ibm-landing`}>
       <div className="ibm-landing-topbar">
         <div className="plm-brand-wrap">
-          <Link href="/" className="plm-brand" aria-label="protocolLM home">
-            protocolLM
+          <Link href="/" className="plm-brand plm-brand-link" aria-label="protocolLM home">
+            <span className="plm-brand-icon" aria-hidden="true">
+              <Image src={AppIcon} alt="" width={22} height={22} priority />
+            </span>
+            <span className="plm-brand-text">protocolLM</span>
           </Link>
         </div>
 
@@ -441,7 +446,9 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
             <button type="submit" disabled={loading || !isLoaded} className="btn-form-submit">
               {loading && <span className="btn-spinner" />}
-              <span className="btn-label">{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}</span>
+              <span className="btn-label">
+                {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+              </span>
             </button>
           </form>
 
@@ -927,6 +934,7 @@ export default function Page() {
            - LANDING: shorten typewriter lines to prevent awkward wrapping gaps
            - CHAT: textarea placeholder no longer clips + placeholder text shortened
            - CHAT: footer links center properly (Safari/iOS) by making the chat footer pill block-level
+           - BRAND: add apple-icon.png next to protocolLM in top-left (landing + chat) WITHOUT using /public
            ========================================================================== */
 
         :root {
@@ -1070,6 +1078,29 @@ export default function Page() {
         }
         .plm-brand:hover {
           background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* ✅ Icon + text */
+        .plm-brand-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .plm-brand-icon {
+          width: 22px;
+          height: 22px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex: 0 0 auto;
+        }
+        .plm-brand-icon img {
+          display: block;
+          border-radius: 6px;
+        }
+        .plm-brand-text {
+          display: inline-block;
+          line-height: 1;
         }
 
         /* ==========================================================================
@@ -2070,7 +2101,12 @@ export default function Page() {
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
@@ -2085,8 +2121,11 @@ export default function Page() {
           ) : (
             <div className={`${ibmMono.className} chat-container`}>
               <div className="chat-topbar">
-                <Link href="/" className="plm-brand" aria-label="protocolLM home">
-                  protocolLM
+                <Link href="/" className="plm-brand plm-brand-link" aria-label="protocolLM home">
+                  <span className="plm-brand-icon" aria-hidden="true">
+                    <Image src={AppIcon} alt="" width={22} height={22} priority />
+                  </span>
+                  <span className="plm-brand-text">protocolLM</span>
                 </Link>
 
                 <div className="chat-top-actions">
@@ -2112,7 +2151,10 @@ export default function Page() {
                 ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
+                      <div
+                        key={idx}
+                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                      >
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
