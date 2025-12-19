@@ -190,8 +190,8 @@ const DEMO_DOCUMENTS = [
 const TYPEWRITER_LINES = [
   'Welcome to Protocol LM.',
   'Where you catch violations before they cost you.',
-  'We watch permits, inspections, and every audit trail.',
-  'Send the evidence. We return clarity before dawn.',
+  'Upload an image to check compliance in seconds.',
+  'Ask anything about Washtenaw County food safety and regulations.',
 ]
 
 // Subtle animated wave background - light theme
@@ -353,6 +353,8 @@ function useConsoleTypewriter(lines) {
     let printed = []
     let deleting = false
     let deleteCountdown = 0
+    let mistakesUsed = 0
+    const mistakeLimit = 2
     let timeoutId
 
     const schedule = (delay) => {
@@ -364,16 +366,18 @@ function useConsoleTypewriter(lines) {
       const current = lines[lineIndex]
 
       if (!deleting) {
-        const makeMistake = Math.random() < 0.12 && charIndex < current.length - 2
+        const allowMistake = mistakesUsed < mistakeLimit
+        const makeMistake = allowMistake && Math.random() < 0.06 && charIndex > 4 && charIndex < current.length - 4
 
         if (makeMistake) {
+          mistakesUsed += 1
           const alphabet = 'abcdefghijklmnopqrstuvwxyz'
           const wrongChar = alphabet[Math.floor(Math.random() * alphabet.length)]
           buffer += wrongChar
-          deleteCountdown = 1 + Math.floor(Math.random() * 2)
+          deleteCountdown = 1
           deleting = true
           setOutput([...printed, buffer].join('\n'))
-          return schedule(220 + Math.random() * 120)
+          return schedule(120 + Math.random() * 60)
         }
 
         buffer += current[charIndex]
@@ -385,10 +389,11 @@ function useConsoleTypewriter(lines) {
           buffer = ''
           charIndex = 0
           lineIndex = (lineIndex + 1) % lines.length
-          return schedule(900)
+          mistakesUsed = 0
+          return schedule(650)
         }
 
-        return schedule(70 + Math.random() * 80)
+        return schedule(40 + Math.random() * 30)
       }
 
       buffer = buffer.slice(0, -1)
@@ -396,7 +401,7 @@ function useConsoleTypewriter(lines) {
       setOutput([...printed, buffer].join('\n'))
 
       if (deleteCountdown <= 0) deleting = false
-      schedule(50 + Math.random() * 70)
+      schedule(40 + Math.random() * 50)
     }
 
     schedule(400)
@@ -1472,15 +1477,16 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
+          background: #0c111a;
         }
 
         .ibm-landing-bg {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(58, 120, 194, 0.1), transparent 45%),
-            radial-gradient(circle at 80% 0%, rgba(58, 120, 194, 0.08), transparent 40%),
-            linear-gradient(90deg, rgba(18, 23, 33, 0.6) 0%, rgba(11, 16, 24, 0.8) 100%);
-          opacity: 0.9;
+          background: radial-gradient(circle at 20% 20%, rgba(42, 63, 98, 0.24), transparent 50%),
+            radial-gradient(circle at 80% 0%, rgba(42, 63, 98, 0.18), transparent 42%),
+            linear-gradient(90deg, rgba(12, 17, 26, 0.9) 0%, rgba(13, 16, 23, 0.92) 100%);
+          opacity: 0.8;
           pointer-events: none;
         }
 
@@ -1497,10 +1503,10 @@ export default function Page() {
 
         .ibm-console-card,
         .ibm-doc-card {
-          background: #0e1320;
-          border: 1px solid #1d2c45;
-          border-radius: 18px;
-          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px #0b1018;
+          background: #0f1623;
+          border: 1px solid #1c2638;
+          border-radius: 16px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
           padding: 18px;
           display: flex;
           flex-direction: column;
@@ -1512,9 +1518,9 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          color: #8fb5ff;
+          color: #9fb3d1;
           text-transform: uppercase;
-          letter-spacing: 0.28em;
+          letter-spacing: 0.24em;
           font-size: 11px;
         }
 
@@ -1522,22 +1528,22 @@ export default function Page() {
           width: 8px;
           height: 8px;
           border-radius: 999px;
-          background: #3a78c2;
-          box-shadow: 0 0 12px rgba(58, 120, 194, 0.9);
+          background: #5c6f8d;
+          box-shadow: 0 0 4px rgba(92, 111, 141, 0.8);
           display: inline-block;
           margin-right: 10px;
         }
 
         .ibm-label {
-          color: #c5d9ff;
+          color: #c3d1e8;
         }
 
         .ibm-console-shell {
-          background: #0a0f1a;
-          border: 1px solid #1a2a3f;
-          border-radius: 14px;
+          background: #0d1320;
+          border: 1px solid #1c2940;
+          border-radius: 12px;
           padding: 14px;
-          color: #d9e6ff;
+          color: #d6deed;
           min-height: 260px;
           display: flex;
           flex-direction: column;
@@ -1545,7 +1551,7 @@ export default function Page() {
         }
 
         .ibm-console-heading {
-          color: #8fb5ff;
+          color: #9fb3d1;
           font-size: 12px;
           letter-spacing: 0.14em;
           text-transform: uppercase;
@@ -1553,20 +1559,20 @@ export default function Page() {
 
         .ibm-console-body {
           flex: 1;
-          background: #0c1120;
-          border: 1px dashed #20345b;
+          background: #0b101b;
+          border: 1px dashed #28354c;
           border-radius: 10px;
           padding: 14px;
-          box-shadow: inset 0 0 0 1px rgba(35, 69, 139, 0.4);
+          box-shadow: inset 0 0 0 1px rgba(40, 53, 76, 0.4);
         }
 
         .ibm-console-type {
           margin: 0;
           white-space: pre-wrap;
-          color: #e9f1ff;
+          color: #e2e8f5;
           font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-          line-height: 1.5;
-          font-size: 16px;
+          line-height: 1.45;
+          font-size: 15px;
         }
 
         .ibm-doc-card {
@@ -1579,12 +1585,12 @@ export default function Page() {
           gap: 10px;
           font-weight: 700;
           letter-spacing: 0.08em;
-          color: #8fb5ff;
+          color: #9fb3d1;
           text-transform: uppercase;
         }
 
         .ibm-doc-meta {
-          color: #7f9ccf;
+          color: #8c9ebc;
           font-size: 11px;
           letter-spacing: 0.18em;
           text-transform: uppercase;
@@ -1592,18 +1598,18 @@ export default function Page() {
 
         .ibm-doc-window {
           position: relative;
-          background: #0a0f1a;
-          border: 1px solid #1a2a3f;
-          border-radius: 14px;
+          background: #0d1320;
+          border: 1px solid #1c2940;
+          border-radius: 12px;
           padding: 12px;
           overflow: hidden;
-          height: 340px;
+          height: 320px;
         }
 
         .ibm-doc-gradient {
           position: absolute;
           inset: 0;
-          background: linear-gradient(180deg, #0a0f1a 0%, transparent 14%, transparent 86%, #0a0f1a 100%);
+          background: linear-gradient(180deg, #0d1320 0%, transparent 16%, transparent 84%, #0d1320 100%);
           z-index: 2;
           pointer-events: none;
         }
@@ -1621,7 +1627,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 12px;
-          color: #d9e6ff;
+          color: #d6deed;
           font-size: 14px;
           letter-spacing: -0.01em;
         }
@@ -1630,8 +1636,8 @@ export default function Page() {
           width: 6px;
           height: 6px;
           border-radius: 999px;
-          background: #3a78c2;
-          box-shadow: 0 0 10px rgba(58, 120, 194, 0.9);
+          background: #5c6f8d;
+          box-shadow: 0 0 6px rgba(92, 111, 141, 0.8);
         }
 
         .ibm-doc-name {
@@ -1678,26 +1684,26 @@ export default function Page() {
 
         .ibm-cta {
           padding: 10px 16px;
-          background: #3a78c2;
-          color: #0b1018;
-          border: 1px solid #23458b;
+          background: #2a3e5a;
+          color: #e2e8f5;
+          border: 1px solid #344863;
           border-radius: 12px;
           text-transform: uppercase;
           letter-spacing: 0.12em;
           font-weight: 700;
-          box-shadow: 0 0 18px rgba(58, 120, 194, 0.35);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .ibm-cta.secondary {
           background: transparent;
-          color: #c5d9ff;
+          color: #c3d1e8;
         }
 
         .ibm-cta:hover {
           transform: translateY(-1px);
-          box-shadow: 0 0 22px rgba(58, 120, 194, 0.55);
+          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -3354,7 +3360,7 @@ export default function Page() {
           flex-direction: column;
           min-height: 0;
           background: #0b1018;
-          color: #e9f1ff;
+          color: #e2e8f5;
         }
 
         .chat-messages {
@@ -3407,14 +3413,14 @@ export default function Page() {
         .chat-empty-title {
           font-size: 18px;
           font-weight: 700;
-          color: #e9f1ff;
+          color: #e2e8f5;
           margin-bottom: 8px;
         }
 
         .chat-empty-text {
           font-size: 14px;
           line-height: 1.6;
-          color: #c5d9ff;
+          color: #c3d1e8;
           margin-bottom: 24px;
         }
 
@@ -3439,17 +3445,17 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: #0e1320;
-          border: 1px solid #23458b;
-          color: #c5d9ff;
+          background: #11192a;
+          border: 1px solid #2c3c58;
+          color: #c3d1e8;
           border-radius: 14px;
-          box-shadow: 0 0 18px rgba(58, 120, 194, 0.35);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .ibm-chat-btn:hover {
-          box-shadow: 0 0 22px rgba(58, 120, 194, 0.55);
+          box-shadow: 0 12px 26px rgba(0, 0, 0, 0.32);
           transform: translateY(-1px);
         }
 
@@ -3600,9 +3606,9 @@ export default function Page() {
           padding: 12px 4px;
           background: transparent;
           border: none;
-          border-bottom: 1px dashed #23458b;
+          border-bottom: 1px dashed #2c3c58;
           border-radius: 0;
-          color: #e9f1ff;
+          color: #e2e8f5;
           font-size: 15px;
           line-height: 1.5;
           resize: none;
