@@ -7,11 +7,12 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit, Inter } from 'next/font/google'
+import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
@@ -152,7 +153,46 @@ const Icons = {
       <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
   ),
+  Chat: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  ),
 }
+
+const DEMO_DOCUMENTS = [
+  '3compsink',
+  'Consumer Advisory',
+  'ConsumerAdvisory',
+  'Cooling Foods',
+  'Cross contamination',
+  'date_marking_guide',
+  'Enforcement Action | Washtenaw County, MI',
+  'FDA_FOOD_CODE_2022',
+  'FOG',
+  'Food Allergy Information | Washtenaw County, MI',
+  'Food Service Inspection Program | Washtenaw County, MI',
+  'Food Service Inspection Program | Washtenaw County, MI – Official Website',
+  'food_labeling_guide',
+  'FoodTemperatures',
+  'Inspection Report Types | Washtenaw County, MI – Official Website',
+  'Internal_Cooking_Temperatures',
+  'mcl_act_92_of_2000',
+  'MI_MODIFIED_FOOD_CODE',
+  'new-business-information-packet',
+  'NorovirusEnvironCleaning',
+  'PROCEDURES_FOR_THE_ADMINISTRATION_AND_ENFORCEMENT_OF_THE_MICHIGAN_FO',
+  'retail_food_establishments_emergency_action_plan',
+  'Summary Chart for Minimum Cooking Food Temperatures and Holding Time',
+  'USDA_Safe_Minimum_Internal_Temperature_Chart',
+]
+
+const TYPEWRITER_LINES = [
+  'Welcome to Protocol LM.',
+  'Where you catch violations before they cost you.',
+  'We watch permits, inspections, and every audit trail.',
+  'Send the evidence. We return clarity before dawn.',
+]
 
 // Subtle animated wave background - light theme
 function WaveBackground() {
@@ -302,6 +342,75 @@ function CountUp({ value, prefix = '', suffix = '', duration = 2000, className =
   )
 }
 
+function useConsoleTypewriter(lines) {
+  const [output, setOutput] = useState('')
+
+  useEffect(() => {
+    let isCancelled = false
+    let lineIndex = 0
+    let charIndex = 0
+    let buffer = ''
+    let printed = []
+    let deleting = false
+    let deleteCountdown = 0
+    let timeoutId
+
+    const schedule = (delay) => {
+      timeoutId = setTimeout(step, delay)
+    }
+
+    const step = () => {
+      if (isCancelled) return
+      const current = lines[lineIndex]
+
+      if (!deleting) {
+        const makeMistake = Math.random() < 0.12 && charIndex < current.length - 2
+
+        if (makeMistake) {
+          const alphabet = 'abcdefghijklmnopqrstuvwxyz'
+          const wrongChar = alphabet[Math.floor(Math.random() * alphabet.length)]
+          buffer += wrongChar
+          deleteCountdown = 1 + Math.floor(Math.random() * 2)
+          deleting = true
+          setOutput([...printed, buffer].join('\n'))
+          return schedule(220 + Math.random() * 120)
+        }
+
+        buffer += current[charIndex]
+        charIndex += 1
+        setOutput([...printed, buffer].join('\n'))
+
+        if (charIndex === current.length) {
+          printed = [...printed, buffer]
+          buffer = ''
+          charIndex = 0
+          lineIndex = (lineIndex + 1) % lines.length
+          return schedule(900)
+        }
+
+        return schedule(70 + Math.random() * 80)
+      }
+
+      buffer = buffer.slice(0, -1)
+      deleteCountdown -= 1
+      setOutput([...printed, buffer].join('\n'))
+
+      if (deleteCountdown <= 0) deleting = false
+      schedule(50 + Math.random() * 70)
+    }
+
+    schedule(400)
+
+    return () => {
+      isCancelled = true
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines])
+
+  return output
+}
+
 function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   const [visible, setVisible] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -411,394 +520,56 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
-
-  const faqs = useMemo(
-    () => [
-      {
-        q: 'Is this only for Washtenaw County?',
-        a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
-      },
-      {
-        q: 'What should my team upload for photo checks?',
-        a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any "does this look right?" moments mid-shift.',
-      },
-      {
-        q: 'How should we use the document side?',
-        a: "Ask short, operational questions. You'll get answers grounded in local enforcement actions plus the relevant food-code sources.",
-      },
-      {
-        q: 'Is usage limited?',
-        a: 'No. The plan is unlimited for text questions and photo checks for your licensed location.',
-      },
-      {
-        q: 'Will it replace training or a manager?',
-        a: "No. It's a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.",
-      },
-      {
-        q: 'How often should my team use it?',
-        a: 'Teams usually run checks before inspection windows, after onboarding new staff, and whenever something looks off during a shift.',
-      },
-    ],
-    []
-  )
-
-  const features = useMemo(
-    () => [
-      {
-        icon: <Icons.Eye />,
-        title: 'Visual Compliance Analysis',
-        description: 'Upload photos of any kitchen station and receive instant feedback on potential violations before inspectors arrive.',
-      },
-      {
-        icon: <Icons.Document />,
-        title: 'Local Regulation Database',
-        description: 'Search Washtenaw County food regulation documents alongside Michigan Food Code requirements for context-aware answers.',
-      },
-      {
-        icon: <Icons.Zap />,
-        title: 'Real-time Guidance',
-        description: 'Get actionable fixes in plain language, not legal jargon. Purpose-built for line staff and shift managers.',
-      },
-    ],
-    []
-  )
-
-  // Real data from FDA, CDC, and industry sources
-  const complianceRisks = useMemo(
-    () => [
-      { 
-        label: 'Average fine per critical violation', 
-        value: 500, 
-        prefix: '$',
-        suffix: '+',
-        icon: <Icons.DollarSign />
-      },
-      { 
-        label: 'Foodborne illness cost per incident', 
-        value: 75000, 
-        prefix: '$',
-        suffix: '',
-        icon: <Icons.AlertTriangle />
-      },
-      { 
-        label: 'Revenue loss during closure', 
-        value: 10000, 
-        prefix: '$',
-        suffix: '+',
-        icon: <Icons.TrendingUp />
-      },
-      { 
-        label: 'Repeat violations in first year', 
-        value: 38, 
-        prefix: '',
-        suffix: '%',
-        icon: <Icons.Clock />
-      },
-    ],
-    []
-  )
-
-  const proofPoints = useMemo(
-    () => [
-      { value: '24/7', label: 'availability', isText: true },
-      { value: 7, label: 'day free trial' },
-      { value: 'Unlimited', label: 'photo checks', isText: true },
-    ],
-    []
-  )
+  const typewriter = useConsoleTypewriter(TYPEWRITER_LINES)
+  const documentRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS.slice(0, 5)], [])
 
   return (
-    <div className="landing-wrapper">
-      {/* Animated wave background */}
-      <WaveBackground />
-
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-container">
-          <div className="hero-content">
-            <Reveal delay={0}>
-              <h1 className={`hero-title ${outfit.className} hero-title-animated`}>
-                <span className="hero-title-line">Catch violations</span>
-                <span className="hero-title-line hero-title-gradient">before the inspector does</span>
-              </h1>
-            </Reveal>
-
-            <Reveal delay={200}>
-              <p className={`hero-description ${inter.className}`}>
-                Upload photos of your kitchen and get instant AI analysis that spots potential 
-                violations before they become citations. Built specifically for Washtenaw County 
-                food code requirements.
-              </p>
-            </Reveal>
-
-            <Reveal delay={300}>
-              <div className="hero-actions">
-                <button onClick={onShowPricing} className="btn-hero-primary">
-                  <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
-                  <span className="btn-icon-right">
-                    <Icons.ArrowRight />
-                  </span>
-                </button>
-                <button onClick={onShowAuth} className="btn-hero-secondary">
-                  <span className={`btn-label ${inter.className}`}>Sign in</span>
-                </button>
-              </div>
-            </Reveal>
+    <div className={`${ibmMono.className} ibm-landing`}>
+      <div className="ibm-landing-bg" />
+      <div className="ibm-landing-grid">
+        <section className="ibm-console-card">
+          <div className="ibm-console-topline">
+            <span className="ibm-led" />
+            <span className="ibm-label">Protocol LM</span>
           </div>
+          <div className="ibm-console-shell">
+            <div className="ibm-console-heading">IBM Console Feed</div>
+            <div className="ibm-console-body">
+              <pre className="ibm-console-type">{typewriter}</pre>
+            </div>
+          </div>
+        </section>
 
-        </div>
-      </section>
-
-      {/* Social Proof Bar */}
-      <section className="proof-section">
-        <div className="proof-container">
-          <Reveal>
-            <div className="proof-grid">
-              {proofPoints.map((point, i) => (
-                <div key={i} className="proof-item">
-                  <div className={`proof-value ${outfit.className}`}>
-                    {point.isText ? (
-                      point.value
-                    ) : (
-                      <CountUp value={point.value} prefix={point.prefix || ''} />
-                    )}
-                  </div>
-                  <div className={`proof-label ${inter.className}`}>{point.label}</div>
+        <section className="ibm-doc-card">
+          <div className="ibm-doc-topline">
+            <div className="ibm-doc-title">
+              <span className="ibm-led" />
+              Ingested Documents
+            </div>
+            <span className="ibm-doc-meta">Live Scroll</span>
+          </div>
+          <div className="ibm-doc-window">
+            <div className="ibm-doc-gradient" />
+            <div className="ibm-doc-scroll animate-doc-scroll">
+              {documentRows.map((doc, idx) => (
+                <div key={`${doc}-${idx}`} className="ibm-doc-row">
+                  <span className="ibm-doc-dot" />
+                  <span className="ibm-doc-name">{doc}</span>
                 </div>
               ))}
             </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="features-section">
-        <div className="features-container">
-          <Reveal>
-            <div className="section-header">
-              <span className={`section-label ${inter.className}`}>Capabilities</span>
-              <h2 className={`section-title ${outfit.className}`}>
-                Built for real kitchen operations
-              </h2>
-              <p className={`section-description ${inter.className}`}>
-                Not a generic chatbot. Purpose-built workflows for photo checks, 
-                quick regulatory answers, and building consistent compliance habits.
-              </p>
-            </div>
-          </Reveal>
-
-          <div className="features-grid">
-            {features.map((feature, i) => (
-              <Reveal key={i} delay={i * 120}>
-                <div className="feature-card">
-                  <div className="feature-card-border" />
-                  <div className="feature-icon-wrapper">
-                    {feature.icon}
-                  </div>
-                  <h3 className={`feature-title ${inter.className}`}>{feature.title}</h3>
-                  <p className={`feature-description ${inter.className}`}>{feature.description}</p>
-                </div>
-              </Reveal>
-            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      {/* Risk/Value Section */}
-      <section className="risk-section">
-        <div className="risk-container">
-          <Reveal>
-            <div className="section-header">
-              <span className={`section-label ${inter.className}`}>Why it matters</span>
-              <h2 className={`section-title ${outfit.className}`}>
-                The real cost of non-compliance
-              </h2>
-              <p className={`section-description ${inter.className}`}>
-                One serious violation can cost more than years of prevention. 
-                These figures represent documented industry averages.
-              </p>
-            </div>
-          </Reveal>
-
-          <div className="risk-grid">
-            {complianceRisks.map((risk, i) => (
-              <Reveal key={i} delay={i * 100}>
-                <div className="risk-card">
-                  <div className="risk-card-border" />
-                  <div className="risk-icon">
-                    {risk.icon}
-                  </div>
-                  <div className={`risk-value ${outfit.className}`}>
-                    <CountUp 
-                      value={risk.value} 
-                      prefix={risk.prefix} 
-                      suffix={risk.suffix}
-                      duration={2500}
-                    />
-                  </div>
-                  <div className={`risk-label ${inter.className}`}>{risk.label}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-
-          <Reveal delay={400}>
-            <p className={`risk-sources ${inter.className}`}>
-              Sources: FDA Model Food Code (2022), CDC Foodborne Illness Economic Burden Report (2024), 
-              National Restaurant Association compliance surveys
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="pricing-section">
-        <div className="pricing-container">
-          <Reveal>
-            <div className="section-header">
-              <span className={`section-label ${inter.className}`}>Simple pricing</span>
-              <h2 className={`section-title ${outfit.className}`}>
-                One plan, unlimited usage
-              </h2>
-              <p className={`section-description ${inter.className}`}>
-                Full access for your entire team at one location. 
-                No per-seat fees, no hidden costs, no usage limits.
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal delay={150}>
-            <div className="pricing-card">
-              <div className="pricing-card-border" />
-              <div className="pricing-card-inner">
-                <div className="pricing-badge-wrapper">
-                  <div className="pricing-badge">
-                    <Icons.Spark />
-                    <span className={inter.className}>Site License</span>
-                  </div>
-                </div>
-
-                <div className="pricing-amount">
-                  <span className={`pricing-currency ${inter.className}`}>$</span>
-                  <span className={`pricing-number ${outfit.className}`}>100</span>
-                  <span className={`pricing-period ${inter.className}`}>/month</span>
-                </div>
-
-                <p className={`pricing-annual ${inter.className}`}>
-                  or $1,000/year <span className="pricing-savings">(save $200)</span>
-                </p>
-
-                <div className="pricing-features">
-                  {[
-                    'Unlimited photo compliance checks',
-                    'Unlimited regulatory questions',
-                    'Washtenaw-specific guidance',
-                    'Full team access included',
-                    '7-day free trial to start',
-                    'Cancel anytime, no questions',
-                  ].map((feature, i) => (
-                    <div key={i} className={`pricing-feature ${inter.className}`}>
-                      <span className="pricing-check">
-                        <Icons.Check />
-                      </span>
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pricing-cta">
-                  <button onClick={onShowPricing} className="btn-pricing-primary">
-                    <span className={`btn-label ${inter.className}`}>Start free trial</span>
-                    <Icons.ArrowRight />
-                  </button>
-                </div>
-
-                <p className={`pricing-note ${inter.className}`}>
-                  No credit card required to start your trial
-                </p>
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={250}>
-            <p className={`pricing-comparison ${inter.className}`}>
-              
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="faq-section">
-        <div className="faq-container">
-          <Reveal>
-            <div className="section-header">
-              <span className={`section-label ${inter.className}`}>Questions</span>
-              <h2 className={`section-title ${outfit.className}`}>
-                Frequently asked
-              </h2>
-            </div>
-          </Reveal>
-
-          <div className="faq-list">
-            {faqs.map((f, i) => (
-              <FAQItem
-                key={i}
-                q={f.q}
-                a={f.a}
-                index={i}
-                isOpen={openFaq === i}
-                onToggle={() => setOpenFaq((v) => (v === i ? null : i))}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="cta-section">
-        <div className="cta-container">
-          <Reveal>
-            <div className="cta-content">
-              <h2 className={`cta-title ${outfit.className}`}>
-                Ready to catch issues before&nbsp;they&nbsp;cost&nbsp;you?
-              </h2>
-              <p className={`cta-description ${inter.className}`}>
-                Setup takes less than 2 minutes. Give your team a faster way to 
-                verify compliance and fix problems before inspection day.
-              </p>
-              <div className="cta-actions">
-                <button onClick={onShowPricing} className="btn-cta-primary">
-                  <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
-                  <Icons.ArrowRight />
-                </button>
-                <button onClick={onShowAuth} className="btn-cta-secondary">
-                  <span className={`btn-label ${inter.className}`}>Sign in to dashboard</span>
-                </button>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="landing-footer">
-        <div className="footer-container">
-          <div className="footer-links">
-            <Link href="/terms" className={`footer-link ${inter.className}`}>Terms of Service</Link>
-            <span className="footer-divider">·</span>
-            <Link href="/privacy" className={`footer-link ${inter.className}`}>Privacy Policy</Link>
-            <span className="footer-divider">·</span>
-            <Link href="/contact" className={`footer-link ${inter.className}`}>Contact</Link>
-          </div>
-          <p className={`footer-api-note ${inter.className}`}>
-            Powered by Anthropic Claude and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
-          </p>
-          <p className={`footer-copyright ${inter.className}`}>
-            © 2025 protocolLM. Made in Washtenaw for Washtenaw.
-          </p>
-        </div>
-      </footer>
+      <div className="ibm-landing-actions">
+        <button onClick={onShowPricing} className="ibm-cta">
+          Start trial
+        </button>
+        <button onClick={onShowAuth} className="ibm-cta secondary">
+          Sign in
+        </button>
+      </div>
     </div>
   )
 }
@@ -1654,6 +1425,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           position: relative;
+          background: #0b1018;
+          color: #e9f1ff;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -1686,6 +1459,245 @@ export default function Page() {
             linear-gradient(90deg, rgba(47, 93, 138, 0.02) 1px, transparent 1px);
           background-size: 60px 60px;
           mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════
+           IBM Console Landing
+           ═══════════════════════════════════════════════════════════════════════ */
+        .ibm-landing {
+          position: relative;
+          z-index: 1;
+          padding: 48px 20px 80px;
+          min-height: calc(100dvh - 0px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .ibm-landing-bg {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at 20% 20%, rgba(58, 120, 194, 0.1), transparent 45%),
+            radial-gradient(circle at 80% 0%, rgba(58, 120, 194, 0.08), transparent 40%),
+            linear-gradient(90deg, rgba(18, 23, 33, 0.6) 0%, rgba(11, 16, 24, 0.8) 100%);
+          opacity: 0.9;
+          pointer-events: none;
+        }
+
+        .ibm-landing-grid {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          max-width: 1200px;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 20px;
+          align-items: stretch;
+        }
+
+        .ibm-console-card,
+        .ibm-doc-card {
+          background: #0e1320;
+          border: 1px solid #1d2c45;
+          border-radius: 18px;
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px #0b1018;
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .ibm-console-topline,
+        .ibm-doc-topline {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          color: #8fb5ff;
+          text-transform: uppercase;
+          letter-spacing: 0.28em;
+          font-size: 11px;
+        }
+
+        .ibm-led {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #3a78c2;
+          box-shadow: 0 0 12px rgba(58, 120, 194, 0.9);
+          display: inline-block;
+          margin-right: 10px;
+        }
+
+        .ibm-label {
+          color: #c5d9ff;
+        }
+
+        .ibm-console-shell {
+          background: #0a0f1a;
+          border: 1px solid #1a2a3f;
+          border-radius: 14px;
+          padding: 14px;
+          color: #d9e6ff;
+          min-height: 260px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .ibm-console-heading {
+          color: #8fb5ff;
+          font-size: 12px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+
+        .ibm-console-body {
+          flex: 1;
+          background: #0c1120;
+          border: 1px dashed #20345b;
+          border-radius: 10px;
+          padding: 14px;
+          box-shadow: inset 0 0 0 1px rgba(35, 69, 139, 0.4);
+        }
+
+        .ibm-console-type {
+          margin: 0;
+          white-space: pre-wrap;
+          color: #e9f1ff;
+          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+          line-height: 1.5;
+          font-size: 16px;
+        }
+
+        .ibm-doc-card {
+          gap: 12px;
+        }
+
+        .ibm-doc-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: #8fb5ff;
+          text-transform: uppercase;
+        }
+
+        .ibm-doc-meta {
+          color: #7f9ccf;
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .ibm-doc-window {
+          position: relative;
+          background: #0a0f1a;
+          border: 1px solid #1a2a3f;
+          border-radius: 14px;
+          padding: 12px;
+          overflow: hidden;
+          height: 340px;
+        }
+
+        .ibm-doc-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, #0a0f1a 0%, transparent 14%, transparent 86%, #0a0f1a 100%);
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .ibm-doc-scroll {
+          position: absolute;
+          inset: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding-right: 8px;
+        }
+
+        .ibm-doc-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #d9e6ff;
+          font-size: 14px;
+          letter-spacing: -0.01em;
+        }
+
+        .ibm-doc-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: #3a78c2;
+          box-shadow: 0 0 10px rgba(58, 120, 194, 0.9);
+        }
+
+        .ibm-doc-name {
+          white-space: nowrap;
+        }
+
+        .animate-doc-scroll {
+          animation: doc-scroll 22s linear infinite;
+        }
+
+        @keyframes doc-scroll {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(-50%); }
+        }
+
+        @media (max-width: 768px) {
+          .ibm-landing {
+            padding: 32px 16px 48px;
+          }
+
+          .ibm-landing-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .ibm-console-card,
+          .ibm-doc-card {
+            padding: 16px;
+          }
+
+          .ibm-doc-name {
+            white-space: normal;
+          }
+        }
+
+        .ibm-landing-actions {
+          position: relative;
+          z-index: 2;
+          margin-top: 18px;
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .ibm-cta {
+          padding: 10px 16px;
+          background: #3a78c2;
+          color: #0b1018;
+          border: 1px solid #23458b;
+          border-radius: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          font-weight: 700;
+          box-shadow: 0 0 18px rgba(58, 120, 194, 0.35);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .ibm-cta.secondary {
+          background: transparent;
+          color: #c5d9ff;
+        }
+
+        .ibm-cta:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 0 22px rgba(58, 120, 194, 0.55);
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -3341,9 +3353,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(85, 214, 178, 0.06), transparent 32%), 
-                      radial-gradient(circle at 80% 10%, rgba(47, 93, 138, 0.06), transparent 40%),
-                      var(--color-bg);
+          background: #0b1018;
+          color: #e9f1ff;
         }
 
         .chat-messages {
@@ -3373,11 +3384,11 @@ export default function Page() {
           width: 100%;
           text-align: center;
           padding: 48px 38px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
-          border: 1px solid var(--color-border);
+          background: #0e1320;
+          border: 1px dashed #23458b;
           border-radius: var(--radius-3xl);
-          box-shadow: var(--shadow-card-hover);
-          backdrop-filter: blur(16px);
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+          backdrop-filter: none;
         }
 
         .chat-empty-icon {
@@ -3396,14 +3407,14 @@ export default function Page() {
         .chat-empty-title {
           font-size: 18px;
           font-weight: 700;
-          color: var(--color-text);
+          color: #e9f1ff;
           margin-bottom: 8px;
         }
 
         .chat-empty-text {
           font-size: 14px;
           line-height: 1.6;
-          color: var(--color-text-secondary);
+          color: #c5d9ff;
           margin-bottom: 24px;
         }
 
@@ -3414,6 +3425,34 @@ export default function Page() {
           flex-wrap: wrap;
         }
 
+        .ibm-chat-launchers {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+          margin-bottom: 18px;
+        }
+
+        .ibm-chat-btn {
+          height: 52px;
+          width: 52px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: #0e1320;
+          border: 1px solid #23458b;
+          color: #c5d9ff;
+          border-radius: 14px;
+          box-shadow: 0 0 18px rgba(58, 120, 194, 0.35);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .ibm-chat-btn:hover {
+          box-shadow: 0 0 22px rgba(58, 120, 194, 0.55);
+          transform: translateY(-1px);
+        }
+
         .chat-history {
           max-width: 800px;
           margin: 0 auto;
@@ -3422,11 +3461,10 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          background: rgba(255, 255, 255, 0.9);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-3xl);
-          box-shadow: var(--shadow-card-hover);
-          backdrop-filter: blur(12px);
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          box-shadow: none;
         }
 
         .chat-message {
@@ -3445,32 +3483,24 @@ export default function Page() {
 
         .chat-bubble {
           max-width: 90%;
-          padding: 14px 18px;
-          border-radius: var(--radius-xl);
+          padding: 0;
+          border-radius: 0;
           font-size: 15px;
           line-height: 1.65;
           position: relative;
-          transition: transform var(--duration-fast) var(--ease-out-expo), box-shadow var(--duration-fast) var(--ease-out-expo);
+          background: transparent;
+          border: none;
+          box-shadow: none;
+          color: #e9f1ff;
         }
 
         .chat-bubble-user {
-          background: var(--color-primary);
-          color: white;
-          border-bottom-right-radius: 4px;
-          box-shadow: 0 6px 24px rgba(14, 116, 144, 0.25);
-        }
-
-        .chat-bubble-assistant {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          color: var(--color-text);
-          border-bottom-left-radius: 4px;
-          box-shadow: 0 10px 30px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(215, 230, 226, 0.6);
+          color: #c5d9ff;
         }
 
         .chat-message:hover .chat-bubble {
-          transform: translateY(-1px);
-          box-shadow: var(--shadow-card-hover);
+          transform: none;
+          box-shadow: none;
         }
 
         .chat-bubble-image {
@@ -3494,16 +3524,16 @@ export default function Page() {
         /* ─── Chat Input Area ─── */
         .chat-input-area {
           flex-shrink: 0;
-          background: rgba(246, 250, 249, 0.95);
-          backdrop-filter: blur(16px);
-          border-top: 1px solid var(--color-border-subtle);
-          box-shadow: 0 -10px 30px rgba(11, 18, 32, 0.08);
+          background: #0b1018;
+          backdrop-filter: none;
+          border-top: 1px solid #1d2c45;
+          box-shadow: none;
         }
 
         .chat-input-inner {
           max-width: 800px;
           margin: 0 auto;
-          padding: 18px 24px;
+          padding: 18px 24px 28px;
           padding-bottom: max(18px, env(safe-area-inset-bottom));
         }
 
@@ -3520,25 +3550,25 @@ export default function Page() {
 
         .smart-progress-phase {
           font-size: 12px;
-          color: var(--color-text-tertiary);
+          color: #7f9ccf;
         }
 
         .smart-progress-pct {
           font-size: 12px;
           font-variant-numeric: tabular-nums;
-          color: var(--color-text-muted);
+          color: #c5d9ff;
         }
 
         .smart-progress-track {
           height: 3px;
-          background: var(--color-border);
+          background: #1d2c45;
           border-radius: 2px;
           overflow: hidden;
         }
 
         .smart-progress-bar {
           height: 100%;
-          background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+          background: linear-gradient(90deg, #2f4f99, #3a78c2);
           border-radius: 2px;
           transition: width 150ms linear;
         }
@@ -3548,18 +3578,18 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           padding: 10px 14px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
+          background: #0e1320;
+          border: 1px dashed #23458b;
           border-radius: var(--radius-md);
           font-size: 13px;
-          color: var(--color-text-secondary);
+          color: #c5d9ff;
           margin-bottom: 12px;
-          box-shadow: var(--shadow-xs);
+          box-shadow: none;
         }
 
         .chat-input-row {
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           gap: 10px;
         }
 
@@ -3567,26 +3597,27 @@ export default function Page() {
           flex: 1;
           min-height: 48px;
           max-height: 160px;
-          padding: 12px 16px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          color: var(--color-text);
+          padding: 12px 4px;
+          background: transparent;
+          border: none;
+          border-bottom: 1px dashed #23458b;
+          border-radius: 0;
+          color: #e9f1ff;
           font-size: 15px;
           line-height: 1.5;
           resize: none;
           outline: none;
           transition: all var(--duration-fast) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
+          box-shadow: none;
         }
 
         .chat-textarea::placeholder {
-          color: var(--color-text-muted);
+          color: #5f7397;
         }
 
         .chat-textarea:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
+          border-color: #3a78c2;
+          box-shadow: none;
         }
 
         .chat-send-btn {
@@ -3595,19 +3626,19 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-primary);
+          background: #3a78c2;
           border: none;
-          border-radius: var(--radius-lg);
-          color: white;
+          border-radius: 10px;
+          color: #0b1018;
           cursor: pointer;
           transition: all var(--duration-fast) var(--ease-out-expo);
           flex-shrink: 0;
-          box-shadow: var(--shadow-sm);
+          box-shadow: 0 0 18px rgba(58, 120, 194, 0.35);
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          background: var(--color-primary-hover);
-          transform: scale(1.05);
+          background: #4d8fe0;
+          transform: translateY(-1px);
         }
 
         .chat-send-btn:disabled {
@@ -3661,109 +3692,6 @@ export default function Page() {
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="app-container">
-        {/* Header */}
-        <header className="app-header">
-          <div className="header-inner">
-            <div className="header-left">
-              <div className={`logo ${outfit.className}`}>
-                <span className="logo-text">protocol</span>
-                <span className="logo-text logo-accent">LM</span>
-              </div>
-
-              <div className={`header-meta ${inter.className}`}>
-                <span className="header-meta-primary">Washtenaw County Compliance</span>
-              </div>
-            </div>
-
-            <div className="header-right">
-              {hasActiveSubscription && (
-                <span className={`header-status ${inter.className}`}>Site License Active</span>
-              )}
-
-              {!isAuthenticated ? (
-                <button
-                  onClick={() => {
-                    setAuthInitialMode('signin')
-                    setShowAuthModal(true)
-                  }}
-                  className="btn-secondary"
-                >
-                  <span className={`btn-label ${inter.className}`}>Sign in</span>
-                </button>
-              ) : (
-                <div className="user-menu-wrapper" ref={userMenuRef}>
-                  <button
-                    onClick={() => setShowUserMenu((v) => !v)}
-                    className={`avatar-btn ${inter.className}`}
-                    aria-label="User menu"
-                  >
-                    {session?.user?.email?.[0]?.toUpperCase() || 'U'}
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="user-menu">
-                      <div className="user-menu-header">
-                        <div className={`user-menu-email ${inter.className}`}>
-                          {session?.user?.email || 'Signed in'}
-                        </div>
-                        <div className={`user-menu-status ${inter.className}`}>
-                          {hasActiveSubscription ? '● Premium Active' : 'Free Account'}
-                        </div>
-                      </div>
-
-                      {hasActiveSubscription ? (
-                        <button onClick={handleManageBilling} className={`user-menu-item ${inter.className}`}>
-                          <span className="user-menu-item-icon"><Icons.Settings /></span>
-                          Manage Billing
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setShowPricingModal(true)
-                            setShowUserMenu(false)
-                          }}
-                          className={`user-menu-item ${inter.className}`}
-                        >
-                          <span className="user-menu-item-icon"><Icons.Spark /></span>
-                          Start Free Trial
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          window.open('/privacy', '_blank')
-                          setShowUserMenu(false)
-                        }}
-                        className={`user-menu-item ${inter.className}`}
-                      >
-                        <span className="user-menu-item-icon"><Icons.Shield /></span>
-                        Privacy & Security
-                      </button>
-
-                      <div className="user-menu-divider" />
-
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false)
-                          handleSignOut()
-                        }}
-                        className={`user-menu-item user-menu-item-danger ${inter.className}`}
-                      >
-                        <span className="user-menu-item-icon"><Icons.LogOut /></span>
-                        Sign Out
-                      </button>
-
-                      <div className="user-menu-footer">
-                        <span className={`user-menu-hint ${inter.className}`}>Press ESC to close</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
         {/* Main Content */}
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {!isAuthenticated ? (
@@ -3833,13 +3761,38 @@ export default function Page() {
               </div>
 
               <div className="chat-input-area">
-                <div className="chat-input-inner">
-                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+              <div className="chat-input-inner">
+                <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                  {selectedImage && (
-                    <div className={`chat-attachment ${inter.className}`}>
-                      <Icons.Camera />
-                      <span>Image attached</span>
+                <div className="ibm-chat-launchers">
+                  <button
+                    type="button"
+                    className="ibm-chat-btn"
+                    aria-label="Open camera intake"
+                    onClick={() => {
+                      setSendMode('vision')
+                      fileInputRef.current?.click()
+                    }}
+                  >
+                    <Icons.Camera />
+                  </button>
+                  <button
+                    type="button"
+                    className="ibm-chat-btn"
+                    aria-label="Start text chat"
+                    onClick={() => {
+                      setSendMode('text')
+                      textAreaRef.current?.focus()
+                    }}
+                  >
+                    <Icons.Chat />
+                  </button>
+                </div>
+
+                {selectedImage && (
+                  <div className={`chat-attachment ${inter.className}`}>
+                    <Icons.Camera />
+                    <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
                         className="btn-icon"
