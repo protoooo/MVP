@@ -37,34 +37,6 @@ const Icons = {
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Check: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  ),
-  Shield: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
-      <path d="M9 12l2 2 4-5" />
-    </svg>
-  ),
-  Lock: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-  ),
-  Spark: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
-      <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
-    </svg>
-  ),
-  ChevronDown: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
 }
 
 const DEMO_DOCUMENTS = [
@@ -98,24 +70,6 @@ const TYPEWRITER_LINES = [
   'Upload an image to check compliance in seconds.',
   'Ask anything about Washtenaw County food safety and regulations.',
 ]
-
-function FooterLinks({ variant = 'landing' }) {
-  return (
-    <div className={variant === 'chat' ? 'plm-footer plm-footer-chat' : 'plm-footer'}>
-      <Link href="/terms" className="plm-footer-link">
-        TERMS
-      </Link>
-      <span className="plm-footer-sep">·</span>
-      <Link href="/privacy" className="plm-footer-link">
-        PRIVACY
-      </Link>
-      <span className="plm-footer-sep">·</span>
-      <Link href="/contact" className="plm-footer-link">
-        CONTACT
-      </Link>
-    </div>
-  )
-}
 
 function useConsoleTypewriter(lines) {
   const [output, setOutput] = useState('')
@@ -227,7 +181,6 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
 
       refs.current.timer = setInterval(() => {
         const elapsed = (Date.now() - refs.current.startedAt) / 1000
-
         const cap = elapsed < 1.5 ? cfg.baseCap - 8 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
         const next = refs.current.pct + (cap - refs.current.pct) * cfg.k
         refs.current.pct = Math.max(refs.current.pct, next)
@@ -284,11 +237,50 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   )
 }
 
+function RotatingDocPill({ items, intervalMs = 2200, position = 'bottom' }) {
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    if (!items?.length) return
+    const t = setInterval(() => setIdx((v) => (v + 1) % items.length), intervalMs)
+    return () => clearInterval(t)
+  }, [items, intervalMs])
+
+  if (!items?.length) return null
+
+  return (
+    <div className={`doc-pill-wrap ${position === 'top' ? 'top' : 'bottom'}`} aria-hidden="true">
+      <div className="doc-pill">
+        <span className="doc-pill-label">Indexed docs</span>
+        <span className="doc-pill-dot">•</span>
+        <span key={idx} className="doc-pill-item" title={items[idx]}>
+          {items[idx]}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function FooterLinks({ variant = 'landing' }) {
+  return (
+    <div className={`plm-footer-links ${variant === 'chat' ? 'chat' : 'landing'} ${ibmMono.className}`}>
+      <Link className="plm-footer-link" href="/terms">
+        Terms
+      </Link>
+      <span className="plm-footer-sep">·</span>
+      <Link className="plm-footer-link" href="/privacy">
+        Privacy
+      </Link>
+      <span className="plm-footer-sep">·</span>
+      <Link className="plm-footer-link" href="/contact">
+        Contact
+      </Link>
+    </div>
+  )
+}
+
 function LandingPage({ onShowPricing, onShowAuth }) {
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
-
-  // 2x is enough once the scroll track is correctly structured.
-  const documentScrollRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS], [])
   const [showPricingMenu, setShowPricingMenu] = useState(false)
   const menuRef = useRef(null)
 
@@ -298,14 +290,20 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       if (!menuRef.current.contains(e.target)) setShowPricingMenu(false)
     }
     document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
+    document.addEventListener('touchstart', onDown, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('touchstart', onDown)
+    }
   }, [])
 
   return (
     <div className={`${ibmMono.className} ibm-landing`}>
       <div className="ibm-landing-topbar">
-        <div className="ibm-brand" aria-label="protocolLM">
-          protocolLM
+        <div className="plm-brand-wrap">
+          <Link href="/" className="plm-brand" aria-label="protocolLM home">
+            protocolLM
+          </Link>
         </div>
 
         <div className="ibm-top-actions">
@@ -318,11 +316,16 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             >
               Pricing
             </button>
+
             {showPricingMenu && (
               <div className="pricing-menu">
                 <div className="pricing-menu-title">protocolLM access</div>
-                <div className="pricing-menu-price">$100 / month</div>
-                <div className="pricing-menu-meta">7-day free trial · Cancel anytime</div>
+                <div className="pricing-menu-price">
+                  <span className="money">$</span>
+                  <span className="money-num">100</span>
+                  <span className="money-suffix">/month</span>
+                </div>
+                <div className="pricing-menu-sub">7-day free trial · Cancel anytime</div>
                 <button
                   type="button"
                   className="ibm-cta small block"
@@ -356,27 +359,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             {typewriterDone && <span className="type-cursor">▌</span>}
           </pre>
         </section>
-
-        <section className="ibm-doc-card" aria-label="Document index">
-          <div className="ibm-doc-window">
-            <div className="ibm-doc-gradient" />
-            <div className="ibm-doc-scroll">
-              <div className="ibm-doc-scroll-track animate-doc-scroll">
-                {documentScrollRows.map((doc, idx) => (
-                  <div key={`${doc}-${idx}`} className="ibm-doc-row">
-                    <span className="ibm-doc-dot" />
-                    <span className="ibm-doc-name" title={doc}>
-                      {doc}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="ibm-doc-footer">Indexed docs · Washtenaw focus</div>
-        </section>
       </div>
 
+      <RotatingDocPill items={DEMO_DOCUMENTS} position="bottom" />
       <FooterLinks variant="landing" />
     </div>
   )
@@ -477,7 +462,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-wrapper" onClick={(e) => e.stopPropagation()}>
         <div className={`modal-card ${ibmMono.className}`}>
-          <button onClick={onClose} className="modal-close-btn" aria-label="Close">
+          <button onClick={onClose} className="modal-close-btn" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
@@ -573,12 +558,13 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-wrapper modal-wrapper-lg" onClick={(e) => e.stopPropagation()}>
         <div className={`modal-card ${ibmMono.className}`}>
-          <button onClick={onClose} className="modal-close-btn" aria-label="Close">
+          <button onClick={onClose} className="modal-close-btn" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
           <div className="modal-header">
             <h2 className="modal-title pricing-title">protocolLM access</h2>
+            <p className="modal-subtitle pricing-subtitle">Unlimited usage</p>
           </div>
 
           <div className="pricing-modal-amount">
@@ -588,12 +574,12 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </div>
 
           <div className="pricing-modal-actions">
-            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-modal-primary">
+            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-modal-primary" type="button">
               {loading === 'monthly' && <span className="btn-spinner" />}
               <span className="btn-label">Start 7-day free trial</span>
             </button>
 
-            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className="btn-pricing-modal-secondary">
+            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className="btn-pricing-modal-secondary" type="button">
               {loading === 'annual' && <span className="btn-spinner" />}
               <span className="btn-label">Annual plan · $1,000/year</span>
               <span className="btn-badge">Save $200</span>
@@ -602,7 +588,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <p className="pricing-modal-note">
             <span>7-day free trial · Cancel anytime</span>
-            <span className="pricing-note-break">One license per restaurant location</span>
+            <br />
+            <span>One license per restaurant location</span>
           </p>
         </div>
       </div>
@@ -984,16 +971,15 @@ export default function Page() {
     <>
       <style jsx global>{`
         /* ==========================================================================
-           protocolLM — Retro Console (IBM) + Clean Dark
-           Fixes in this version:
-           - HARD fix for iOS/desktop "white leak" (html bg + fixed viewport bg + overflow clamp)
-           - protocolLM brand top-left (landing + chat)
-           - Terms / Privacy / Contact footer (landing + chat)
-           - Pricing: removed Site License pill + removed redundant Unlimited usage row
-           - Removed dotted zero in 100
-           - Auth modal: removed header icon + removed alert icons
-           - Empty chat state now truly center-center
-           - Removed green focus outline/box on textarea & buttons
+           protocolLM — Minimal IBM Console
+           Updates in this version:
+           - Fix iOS/desktop “white leak” (html/body background + iOS fill-available)
+           - Add bottom Terms/Privacy/Contact links
+           - Landing doc card -> subtle rotating pill
+           - Top-left protocolLM wordmark (white, IBM)
+           - Pricing modal: remove “Site License” pill + remove redundant “Unlimited usage” feature block
+           - Remove auth modal header icon/emoji vibes
+           - Kill iOS green focus ring on textarea/buttons
            ========================================================================== */
 
         :root {
@@ -1009,54 +995,73 @@ export default function Page() {
           --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
         }
 
-        *, *::before, *::after { box-sizing: border-box; }
-
-        /* --- WHITE LEAK KILL SWITCH --- */
-        html {
-          height: 100%;
-          background: var(--bg-0) !important;
-          width: 100%;
-          overscroll-behavior: none;
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
         }
+
+        html,
         body {
-          min-height: 100%;
-          margin: 0;
-          background: var(--bg-0) !important;
-          color: var(--ink-0);
+          height: 100%;
           width: 100%;
-          overscroll-behavior: none;
+          margin: 0;
+          background: var(--bg-0) !important; /* key: prevents “white leak” behind bounce */
+          color: var(--ink-0);
           overflow-x: hidden;
+        }
+
+        /* iOS Safari viewport/bounce helpers */
+        @supports (-webkit-touch-callout: none) {
+          html {
+            height: -webkit-fill-available;
+            background: var(--bg-0) !important;
+          }
+          body {
+            min-height: -webkit-fill-available;
+            background: var(--bg-0) !important;
+          }
+        }
+
+        body {
+          position: relative;
+          overscroll-behavior-x: none;
+          overscroll-behavior-y: none;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Remove tap highlight + focus rings (yes, this is what removes the green box) */
+        a,
+        button,
+        input,
+        textarea {
           -webkit-tap-highlight-color: transparent;
         }
-        /* fixed viewport background prevents Safari overscroll/underscroll from showing white */
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background: var(--bg-0);
-          z-index: -1;
-          pointer-events: none;
-        }
-        @supports (overflow: clip) {
-          html, body { overflow-x: clip; }
-        }
-
-        ::selection { background: rgba(217, 217, 223, 0.18); color: var(--ink-0); }
-
-        /* Scrollbar (subtle, non-blue) */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(217, 217, 223, 0.14); border-radius: 6px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(217, 217, 223, 0.2); }
-
-        /* kill default focus outlines (your request) */
-        :focus { outline: none; }
-        :focus-visible { outline: none; }
-        button:focus, button:focus-visible,
-        textarea:focus, textarea:focus-visible,
-        input:focus, input:focus-visible {
+        :focus,
+        :focus-visible {
           outline: none !important;
           box-shadow: none !important;
+        }
+
+        ::selection {
+          background: rgba(217, 217, 223, 0.18);
+          color: var(--ink-0);
+        }
+
+        /* Scrollbar (subtle) */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(217, 217, 223, 0.14);
+          border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(217, 217, 223, 0.2);
         }
 
         /* Loading */
@@ -1069,7 +1074,12 @@ export default function Page() {
           background: var(--bg-0);
           z-index: 9999;
         }
-        .loading-content { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .loading-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+        }
         .loading-spinner {
           width: 32px;
           height: 32px;
@@ -1078,52 +1088,48 @@ export default function Page() {
           border-radius: 999px;
           animation: spin 0.8s linear infinite;
         }
-        .loading-text { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-1); }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+          font-size: 12px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-1);
+        }
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
 
         /* App shell */
         .app-container {
-          min-height: 100svh;
+          min-height: 100vh;
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
           background: var(--bg-0);
-          width: 100%;
         }
 
-        /* Footer links */
-        .plm-footer {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          bottom: max(16px, env(safe-area-inset-bottom));
-          display: inline-flex;
+        /* ==========================================================================
+           Brand
+           ========================================================================== */
+        .plm-brand-wrap {
+          pointer-events: auto;
+          display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 8px 12px;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.06);
-          box-shadow: 0 10px 22px rgba(0,0,0,0.25);
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-          user-select: none;
         }
-        .plm-footer-chat {
-          position: static;
-          transform: none;
-          margin: 10px auto 0;
-          width: fit-content;
-          bottom: auto;
-        }
-        .plm-footer-link {
-          color: var(--ink-2);
+        .plm-brand {
+          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          color: var(--ink-0);
           text-decoration: none;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          font-size: 16px;
+          padding: 6px 6px;
+          border-radius: 10px;
         }
-        .plm-footer-link:hover { color: var(--ink-0); }
-        .plm-footer-sep { opacity: 0.5; }
+        .plm-brand:hover {
+          background: rgba(255, 255, 255, 0.04);
+        }
 
         /* ==========================================================================
            IBM Landing
@@ -1131,14 +1137,13 @@ export default function Page() {
         .ibm-landing {
           position: relative;
           padding: 34px 20px 74px;
-          min-height: 100svh;
+          min-height: 100vh;
           min-height: 100dvh;
           display: flex;
           align-items: center;
           justify-content: center;
           background: var(--bg-0);
           color: var(--ink-0);
-          width: 100%;
           overflow: hidden;
         }
 
@@ -1151,23 +1156,18 @@ export default function Page() {
           align-items: center;
           justify-content: space-between;
           padding: 0 18px;
-          z-index: 5;
+          z-index: 6;
           pointer-events: none;
         }
-
-        .ibm-brand {
+        .ibm-top-actions {
+          display: flex;
+          gap: 10px;
+          align-items: center;
           pointer-events: auto;
-          color: var(--ink-0);
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-          font-size: 18px;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          opacity: 0.95;
-          user-select: none;
         }
-
-        .ibm-top-actions { display: flex; gap: 10px; align-items: center; pointer-events: auto; }
-        .pricing-menu-wrapper { position: relative; }
+        .pricing-menu-wrapper {
+          position: relative;
+        }
 
         .ibm-cta {
           display: inline-flex;
@@ -1188,11 +1188,28 @@ export default function Page() {
           transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
           font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
         }
-        .ibm-cta:hover { transform: translateY(-1px); background: #1c1c22; border-color: #34343c; }
-        .ibm-cta.secondary { background: transparent; color: var(--ink-1); }
-        .ibm-cta.secondary:hover { color: var(--ink-0); background: rgba(255,255,255,0.04); }
-        .ibm-cta.small { padding: 7px 11px; font-size: 11px; letter-spacing: 0.12em; border-radius: 9px; }
-        .ibm-cta.block { width: 100%; }
+        .ibm-cta:hover {
+          transform: translateY(-1px);
+          background: #1c1c22;
+          border-color: #34343c;
+        }
+        .ibm-cta.secondary {
+          background: transparent;
+          color: var(--ink-1);
+        }
+        .ibm-cta.secondary:hover {
+          color: var(--ink-0);
+          background: rgba(255, 255, 255, 0.04);
+        }
+        .ibm-cta.small {
+          padding: 7px 11px;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          border-radius: 9px;
+        }
+        .ibm-cta.block {
+          width: 100%;
+        }
 
         .pricing-menu {
           position: absolute;
@@ -1202,7 +1219,7 @@ export default function Page() {
           border: 1px solid var(--line-1);
           border-radius: 10px;
           padding: 10px;
-          min-width: 220px;
+          min-width: 240px;
           box-shadow: var(--shadow);
           display: flex;
           flex-direction: column;
@@ -1215,28 +1232,53 @@ export default function Page() {
           color: var(--ink-0);
           font-size: 11px;
         }
-        .pricing-menu-price { font-size: 16px; font-weight: 800; color: var(--ink-0); }
-        .pricing-menu-meta { color: var(--ink-2); font-size: 11px; line-height: 1.4; }
+        .pricing-menu-price {
+          display: flex;
+          align-items: baseline;
+          gap: 3px;
+          color: var(--ink-0);
+        }
+        .pricing-menu-price .money {
+          color: var(--ink-2);
+          font-size: 14px;
+        }
+        .pricing-menu-price .money-num {
+          font-family: ${outfit.style.fontFamily}, ${inter.style.fontFamily}, system-ui;
+          font-size: 22px;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+        }
+        .pricing-menu-price .money-suffix {
+          color: var(--ink-2);
+          font-size: 12px;
+          margin-left: 2px;
+        }
+        .pricing-menu-sub {
+          font-size: 12px;
+          color: var(--ink-1);
+          line-height: 1.4;
+        }
 
         .ibm-landing-bg {
           position: absolute;
           inset: 0;
-          background:
-            radial-gradient(circle at 20% 20%, rgba(48, 48, 54, 0.26), transparent 52%),
+          background: radial-gradient(circle at 20% 20%, rgba(48, 48, 54, 0.26), transparent 52%),
             radial-gradient(circle at 80% 0%, rgba(48, 48, 54, 0.18), transparent 44%),
             linear-gradient(90deg, rgba(14, 14, 17, 0.98) 0%, rgba(16, 16, 20, 0.95) 100%);
           pointer-events: none;
         }
 
+        /* Centered hero only */
         .ibm-landing-grid {
           position: relative;
           z-index: 2;
           width: 100%;
-          max-width: 1180px;
+          max-width: 860px;
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 20px;
-          align-items: stretch;
+          grid-template-columns: 1fr;
+          justify-items: center;
+          align-items: center;
+          gap: 0;
         }
 
         .ibm-console-text {
@@ -1244,6 +1286,8 @@ export default function Page() {
           min-height: 340px;
           display: flex;
           align-items: center;
+          justify-content: center;
+          width: 100%;
         }
         .ibm-console-type {
           margin: 0;
@@ -1252,94 +1296,139 @@ export default function Page() {
           font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
           line-height: 1.45;
           font-size: 15px;
+          width: min(720px, 100%);
         }
-        .type-cursor { display: inline-block; width: 10px; animation: cursor-blink 1s steps(2, end) infinite; }
-        @keyframes cursor-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
-
-        .ibm-doc-card {
-          background: var(--bg-1);
-          border: 1px solid var(--line-0);
-          border-radius: 12px;
-          padding: 16px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
+        .type-cursor {
+          display: inline-block;
+          width: 10px;
+          animation: cursor-blink 1s steps(2, end) infinite;
         }
-
-        .ibm-doc-window {
-          position: relative;
-          background: #0d0d12;
-          border: 1px solid var(--line-1);
-          border-radius: 12px;
-          overflow: hidden;
-          height: 320px;
+        @keyframes cursor-blink {
+          0%,
+          50% {
+            opacity: 1;
+          }
+          50.01%,
+          100% {
+            opacity: 0;
+          }
         }
 
-        .ibm-doc-gradient {
+        /* Rotating docs pill */
+        .doc-pill-wrap {
           position: absolute;
-          inset: 0;
-          background: linear-gradient(180deg, #0d0d12 0%, transparent 16%, transparent 84%, #0d0d12 100%);
-          z-index: 2;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 6;
+          width: min(920px, calc(100% - 28px));
           pointer-events: none;
-        }
-
-        .ibm-doc-scroll {
-          position: absolute;
-          inset: 12px;
-          overflow: hidden;
-          padding-right: 8px;
-        }
-        .ibm-doc-scroll-track {
           display: flex;
-          flex-direction: column;
-          gap: 10px;
-          will-change: transform;
+          justify-content: center;
         }
-
-        .ibm-doc-row {
-          display: flex;
+        .doc-pill-wrap.bottom {
+          bottom: max(56px, calc(env(safe-area-inset-bottom) + 56px));
+        }
+        .doc-pill-wrap.top {
+          top: 66px;
+        }
+        .doc-pill {
+          pointer-events: none;
+          display: inline-flex;
           align-items: center;
-          gap: 12px;
-          color: var(--ink-0);
-          font-size: 13px;
-          letter-spacing: -0.01em;
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-          min-height: 22px;
-        }
-
-        .ibm-doc-dot {
-          width: 6px;
-          height: 6px;
+          gap: 10px;
+          padding: 10px 14px;
           border-radius: 999px;
-          background: var(--ink-2);
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+          color: rgba(242, 242, 242, 0.88);
+          font-size: 11px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
         }
-
-        .ibm-doc-name {
+        .doc-pill-label {
+          opacity: 0.75;
+        }
+        .doc-pill-dot {
+          opacity: 0.45;
+        }
+        .doc-pill-item {
+          text-transform: none;
+          letter-spacing: 0.02em;
+          opacity: 0.92;
+          max-width: min(560px, 64vw);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          animation: pillFade 2200ms ease both;
+        }
+        @keyframes pillFade {
+          0% {
+            opacity: 0;
+            transform: translateY(2px);
+          }
+          14% {
+            opacity: 0.92;
+            transform: translateY(0);
+          }
+          86% {
+            opacity: 0.92;
+            transform: translateY(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-2px);
+          }
         }
 
-        .animate-doc-scroll { animation: doc-scroll 20s linear infinite; }
-        @keyframes doc-scroll {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-50%); }
+        /* Footer links */
+        .plm-footer-links {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 6;
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+          pointer-events: auto;
         }
-
-        .ibm-doc-footer {
+        .plm-footer-links.landing {
+          bottom: max(16px, env(safe-area-inset-bottom));
+        }
+        .plm-footer-links.chat {
+          position: static;
+          transform: none;
+          margin-top: 10px;
+          justify-content: center;
+          width: fit-content;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .plm-footer-link {
+          color: rgba(242, 242, 242, 0.8);
+          text-decoration: none;
           font-size: 11px;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--ink-2);
-          opacity: 0.9;
-          padding: 2px 2px 0;
+          font-weight: 700;
+        }
+        .plm-footer-link:hover {
+          color: var(--ink-0);
+        }
+        .plm-footer-sep {
+          color: rgba(242, 242, 242, 0.35);
+          font-size: 12px;
         }
 
         @media (max-width: 768px) {
-          .ibm-landing { padding: 32px 16px 58px; }
-          .ibm-landing-grid { grid-template-columns: 1fr; }
-          .ibm-brand { font-size: 16px; }
+          .ibm-landing {
+            padding: 32px 16px 48px;
+          }
         }
 
         /* ==========================================================================
@@ -1357,11 +1446,33 @@ export default function Page() {
           padding: 24px;
           animation: fadeIn 200ms ease;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
 
-        .modal-wrapper { width: 100%; max-width: 420px; animation: modalUp 240ms ease; }
-        .modal-wrapper-lg { max-width: 480px; }
-        @keyframes modalUp { from { opacity: 0; transform: translateY(12px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-wrapper {
+          width: 100%;
+          max-width: 420px;
+          animation: modalUp 240ms ease;
+        }
+        .modal-wrapper-lg {
+          max-width: 480px;
+        }
+        @keyframes modalUp {
+          from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.99);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
 
         .modal-card {
           position: relative;
@@ -1373,7 +1484,11 @@ export default function Page() {
           overflow: hidden;
           color: var(--ink-0);
         }
-        @media (max-width: 480px) { .modal-card { padding: 22px 18px; } }
+        @media (max-width: 480px) {
+          .modal-card {
+            padding: 22px 18px;
+          }
+        }
 
         .modal-close-btn {
           position: absolute;
@@ -1392,15 +1507,46 @@ export default function Page() {
           transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
           z-index: 10;
         }
-        .modal-close-btn:hover { background: #22222a; color: var(--ink-0); border-color: #34343c; }
+        .modal-close-btn:hover {
+          background: #22222a;
+          color: var(--ink-0);
+          border-color: #34343c;
+        }
 
-        .modal-header { text-align: center; margin-bottom: 18px; }
-        .modal-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--ink-0); }
-        .modal-subtitle { font-size: 13px; color: var(--ink-1); line-height: 1.55; margin: 0; }
+        .modal-header {
+          text-align: center;
+          margin-bottom: 18px;
+        }
+        .modal-title {
+          font-size: 20px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          margin: 0 0 6px;
+          color: var(--ink-0);
+        }
+        .modal-subtitle {
+          font-size: 13px;
+          color: var(--ink-1);
+          line-height: 1.55;
+          margin: 0;
+        }
 
-        .modal-form { display: flex; flex-direction: column; gap: 14px; }
-        .form-field { display: flex; flex-direction: column; gap: 8px; }
-        .form-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+        .modal-form {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .form-field {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .form-label {
+          font-size: 12px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
 
         .form-input {
           width: 100%;
@@ -1411,11 +1557,20 @@ export default function Page() {
           border-radius: 10px;
           color: var(--ink-0);
           font-size: 14px;
+          outline: none;
+          appearance: none;
+          -webkit-appearance: none;
         }
-        .form-input::placeholder { color: rgba(217,217,223,0.45); }
-        .form-input:focus { border-color: #34343c; }
+        .form-input::placeholder {
+          color: rgba(217, 217, 223, 0.45);
+        }
+        .form-input:focus {
+          border-color: #34343c;
+        }
 
-        .form-input-group { position: relative; }
+        .form-input-group {
+          position: relative;
+        }
         .form-toggle {
           position: absolute;
           right: 12px;
@@ -1429,7 +1584,9 @@ export default function Page() {
           text-transform: uppercase;
           cursor: pointer;
         }
-        .form-toggle:hover { color: var(--ink-0); }
+        .form-toggle:hover {
+          color: var(--ink-0);
+        }
 
         .btn-form-submit {
           width: 100%;
@@ -1449,32 +1606,49 @@ export default function Page() {
           cursor: pointer;
           transition: transform 0.15s ease, background 0.15s ease;
         }
-        .btn-form-submit:hover:not(:disabled) { background: #34343c; transform: translateY(-1px); }
-        .btn-form-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-form-submit:hover:not(:disabled) {
+          background: #34343c;
+          transform: translateY(-1px);
+        }
+        .btn-form-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
 
         .btn-spinner {
-          width: 16px; height: 16px;
-          border: 2px solid rgba(255,255,255,0.25);
-          border-top-color: rgba(255,255,255,0.8);
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.25);
+          border-top-color: rgba(255, 255, 255, 0.8);
           border-radius: 999px;
           animation: spin 0.6s linear infinite;
         }
 
         .modal-alert {
           padding: 12px 14px;
-          background: rgba(255,255,255,0.03);
+          background: rgba(255, 255, 255, 0.03);
           border: 1px solid var(--line-1);
           border-radius: 12px;
           margin-top: 14px;
           font-size: 13px;
-          color: var(--ink-1);
           line-height: 1.5;
+          color: var(--ink-1);
           text-align: center;
         }
-        .modal-alert.ok { border-color: rgba(16,185,129,0.35); }
-        .modal-alert.err { border-color: rgba(239,68,68,0.35); }
+        .modal-alert.ok {
+          border-color: rgba(16, 185, 129, 0.35);
+        }
+        .modal-alert.err {
+          border-color: rgba(239, 68, 68, 0.35);
+        }
 
-        .modal-footer { margin-top: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .modal-footer {
+          margin-top: 16px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
         .modal-link {
           background: none;
           border: none;
@@ -1483,25 +1657,51 @@ export default function Page() {
           color: var(--ink-2);
           cursor: pointer;
         }
-        .modal-link:hover { color: var(--ink-0); }
-        .modal-link strong { color: var(--ink-0); font-weight: 800; }
+        .modal-link:hover {
+          color: var(--ink-0);
+        }
+        .modal-link strong {
+          color: var(--ink-0);
+          font-weight: 800;
+        }
 
-        /* Pricing modal */
-        .pricing-title { text-transform: lowercase; }
-        .pricing-modal-amount { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin: 10px 0 18px; }
-        .pricing-currency { font-size: 16px; color: var(--ink-2); }
+        /* Pricing modal (no “Site License” pill) */
+        .pricing-title {
+          color: var(--ink-0);
+        }
+        .pricing-subtitle {
+          color: var(--ink-1);
+        }
+        .pricing-modal-amount {
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 4px;
+          margin: 12px 0 18px;
+        }
+        .pricing-currency {
+          font-size: 16px;
+          color: var(--ink-2);
+        }
+        /* Fix dotted zeros: use Outfit for numerals */
         .pricing-number-lg {
           font-size: 56px;
           font-weight: 900;
           letter-spacing: -0.04em;
-          color: var(--ink-0);
-          /* remove dotted/slashed zero features */
-          font-feature-settings: "zero" 0;
-          font-variant-numeric: tabular-nums;
+          font-family: ${outfit.style.fontFamily}, ${inter.style.fontFamily}, system-ui;
         }
-        .pricing-period { font-size: 13px; color: var(--ink-2); margin-left: 4px; }
+        .pricing-period {
+          font-size: 13px;
+          color: var(--ink-2);
+          margin-left: 4px;
+        }
 
-        .pricing-modal-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+        .pricing-modal-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
         .btn-pricing-modal-primary,
         .btn-pricing-modal-secondary {
           width: 100%;
@@ -1523,15 +1723,24 @@ export default function Page() {
           border: 1px solid #34343c;
           color: var(--ink-0);
         }
-        .btn-pricing-modal-primary:hover:not(:disabled) { background: #34343c; transform: translateY(-1px); }
+        .btn-pricing-modal-primary:hover:not(:disabled) {
+          background: #34343c;
+          transform: translateY(-1px);
+        }
         .btn-pricing-modal-secondary {
           background: transparent;
           border: 1px solid var(--line-1);
           color: var(--ink-0);
         }
-        .btn-pricing-modal-secondary:hover:not(:disabled) { background: rgba(255,255,255,0.04); border-color: #34343c; }
+        .btn-pricing-modal-secondary:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: #34343c;
+        }
         .btn-pricing-modal-primary:disabled,
-        .btn-pricing-modal-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-pricing-modal-secondary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
 
         .btn-badge {
           font-size: 10px;
@@ -1544,17 +1753,12 @@ export default function Page() {
           padding: 3px 8px;
           border-radius: 8px;
         }
-
         .pricing-modal-note {
           text-align: center;
           font-size: 11px;
           color: var(--ink-2);
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
           margin: 0;
         }
-        .pricing-note-break { color: rgba(217,217,223,0.75); }
 
         /* ==========================================================================
            Chat
@@ -1567,10 +1771,10 @@ export default function Page() {
           background: var(--bg-0);
           color: var(--ink-0);
           position: relative;
-          width: 100%;
-          overflow: hidden;
+          overflow: hidden; /* helps prevent side “leaks” */
         }
 
+        /* subtle scanlines */
         .chat-container::before {
           content: '';
           position: absolute;
@@ -1578,10 +1782,10 @@ export default function Page() {
           pointer-events: none;
           background: repeating-linear-gradient(
             to bottom,
-            rgba(255,255,255,0.02),
-            rgba(255,255,255,0.02) 1px,
-            rgba(0,0,0,0) 3px,
-            rgba(0,0,0,0) 6px
+            rgba(255, 255, 255, 0.02),
+            rgba(255, 255, 255, 0.02) 1px,
+            rgba(0, 0, 0, 0) 3px,
+            rgba(0, 0, 0, 0) 6px
           );
           opacity: 0.35;
           mix-blend-mode: overlay;
@@ -1599,18 +1803,11 @@ export default function Page() {
           position: relative;
           z-index: 2;
         }
-
-        .chat-brand {
-          color: var(--ink-0);
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-          font-size: 18px;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          opacity: 0.95;
-          user-select: none;
+        .chat-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
-
-        .chat-top-actions { display: flex; align-items: center; gap: 10px; }
 
         .chat-messages {
           flex: 1;
@@ -1620,25 +1817,24 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-start;
           padding: 10px 16px 16px;
           gap: 14px;
           position: relative;
           z-index: 2;
-          -webkit-overflow-scrolling: touch;
         }
-        .chat-messages.is-empty {
+        .chat-messages.empty {
           justify-content: center; /* center-center empty state */
+          padding-top: 0;
         }
 
         .chat-empty-content {
           max-width: 560px;
           width: 100%;
-          text-align: center;
+          text-align: left;
           border: 1px dashed var(--line-1);
           border-radius: 12px;
           padding: 18px 18px 16px;
-          background: rgba(255,255,255,0.02);
+          background: rgba(255, 255, 255, 0.02);
         }
         .chat-empty-title {
           font-size: 13px;
@@ -1666,9 +1862,16 @@ export default function Page() {
           background: transparent;
         }
 
-        .chat-message { display: flex; width: 100%; }
-        .chat-message-user { justify-content: flex-end; }
-        .chat-message-assistant { justify-content: flex-start; }
+        .chat-message {
+          display: flex;
+          width: 100%;
+        }
+        .chat-message-user {
+          justify-content: flex-end;
+        }
+        .chat-message-assistant {
+          justify-content: flex-start;
+        }
 
         .chat-bubble {
           max-width: 92%;
@@ -1676,24 +1879,24 @@ export default function Page() {
           border-radius: 12px;
           font-size: 14px;
           line-height: 1.65;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.06);
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
           color: var(--ink-0);
         }
         .chat-bubble-user {
-          background: rgba(255,255,255,0.03);
+          background: rgba(255, 255, 255, 0.03);
           border-style: dashed;
-          border-color: rgba(217,217,223,0.25);
+          border-color: rgba(217, 217, 223, 0.25);
         }
         .chat-bubble-assistant {
-          border-left: 3px solid rgba(217,217,223,0.22);
+          border-left: 3px solid rgba(217, 217, 223, 0.22);
         }
 
         .chat-bubble-image {
           border-radius: 10px;
           overflow: hidden;
           margin-bottom: 10px;
-          border: 1px solid rgba(255,255,255,0.08);
+          border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .chat-bubble-image img {
           display: block;
@@ -1702,13 +1905,16 @@ export default function Page() {
           object-fit: contain;
         }
 
-        .chat-thinking { color: var(--ink-2); font-style: italic; }
+        .chat-thinking {
+          color: var(--ink-2);
+          font-style: italic;
+        }
 
         .chat-input-area {
           flex-shrink: 0;
           background: var(--bg-0);
           border-top: 1px solid var(--line-1);
-          box-shadow: 0 -12px 28px rgba(0,0,0,0.35);
+          box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.35);
           position: relative;
           z-index: 3;
         }
@@ -1720,12 +1926,38 @@ export default function Page() {
           padding-bottom: max(14px, env(safe-area-inset-bottom));
         }
 
-        .smart-progress { padding: 0 4px 12px; }
-        .smart-progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-        .smart-progress-phase { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
-        .smart-progress-pct { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--ink-0); }
-        .smart-progress-track { height: 3px; background: rgba(217,217,223,0.18); border-radius: 2px; overflow: hidden; }
-        .smart-progress-bar { height: 100%; background: rgba(217,217,223,0.65); border-radius: 2px; transition: width 150ms linear; }
+        .smart-progress {
+          padding: 0 4px 12px;
+        }
+        .smart-progress-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 6px;
+        }
+        .smart-progress-phase {
+          font-size: 11px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+        .smart-progress-pct {
+          font-size: 11px;
+          font-variant-numeric: tabular-nums;
+          color: var(--ink-0);
+        }
+        .smart-progress-track {
+          height: 3px;
+          background: rgba(217, 217, 223, 0.18);
+          border-radius: 2px;
+          overflow: hidden;
+        }
+        .smart-progress-bar {
+          height: 100%;
+          background: rgba(217, 217, 223, 0.65);
+          border-radius: 2px;
+          transition: width 150ms linear;
+        }
 
         .chat-attachment {
           display: inline-flex;
@@ -1733,7 +1965,7 @@ export default function Page() {
           gap: 10px;
           padding: 10px 12px;
           background: var(--bg-1);
-          border: 1px dashed rgba(217,217,223,0.25);
+          border: 1px dashed rgba(217, 217, 223, 0.25);
           border-radius: 12px;
           font-size: 12px;
           letter-spacing: 0.08em;
@@ -1742,7 +1974,11 @@ export default function Page() {
           margin-bottom: 10px;
         }
 
-        .chat-input-row { display: flex; align-items: center; gap: 10px; }
+        .chat-input-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
 
         .chat-btn-icon {
           width: 44px;
@@ -1765,27 +2001,33 @@ export default function Page() {
           color: var(--ink-0);
         }
 
+        /* Key: prevent iOS green focus box by forcing appearance + no shadow */
         .chat-textarea {
           flex: 1;
           min-height: 44px;
           max-height: 160px;
-          padding: 12px 4px;
-          background: transparent;
-          border: none;
-          border-bottom: 1px dashed rgba(217,217,223,0.25);
-          border-radius: 0;
+          padding: 12px 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
           color: var(--ink-0);
           font-size: 14px;
           line-height: 1.5;
           resize: none;
-          outline: none;
-          box-shadow: none;
-          transition: border-color 0.15s ease;
+          outline: none !important;
+          box-shadow: none !important;
+          appearance: none;
+          -webkit-appearance: none;
           font-family: inherit;
-          caret-color: var(--ink-0); /* no weird green caret */
         }
-        .chat-textarea::placeholder { color: rgba(217,217,223,0.38); }
-        .chat-textarea:focus { border-color: rgba(217,217,223,0.55); }
+        .chat-textarea::placeholder {
+          color: rgba(217, 217, 223, 0.38);
+        }
+        .chat-textarea:focus {
+          border-color: rgba(217, 217, 223, 0.28);
+          outline: none !important;
+          box-shadow: none !important;
+        }
 
         .chat-send-btn {
           width: 44px;
@@ -1801,14 +2043,20 @@ export default function Page() {
           transition: transform 0.15s ease, background 0.15s ease;
           flex-shrink: 0;
         }
-        .chat-send-btn:hover:not(:disabled) { background: #34343c; transform: translateY(-1px); }
-        .chat-send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .chat-send-btn:hover:not(:disabled) {
+          background: #34343c;
+          transform: translateY(-1px);
+        }
+        .chat-send-btn:disabled {
+          opacity: 0.45;
+          cursor: not-allowed;
+        }
 
         .chat-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(217,217,223,0.25);
-          border-top-color: rgba(217,217,223,0.8);
+          border: 2px solid rgba(217, 217, 223, 0.25);
+          border-top-color: rgba(217, 217, 223, 0.8);
           border-radius: 999px;
           animation: spin 0.6s linear infinite;
         }
@@ -1818,18 +2066,25 @@ export default function Page() {
           text-align: center;
           font-size: 11px;
           letter-spacing: 0.06em;
-          color: rgba(217,217,223,0.55);
+          color: rgba(217, 217, 223, 0.55);
         }
 
         @media (max-width: 640px) {
-          .chat-input-inner { padding: 12px 14px 14px; }
-          .chat-history { padding: 10px 4px 10px; }
-          .chat-bubble { max-width: 92%; }
-          .chat-brand { font-size: 16px; }
+          .chat-input-inner {
+            padding: 12px 14px 14px;
+          }
+          .chat-history {
+            padding: 10px 4px 10px;
+          }
+          .chat-bubble {
+            max-width: 92%;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          *, *::before, *::after {
+          *,
+          *::before,
+          *::after {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
@@ -1853,9 +2108,9 @@ export default function Page() {
           ) : (
             <div className={`${ibmMono.className} chat-container`}>
               <div className="chat-topbar">
-                <div className="chat-brand" aria-label="protocolLM">
+                <Link href="/" className="plm-brand" aria-label="protocolLM home">
                   protocolLM
-                </div>
+                </Link>
 
                 <div className="chat-top-actions">
                   {hasActiveSubscription && (
@@ -1872,7 +2127,7 @@ export default function Page() {
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'is-empty' : ''}`}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
               >
                 {messages.length === 0 ? (
                   <div className="chat-empty-content">
@@ -1884,10 +2139,7 @@ export default function Page() {
                 ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
-                      >
+                      <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
@@ -1927,19 +2179,13 @@ export default function Page() {
                   )}
 
                   <div className="chat-input-row">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleImageChange}
-                    />
+                    <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 
                     <button onClick={() => fileInputRef.current?.click()} className="chat-btn-icon" aria-label="Attach image" type="button">
                       <Icons.Camera />
                     </button>
 
-                    <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', gap: 10 }}>
+                    <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', gap: 10, alignItems: 'center' }}>
                       <textarea
                         ref={textAreaRef}
                         value={input}
@@ -1955,12 +2201,7 @@ export default function Page() {
                         }}
                       />
 
-                      <button
-                        type="submit"
-                        disabled={(!input.trim() && !selectedImage) || isSending}
-                        className="chat-send-btn"
-                        aria-label="Send"
-                      >
+                      <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className="chat-send-btn" aria-label="Send">
                         {isSending ? <div className="chat-spinner" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
