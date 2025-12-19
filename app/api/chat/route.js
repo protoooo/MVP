@@ -1,4 +1,9 @@
-// app/api/chat/route.js - UPDATED: Structured output (no "Cited findings", no letter classes, no sources shown)
+// app/api/chat/route.js
+// FINAL-FORM: Structured, non-scare output. No sources shown. No C/P/Pf letters shown.
+// - Findings must be excerpt-backed.
+// - Enforcement/fines only if user asks or includeLegal flag.
+// - Criminal penalties only if user explicitly asks.
+
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -11,7 +16,6 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-// ✅ Cache client instance instead of module
 let anthropicClient = null
 let searchDocuments = null
 
@@ -42,24 +46,26 @@ const RETRIEVAL_TIMEOUT_MS = 9000
 const TOPK = 18
 const PINNED_TOPK = 8
 
-// ✅ Pinned: Washtenaw framing + enforcement + penalties (Act 92)
+// If your corpus has a concept of global/statewide docs, these may work.
+// If not, they’ll just fail harmlessly (caught).
+const GLOBAL_FALLBACK_KEYS = ['global', 'michigan', 'state', 'all']
+
+// Pinned queries:
+// - Washtenaw Violation Types (category definitions + correction windows)
+// - Washtenaw Enforcement Action (3 opportunities)
+// - Act 92 (admin fines + penalties) for optional “legal context”
 const PINNED_QUERIES = [
-  // Washtenaw Violation Types (classes + correction timing)
-  'Washtenaw County Violation Types Priority Priority Foundation Core When the violation needs to be corrected immediately within 10 days within 90 days repeated enforcement actions',
-  // Washtenaw Enforcement Action (summary + progressive enforcement with 3 opportunities)
-  'Washtenaw County Enforcement Action summary enforcement action imminent health hazard progressive enforcement action 3 opportunities Office Conference Informal Hearing Formal Hearing limit suspend revoke',
-  // Act 92 administrative fines
-  '289.5105 Administrative fines or costs department may impose administrative fine $500 first offense $1,000 second offense costs of investigation aggregate amount $4,000 $8,000',
-  // Act 92 penalties
-  '289.5107 Violations penalties misdemeanor fine $250 $2,500 imprisonment 90 days felony 4 years $10,000 costs of investigation',
-  // Act 92 report before penalties for certain unsanitary conditions
+  'Washtenaw County Violation Types Priority Priority Foundation Core When the Violation Needs to Be Corrected corrected immediately within 10 days within 90 days enforcement actions repeated',
+  'Washtenaw County Enforcement Action Progressive Enforcement Action Opportunity Number 1 Opportunity Number 2 Opportunity Number 3 Office Conference Informal Hearing Formal Hearing license limited suspended revoked',
+  '289.5105 Administrative fines or costs department may impose administrative fine $500 first offense $1,000 second subsequent offense costs of investigation written notice warning minor violations',
+  '289.5107 Violations penalties misdemeanor fine $250 $2,500 90 days felony 4 years $10,000 costs of investigation',
   '289.5109 written report of the violation before subjecting persons to the penalties',
 ]
 
-// Source tiering (helps keep Washtenaw + enforcement + Act 92 prioritized when available)
+// Ranking sources for internal excerpt ordering (NOT shown to users)
 const SOURCE_PRIORITY = {
   washtenaw: [/washtenaw/i, /violation\s*types/i, /enforcement\s*action/i],
-  michigan: [/mi.*modified.*food.*code/i, /michigan.*food/i, /act\s*92/i, /289\.\d+/i],
+  michigan: [/act\s*92/i, /mcl/i, /michigan/i, /289\.\d+/i, /modified.*food.*code/i],
   fda: [/fda.*food.*code/i],
   guides: [/cooking.*temp/i, /cooling.*foods/i, /cross.*contam/i, /date.*mark/i],
 }
@@ -67,45 +73,17 @@ const SOURCE_PRIORITY = {
 const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
 const ALLOWED_CLASS = new Set(['P', 'Pf', 'C', 'Unclear'])
 
-// --- Helpers: class labels (no more "C", "P", "Pf" in user-visible output) ---
-function classLabel(cls) {
-  if (cls === 'P') return 'Priority'
-  if (cls === 'Pf') return 'Priority Foundation'
-  if (cls === 'C') return 'Core'
-  return 'Unclear'
+function safeText(x) {
+  if (typeof x !== 'string') return ''
+  return x.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim()
+}
+function safeLine(x) {
+  return safeText(x).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim()
 }
 
-function classDefinition(cls) {
-  // Mirrors Washtenaw Violation Types language (plain)
-  if (cls === 'P') return 'Directly reduces a foodborne illness hazard.'
-  if (cls === 'Pf') return 'Supports Priority compliance (supplies, equipment, facilities, programs).'
-  if (cls === 'C') return 'General sanitation and facility maintenance.'
-  return 'Category could not be confirmed.'
-}
-
-function computeDeadlineByClass(cls) {
-  if (cls === 'P' || cls === 'Pf') return 'Immediately or within 10 days'
-  if (cls === 'C') return 'Within 90 days'
-  return 'Unclear'
-}
-
-function normalizeLikelihood(x) {
-  const v = safeLine(x)
-  if (ALLOWED_LIKELIHOOD.has(v)) return v
-  return 'Unclear'
-}
-
-function normalizeClass(x) {
-  const v = safeLine(x)
-  if (ALLOWED_CLASS.has(v)) return v
-  return 'Unclear'
-}
-
-// ✅ IMPROVED: Better quote detection for copyright compliance
+// Output sanitizer: no emojis/markdown-y noise, safe length cap
 function sanitizePlainText(text) {
   let out = safeText(text || '')
-
-  // Remove emojis, markdown-ish chars
   out = out.replace(/[`#*]/g, '')
   out = out.replace(/\u2022/g, '')
   out = out.replace(/\n{3,}/g, '\n\n')
@@ -115,35 +93,14 @@ function sanitizePlainText(text) {
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
-  // Remove numbered list prefixes but keep line breaks
   out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
-
-  // Detect potential long quotes (copyright concern)
-  const quotePattern = /"[^"]{15,}"/g
-  const matches = out.match(quotePattern)
-  if (matches && matches.some((m) => m.length > 80)) {
-    logger.warn('Potential copyright violation: long quote detected', {
-      quoteLength: matches[0]?.length,
-      preview: matches[0]?.substring(0, 50) + '...',
-    })
-  }
 
   const HARD_LIMIT = 2600
   if (out.length > HARD_LIMIT) {
     out = out.slice(0, HARD_LIMIT).trimEnd()
     out += '\n\nTip: say "full audit" to list more.'
   }
-
   return out.trim()
-}
-
-function safeText(x) {
-  if (typeof x !== 'string') return ''
-  return x.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim()
-}
-
-function safeLine(x) {
-  return safeText(x).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim()
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
@@ -200,6 +157,39 @@ function wantsFullAudit(text) {
     t.includes('check everything') ||
     t.includes('scan everything') ||
     t.includes('complete audit')
+  )
+}
+
+// “Legal context” should be opt-in (no scare tactics).
+function wantsLegalContext(text) {
+  const t = safeLine(text).toLowerCase()
+  if (!t) return false
+  return (
+    t.includes('fine') ||
+    t.includes('fines') ||
+    t.includes('penalt') ||
+    t.includes('consequence') ||
+    t.includes('what happens') ||
+    t.includes('enforcement') ||
+    t.includes('if i dont') ||
+    t.includes("if i don't") ||
+    t.includes('if it is not corrected') ||
+    t.includes('if it isnt corrected')
+  )
+}
+
+// Criminal penalty language should be EXTRA opt-in.
+function wantsCriminalContext(text) {
+  const t = safeLine(text).toLowerCase()
+  if (!t) return false
+  return (
+    t.includes('criminal') ||
+    t.includes('misdemeanor') ||
+    t.includes('felony') ||
+    t.includes('jail') ||
+    t.includes('imprison') ||
+    t.includes('90 days') ||
+    t.includes('4 years')
   )
 }
 
@@ -265,21 +255,12 @@ function buildExcerptContext(docs, opts = {}) {
 
     if (buf.length + chunk.length > MAX_CHARS) break
 
-    excerpts.push({
-      id,
-      source,
-      page: d?.page || null,
-      tier: getSourceTier(source),
-    })
-
+    excerpts.push({ id, source, page: d?.page || null, tier: getSourceTier(source) })
     buf += chunk
     n++
   }
 
-  return {
-    excerptIndex: excerpts,
-    contextText: buf.trim(),
-  }
+  return { excerptIndex: excerpts, contextText: buf.trim() }
 }
 
 function extractJsonObject(text) {
@@ -297,51 +278,108 @@ function extractJsonObject(text) {
   }
 }
 
+function normalizeLikelihood(x) {
+  const v = safeLine(x)
+  if (ALLOWED_LIKELIHOOD.has(v)) return v
+  return 'Unclear'
+}
+
+function normalizeClass(x) {
+  const v = safeLine(x)
+  if (ALLOWED_CLASS.has(v)) return v
+  return 'Unclear'
+}
+
+function classLabel(cls) {
+  if (cls === 'P') return 'Priority'
+  if (cls === 'Pf') return 'Priority Foundation'
+  if (cls === 'C') return 'Core'
+  return 'Unclear'
+}
+
+function classMeaning(cls) {
+  // From Washtenaw Violation Types: P reduces illness hazard; Pf supports P; C general sanitation.
+  if (cls === 'P') return 'Directly reduces a foodborne illness hazard.'
+  if (cls === 'Pf') return 'Supports Priority compliance (supplies, equipment, facilities, programs).'
+  if (cls === 'C') return 'General sanitation and facility maintenance.'
+  return 'Category could not be confirmed.'
+}
+
+function computeDeadlineByClass(cls) {
+  if (cls === 'P' || cls === 'Pf') return 'Immediately or within 10 days'
+  if (cls === 'C') return 'Within 90 days'
+  return 'Unclear'
+}
+
+function pickSourcesFromIds(sourceIds, excerptIndex) {
+  const map = new Map((excerptIndex || []).map((e) => [e.id, e]))
+  const used = []
+  for (const sid of sourceIds || []) {
+    const id = safeLine(sid)
+    if (!id) continue
+    const ex = map.get(id)
+    if (!ex) continue
+    used.push(ex)
+  }
+  return used
+}
+
 function renderDoNowBlock(doNow, photoRequests) {
   const dn = Array.isArray(doNow) ? doNow.map(safeLine).filter(Boolean) : []
   const pr = Array.isArray(photoRequests) ? photoRequests.map(safeLine).filter(Boolean) : []
 
   const out = []
-
   if (dn.length) {
     out.push('What to do now:')
     for (const x of dn.slice(0, 6)) out.push(`- ${x}`)
   }
-
   if (pr.length) {
     if (out.length) out.push('')
     out.push('Best follow-up photo:')
     for (const x of pr.slice(0, 4)) out.push(`- ${x}`)
   }
-
   return out.length ? out.join('\n') : ''
 }
 
-function renderConsequencesBlock() {
-  // Concise, plain language; aligns with Washtenaw Enforcement + Act 92 concepts
-  return sanitizePlainText(
-    [
-      'What can happen if it is not corrected:',
-      '- The county can require correction during routine and follow-up inspections. If problems continue, enforcement may escalate (Office Conference, then Informal Hearing, then license limitation, suspension, or revocation; you can request a Formal Hearing to appeal).',
-      '- If violations rise to an imminent health hazard, the county can order closure until corrected.',
-      '- State law also allows administrative fines and, in some cases, criminal penalties.',
-    ].join('\n')
-  )
+// Enforcement/fines: factual, optional, non-scare.
+// (Derived from Washtenaw Enforcement Action + Act 92 admin fine section.)
+function renderLegalContextBlock({ includeLegal = false, includeCriminal = false } = {}) {
+  if (!includeLegal) return ''
+
+  const lines = [
+    'If it is not corrected by the deadline (optional context):',
+    '- The county can escalate if issues repeat: routine/follow-up → Office Conference → Informal Hearing → license action; you can request a Formal Hearing to appeal.',
+    '- State law allows administrative fines (not automatic): up to $500 first offense, up to $1,000 second/subsequent, plus investigation costs. For minor issues, a warning/notice may be used instead of a fine.',
+  ]
+
+  if (includeCriminal) {
+    lines.push('- Act 92 also contains criminal penalties for certain violations (misdemeanor/felony language). If you want that breakdown, say: "show criminal penalties".')
+  }
+
+  return sanitizePlainText(lines.join('\n'))
 }
 
-function renderAuditPlainText(payload, maxItems) {
+function clampShort(s, max = 160) {
+  const x = safeLine(s || '')
+  if (!x) return ''
+  return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
+}
+
+// User-facing rendering: no sources, no excerpt IDs, no letter classes.
+function renderAuditPlainText(payload, maxItems, includeLegal = false, includeCriminal = false) {
   const opening = sanitizePlainText(payload?.opening_line || '')
-  const findings = Array.isArray(payload?.findings) ? payload.findings : []
-  const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
-  const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
-  const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
-  const observations = Array.isArray(payload?.observations) ? payload.observations : []
   const auditStatus = safeLine(payload?.audit_status || 'unknown')
 
-  // ✅ If clear: ONLY the positive line (no follow-up blocks)
+  // Clear: only a positive line. Nothing else.
   if (auditStatus === 'clear') {
     return sanitizePlainText(opening || 'Everything looks great here. Great job.')
   }
+
+  const observations = Array.isArray(payload?.observations) ? payload.observations : []
+  const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
+  const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
+  const findings = Array.isArray(payload?.findings) ? payload.findings : []
+  const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
 
   const out = []
   out.push(opening || 'Here is what I can tell from what was provided.')
@@ -350,7 +388,7 @@ function renderAuditPlainText(payload, maxItems) {
     out.push('')
     out.push('From the photo:')
     for (const o of observations.slice(0, 4)) {
-      const line = sanitizePlainText(o)
+      const line = clampShort(o, 180)
       if (!line) continue
       out.push(`- ${line}`)
     }
@@ -369,32 +407,35 @@ function renderAuditPlainText(payload, maxItems) {
     for (const f of findings.slice(0, maxItems)) {
       const cls = normalizeClass(f?.class)
       const label = classLabel(cls)
-      const def = classDefinition(cls)
+      const meaning = classMeaning(cls)
+      const title = clampShort(f?.title || 'Possible issue', 140)
+      const why = clampShort(f?.why || '', 170)
+      const fix = clampShort(f?.fix || '', 170)
       const likelihood = normalizeLikelihood(f?.likelihood)
-      const title = sanitizePlainText(f?.title || 'Possible issue')
-      const why = sanitizePlainText(f?.why || '')
-      const fix = sanitizePlainText(f?.fix || '')
-      const deadlineRaw = sanitizePlainText(f?.deadline || '')
+      const deadlineRaw = safeLine(f?.deadline || '')
       const deadline = deadlineRaw || computeDeadlineByClass(cls)
 
       out.push('')
       out.push(`${label} — ${title}`)
-      out.push(`- What it means: ${def}`)
+      out.push(`- What it means: ${meaning}`)
       out.push(`- Correction window: ${deadline}`)
       if (likelihood !== 'Unclear') out.push(`- Confidence: ${likelihood}`)
       if (why) out.push(`- Why it matters: ${why}`)
       if (fix) out.push(`- What to do: ${fix}`)
     }
 
-    out.push('')
-    out.push(renderConsequencesBlock())
+    const legal = renderLegalContextBlock({ includeLegal, includeCriminal })
+    if (legal) {
+      out.push('')
+      out.push(legal)
+    }
   }
 
   if (questions.length > 0) {
     out.push('')
     out.push('To confirm:')
     for (const q of questions.slice(0, 3)) {
-      const qq = sanitizePlainText(q)
+      const qq = clampShort(q, 180)
       if (!qq) continue
       out.push(`- ${qq}`)
     }
@@ -412,7 +453,7 @@ function renderGuidancePlainText(payload) {
   out.push(opening || 'Here is the safest way to handle that:')
 
   for (const s of steps.slice(0, 7)) {
-    const line = sanitizePlainText(s)
+    const line = clampShort(s, 180)
     if (!line) continue
     out.push(`- ${line}`)
   }
@@ -421,7 +462,7 @@ function renderGuidancePlainText(payload) {
     out.push('')
     out.push('To confirm:')
     for (const q of questions.slice(0, 3)) {
-      const qq = sanitizePlainText(q)
+      const qq = clampShort(q, 180)
       if (!qq) continue
       out.push(`- ${qq}`)
     }
@@ -459,25 +500,25 @@ function buildCacheStats(usage) {
   }
 }
 
-function pickSourcesFromIds(sourceIds, excerptIndex) {
-  const map = new Map((excerptIndex || []).map((e) => [e.id, e]))
-  const used = []
-  for (const sid of sourceIds || []) {
-    const id = safeLine(sid)
-    if (!id) continue
-    const ex = map.get(id)
-    if (!ex) continue
-    used.push(ex)
+async function runPinnedRetrieval(searchDocumentsFn, county, q, k) {
+  // Try county first
+  const primary = await withTimeout(
+    searchDocumentsFn(q, county, k),
+    RETRIEVAL_TIMEOUT_MS,
+    'RETRIEVAL_TIMEOUT_PINNED'
+  ).catch(() => [])
+  if (Array.isArray(primary) && primary.length) return primary
+
+  // Fallback keys
+  for (const key of GLOBAL_FALLBACK_KEYS) {
+    const alt = await withTimeout(
+      searchDocumentsFn(q, key, k),
+      RETRIEVAL_TIMEOUT_MS,
+      'RETRIEVAL_TIMEOUT_PINNED_GLOBAL'
+    ).catch(() => [])
+    if (Array.isArray(alt) && alt.length) return alt
   }
-  const seen = new Set()
-  const out = []
-  for (const u of used) {
-    const k = `${u.source}::${u.page || ''}`
-    if (seen.has(k)) continue
-    seen.add(k)
-    out.push(u)
-  }
-  return out
+  return []
 }
 
 export async function POST(request) {
@@ -519,6 +560,10 @@ export async function POST(request) {
     const fullAudit = wantsFullAudit(effectiveUserPrompt) || Boolean(body?.fullAudit)
     const maxFindings = fullAudit ? 10 : 4
 
+    // ✅ Non-scare defaults:
+    const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
+    const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
+
     // Auth (non-blocking)
     let userId = null
     try {
@@ -544,7 +589,7 @@ export async function POST(request) {
     const anthropic = await getAnthropicClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // 1) Conservative vision scan + safe actions
+    // 1) Conservative vision scan (NO legal claims)
     let vision = {
       summary: '',
       search_terms: '',
@@ -566,10 +611,7 @@ export async function POST(request) {
               {
                 role: 'user',
                 content: [
-                  {
-                    type: 'image',
-                    source: { type: 'base64', media_type: imageMediaType, data: imageBase64 },
-                  },
+                  { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
                   {
                     type: 'text',
                     text: `You are doing a conservative kitchen photo scan.
@@ -659,12 +701,14 @@ Return ONLY valid JSON:
     let mainDocs = []
     let pinnedDocs = []
     try {
-      const mainPromise = withTimeout(searchDocumentsFn(retrievalQuery, county, TOPK), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_MAIN')
+      const mainPromise = withTimeout(
+        searchDocumentsFn(retrievalQuery, county, TOPK),
+        RETRIEVAL_TIMEOUT_MS,
+        'RETRIEVAL_TIMEOUT_MAIN'
+      )
 
       const pinnedPromise = Promise.all(
-        PINNED_QUERIES.map((q) =>
-          withTimeout(searchDocumentsFn(q, county, PINNED_TOPK), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(() => [])
-        )
+        PINNED_QUERIES.map((q) => runPinnedRetrieval(searchDocumentsFn, county, q, PINNED_TOPK))
       )
 
       const [m, pList] = await Promise.all([mainPromise.catch(() => []), pinnedPromise])
@@ -694,27 +738,30 @@ Return ONLY valid JSON:
     const mainCtx = buildExcerptContext(mainDocs, { prefix: 'EXCERPT_D', maxChars: 16000, startAt: 1 })
     const excerptIndex = [...pinnedCtx.excerptIndex, ...mainCtx.excerptIndex]
 
-    const pinnedContextText = pinnedCtx.contextText
-    const dynamicContextText = mainCtx.contextText
+    const pinnedBlock = `Pinned reference excerpts (cite by excerpt id only):
+${pinnedCtx.contextText || 'No pinned excerpts retrieved.'}`
 
-    // 3) Build the prompt
+    const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
+${mainCtx.contextText || 'No dynamic excerpts retrieved.'}`
+
+    // 3) Model prompt
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-You help restaurant owners and GMs catch problems before an inspector does.
-Be professional, plain language, and easy to follow.
-No emojis. No markdown. No asterisks. No hashtags. No numbered lists.
+Tone:
+- Professional, plain language, concise.
+- No emojis. No markdown. No hashtags. No numbered lists.
+- Do not mention sources, document names, page numbers, or "excerpt" in user-facing fields.
 
 Grounding rules (strict):
-- You may ONLY use rules from the provided "Relevant excerpts".
+- You may ONLY use rules from the provided excerpts.
 - Any item in audit.findings MUST include at least one valid excerpt id in source_ids.
 - If you cannot cite it, do NOT put it in findings. Put it in clarifying_questions instead.
 
-If there are no excerpt-backed findings:
-- Set audit.status to "clear" if the photo/question looks fine.
-- The opening_line should be a simple positive line like: "Everything looks great here. Great job."
-- Keep clarifying_questions empty unless you truly need one check to confirm.
+Output rules:
+- Use class only as P / Pf / C / Unclear (server will render full labels).
+- Keep each field short (single sentence where requested).
 
-Return ONLY valid JSON in one of these shapes:
+Return ONLY valid JSON:
 
 AUDIT MODE:
 {
@@ -737,11 +784,11 @@ AUDIT MODE:
   "clarifying_questions": ["up to 3 short questions only if needed"]
 }
 
-GUIDANCE MODE (for general Q&A that is not a photo audit):
+GUIDANCE MODE:
 {
   "mode": "guidance",
   "opening_line": "one short sentence",
-  "guidance_steps": ["up to 7 short steps (plain language)"],
+  "guidance_steps": ["up to 7 short steps"],
   "clarifying_questions": ["up to 3 short questions only if needed"]
 }
 
@@ -771,12 +818,6 @@ ${factsBlock}
 
 ${possibleIssuesBlock}` : ''}`.trim()
 
-    const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
-${dynamicContextText || 'No dynamic excerpts retrieved.'}`
-
-    const pinnedBlock = `Pinned reference excerpts (stable; cite by excerpt id only):
-${pinnedContextText || 'No pinned excerpts retrieved.'}`
-
     // 4) Final answer
     let modelText = ''
     let parsed = null
@@ -789,16 +830,9 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
         finalMessages.push({
           role: 'user',
           content: [
-            {
-              type: 'text',
-              text: pinnedBlock,
-              cache_control: { type: 'ephemeral' },
-            },
+            { type: 'text', text: pinnedBlock, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: dynamicBlock },
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: imageMediaType, data: imageBase64 },
-            },
+            { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
             { type: 'text', text: questionBlock },
           ],
         })
@@ -806,11 +840,7 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
         finalMessages.push({
           role: 'user',
           content: [
-            {
-              type: 'text',
-              text: pinnedBlock,
-              cache_control: { type: 'ephemeral' },
-            },
+            { type: 'text', text: pinnedBlock, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: dynamicBlock },
             { type: 'text', text: questionBlock },
           ],
@@ -822,13 +852,7 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
           model: CLAUDE_MODEL,
           temperature: 0.2,
           max_tokens: fullAudit ? 1400 : 1000,
-          system: [
-            {
-              type: 'text',
-              text: systemPrompt,
-              cache_control: { type: 'ephemeral' },
-            },
-          ],
+          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
           messages: finalMessages,
         }),
         ANSWER_TIMEOUT_MS,
@@ -841,14 +865,13 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
         .join('')
 
       parsed = extractJsonObject(modelText)
-
       cacheStats = buildCacheStats(answerResp.usage)
       if (cacheStats) logger.info('Prompt cache stats', cacheStats)
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
     }
 
-    // 5) Render (NO SOURCES SHOWN, NO LETTER CLASSES SHOWN)
+    // 5) Render
     let message = ''
     let status = 'unknown'
 
@@ -876,47 +899,52 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
         })
       }
 
-      const hasAnyChecks = (vision.possible_issues || []).length > 0 || (vision.unclear || []).length > 0 || questions.length > 0
+      const hasAnyChecks =
+        (vision.possible_issues || []).length > 0 || (vision.unclear || []).length > 0 || questions.length > 0
 
       if (supportedFindings.length > 0) {
         status = 'findings'
-        const payloadForRender = {
-          audit_status: 'findings',
-          opening_line: modelOpening || 'I noticed a few things worth fixing before an inspection.',
-          findings: supportedFindings,
-          clarifying_questions: questions,
-          do_now: vision.do_now || [],
-          photo_requests: vision.photo_requests || [],
-          observations: (vision.visible_facts || []).slice(0, 4),
-        }
-        message = renderAuditPlainText(payloadForRender, maxFindings)
-      } else {
-        if (!hasAnyChecks) {
-          status = 'clear'
-          const payloadForRender = {
-            audit_status: 'clear',
-            opening_line: modelOpening || 'Everything looks great here. Great job.',
-            findings: [],
-            clarifying_questions: [],
-            do_now: [],
-            photo_requests: [],
-            observations: [],
-          }
-          message = renderAuditPlainText(payloadForRender, maxFindings)
-        } else {
-          status = 'needs_info'
-          const payloadForRender = {
-            audit_status: 'needs_info',
-            opening_line:
-              modelOpening ||
-              'I cannot confirm a specific inspection issue from this photo alone. Here is what I would check next.',
-            findings: [],
+        message = renderAuditPlainText(
+          {
+            audit_status: 'findings',
+            opening_line: modelOpening || 'I noticed a few things worth tightening up before an inspection.',
+            findings: supportedFindings,
             clarifying_questions: questions,
             do_now: vision.do_now || [],
             photo_requests: vision.photo_requests || [],
             observations: (vision.visible_facts || []).slice(0, 4),
-          }
-          message = renderAuditPlainText(payloadForRender, maxFindings)
+          },
+          maxFindings,
+          includeLegal,
+          includeCriminal
+        )
+      } else {
+        if (!hasAnyChecks) {
+          status = 'clear'
+          message = renderAuditPlainText(
+            { audit_status: 'clear', opening_line: modelOpening || 'Everything looks great here. Great job.' },
+            maxFindings,
+            false,
+            false
+          )
+        } else {
+          status = 'needs_info'
+          message = renderAuditPlainText(
+            {
+              audit_status: 'needs_info',
+              opening_line:
+                modelOpening ||
+                'I cannot confirm a specific inspection issue from this photo alone. Here is what I would check next.',
+              findings: [],
+              clarifying_questions: questions,
+              do_now: vision.do_now || [],
+              photo_requests: vision.photo_requests || [],
+              observations: (vision.visible_facts || []).slice(0, 4),
+            },
+            maxFindings,
+            false,
+            false
+          )
         }
       }
     } else if (parsed && parsed.mode === 'guidance') {
@@ -941,6 +969,8 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
       fullAudit,
       mainDocsRetrieved: mainDocs.length,
       pinnedDocsRetrieved: pinnedDocs.length,
+      includeLegal,
+      includeCriminal,
       cache_hit: cacheStats?.cache_hit || false,
       cache_read_input_tokens: cacheStats?.cache_read_input_tokens || 0,
       cache_savings_pct: cacheStats?.cache_savings_pct || 0,
@@ -964,6 +994,8 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
           mainDocsRetrieved: mainDocs.length,
           pinnedDocsRetrieved: pinnedDocs.length,
           durationMs: Date.now() - startedAt,
+          includeLegal,
+          includeCriminal,
           cache: cacheStats || null,
         },
       },
