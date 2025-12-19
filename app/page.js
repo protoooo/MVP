@@ -16,6 +16,13 @@ const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
+// Adjust these if your routes differ
+const LEGAL_LINKS = [
+  { label: 'Terms', href: '/terms' },
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Contact', href: '/contact' },
+]
+
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
@@ -260,6 +267,23 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   )
 }
 
+function LegalFooter() {
+  return (
+    <footer className={`legal-footer ${ibmMono.className}`} aria-label="Legal links">
+      <div className="legal-footer-inner">
+        {LEGAL_LINKS.map((l, idx) => (
+          <span key={l.href} className="legal-footer-item">
+            <Link className="legal-link" href={l.href}>
+              {l.label}
+            </Link>
+            {idx < LEGAL_LINKS.length - 1 && <span className="legal-sep">·</span>}
+          </span>
+        ))}
+      </div>
+    </footer>
+  )
+}
+
 function LandingPage({ onShowPricing, onShowAuth }) {
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
 
@@ -351,6 +375,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="ibm-doc-footer">Indexed docs · Washtenaw focus</div>
         </section>
       </div>
+
+      {/* NEW: Terms / Privacy / Contact footer */}
+      <LegalFooter />
     </div>
   )
 }
@@ -1010,18 +1037,6 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        /* ==========================================================================
-           protocolLM — Retro Console (IBM) + Clean Dark
-           Fixes requested in this pass:
-           - Kill the white “behind” the page (html/bg + iOS bounce background)
-           - Kill thin white line right (overflow-x clip)
-           - Add top-left brand: protocolLM (white, IBM)
-           - Pricing card: remove Site License pill, remove redundant sections, fix dotted zeros (use Inter for price)
-           - Auth card: remove header icons + alert icons
-           - Empty chat: composer centered (center-center)
-           - Remove green focus box on textarea (no outline / no focus ring)
-           ========================================================================== */
-
         :root {
           --bg-0: #0e0e11;
           --bg-1: #121218;
@@ -1035,7 +1050,9 @@ export default function Page() {
           --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
         }
 
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
           box-sizing: border-box;
           -webkit-tap-highlight-color: transparent;
         }
@@ -1062,7 +1079,6 @@ export default function Page() {
           background-color: var(--bg-0);
         }
 
-        /* Next root backgrounds (prevents white gaps behind app on some browsers) */
         #__next,
         body > div:first-child,
         body > div {
@@ -1074,7 +1090,6 @@ export default function Page() {
           color: var(--ink-0);
         }
 
-        /* Kill default focus rings (your green box) */
         :focus,
         :focus-visible {
           outline: none !important;
@@ -1087,7 +1102,6 @@ export default function Page() {
           box-shadow: none !important;
         }
 
-        /* Scrollbar (subtle, non-blue) */
         ::-webkit-scrollbar {
           width: 8px;
           height: 8px;
@@ -1103,7 +1117,6 @@ export default function Page() {
           background: rgba(217, 217, 223, 0.2);
         }
 
-        /* Loading */
         .loading-screen {
           position: fixed;
           inset: 0;
@@ -1139,7 +1152,6 @@ export default function Page() {
           }
         }
 
-        /* App shell */
         .app-container {
           min-height: 100dvh;
           display: flex;
@@ -1148,9 +1160,6 @@ export default function Page() {
           width: 100%;
         }
 
-        /* ==========================================================================
-           IBM Landing
-           ========================================================================== */
         .ibm-landing {
           position: relative;
           padding: 34px 20px 74px;
@@ -1417,18 +1426,61 @@ export default function Page() {
           padding: 2px 2px 0;
         }
 
+        /* NEW: legal footer styles */
+        .legal-footer {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: calc(14px + env(safe-area-inset-bottom));
+          z-index: 6;
+          display: flex;
+          justify-content: center;
+          pointer-events: auto;
+        }
+        .legal-footer-inner {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: rgba(18, 18, 24, 0.7);
+          border: 1px solid rgba(42, 42, 50, 0.8);
+          backdrop-filter: blur(8px);
+          box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
+        }
+        .legal-footer-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .legal-link {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          text-decoration: none;
+          color: rgba(217, 217, 223, 0.85);
+        }
+        .legal-link:hover {
+          color: rgba(242, 242, 242, 0.95);
+        }
+        .legal-sep {
+          color: rgba(217, 217, 223, 0.45);
+          font-size: 12px;
+          line-height: 1;
+        }
+
         @media (max-width: 768px) {
           .ibm-landing {
-            padding: 32px 16px 48px;
+            padding: 32px 16px 62px;
           }
           .ibm-landing-grid {
             grid-template-columns: 1fr;
           }
+          .legal-footer-inner {
+            border-radius: 14px;
+          }
         }
 
-        /* ==========================================================================
-           Modals
-           ========================================================================== */
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -1657,7 +1709,6 @@ export default function Page() {
           font-weight: 800;
         }
 
-        /* Pricing modal (condensed, no badge/pill, no redundant block) */
         .pricing-title {
           text-transform: none;
         }
@@ -1748,9 +1799,6 @@ export default function Page() {
           display: block;
         }
 
-        /* ==========================================================================
-           Chat
-           ========================================================================== */
         .chat-container {
           flex: 1;
           display: flex;
@@ -1915,7 +1963,6 @@ export default function Page() {
           width: 100%;
         }
 
-        /* Centered composer (empty chat): looks like it belongs in the middle */
         .chat-input-area.centered {
           border-top: none;
           box-shadow: none;
