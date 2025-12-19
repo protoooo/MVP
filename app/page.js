@@ -1130,7 +1130,7 @@ export default function Page() {
         .plm-brand-text {
           display: inline-block;
           line-height: 1;
-          transform: translateY(0.5px); /* tiny optical alignment */
+          transform: translateY(1px); /* tiny optical alignment */
         }
 
         /* ==========================================================================
