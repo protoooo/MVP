@@ -21,47 +21,58 @@ export default function InfoPageLayout({ title, eyebrow, subtitle, children }) {
   }, [])
 
   return (
-    <div className={`min-h-screen bg-[#F6FAF9] text-[#0B1220] ${inter.className}`}>
-      <div className="relative isolate overflow-hidden px-4 pb-16 pt-10 sm:px-6 lg:px-10">
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(85,214,178,0.12),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(47,93,138,0.14),transparent_38%),radial-gradient(circle_at_50%_80%,rgba(85,214,178,0.18),transparent_32%)]" />
-          <div className="absolute inset-x-10 top-8 h-32 rounded-full bg-white/60 blur-3xl shadow-[0_20px_60px_rgba(31,78,122,0.08)]" />
-        </div>
-
-        <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-3">
-          <Link href="/" className={`inline-flex items-baseline gap-0 rounded-full bg-white/80 px-3 py-2 text-sm font-semibold text-[#0B1220] shadow-[0_1px_3px_rgba(11,18,32,0.08)] ring-1 ring-[#D7E6E2] backdrop-blur ${outfit.className}`}>
+    <div className={`min-h-screen bg-[#0e0e11] text-[#f2f2f2] ${inter.className}`}>
+      <div className="px-5 pb-16 pt-10 sm:px-8 lg:px-12">
+        <header className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+          <Link href="/" className={`inline-flex items-center gap-2 rounded-md bg-[#1c1c22] px-3 py-2 text-sm font-semibold text-[#f2f2f2] ring-1 ring-[#2a2a32] ${outfit.className}`}>
             <span className="tracking-tight">protocol</span>
-            <span className="tracking-tight text-[#2F5D8A]">LM</span>
+            <span className="tracking-tight">LM</span>
           </Link>
-          <div className="hidden sm:flex items-center gap-3 text-[13px] font-medium text-[#3D4F5F]">
-            <span className="hidden sm:inline-block rounded-full bg-white/80 px-3 py-1 text-[12px] uppercase tracking-[0.18em] text-[#2F5D8A] ring-1 ring-[#D7E6E2]">Compliance ready</span>
-            <span className="text-[#3D4F5F]">Made in Washtenaw County.</span>
-          </div>
+          <Link href="/" className="text-[13px] text-[#d9d9df] hover:underline">
+            ← Back to app
+          </Link>
         </header>
 
-        <main className="relative z-10 mx-auto mt-8 max-w-6xl space-y-6">
-          <div className="overflow-hidden rounded-3xl border border-[#D7E6E2] bg-white/90 shadow-[0_18px_45px_rgba(11,18,32,0.08)] backdrop-blur">
-            <div className="border-b border-[#E8F0ED] px-6 py-6 sm:px-10 sm:py-8">
-              {eyebrow ? (
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#E8FAF4] px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.2em] text-[#2F5D8A] ring-1 ring-[#B8CFC8]">
-                  {eyebrow}
-                </div>
-              ) : null}
-              <h1 className={`text-3xl font-extrabold tracking-tight text-[#0B1220] sm:text-4xl ${outfit.className}`}>{title}</h1>
-              {subtitle ? <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-[#3D4F5F]">{subtitle}</p> : null}
+        <main className="mx-auto mt-10 max-w-5xl space-y-6">
+          <div className="rounded-2xl border border-[#2a2a32] bg-[#121218] px-6 py-8 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+            {eyebrow ? (
+              <div className="mb-3 inline-flex items-center gap-2 rounded-md bg-[#1c1c22] px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#f2f2f2] ring-1 ring-[#2a2a32]">
+                {eyebrow}
+              </div>
+            ) : null}
+            <h1 className={`text-3xl font-extrabold tracking-tight text-[#f2f2f2] sm:text-4xl ${outfit.className}`}>{title}</h1>
+            {subtitle ? <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-[#d9d9df]">{subtitle}</p> : null}
+
+            <div className="info-content mt-8 space-y-6 text-[15px] leading-relaxed text-[#d9d9df]">
+              {children}
             </div>
-
-            <div className="px-6 py-8 sm:px-10 sm:py-10">{children}</div>
-          </div>
-
-          <div className="flex flex-col items-center justify-between gap-3 text-center text-[13px] text-[#3D4F5F] sm:flex-row sm:text-left">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 ring-1 ring-[#D7E6E2]">Health code compliance for Washtenaw County operators.</div>
-            <Link href="/" className="inline-flex items-center gap-2 text-[#2F5D8A] underline-offset-4 hover:text-[#1F4E7A] hover:underline">
-              <span aria-hidden>←</span> Return to landing
-            </Link>
           </div>
         </main>
       </div>
+
+      <style jsx>{`
+        .info-content section,
+        .info-content div,
+        .info-content ul,
+        .info-content li,
+        .info-content p {
+          background: transparent !important;
+          color: #d9d9df !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .info-content h2,
+        .info-content h3 {
+          color: #f2f2f2 !important;
+        }
+        .info-content a {
+          color: #f2f2f2 !important;
+        }
+        .info-content ul {
+          list-style: disc;
+          padding-left: 1.25rem;
+        }
+      `}</style>
     </div>
   )
-              }
+}
