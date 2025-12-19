@@ -531,7 +531,7 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
-  const documentRows = useMemo(() => [...DEMO_DOCUMENTS], [])
+  const documentRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS], [])
   const [showPricingMenu, setShowPricingMenu] = useState(false)
 
   return (
@@ -552,10 +552,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 <div className="pricing-menu-title">Site License</div>
                 <div className="pricing-menu-price">$100 / month</div>
                 <ul className="pricing-menu-list">
-                  <li>Unlimited photo checks</li>
-                  <li>Unlimited Q&A</li>
-                  <li>Washtenaw-specific guidance</li>
-                  <li>Full team access</li>
+                  <li>Unlimited usage</li>
                 </ul>
                 <button
                   type="button"
@@ -589,15 +586,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         </section>
 
         <section className="ibm-doc-card">
-          <div className="ibm-doc-topline">
-            <div className="ibm-doc-title">
-              Knowledge Base
-            </div>
-            <span className="ibm-doc-meta">Live Scroll</span>
-          </div>
-            <div className="ibm-doc-window">
-              <div className="ibm-doc-gradient" />
-            <div className="ibm-doc-scroll">
+          <div className="ibm-doc-window">
+            <div className="ibm-doc-gradient" />
+            <div className="ibm-doc-scroll animate-doc-scroll">
               {documentRows.map((doc, idx) => (
                 <div key={`${doc}-${idx}`} className="ibm-doc-row">
                   <span className="ibm-doc-dot" />
@@ -850,7 +841,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             </div>
             <h2 className={`modal-title ${outfit.className}`}>protocolLM Access</h2>
             <p className={`modal-subtitle ${inter.className}`}>
-              Unlimited photo checks and regulatory search for your entire team
+              $100/month · unlimited usage
             </p>
           </div>
 
@@ -861,7 +852,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </div>
 
           <div className="pricing-modal-features">
-            {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-focused', 'Full team access'].map((f, i) => (
+            {['Unlimited usage'].map((f, i) => (
               <div key={i} className={`pricing-modal-feature ${inter.className}`}>
                 <Icons.Check />
                 <span>{f}</span>
@@ -1665,7 +1656,7 @@ export default function Page() {
           border: 1px solid #25252d;
           border-radius: 12px;
           padding: 12px;
-          overflow-y: auto;
+          overflow: hidden;
           height: 320px;
         }
 
@@ -1706,6 +1697,15 @@ export default function Page() {
 
         .ibm-doc-name {
           white-space: nowrap;
+        }
+
+        .animate-doc-scroll {
+          animation: doc-scroll 24s linear infinite;
+        }
+
+        @keyframes doc-scroll {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(-50%); }
         }
 
         @media (max-width: 768px) {
@@ -1754,6 +1754,12 @@ export default function Page() {
         .ibm-cta.secondary {
           background: transparent;
           color: #d9d9df;
+        }
+
+        .ibm-cta.small {
+          padding: 8px 12px;
+          font-size: 12px;
+          letter-spacing: 0.1em;
         }
 
         .ibm-cta:hover {
@@ -3017,7 +3023,7 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: var(--z-modal);
-          background: rgba(11, 18, 32, 0.5);
+          background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
@@ -3054,12 +3060,13 @@ export default function Page() {
 
         .modal-card {
           position: relative;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
+          background: #121218;
+          border: 1px solid #2a2a32;
           border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-xl);
+          box-shadow: 0 16px 50px rgba(0, 0, 0, 0.55);
           padding: 32px;
           overflow: hidden;
+          color: #f2f2f2;
         }
 
         @media (max-width: 480px) {
@@ -3077,19 +3084,19 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-card);
-          border: 1px solid var(--color-border);
+          background: #1c1c22;
+          border: 1px solid #2a2a32;
           border-radius: var(--radius-sm);
-          color: var(--color-text-tertiary);
+          color: #d9d9df;
           cursor: pointer;
           transition: all var(--duration-fast) var(--ease-out-expo);
           z-index: 10;
         }
 
         .modal-close-btn:hover {
-          background: var(--color-surface);
-          color: var(--color-text);
-          border-color: var(--color-border-hover);
+          background: #22222a;
+          color: #f2f2f2;
+          border-color: #2f2f38;
         }
 
         .modal-header {
@@ -3103,24 +3110,24 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
+          background: #1c1c22;
+          border: 1px solid #2a2a32;
           border-radius: var(--radius-lg);
           margin: 0 auto 18px;
-          color: var(--color-primary);
+          color: #f2f2f2;
         }
 
         .modal-title {
           font-size: 24px;
           font-weight: 700;
           letter-spacing: -0.02em;
-          color: var(--color-text);
+          color: #f2f2f2;
           margin-bottom: 8px;
         }
 
         .modal-subtitle {
           font-size: 14px;
-          color: var(--color-text-secondary);
+          color: #d9d9df;
           line-height: 1.5;
         }
 
@@ -3139,29 +3146,29 @@ export default function Page() {
         .form-label {
           font-size: 13px;
           font-weight: 600;
-          color: var(--color-text-secondary);
+          color: #d9d9df;
         }
 
         .form-input {
           width: 100%;
           height: 48px;
           padding: 0 16px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
+          background: #1a1a20;
+          border: 1px solid #2a2a32;
           border-radius: var(--radius-md);
-          color: var(--color-text);
+          color: #f2f2f2;
           font-size: 15px;
           transition: all var(--duration-fast) var(--ease-out-expo);
           outline: none;
         }
 
         .form-input::placeholder {
-          color: var(--color-text-muted);
+          color: #8c8c93;
         }
 
         .form-input:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
+          border-color: #3a3a42;
+          box-shadow: none;
         }
 
         .form-input-group {
@@ -3183,7 +3190,7 @@ export default function Page() {
         }
 
         .form-toggle:hover {
-          color: var(--color-primary);
+          color: #f2f2f2;
         }
 
         .btn-form-submit {
@@ -3193,8 +3200,8 @@ export default function Page() {
           justify-content: center;
           gap: 10px;
           height: 48px;
-          background: var(--color-primary);
-          color: white;
+          background: #2a2a32;
+          color: #f2f2f2;
           border: none;
           border-radius: var(--radius-md);
           font-size: 15px;
@@ -3205,9 +3212,9 @@ export default function Page() {
         }
 
         .btn-form-submit:hover:not(:disabled) {
-          background: var(--color-primary-hover);
+          background: #34343c;
           transform: translateY(-1px);
-          box-shadow: var(--shadow-md);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
         }
 
         .btn-form-submit:disabled {
@@ -3287,12 +3294,12 @@ export default function Page() {
           align-items: center;
           gap: 8px;
           padding: 8px 14px;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
+          background: #1c1c22;
+          border: 1px solid #2a2a32;
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 600;
-          color: var(--color-primary);
+          color: #f2f2f2;
           margin-bottom: 16px;
         }
 
@@ -3311,7 +3318,7 @@ export default function Page() {
           justify-content: center;
           margin-bottom: 24px;
           padding: 20px;
-          background: var(--color-card);
+          background: #1a1a20;
           border-radius: var(--radius-lg);
         }
 
@@ -3320,11 +3327,11 @@ export default function Page() {
           align-items: center;
           gap: 6px;
           font-size: 13px;
-          color: var(--color-text-secondary);
+          color: #d9d9df;
         }
 
         .pricing-modal-feature svg {
-          color: var(--color-success);
+          color: #f2f2f2;
           width: 14px;
           height: 14px;
         }
@@ -3343,8 +3350,8 @@ export default function Page() {
           justify-content: center;
           gap: 10px;
           height: 48px;
-          background: var(--color-primary);
-          color: white;
+          background: #2a2a32;
+          color: #f2f2f2;
           border: none;
           border-radius: var(--radius-md);
           font-size: 15px;
@@ -3354,9 +3361,9 @@ export default function Page() {
         }
 
         .btn-pricing-modal-primary:hover:not(:disabled) {
-          background: var(--color-primary-hover);
+          background: #34343c;
           transform: translateY(-1px);
-          box-shadow: var(--shadow-md);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
         }
 
         .btn-pricing-modal-primary:disabled {
@@ -3371,9 +3378,9 @@ export default function Page() {
           justify-content: center;
           gap: 10px;
           height: 48px;
-          background: var(--color-surface);
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
+          background: #1c1c22;
+          color: #f2f2f2;
+          border: 1px solid #2a2a32;
           border-radius: var(--radius-md);
           font-size: 15px;
           font-weight: 600;
@@ -3382,8 +3389,8 @@ export default function Page() {
         }
 
         .btn-pricing-modal-secondary:hover:not(:disabled) {
-          background: var(--color-card);
-          border-color: var(--color-border-hover);
+          background: #22222a;
+          border-color: #2f2f38;
         }
 
         .btn-pricing-modal-secondary:disabled {
@@ -3394,8 +3401,8 @@ export default function Page() {
         .btn-badge {
           font-size: 10px;
           font-weight: 700;
-          color: var(--color-success);
-          background: var(--color-success-bg);
+          color: #f2f2f2;
+          background: #2a2a32;
           padding: 3px 8px;
           border-radius: var(--radius-xs);
         }
@@ -3403,7 +3410,7 @@ export default function Page() {
         .pricing-modal-note {
           text-align: center;
           font-size: 12px;
-          color: var(--color-text-muted);
+          color: #d9d9df;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -3778,11 +3785,11 @@ export default function Page() {
                 <div />
                 <div className="chat-top-actions">
                   {hasActiveSubscription && (
-                    <button onClick={handleManageBilling} className="ibm-cta secondary" type="button">
+                    <button onClick={handleManageBilling} className="ibm-cta secondary small" type="button">
                       Billing
                     </button>
                   )}
-                  <button onClick={handleSignOut} className="ibm-cta secondary" type="button">
+                  <button onClick={handleSignOut} className="ibm-cta secondary small" type="button">
                     Log out
                   </button>
                 </div>
