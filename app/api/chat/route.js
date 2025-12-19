@@ -11,6 +11,7 @@ import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics } from '@/lib/usage'
+import { validateSingleLocation, logSessionActivity } from '@/lib/licenseValidation'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -564,7 +565,7 @@ export async function POST(request) {
     const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
     const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
 
-    // Auth (non-blocking)
+    // ✅ ENHANCED: Auth with location validation
     let userId = null
     try {
       const cookieStore = await cookies()
@@ -580,8 +581,55 @@ export async function POST(request) {
           },
         },
       })
+      
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
+
+      // ✅ NEW: Email verification check
+      if (userId && data?.user && !data.user.email_confirmed_at) {
+        return NextResponse.json({ 
+          error: 'Please verify your email address before using protocolLM. Check your inbox for the verification link.',
+          code: 'EMAIL_NOT_VERIFIED'
+        }, { status: 403 })
+      }
+
+      // ✅ NEW: Validate single location license
+      if (userId) {
+        const sessionInfo = {
+          ip: request.headers.get('x-forwarded-for')?.split(',')[0] || 
+              request.headers.get('x-real-ip') || 
+              'unknown',
+          userAgent: request.headers.get('user-agent') || 'unknown'
+        }
+
+        const locationCheck = await validateSingleLocation(userId, sessionInfo)
+
+        if (!locationCheck.valid) {
+          if (locationCheck.code === 'LOCATION_MISMATCH') {
+            return NextResponse.json({ 
+              error: locationCheck.error,
+              code: 'LOCATION_MISMATCH'
+            }, { status: 403 })
+          }
+
+          if (locationCheck.code === 'MULTI_LOCATION_ACCESS') {
+            return NextResponse.json({ 
+              error: locationCheck.error,
+              code: 'MULTI_LOCATION_ACCESS'
+            }, { status: 403 })
+          }
+
+          if (locationCheck.needsRegistration) {
+            return NextResponse.json({ 
+              error: 'Location registration required',
+              code: 'LOCATION_NOT_REGISTERED'
+            }, { status: 403 })
+          }
+        }
+
+        await logSessionActivity(userId, sessionInfo)
+      }
+
     } catch (e) {
       logger.warn('Auth check failed (continuing)', { error: e?.message })
     }
