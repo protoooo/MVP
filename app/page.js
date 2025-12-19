@@ -197,7 +197,7 @@ function BrandLink({ variant = 'landing' }) {
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={64} height={64} priority />
+          <Image src={appleIcon} alt="" width={32} height={32} priority />
         </span>
         <span className="plm-brand-text">protocolLM</span>
       </span>
@@ -1112,8 +1112,8 @@ export default function Page() {
         }
         /* ✅ ~80% bigger mark */
         .plm-brand-mark {
-          width: 32px;
-          height: 32px;
+          width: 64px;
+          height: 64px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
