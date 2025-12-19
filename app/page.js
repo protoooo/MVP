@@ -161,27 +161,27 @@ const Icons = {
 }
 
 const DEMO_DOCUMENTS = [
-  '3compsink',
-  'Consumer Advisory',
-  'Cooling Foods',
-  'Cross Contamination',
-  'Date Marking Guide',
-  'Enforcement Action | Washtenaw County, MI',
-  'FDA Food Code 2022',
-  'FOG',
-  'Food Allergy Information | Washtenaw County, MI',
-  'Food Service Inspection Program | Washtenaw County, MI',
+  'Washtenaw County Enforcement Actions',
+  'Washtenaw County Violation Types',
+  'Washtenaw County Food Allergy Information',
+  'Washtenaw County Inspection Program',
   'Food Labeling Guide',
   'Food Temperatures',
-  'Inspection Report Types | Washtenaw County, MI',
   'Internal Cooking Temperatures',
-  'MCL Act 92 of 2000',
+  'FDA Food Code',
   'MI Modified Food Code',
+  'MCL Act 92 of 2000',
+  'Inspection Report Types',
+  'Date Marking Guide',
+  'Cross Contamination',
+  'Cooling Foods',
+  'Sanitation Standards',
+  'Fat, Oil, and Grease Control',
   'New Business Information Packet',
-  'Norovirus Environ Cleaning',
-  'Procedures for the Administration and Enforcement of the Michigan Food Code',
+  'Norovirus Environmental Cleaning',
+  'Procedures for the Michigan Food Code',
   'Retail Food Establishments Emergency Action Plan',
-  'Summary Chart for Minimum Cooking Food Temperatures and Holding Time',
+  'Summary Chart for Minimum Cooking Food Temperatures',
   'USDA Safe Minimum Internal Temperature Chart',
 ]
 
@@ -531,7 +531,8 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
-  const documentRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS], [])
+  const documentRows = useMemo(() => [...DEMO_DOCUMENTS], [])
+  const documentScrollRows = useMemo(() => [...DEMO_DOCUMENTS, ...DEMO_DOCUMENTS], [])
   const [showPricingMenu, setShowPricingMenu] = useState(false)
 
   return (
@@ -589,7 +590,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="ibm-doc-window">
             <div className="ibm-doc-gradient" />
             <div className="ibm-doc-scroll animate-doc-scroll">
-              {documentRows.map((doc, idx) => (
+              {documentScrollRows.map((doc, idx) => (
                 <div key={`${doc}-${idx}`} className="ibm-doc-row">
                   <span className="ibm-doc-dot" />
                   <span className="ibm-doc-name">{doc}</span>
@@ -1685,6 +1686,7 @@ export default function Page() {
           color: #f2f2f2;
           font-size: 14px;
           letter-spacing: -0.01em;
+          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
         }
 
         .ibm-doc-dot {
@@ -1700,7 +1702,7 @@ export default function Page() {
         }
 
         .animate-doc-scroll {
-          animation: doc-scroll 24s linear infinite;
+          animation: doc-scroll 22s linear infinite;
         }
 
         @keyframes doc-scroll {
@@ -1746,6 +1748,7 @@ export default function Page() {
           text-transform: uppercase;
           letter-spacing: 0.12em;
           font-weight: 700;
+          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
           box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
           cursor: pointer;
           transition: all 0.2s ease;
@@ -3454,6 +3457,10 @@ export default function Page() {
           gap: 10px;
         }
 
+        .chat-top-actions .ibm-cta {
+          font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+        }
+
         .chat-empty {
           width: 100%;
           max-width: 960px;
@@ -3502,33 +3509,7 @@ export default function Page() {
           flex-wrap: wrap;
         }
 
-        .ibm-chat-launchers {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 14px;
-          margin-bottom: 18px;
-        }
-
-        .ibm-chat-btn {
-          height: 52px;
-          width: 52px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background: #11192a;
-          border: 1px solid #2c3c58;
-          color: #f2f2f2;
-          border-radius: 14px;
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .ibm-chat-btn:hover {
-          box-shadow: 0 12px 26px rgba(0, 0, 0, 0.32);
-          transform: translateY(-1px);
-        }
+        .ibm-chat-launchers { display: none; }
 
         .chat-history {
           max-width: 800px;
@@ -3809,21 +3790,7 @@ export default function Page() {
                         Run quick photo checks to spot likely issues, or search the 
                         Washtenaw-focused database when you need a clear answer.
                       </p>
-                      <div className="chat-empty-actions">
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="btn-secondary"
-                        >
-                          <Icons.Camera />
-                          <span className={`btn-label ${inter.className}`}>Attach photo</span>
-                        </button>
-                        <button
-                          onClick={() => textAreaRef.current?.focus()}
-                          className="btn-secondary"
-                        >
-                          <span className={`btn-label ${inter.className}`}>Ask a question</span>
-                        </button>
-                      </div>
+                      <div className="chat-empty-actions" />
                     </div>
                   </div>
                 ) : (
@@ -3854,31 +3821,6 @@ export default function Page() {
               <div className="chat-input-area">
               <div className="chat-input-inner">
                 <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-
-                <div className="ibm-chat-launchers">
-                  <button
-                    type="button"
-                    className="ibm-chat-btn"
-                    aria-label="Open camera intake"
-                    onClick={() => {
-                      setSendMode('vision')
-                      fileInputRef.current?.click()
-                    }}
-                  >
-                    <Icons.Camera />
-                  </button>
-                  <button
-                    type="button"
-                    className="ibm-chat-btn"
-                    aria-label="Start text chat"
-                    onClick={() => {
-                      setSendMode('text')
-                      textAreaRef.current?.focus()
-                    }}
-                  >
-                    <Icons.Chat />
-                  </button>
-                </div>
 
                 {selectedImage && (
                   <div className={`chat-attachment ${inter.className}`}>
