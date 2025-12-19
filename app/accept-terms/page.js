@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Outfit } from 'next/font/google'
 import InfoPageLayout from '@/components/InfoPageLayout'
+import { createClient } from '@/lib/supabase-browser'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700', '800'] })
 
 export default function AcceptTermsPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [agreePrivacy, setAgreePrivacy] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,6 +26,7 @@ export default function AcceptTermsPage() {
     setError('')
 
     try {
+      // Accept terms
       const res = await fetch('/api/accept-terms', { method: 'POST' })
       const data = await res.json()
 
@@ -34,7 +37,32 @@ export default function AcceptTermsPage() {
       }
 
       setSuccess(true)
-      setTimeout(() => router.replace('/'), 600)
+      
+      // ✅ NEW: Check if location needs registration
+      setTimeout(async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          
+          if (user) {
+            const { data: sub } = await supabase
+              .from('subscriptions')
+              .select('metadata')
+              .eq('user_id', user.id)
+              .in('status', ['active', 'trialing'])
+              .maybeSingle()
+
+            if (sub && !sub.metadata?.location_hash) {
+              router.replace('/register-location')
+              return
+            }
+          }
+        } catch (e) {
+          console.error('Location check failed:', e)
+        }
+
+        router.replace('/')
+      }, 600)
+      
     } catch (err) {
       console.error('Accept terms error:', err)
       setError('An unexpected error occurred. Please try again.')
@@ -57,6 +85,7 @@ export default function AcceptTermsPage() {
               <li>protocolLM is a reference tool; human review is required for compliance decisions.</li>
               <li>AI outputs may be imperfect; always verify with official Washtenaw County guidance.</li>
               <li>Data is protected with encryption, limited retention, and no use for public model training.</li>
+              <li>Each license is valid for ONE physical restaurant location only.</li>
             </ul>
             <div className="mt-4 flex flex-wrap gap-3 text-[14px] font-semibold text-[#2F5D8A]">
               <Link href="/terms" className="inline-flex items-center gap-2 underline-offset-4 hover:text-[#1F4E7A] hover:underline">
@@ -104,10 +133,22 @@ export default function AcceptTermsPage() {
                 I acknowledge the Privacy Policy describing data collection, retention, and protection practices.
               </span>
             </label>
+
+            <label className="flex items-start gap-3 rounded-xl border border-[#E8F0ED] bg-[#F6FAF9] px-4 py-3">
+              <input
+                type="checkbox"
+                checked={agreeTerms && agreePrivacy}
+                disabled
+                className="mt-1 h-5 w-5 rounded border-[#B8CFC8] text-[#2F5D8A] focus:ring-[#55D6B2]"
+              />
+              <span className="text-[15px] leading-relaxed text-[#0B1220]">
+                I understand this license is valid for <strong>one physical location only</strong>. Multiple locations require separate licenses.
+              </span>
+            </label>
           </div>
 
           {error ? <p className="mt-3 text-[14px] font-medium text-[#B45309]">{error}</p> : null}
-          {success ? <p className="mt-3 text-[14px] font-semibold text-[#0B1220]">Saved. Redirecting you back to protocolLM…</p> : null}
+          {success ? <p className="mt-3 text-[14px] font-semibold text-[#0B1220]">Saved. Redirecting you to location registration…</p> : null}
 
           <button
             type="submit"
