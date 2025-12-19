@@ -99,9 +99,9 @@ export async function POST(req) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     
-    // Replay attack protection: reject events older than 3 minutes
+    // ✅ FIXED: Reduced replay attack protection window from 3 min to 1 min
     const eventAge = Date.now() - (event.created * 1000)
-    if (eventAge > 3 * 60 * 1000) {
+    if (eventAge > 60 * 1000) {  // Changed from 3 * 60 * 1000
       logger.security('Webhook event too old - possible replay attack', {
         eventId: event.id,
         ageMs: eventAge,
