@@ -503,7 +503,7 @@ export async function POST(request) {
     const anthropic = await getAnthropicClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // 1) Conservative vision scan + “do now” actions
+    // 1) Conservative vision scan + "do now" actions
     let vision = {
       summary: '',
       search_terms: '',
@@ -652,8 +652,8 @@ Return ONLY valid JSON:
     })
 
     // Build two contexts:
-    // - Dynamic excerpts (not cached)
-    // - Pinned excerpts (cached)  ✅
+    // - Pinned excerpts (cached, stable) ✅
+    // - Dynamic excerpts (not cached, varies per request)
     const pinnedCtx = buildExcerptContext(pinnedDocs, { prefix: 'EXCERPT_P', maxChars: 24000, startAt: 1 })
     const mainCtx = buildExcerptContext(mainDocs, { prefix: 'EXCERPT_D', maxChars: 16000, startAt: 1 })
     const excerptIndex = [...pinnedCtx.excerptIndex, ...mainCtx.excerptIndex]
@@ -661,7 +661,7 @@ Return ONLY valid JSON:
     const pinnedContextText = pinnedCtx.contextText
     const dynamicContextText = mainCtx.contextText
 
-    // 3) Final answer (strictly excerpt-backed findings)
+    // 3) Build the prompt components
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
 You help restaurant owners and GMs catch problems before an inspector does.
@@ -728,7 +728,6 @@ Hard caps:
             .join('\n')}`
         : 'Possible things to verify: None listed.'
 
-    // Uncached: question + photo summary + dynamic excerpts (varies per request)
     const questionBlock = `User request:
 ${effectiveUserPrompt || (hasImage ? 'Analyze photo.' : '')}
 
@@ -742,10 +741,10 @@ ${possibleIssuesBlock}` : ''}`.trim()
     const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
 ${dynamicContextText || 'No dynamic excerpts retrieved.'}`
 
-    // Cached: pinned references (more stable across requests)
     const pinnedBlock = `Pinned reference excerpts (stable; cite by excerpt id only):
 ${pinnedContextText || 'No pinned excerpts retrieved.'}`
 
+    // 4) Final answer (strictly excerpt-backed findings)
     let modelText = ''
     let parsed = null
     let cacheStats = null
@@ -753,39 +752,48 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
     try {
       const finalMessages = []
 
+      // ✅ OPTIMIZED STRUCTURE: Stable content FIRST for maximum cache hits
+      // Order: system (cached) → pinned excerpts (cached) → dynamic content → image/question
+      
       if (hasImage && imageBase64) {
-        // ✅ Image message: last content block (pinned excerpts) is cached
         finalMessages.push({
           role: 'user',
           content: [
+            // 1️⃣ Pinned excerpts FIRST (cached after system prompt)
+            {
+              type: 'text',
+              text: pinnedBlock,
+              cache_control: { type: 'ephemeral' },
+            },
+            // 2️⃣ Dynamic excerpts (not cached, varies per request)
+            { type: 'text', text: dynamicBlock },
+            // 3️⃣ Image and question (not cached, unique per request)
             {
               type: 'image',
               source: { type: 'base64', media_type: imageMediaType, data: imageBase64 },
             },
-            { type: 'text', text: `${questionBlock}\n\n${dynamicBlock}` },
-            {
-              type: 'text',
-              text: pinnedBlock,
-              cache_control: { type: 'ephemeral' },
-            },
+            { type: 'text', text: questionBlock },
           ],
         })
       } else {
-        // ✅ Text-only: last content block (pinned excerpts) is cached
         finalMessages.push({
           role: 'user',
           content: [
-            { type: 'text', text: `${questionBlock}\n\n${dynamicBlock}` },
+            // 1️⃣ Pinned excerpts FIRST (cached after system prompt)
             {
               type: 'text',
               text: pinnedBlock,
               cache_control: { type: 'ephemeral' },
             },
+            // 2️⃣ Dynamic excerpts (not cached, varies per request)
+            { type: 'text', text: dynamicBlock },
+            // 3️⃣ Question (not cached, unique per request)
+            { type: 'text', text: questionBlock },
           ],
         })
       }
 
-      // ✅ System prompt as array with cache_control (cached separately)
+      // ✅ System prompt with cache_control (cached separately)
       const answerResp = await withTimeout(
         anthropic.messages.create({
           model: CLAUDE_MODEL,
@@ -812,12 +820,14 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
       parsed = extractJsonObject(modelText)
 
       cacheStats = buildCacheStats(answerResp.usage)
-      if (cacheStats) logger.info('Prompt cache stats', cacheStats)
+      if (cacheStats) {
+        logger.info('Prompt cache stats', cacheStats)
+      }
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
     }
 
-    // 4) Render
+    // 5) Render
     let message = ''
     let status = 'unknown'
 
@@ -880,7 +890,7 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
               'I do not see a clear, excerpt-backed violation from this photo alone. Here is what I would check next.',
             findings: [],
             clarifying_questions: questions,
-            // only show “do now” when we actually have checks/uncertainty
+            // only show "do now" when we actually have checks/uncertainty
             do_now: vision.do_now || [],
             photo_requests: vision.photo_requests || [],
           }
@@ -911,6 +921,7 @@ ${pinnedContextText || 'No pinned excerpts retrieved.'}`
       pinnedDocsRetrieved: pinnedDocs.length,
       cache_hit: cacheStats?.cache_hit || false,
       cache_read_input_tokens: cacheStats?.cache_read_input_tokens || 0,
+      cache_savings_pct: cacheStats?.cache_savings_pct || 0,
     })
 
     await safeLogUsage({
