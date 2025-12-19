@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - COMPLETE FILE with tighter replay attack window
+// app/api/webhook/route.js - COMPLETE FILE with cleanup
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -42,10 +42,34 @@ async function markEventProcessed(eventId, eventType) {
     .onConflict('event_id')
 }
 
+// ✅ NEW: Cleanup old webhook events to prevent table bloat
+async function cleanupOldWebhookEvents() {
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    
+    const { error, count } = await supabase
+      .from('processed_webhook_events')
+      .delete()
+      .lt('processed_at', thirtyDaysAgo.toISOString())
+      .select('*', { count: 'exact', head: true })
+    
+    if (error) {
+      logger.warn('Webhook cleanup failed', { error: error.message })
+    } else if (count > 0) {
+      logger.info('Webhook events cleaned up', { 
+        deletedCount: count,
+        olderThan: thirtyDaysAgo.toISOString() 
+      })
+    }
+  } catch (err) {
+    logger.warn('Webhook cleanup exception', { error: err.message })
+  }
+}
+
 async function getUserEmail(userId) {
   try {
-    const { data: authData } = await supabase.auth.admin.getUserById(userId)
-    return authData?.user?.email || null
+    const { data } = await supabase.auth.admin.getUserById(userId)
+    return data?.user?.email || null
   } catch (error) {
     logger.error('Failed to get user email', { error: error.message, userId })
     return null
@@ -75,7 +99,7 @@ export async function POST(req) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     
-    // ✅ FIXED: Tighter replay attack window (3 minutes instead of 5)
+    // Replay attack protection: reject events older than 3 minutes
     const eventAge = Date.now() - (event.created * 1000)
     if (eventAge > 3 * 60 * 1000) {
       logger.security('Webhook event too old - possible replay attack', {
@@ -91,6 +115,7 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
+  // Check for duplicate events
   if (await isEventProcessed(event.id)) {
     logger.info('Duplicate webhook event ignored', { eventId: event.id })
     return NextResponse.json({ received: true, duplicate: true })
@@ -116,12 +141,14 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
+        // Validate userId format (UUID)
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
         if (!uuidRegex.test(userId)) {
           logger.security('Invalid userId format in webhook', { userId, sessionId: session.id })
           return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
         }
 
+        // Handle fake IDs in development
         const isFakeId = String(subscriptionId).includes('fake') || 
                          String(subscriptionId).includes('test') || 
                          String(subscriptionId).includes('local') ||
@@ -166,6 +193,7 @@ export async function POST(req) {
 
         const now = new Date().toISOString()
         
+        // Upsert user profile
         const { error: profileError } = await supabase
           .from('user_profiles')
           .upsert(
@@ -193,6 +221,7 @@ export async function POST(req) {
           })
         }
 
+        // Insert subscription
         const { error: subError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
@@ -220,6 +249,7 @@ export async function POST(req) {
           status: subscription.status
         })
 
+        // Send welcome email
         const userEmail = await getUserEmail(userId)
         if (userEmail) {
           const userName = userEmail.split('@')[0]
@@ -262,6 +292,7 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
+        // Update user profile subscription status
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -452,7 +483,16 @@ export async function POST(req) {
         })
     }
 
+    // Mark event as processed
     await markEventProcessed(event.id, event.type)
+
+    // ✅ NEW: Run cleanup 10% of the time (prevents extra load)
+    if (Math.random() < 0.1) {
+      // Don't await - run in background
+      cleanupOldWebhookEvents().catch(err => 
+        logger.warn('Background cleanup failed', { error: err.message })
+      )
+    }
 
     return NextResponse.json({ received: true })
     
