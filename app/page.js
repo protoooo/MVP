@@ -211,22 +211,6 @@ function FooterLinks() {
   )
 }
 
-function MobileLandingActions({ onShowPricing, onShowAuth }) {
-  return (
-    <div className={`landing-mobile-actions ${ibmMono.className}`}>
-      <button type="button" className="mob-cta ghost" onClick={onShowPricing}>
-        Pricing
-      </button>
-      <button type="button" className="mob-cta primary" onClick={onShowPricing}>
-        Start trial
-      </button>
-      <button type="button" className="mob-cta ghost" onClick={onShowAuth}>
-        Sign in
-      </button>
-    </div>
-  )
-}
-
 function LandingPage({ onShowPricing, onShowAuth }) {
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
   const [showPricingMenu, setShowPricingMenu] = useState(false)
@@ -258,6 +242,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <RotatingDocPill items={DEMO_DOCUMENTS} />
         </div>
 
+        {/* Desktop actions (unchanged) */}
         <nav className="landing-top-actions desktop-only">
           <div className="pricing-menu-wrapper" ref={menuRef}>
             <button
@@ -299,6 +284,13 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             Sign in
           </button>
         </nav>
+
+        {/* ✅ Mobile: Sign in in top-right (text only, no pill) */}
+        <nav className="landing-top-auth mobile-only" aria-label="Mobile auth">
+          <button onClick={onShowAuth} className="landing-top-link" type="button">
+            Sign in
+          </button>
+        </nav>
       </header>
 
       <main className="landing-hero">
@@ -328,10 +320,16 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               Sign in
             </button>
           </div>
+
+          {/* ✅ Mobile: centered Start Trial button under the terminal */}
+          <div className="hero-cta-mobile mobile-only">
+            <button onClick={onShowPricing} className="btn-mobile-trial" type="button">
+              Start 7-day free trial
+            </button>
+          </div>
         </div>
       </main>
 
-      <MobileLandingActions onShowPricing={onShowPricing} onShowAuth={onShowAuth} />
       <FooterLinks />
     </div>
   )
@@ -1113,7 +1111,12 @@ export default function Page() {
           font-size: 20px;
           font-weight: 600;
           letter-spacing: -0.02em;
+          white-space: nowrap;
         }
+
+        /* Helpers */
+        .desktop-only { display: flex; }
+        .mobile-only { display: none; }
 
         /* ==========================================================================
            Landing
@@ -1143,11 +1146,13 @@ export default function Page() {
           display: grid;
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
-          padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px max(24px, env(safe-area-inset-left));
+          padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
+            max(24px, env(safe-area-inset-left));
           z-index: 10;
         }
 
         .landing-top-center { justify-self: center; }
+
         .landing-top-actions {
           justify-self: end;
           display: flex;
@@ -1155,7 +1160,28 @@ export default function Page() {
           gap: 4px;
         }
 
-        .desktop-only { display: flex; }
+        .landing-top-auth {
+          justify-self: end;
+          display: flex;
+          align-items: center;
+        }
+
+        .landing-top-link {
+          background: transparent;
+          border: none;
+          padding: 0;
+          margin: 0;
+          cursor: pointer;
+          color: var(--ink-2);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          transition: color 0.15s ease;
+          font-family: inherit;
+          white-space: nowrap;
+        }
+
+        .landing-top-link:hover { color: var(--ink-0); }
 
         .btn-nav {
           height: 36px;
@@ -1402,44 +1428,32 @@ export default function Page() {
           border-color: var(--ink-3);
         }
 
-        /* Mobile actions */
-        .landing-mobile-actions {
-          position: absolute;
-          bottom: calc(max(20px, env(safe-area-inset-bottom)) + 44px);
-          left: 50%;
-          transform: translateX(-50%);
-          display: none;
+        /* ✅ Mobile CTA under terminal */
+        .hero-cta-mobile {
+          width: 100%;
+          display: flex;
           align-items: center;
-          gap: 4px;
-          padding: 4px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-full);
-          z-index: 10;
+          justify-content: center;
+          margin-top: -8px;
         }
 
-        .mob-cta {
-          height: 34px;
-          padding: 0 14px;
-          border-radius: var(--radius-full);
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          border: none;
-          background: transparent;
-          color: var(--ink-1);
-          font-family: inherit;
-          transition: color 0.15s ease;
-        }
-
-        .mob-cta:hover { color: var(--ink-0); }
-
-        .mob-cta.primary {
+        .btn-mobile-trial {
+          width: 100%;
+          max-width: 340px;
+          height: 44px;
+          padding: 0 18px;
           background: var(--accent);
           color: #fff;
+          border: none;
+          border-radius: var(--radius-sm);
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s ease;
+          font-family: inherit;
         }
 
-        .mob-cta.primary:hover { background: var(--accent-hover); }
+        .btn-mobile-trial:hover { background: var(--accent-hover); }
 
         /* Footer links */
         .plm-footer-links {
@@ -2009,20 +2023,27 @@ export default function Page() {
            Responsive
            ========================================================================== */
         @media (max-width: 768px) {
+          /* ✅ Mobile topbar: logo left, Sign in right */
           .landing-topbar {
-            grid-template-columns: 1fr;
-            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
+              max(16px, env(safe-area-inset-left));
+            gap: 14px;
           }
 
           .landing-top-center { display: none; }
+
           .desktop-only { display: none !important; }
-          .landing-mobile-actions { display: flex; }
+          .mobile-only { display: flex; }
 
           .landing-hero { padding: 120px 20px 120px; }
           .terminal-output { font-size: 13px; }
 
-          .plm-brand-mark { width: 48px; height: 48px; }
-          .plm-brand-text { font-size: 17px; }
+          /* ✅ Logo + text bump on mobile (logo ~25%, text +1) */
+          .plm-brand-mark { width: 60px; height: 60px; }
+          .plm-brand-text { font-size: 18px; }
 
           /* ✅ Replace chat mobile CSS blocks (tight + stable + safe area aware) */
           .chat-topbar {
@@ -2047,8 +2068,12 @@ export default function Page() {
         @media (max-width: 480px) {
           .modal-card { padding: 24px 20px; }
           .price-value { font-size: 48px; }
-          .plm-brand-mark { width: 44px; height: 44px; }
-          .plm-brand-text { font-size: 16px; }
+
+          /* ✅ Slightly smaller but still +~25% vs old 44px */
+          .plm-brand-mark { width: 55px; height: 55px; }
+          .plm-brand-text { font-size: 17px; }
+
+          .btn-mobile-trial { max-width: 320px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
