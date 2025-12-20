@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - COMPLETE FILE with cleanup
+// app/api/webhook/route.js - COMPLETE FILE with quantity-based billing
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -14,13 +14,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const PRICE_TO_PLAN = {
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'business',
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL]: 'business',
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'enterprise',
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL]: 'enterprise',
-}
-
+// Track processed events
 async function isEventProcessed(eventId) {
   const { data } = await supabase
     .from('processed_webhook_events')
@@ -42,30 +36,6 @@ async function markEventProcessed(eventId, eventType) {
     .onConflict('event_id')
 }
 
-// ✅ NEW: Cleanup old webhook events to prevent table bloat
-async function cleanupOldWebhookEvents() {
-  try {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    
-    const { error, count } = await supabase
-      .from('processed_webhook_events')
-      .delete()
-      .lt('processed_at', thirtyDaysAgo.toISOString())
-      .select('*', { count: 'exact', head: true })
-    
-    if (error) {
-      logger.warn('Webhook cleanup failed', { error: error.message })
-    } else if (count > 0) {
-      logger.info('Webhook events cleaned up', { 
-        deletedCount: count,
-        olderThan: thirtyDaysAgo.toISOString() 
-      })
-    }
-  } catch (err) {
-    logger.warn('Webhook cleanup exception', { error: err.message })
-  }
-}
-
 async function getUserEmail(userId) {
   try {
     const { data } = await supabase.auth.admin.getUserById(userId)
@@ -76,16 +46,85 @@ async function getUserEmail(userId) {
   }
 }
 
-async function getUserIdFromSubscription(subscriptionId) {
-  const { data } = await supabase
-    .from('subscriptions')
-    .select('user_id')
-    .eq('stripe_subscription_id', subscriptionId)
-    .single()
-  
-  return data?.user_id || null
+// ============================================================================
+// SYNC LOCATION COUNT TO STRIPE (Exported for use in location APIs)
+// ============================================================================
+export async function syncLocationQuantityToStripe(userId) {
+  try {
+    // Count active locations
+    const { data: locations, error: locError } = await supabase
+      .from('locations')
+      .select('id')
+      .eq('owner_id', userId)
+      .eq('is_active', true)
+
+    if (locError) throw locError
+
+    const activeLocationCount = locations?.length || 0
+
+    // Get user's subscription
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id, stripe_customer_id')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trialing'])
+      .single()
+
+    if (subError || !subscription) {
+      logger.warn('No active subscription to update', { userId })
+      return { success: false, error: 'No active subscription' }
+    }
+
+    // Get Stripe subscription
+    const stripeSubscription = await stripe.subscriptions.retrieve(
+      subscription.stripe_subscription_id
+    )
+
+    const subscriptionItem = stripeSubscription.items.data[0]
+
+    if (!subscriptionItem) {
+      logger.error('No subscription item found', { 
+        subscriptionId: subscription.stripe_subscription_id 
+      })
+      return { success: false, error: 'No subscription item' }
+    }
+
+    // Update quantity in Stripe
+    await stripe.subscriptionItems.update(subscriptionItem.id, {
+      quantity: Math.max(activeLocationCount, 1),
+      proration_behavior: 'always_invoice'
+    })
+
+    // Update subscription record
+    await supabase
+      .from('subscriptions')
+      .update({
+        location_count: activeLocationCount,
+        is_multi_location: activeLocationCount > 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('stripe_subscription_id', subscription.stripe_subscription_id)
+
+    logger.audit('Location quantity synced to Stripe', {
+      userId,
+      activeLocations: activeLocationCount,
+      subscriptionId: subscription.stripe_subscription_id
+    })
+
+    return { success: true, quantity: activeLocationCount }
+
+  } catch (error) {
+    logger.error('Failed to sync location quantity', { 
+      error: error.message, 
+      userId 
+    })
+    return { success: false, error: error.message }
+  }
 }
 
+// ============================================================================
+// WEBHOOK HANDLER
+// ============================================================================
 export async function POST(req) {
   const body = await req.text()
   const signature = headers().get('stripe-signature')
@@ -99,13 +138,12 @@ export async function POST(req) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     
-    // ✅ FIXED: Reduced replay attack protection window from 3 min to 1 min
+    // Replay attack protection
     const eventAge = Date.now() - (event.created * 1000)
-    if (eventAge > 60 * 1000) {  // Changed from 3 * 60 * 1000
-      logger.security('Webhook event too old - possible replay attack', {
+    if (eventAge > 60 * 1000) {
+      logger.security('Webhook event too old', {
         eventId: event.id,
-        ageMs: eventAge,
-        ageMinutes: (eventAge / 60000).toFixed(2)
+        ageMs: eventAge
       })
       return NextResponse.json({ error: 'Event too old' }, { status: 400 })
     }
@@ -115,7 +153,7 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  // Check for duplicate events
+  // Check for duplicates
   if (await isEventProcessed(event.id)) {
     logger.info('Duplicate webhook event ignored', { eventId: event.id })
     return NextResponse.json({ received: true, duplicate: true })
@@ -125,6 +163,9 @@ export async function POST(req) {
 
   try {
     switch (event.type) {
+      // ======================================================================
+      // CHECKOUT COMPLETED
+      // ======================================================================
       case 'checkout.session.completed': {
         const session = event.data.object
         const userId = session.metadata?.userId
@@ -132,122 +173,63 @@ export async function POST(req) {
         const customerId = session.customer
 
         if (!userId || !subscriptionId || !customerId) {
-          logger.error('Missing required data in checkout.session.completed', { 
+          logger.error('Missing required data in checkout', { 
             userId, 
             subscriptionId,
-            customerId,
-            sessionId: session.id 
+            customerId 
           })
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
-        // Validate userId format (UUID)
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-        if (!uuidRegex.test(userId)) {
-          logger.security('Invalid userId format in webhook', { userId, sessionId: session.id })
-          return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
-        }
-
-        // Handle fake IDs in development
-        const isFakeId = String(subscriptionId).includes('fake') || 
-                         String(subscriptionId).includes('test') || 
-                         String(subscriptionId).includes('local') ||
-                         String(subscriptionId).startsWith('cust_local')
-
-        let subscription
-
-        if (isFakeId) {
-          logger.warn('Development mode: using mock subscription data', { subscriptionId })
-          
-          subscription = {
-            id: subscriptionId,
-            items: { 
-              data: [{ 
-                price: { 
-                  id: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY || 'price_fake' 
-                } 
-              }] 
-            },
-            status: 'trialing',
-            current_period_start: Math.floor(Date.now() / 1000),
-            current_period_end: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000),
-            trial_end: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000),
-            cancel_at_period_end: false,
-          }
-        } else {
-          subscription = await stripe.subscriptions.retrieve(subscriptionId)
-        }
-
+        // Get subscription from Stripe
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
-        const planName = PRICE_TO_PLAN[priceId] || 'business'
 
-        logger.info('Checkout completed', { 
+        logger.info('New subscription created', { 
           userId, 
-          plan: planName, 
           subscriptionId,
-          customerId,
-          status: subscription.status,
-          trialEnd: subscription.trial_end,
-          isFakeId
+          status: subscription.status
         })
 
-        const now = new Date().toISOString()
-        
-        // Upsert user profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .upsert(
-            {
-              id: userId,
-              stripe_customer_id: customerId,
-              accepted_terms: true,
-              accepted_privacy: true,
-              terms_accepted_at: now,
-              privacy_accepted_at: now,
-              is_subscribed: true,
-              created_at: now,
-              updated_at: now
-            },
-            { 
-              onConflict: 'id',
-              ignoreDuplicates: false 
-            }
-          )
-
-        if (profileError) {
-          logger.error('Failed to upsert user profile', { 
-            error: profileError.message,
-            userId 
-          })
-        }
-
-        // Insert subscription
+        // Create subscription record
         const { error: subError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
           stripe_customer_id: customerId,
-          plan: planName,
+          plan: 'business',
           price_id: priceId,
           status: subscription.status,
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
           cancel_at_period_end: subscription.cancel_at_period_end,
+          location_count: 1,
+          is_multi_location: false,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }, { onConflict: 'stripe_subscription_id' })
 
         if (subError) {
-          logger.error('Failed to upsert subscription', { error: subError.message })
+          logger.error('Failed to create subscription', { error: subError.message })
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        logger.audit('Subscription created', { 
-          userId, 
-          plan: planName, 
-          subscriptionId,
-          status: subscription.status
-        })
+        // Create first location automatically
+        try {
+          const { error: locError } = await supabase.rpc('create_location', {
+            p_owner_id: userId,
+            p_name: 'Main Location',
+            p_address: null
+          })
+
+          if (locError) {
+            logger.error('Failed to create initial location', { error: locError.message })
+          } else {
+            logger.audit('Initial location created', { userId })
+          }
+        } catch (locException) {
+          logger.error('Create location exception', { error: locException.message })
+        }
 
         // Send welcome email
         const userEmail = await getUserEmail(userId)
@@ -260,31 +242,33 @@ export async function POST(req) {
         break
       }
 
+      // ======================================================================
+      // SUBSCRIPTION UPDATED
+      // ======================================================================
       case 'customer.subscription.updated': {
         const subscription = event.data.object
         const priceId = subscription.items.data[0].price.id
-        const planName = PRICE_TO_PLAN[priceId] || 'business'
         const previousStatus = event.data.previous_attributes?.status
         const newStatus = subscription.status
+        const quantity = subscription.items.data[0].quantity || 1
 
         logger.info('Subscription updated', { 
           subscriptionId: subscription.id,
           oldStatus: previousStatus,
           newStatus: newStatus,
-          plan: planName,
-          trialEnd: subscription.trial_end,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end
+          quantity
         })
 
         const { error: updateError } = await supabase.from('subscriptions').update({
           status: newStatus,
-          plan: planName,
           price_id: priceId,
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
           cancel_at_period_end: subscription.cancel_at_period_end,
-          updated_at: new Date().toISOString(),
+          location_count: quantity,
+          is_multi_location: quantity > 1,
+          updated_at: new Date().toISOString()
         }).eq('stripe_subscription_id', subscription.id)
 
         if (updateError) {
@@ -292,55 +276,35 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        // Update user profile subscription status
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', subscription.id)
-          .single()
-        
-        if (sub) {
-          const isActive = ['active', 'trialing'].includes(newStatus)
-          
-          await supabase.from('user_profiles').update({ 
-            is_subscribed: isActive,
-            updated_at: new Date().toISOString()
-          }).eq('id', sub.user_id)
-
-          logger.info('User profile updated', { 
-            userId: sub.user_id, 
-            isSubscribed: isActive,
-            status: newStatus
-          })
-        }
-
-        logger.audit('Subscription status updated', { 
+        logger.audit('Subscription updated', { 
           subscriptionId: subscription.id, 
           oldStatus: previousStatus,
           newStatus: newStatus,
-          plan: planName
+          quantity
         })
         break
       }
 
+      // ======================================================================
+      // SUBSCRIPTION DELETED
+      // ======================================================================
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
         
         logger.info('Subscription deleted', {
-          subscriptionId: subscription.id,
-          canceledAt: subscription.canceled_at,
-          endedAt: subscription.ended_at
+          subscriptionId: subscription.id
         })
 
         const { error: cancelError } = await supabase.from('subscriptions').update({
           status: 'canceled',
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }).eq('stripe_subscription_id', subscription.id)
 
         if (cancelError) {
           logger.error('Failed to cancel subscription', { error: cancelError.message })
         }
 
+        // Disable all locations
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -348,12 +312,12 @@ export async function POST(req) {
           .single()
         
         if (sub) {
-          await supabase.from('user_profiles').update({ 
-            is_subscribed: false,
-            updated_at: new Date().toISOString()
-          }).eq('id', sub.user_id)
+          await supabase
+            .from('locations')
+            .update({ is_active: false })
+            .eq('owner_id', sub.user_id)
 
-          logger.audit('User access revoked - subscription canceled', { 
+          logger.audit('All locations disabled - subscription canceled', { 
             userId: sub.user_id,
             subscriptionId: subscription.id
           })
@@ -362,66 +326,52 @@ export async function POST(req) {
           if (userEmail) {
             const userName = userEmail.split('@')[0]
             await emails.subscriptionCanceled(userEmail, userName)
-            logger.info('Cancellation email sent', { email: userEmail.substring(0, 3) + '***' })
           }
         }
 
         break
       }
 
+      // ======================================================================
+      // PAYMENT FAILED
+      // ======================================================================
       case 'invoice.payment_failed': {
         const invoice = event.data.object
         
         logger.warn('Payment failed', { 
           subscriptionId: invoice.subscription,
-          customerId: invoice.customer,
-          attemptCount: invoice.attempt_count,
-          amountDue: invoice.amount_due / 100,
-          nextPaymentAttempt: invoice.next_payment_attempt
+          attemptCount: invoice.attempt_count
         })
 
         if (invoice.attempt_count >= 3) {
-          logger.warn('Payment failed after 3 attempts - blocking access', {
-            subscriptionId: invoice.subscription,
-            attemptCount: invoice.attempt_count
-          })
-
-          const { error: statusError } = await supabase
+          const { data: sub } = await supabase
             .from('subscriptions')
-            .update({
-              status: 'past_due',
-              updated_at: new Date().toISOString(),
-            })
+            .select('user_id')
             .eq('stripe_subscription_id', invoice.subscription)
+            .single()
 
-          if (statusError) {
-            logger.error('Failed to update subscription to past_due', { 
-              error: statusError.message 
-            })
-          }
+          if (sub) {
+            // Disable all locations
+            await supabase
+              .from('locations')
+              .update({ is_active: false })
+              .eq('owner_id', sub.user_id)
 
-          const userId = await getUserIdFromSubscription(invoice.subscription)
-          
-          if (userId) {
-            await supabase.from('user_profiles').update({ 
-              is_subscribed: false,
-              updated_at: new Date().toISOString()
-            }).eq('id', userId)
+            // Update subscription status
+            await supabase
+              .from('subscriptions')
+              .update({ status: 'past_due' })
+              .eq('stripe_subscription_id', invoice.subscription)
 
-            logger.audit('User access blocked - payment failed after 3 attempts', { 
-              userId,
-              subscriptionId: invoice.subscription,
+            logger.audit('All locations disabled - payment failed', { 
+              userId: sub.user_id,
               attempts: invoice.attempt_count
             })
 
-            const userEmail = await getUserEmail(userId)
+            const userEmail = await getUserEmail(sub.user_id)
             if (userEmail) {
               const userName = userEmail.split('@')[0]
               await emails.paymentFailed(userEmail, userName, invoice.attempt_count)
-              logger.info('Payment failed email sent', { 
-                email: userEmail.substring(0, 3) + '***',
-                attemptCount: invoice.attempt_count 
-              })
             }
           }
         }
@@ -429,47 +379,44 @@ export async function POST(req) {
         break
       }
 
+      // ======================================================================
+      // PAYMENT SUCCEEDED
+      // ======================================================================
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object
         
         logger.audit('Payment succeeded', {
           subscriptionId: invoice.subscription,
-          amount: invoice.amount_paid / 100,
-          billingReason: invoice.billing_reason,
-          currency: invoice.currency
+          amount: invoice.amount_paid / 100
         })
 
-        if (invoice.billing_reason === 'subscription_cycle' || invoice.billing_reason === 'subscription_update') {
-          const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('user_id, status')
-            .eq('stripe_subscription_id', invoice.subscription)
-            .single()
-          
-          if (sub && sub.status === 'past_due') {
-            await supabase.from('subscriptions').update({
-              status: 'active',
-              updated_at: new Date().toISOString(),
-            }).eq('stripe_subscription_id', invoice.subscription)
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('user_id, status')
+          .eq('stripe_subscription_id', invoice.subscription)
+          .single()
+        
+        if (sub && sub.status === 'past_due') {
+          // Restore subscription
+          await supabase.from('subscriptions').update({
+            status: 'active',
+            updated_at: new Date().toISOString()
+          }).eq('stripe_subscription_id', invoice.subscription)
 
-            await supabase.from('user_profiles').update({ 
-              is_subscribed: true,
-              updated_at: new Date().toISOString()
-            }).eq('id', sub.user_id)
+          // Re-enable all locations
+          await supabase
+            .from('locations')
+            .update({ is_active: true })
+            .eq('owner_id', sub.user_id)
 
-            logger.audit('User access restored - payment succeeded after past_due', { 
-              userId: sub.user_id,
-              subscriptionId: invoice.subscription
-            })
+          logger.audit('Locations restored - payment recovered', { 
+            userId: sub.user_id
+          })
 
-            const userEmail = await getUserEmail(sub.user_id)
-            if (userEmail) {
-              const userName = userEmail.split('@')[0]
-              await emails.paymentSucceeded(userEmail, userName)
-              logger.info('Payment success email sent', { 
-                email: userEmail.substring(0, 3) + '***' 
-              })
-            }
+          const userEmail = await getUserEmail(sub.user_id)
+          if (userEmail) {
+            const userName = userEmail.split('@')[0]
+            await emails.paymentSucceeded(userEmail, userName)
           }
         }
 
@@ -477,22 +424,11 @@ export async function POST(req) {
       }
 
       default:
-        logger.info('Unhandled webhook event', { 
-          type: event.type,
-          id: event.id 
-        })
+        logger.info('Unhandled webhook event', { type: event.type })
     }
 
     // Mark event as processed
     await markEventProcessed(event.id, event.type)
-
-    // ✅ NEW: Run cleanup 10% of the time (prevents extra load)
-    if (Math.random() < 0.1) {
-      // Don't await - run in background
-      cleanupOldWebhookEvents().catch(err => 
-        logger.warn('Background cleanup failed', { error: err.message })
-      )
-    }
 
     return NextResponse.json({ received: true })
     
@@ -500,8 +436,7 @@ export async function POST(req) {
     logger.error('Webhook processing error', { 
       error: error.message,
       stack: error.stack,
-      eventType: event.type,
-      eventId: event.id
+      eventType: event.type
     })
     return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
   }
