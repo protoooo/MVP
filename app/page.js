@@ -16,8 +16,9 @@ const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800']
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
-const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
+const STARTER_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY
+const PRO_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
+const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -511,44 +512,168 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
+  const tiers = [
+    {
+      name: 'Starter',
+      price: 49,
+      priceId: STARTER_MONTHLY,
+      model: 'Haiku',
+      speed: 'Fast',
+      features: [
+        'Unlimited text questions',
+        'Unlimited photo scans',
+        'Same regulation database',
+        'Email support'
+      ],
+      description: 'Fast - perfect for daily checks',
+      loadingKey: 'starter'
+    },
+    {
+      name: 'Professional',
+      price: 99,
+      priceId: PRO_MONTHLY,
+      model: 'Sonnet',
+      speed: 'Balanced',
+      features: [
+        'Unlimited text questions',
+        'Unlimited photo scans',
+        'Advanced reasoning',
+        'Priority support'
+      ],
+      description: 'Most accurate for compliance',
+      popular: true,
+      loadingKey: 'pro'
+    },
+    {
+      name: 'Enterprise',
+      price: 199,
+      priceId: ENTERPRISE_MONTHLY,
+      model: 'Opus',
+      speed: 'Deep Knowledge',
+      features: [
+        'Unlimited text questions',
+        'Unlimited photo scans',
+        'Deep compliance LLM responses',
+        'Dedicated multi-location support'
+      ],
+      description: 'For restaurant groups',
+      loadingKey: 'enterprise'
+    }
+  ]
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card pricing-modal ${ibmMono.className}`}>
+      <div className="modal-container" style={{ maxWidth: '920px' }} onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-card pricing-modal ${ibmMono.className}`} style={{ padding: '32px' }}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
-          <div className="pricing-modal-price">
-            <span className="price-currency">$</span>
-            <span className="price-value">100</span>
-            <span className="price-period">/month</span>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>
+              Choose Your Plan
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>
+              7-day free trial • Cancel anytime • Unlimited usage on all plans
+            </p>
           </div>
 
-          <div className="pricing-modal-buttons">
-            <button
-              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-              disabled={!!loading}
-              className="btn-pricing-primary"
-              type="button"
-            >
-              {loading === 'monthly' && <span className="spinner" />}
-              <span>Start 7-day free trial</span>
-            </button>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+            {tiers.map((tier) => (
+              <div
+                key={tier.name}
+                style={{
+                  background: tier.popular ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : 'var(--bg-2)',
+                  border: tier.popular ? '2px solid var(--accent)' : '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '24px',
+                  position: 'relative',
+                  color: tier.popular ? 'white' : 'var(--ink-0)'
+                }}
+              >
+                {tier.popular && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-10px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'var(--accent)',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase'
+                  }}>
+                    Recommended
+                  </div>
+                )}
 
-            <button
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading}
-              className="btn-pricing-secondary"
-              type="button"
-            >
-              {loading === 'annual' && <span className="spinner" />}
-              <span>Annual — $1,000/year</span>
-              <span className="save-badge">Save $200</span>
-            </button>
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>
+                    {tier.name}
+                  </div>
+                  <div style={{ fontSize: '11px', opacity: 0.7, marginBottom: '12px' }}>
+                    Claude {tier.model} LLM • {tier.speed}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '36px', fontWeight: '700' }}>${tier.price}</span>
+                    <span style={{ fontSize: '14px', opacity: 0.7 }}>/month</span>
+                  </div>
+                  <div style={{ fontSize: '12px', opacity: 0.7, lineHeight: '1.4' }}>
+                    {tier.description}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => onCheckout(tier.priceId, tier.loadingKey)}
+                  disabled={!!loading}
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: tier.popular ? 'white' : 'var(--accent)',
+                    color: tier.popular ? 'var(--bg-1)' : 'white',
+                    border: 'none',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.5 : 1,
+                    marginBottom: '16px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {loading === tier.loadingKey && <span className="spinner" />}
+                  <span>Start 7-Day Trial</span>
+                </button>
+
+                <div style={{ borderTop: tier.popular ? '1px solid rgba(255,255,255,0.1)' : '1px solid var(--border-subtle)', paddingTop: '16px' }}>
+                  {tier.features.map((feature, idx) => (
+                    <div key={idx} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      fontSize: '13px', 
+                      marginBottom: '8px',
+                      opacity: 0.9
+                    }}>
+                      <span style={{ fontSize: '16px' }}>✓</span>
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <p className="pricing-modal-terms">7-day free trial · Cancel anytime · One license per location</p>
+          <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '24px', textAlign: 'center' }}>
+            All plans: Unlimited usage • Same Washtenaw County database • 7-day free trial • Cancel anytime
+          </p>
         </div>
       </div>
     </div>

@@ -35,7 +35,52 @@ async function getSearchDocuments() {
   return searchDocuments
 }
 
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
+// Model selection based on subscription tier
+async function getModelForUser(userId, supabase) {
+  try {
+    const { data: subscription, error } = await supabase
+      .from('subscriptions')
+      .select('plan, price_id, status')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !subscription) {
+      logger.warn('No subscription found for model selection', { userId })
+      throw new Error('No active subscription')
+    }
+
+    // Map price IDs to Claude models
+    const modelMap = {
+      // Starter tier - Haiku ($99/mo, 98% margin at heavy usage)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: 'claude-haiku-4-20250514',
+      
+      // Professional tier - Sonnet ($149/mo, 85% margin at heavy usage)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY]: 'claude-sonnet-4-20250514',
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'claude-sonnet-4-20250514', // Legacy
+      
+      // Enterprise tier - Opus ($249/mo, designed for multi-location)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'claude-opus-4-20250514',
+    }
+
+    const selectedModel = modelMap[subscription.price_id] || 'claude-sonnet-4-20250514'
+    
+    logger.info('Model selected for user', { 
+      userId, 
+      plan: subscription.plan,
+      priceId: subscription.price_id?.substring(0, 15) + '***',
+      model: selectedModel.split('-')[1]
+    })
+
+    return selectedModel
+
+  } catch (error) {
+    logger.error('Model selection failed', { error: error.message, userId })
+    return 'claude-sonnet-4-20250514'
+  }
+}
 
 // Time budgets
 const VISION_TIMEOUT_MS = 20000
@@ -571,6 +616,7 @@ export async function POST(request) {
 
     let userId = null
     let userMemory = null
+    let CLAUDE_MODEL = 'claude-sonnet-4-20250514'
 
     try {
       const cookieStore = await cookies()
@@ -658,6 +704,9 @@ export async function POST(request) {
         uniqueLocationsUsed: locationCheck.uniqueLocationsUsed,
         locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
+
+      // Select Claude model based on subscription tier
+      CLAUDE_MODEL = await getModelForUser(userId, supabase)
 
       try {
         userMemory = await getUserMemory(userId)
