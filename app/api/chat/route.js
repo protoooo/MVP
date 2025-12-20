@@ -330,59 +330,72 @@ function pickSourcesFromIds(sourceIds, excerptIndex) {
   return used
 }
 
+function normalizeSourceIds(x) {
+  if (!Array.isArray(x)) return []
+  return x.map(safeLine).filter(Boolean).slice(0, 6)
+}
+
 // ============================================================================
 // OUTPUT RENDERING
 // ============================================================================
-
-function renderFineContext() {
-  return `If not corrected by deadline:
-- County may escalate: follow-up inspection → Office Conference → Informal Hearing → license action
-- Administrative fines under MCL 289.5101: up to $500 first offense, up to $1,000 subsequent, plus investigation costs
-- Minor issues often get a warning first`
-}
 
 function renderAuditOutput(payload, opts = {}) {
   const { maxItems = 4, includeFines = false, fullAudit = false } = opts
   const status = safeLine(payload?.status || 'unknown')
   const findings = Array.isArray(payload?.findings) ? payload.findings : []
   const questions = Array.isArray(payload?.questions) ? payload.questions : []
+  const enforcement = safeLine(payload?.enforcement || '')
 
   if (status === 'clear' || findings.length === 0) {
     const base = 'No violations detected.'
     if (questions.length > 0 && fullAudit) {
-      const qs = questions.slice(0, 2).map((q) => `- ${clampShort(q, 120)}`).join('\n')
-      return sanitizeOutput(`${base}\n\nTo verify:\n${qs}`)
+      const qs = questions.slice(0, 2).map((q) => `To confirm: ${clampShort(q, 140)}`).join('\n')
+      return sanitizeOutput(`${base}\n\n${qs}`)
     }
     return sanitizeOutput(base)
   }
 
-  const lines = ['Potential issues found:\n']
+  const lines = ['Potential issues found:', '']
 
   for (const f of findings.slice(0, maxItems)) {
     const cls = normalizeClass(f?.class)
-    const title = clampShort(f?.title || 'Issue', 100)
     const likelihood = normalizeLikelihood(f?.likelihood)
-    const why = clampShort(f?.why || '', 140)
-    const fix = clampShort(f?.fix || '', 140)
-    const deadline = safeLine(f?.deadline) || deadlineByClass(cls)
 
-    lines.push(`${classLabel(cls)}: ${title}`)
+    const observed = clampShort(f?.observed || f?.seeing || f?.evidence || '', 220)
+    const violation = clampShort(f?.violation || f?.rule || f?.title || 'Possible violation', 220)
+    const vtype = clampShort(f?.violation_type || f?.type || '', 140)
+
+    const why = clampShort(f?.why || '', 220)
+    const fix = clampShort(f?.fix || '', 220)
+    const deadline = safeLine(f?.deadline) || deadlineByClass(cls)
+    const ifNotFixed = clampShort(f?.if_not_fixed || f?.consequence || '', 220)
+
+    const sourceIds = normalizeSourceIds(f?.source_ids)
+
+    lines.push('Issue')
+    if (observed) lines.push(`Seeing: ${observed}`)
+    lines.push(`Violation: ${violation}`)
+    if (vtype) lines.push(`Violation type: ${vtype}`)
+    lines.push(`Severity: ${classLabel(cls)}`)
     lines.push(`Fix by: ${deadline}`)
     if (likelihood !== 'Unclear') lines.push(`Confidence: ${likelihood}`)
     if (why) lines.push(`Why it matters: ${why}`)
     if (fix) lines.push(`Action: ${fix}`)
+    if (ifNotFixed) lines.push(`If not fixed: ${ifNotFixed}`)
+    if (sourceIds.length > 0) lines.push(`Sources: ${sourceIds.join(', ')}`)
     lines.push('')
   }
 
-  if (includeFines) {
-    lines.push(renderFineContext())
+  if (includeFines && enforcement) {
+    lines.push('If not corrected:')
+    lines.push(enforcement)
     lines.push('')
   }
 
   if (questions.length > 0 && fullAudit) {
-    lines.push('To confirm:')
     for (const q of questions.slice(0, 2)) {
-      lines.push(`- ${clampShort(q, 120)}`)
+      const qq = clampShort(q, 160)
+      if (qq) lines.push(`To clarify: ${qq}`)
     }
   }
 
@@ -403,16 +416,16 @@ function renderGuidanceOutput(payload) {
 
   if (steps.length > 0) {
     for (const s of steps.slice(0, 6)) {
-      const step = clampShort(s, 160)
-      if (step) lines.push(`- ${step}`)
+      const step = clampShort(s, 180)
+      if (step) lines.push(`Step: ${step}`)
     }
     lines.push('')
   }
 
   if (questions.length > 0) {
-    lines.push('To clarify:')
     for (const q of questions.slice(0, 2)) {
-      lines.push(`- ${clampShort(q, 120)}`)
+      const qq = clampShort(q, 160)
+      if (qq) lines.push(`To clarify: ${qq}`)
     }
   }
 
@@ -460,7 +473,7 @@ function getSessionInfo(request) {
   const forwarded = request.headers.get('x-forwarded-for')
   const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown'
   const userAgent = request.headers.get('user-agent') || 'unknown'
-  
+
   return { ip, userAgent }
 }
 
@@ -524,7 +537,9 @@ export async function POST(request) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         {
           cookies: {
-            getAll() { return cookieStore.getAll() },
+            getAll() {
+              return cookieStore.getAll()
+            },
             setAll(cookiesToSet) {
               try {
                 cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
@@ -538,27 +553,33 @@ export async function POST(request) {
       userId = data?.user?.id || null
 
       if (!userId || !data?.user) {
-        return NextResponse.json({
-          error: 'Authentication required.',
-          code: 'UNAUTHORIZED',
-        }, { status: 401 })
+        return NextResponse.json(
+          {
+            error: 'Authentication required.',
+            code: 'UNAUTHORIZED',
+          },
+          { status: 401 }
+        )
       }
 
       // Email verification check
       if (!data.user.email_confirmed_at) {
-        return NextResponse.json({
-          error: 'Please verify your email before using protocolLM.',
-          code: 'EMAIL_NOT_VERIFIED',
-        }, { status: 403 })
+        return NextResponse.json(
+          {
+            error: 'Please verify your email before using protocolLM.',
+            code: 'EMAIL_NOT_VERIFIED',
+          },
+          { status: 403 }
+        )
       }
 
       // ✅ LICENSE VALIDATION: Multi-user, single-location enforcement
       const sessionInfo = getSessionInfo(request)
-      
+
       logger.info('Validating license', {
         userId,
         ip: sessionInfo.ip.substring(0, 12) + '***',
-        userAgent: sessionInfo.userAgent.substring(0, 50)
+        userAgent: sessionInfo.userAgent.substring(0, 50),
       })
 
       const locationCheck = await validateSingleLocation(userId, sessionInfo)
@@ -568,38 +589,49 @@ export async function POST(request) {
           userId,
           code: locationCheck.code,
           error: locationCheck.error,
-          ip: sessionInfo.ip.substring(0, 12) + '***'
+          ip: sessionInfo.ip.substring(0, 12) + '***',
         })
 
         // Return specific error codes for different violation types
         if (locationCheck.code === 'MULTI_LOCATION_ABUSE') {
-          return NextResponse.json({
-            error: locationCheck.error,
-            code: 'MULTI_LOCATION_ABUSE',
-            message: 'This license appears to be shared across multiple physical locations. Each location requires its own license ($100/month per location). Contact support@protocollm.org for multi-location pricing.'
-          }, { status: 403 })
+          return NextResponse.json(
+            {
+              error: locationCheck.error,
+              code: 'MULTI_LOCATION_ABUSE',
+              message:
+                'This license appears to be shared across multiple physical locations. Each location requires its own license ($100/month per location). Contact support@protocollm.org for multi-location pricing.',
+            },
+            { status: 403 }
+          )
         }
 
         if (locationCheck.code === 'LOCATION_LIMIT_EXCEEDED') {
-          return NextResponse.json({
-            error: locationCheck.error,
-            code: 'LOCATION_LIMIT_EXCEEDED',
-            message: 'This license is being used from too many different locations. Each restaurant location requires its own license. Contact support@protocollm.org if you need help.'
-          }, { status: 403 })
+          return NextResponse.json(
+            {
+              error: locationCheck.error,
+              code: 'LOCATION_LIMIT_EXCEEDED',
+              message:
+                'This license is being used from too many different locations. Each restaurant location requires its own license. Contact support@protocollm.org if you need help.',
+            },
+            { status: 403 }
+          )
         }
 
         // Generic location validation failure
-        return NextResponse.json({
-          error: locationCheck.error || 'Location validation failed',
-          code: 'LOCATION_VALIDATION_FAILED'
-        }, { status: 403 })
+        return NextResponse.json(
+          {
+            error: locationCheck.error || 'Location validation failed',
+            code: 'LOCATION_VALIDATION_FAILED',
+          },
+          { status: 403 }
+        )
       }
 
       // ✅ Location validation passed
       logger.info('License validated', {
         userId,
         uniqueLocationsUsed: locationCheck.uniqueLocationsUsed,
-        locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***'
+        locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
 
       // Load user memory
@@ -610,10 +642,13 @@ export async function POST(request) {
       }
     } catch (e) {
       logger.error('Auth/license check failed', { error: e?.message })
-      return NextResponse.json({
-        error: 'Authentication error. Please sign in again.',
-        code: 'AUTH_ERROR'
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          error: 'Authentication error. Please sign in again.',
+          code: 'AUTH_ERROR',
+        },
+        { status: 401 }
+      )
     }
 
     const anthropic = await getAnthropicClient()
@@ -636,7 +671,7 @@ export async function POST(request) {
           anthropic.messages.create({
             model: CLAUDE_MODEL,
             temperature: 0,
-            max_tokens: 600,
+            max_tokens: 750,
             messages: [
               {
                 role: 'user',
@@ -646,26 +681,26 @@ export async function POST(request) {
                     type: 'text',
                     text: `Scan this food service photo for compliance issues.
 
-Focus on:
-- Chemicals/cleaners near food prep areas, sinks, or clean equipment (Windex, bleach, unlabeled bottles, etc.)
+Hard focus:
+- Chemicals/cleaners near food prep areas, sinks, or clean equipment
+  - If you see a branded spray bottle (example: Windex/Lysol/bleach) or an unlabeled bottle that appears to be cleaner, include it in issues.
+- Handwashing sink problems (blocked, used for storage, no soap/towels, chemicals stored at/above it)
 - Improper food storage (on floor, uncovered, raw above ready-to-eat)
-- Temperature abuse indicators (food sitting out, condensation on cold items)
 - Cross-contamination risks
-- Handwashing sink issues (blocked, no soap/towels, used for other purposes)
+- Temperature abuse indicators
 - Pest evidence, visible dirt/debris, mold
 - Missing date labels on prepped food
 
-Do NOT flag:
-- Single sink as "inadequate warewashing" unless there's clear misuse
-- Generic observations without compliance relevance
+Do NOT include generic narration. Only compliance-relevant observations.
+If you're unsure, mark the issue as possible but still list it.
 
 Return JSON only:
 {
-  "summary": "one sentence describing what you see",
+  "summary": "one sentence",
   "search_terms": "keywords for document lookup",
-  "issues": [{"issue": "short description", "why": "why it matters"}],
-  "facts": ["observable facts relevant to compliance"]
-}`
+  "issues": [{"issue": "short description of the potential issue", "why": "why it matters"}],
+  "facts": ["observable compliance-relevant facts (no fluff)"]
+}`,
                   },
                 ],
               },
@@ -693,7 +728,7 @@ Return JSON only:
           }
 
           if (Array.isArray(parsedVision.facts)) {
-            vision.facts = parsedVision.facts.map(safeLine).filter(Boolean).slice(0, 8)
+            vision.facts = parsedVision.facts.map(safeLine).filter(Boolean).slice(0, 10)
           }
         }
       } catch (e) {
@@ -707,14 +742,23 @@ Return JSON only:
 
     const visionContext = [
       vision.searchTerms,
-      ...vision.facts.slice(0, 4),
+      ...vision.facts.slice(0, 6),
       ...vision.issues.map((i) => i.issue),
-    ].filter(Boolean).join(' ').slice(0, 500)
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 700)
 
-    const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code']
-      .filter(Boolean).join(' ').slice(0, 800)
+    const baselineImageTerms = hasImage
+      ? 'chemicals cleaner sanitizer windex bleach spray bottle toxic materials hand sink soap towel cross contamination temperature date marking'
+      : ''
 
-    const queryIssues = vision.issues.map((i) => i.issue).join(' ').slice(0, 300)
+    const queryMain = [effectivePrompt, visionContext, baselineImageTerms, 'Washtenaw County Michigan food code']
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 900)
+
+    const queryIssues = vision.issues.map((i) => i.issue).join(' ').slice(0, 400)
 
     const queries = [queryMain]
     if (queryIssues) queries.push(queryIssues)
@@ -723,8 +767,7 @@ Return JSON only:
     try {
       const results = await Promise.all(
         queries.map((q) =>
-          withTimeout(searchDocumentsFn(q, county, TOPK_PER_QUERY), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT')
-            .catch(() => [])
+          withTimeout(searchDocumentsFn(q, county, TOPK_PER_QUERY), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT').catch(() => [])
         )
       )
 
@@ -753,32 +796,24 @@ ${ctx.contextText || 'No documents retrieved.'}`
 
     const systemPrompt = `You are protocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-${memoryContext ? `${memoryContext}\n\n` : ''}Your knowledge base: 24 indexed documents including MI Modified Food Code, MCL Act 92 of 2000, Washtenaw County procedures, violation types, enforcement actions, temperature guides, date marking, cross contamination, cooling procedures, and more.
+${memoryContext ? `${memoryContext}\n\n` : ''}Your knowledge base is the provided reference excerpts. Do not assume anything outside those excerpts.
 
 RULES:
 1. Be concise. Short sentences. No fluff.
-2. No markdown formatting (no **, no #, no bullets with *)
-3. No emojis
-4. Ground every finding in a document excerpt. Include source_ids.
-5. If you can't cite it from the excerpts, don't claim it as a violation.
-6. Use probability language: "likely", "possible", "appears to be"
-7. If the photo looks compliant, just say "No violations detected." and stop.
-8. Don't narrate what's in the photo. Get to the point.
+2. No markdown formatting (no **, no #, no bullet lists).
+3. No emojis.
+4. Ground every finding in the reference excerpts. Every finding must include source_ids.
+5. If you can't support it from the excerpts, do not call it a violation.
+6. Use probability language: "very likely", "likely", "possible".
+7. If the photo looks compliant, say: "No violations detected." and stop.
+8. Don't narrate the scene. Get to the point.
 9. Don't ask if this is residential/commercial. Assume food service.
+10. Do not prioritize any one document. Use whichever excerpt best supports the finding.
 
 VIOLATION CLASSES:
 - P (Priority): Direct food safety hazard. Fix immediately.
 - Pf (Priority Foundation): Supports priority items. Fix within 10 days.
 - C (Core): General sanitation. Fix within 90 days.
-
-COMMON ISSUES TO CATCH:
-- Chemicals stored near food/clean surfaces
-- Food at wrong temperature
-- Missing date labels
-- Cross contamination setup
-- Handwashing sink problems
-- Pest evidence
-- Dirty food contact surfaces
 
 OUTPUT FORMAT (JSON only):
 
@@ -789,14 +824,22 @@ For image analysis:
   "findings": [
     {
       "class": "P|Pf|C|Unclear",
-      "title": "short title",
       "likelihood": "Very likely|Likely|Possible|Unclear",
-      "why": "one sentence",
-      "fix": "one sentence action",
+
+      "observed": "What you see in the photo (one sentence, evidence only).",
+
+      "violation": "What violation this would be, phrased as a requirement being violated (one sentence).",
+      "violation_type": "Short category label (example: Chemical storage, Hand sink use, Date marking, Temperature control).",
+
+      "why": "One sentence on risk/impact (must be supported by excerpts).",
+      "fix": "One sentence corrective action.",
       "deadline": "Immediately|Within 10 days|Within 90 days",
+      "if_not_fixed": "One sentence on likely inspection/enforcement outcome per excerpts (only if supported).",
+
       "source_ids": ["DOC_1"]
     }
   ],
+  "enforcement": "Only if user asked about fines/penalties/what happens if. Must be supported by excerpts.",
   "questions": ["only if genuinely needed for clarification"]
 }
 
@@ -814,9 +857,8 @@ Max findings: ${maxFindings}`
     // QUESTION CONTEXT
     // ========================================================================
 
-    const issueHints = vision.issues.length > 0
-      ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}`
-      : ''
+    const issueHints =
+      vision.issues.length > 0 ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}` : ''
 
     const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}
 ${hasImage && issueHints ? `\n${issueHints}` : ''}`
@@ -855,7 +897,7 @@ ${hasImage && issueHints ? `\n${issueHints}` : ''}`
         anthropic.messages.create({
           model: CLAUDE_MODEL,
           temperature: 0.15,
-          max_tokens: fullAudit ? 1200 : 900,
+          max_tokens: fullAudit ? 1300 : 950,
           system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
           messages: finalMessages,
         }),
@@ -885,6 +927,7 @@ ${hasImage && issueHints ? `\n${issueHints}` : ''}`
     if (parsed && parsed.mode === 'audit') {
       const findingsRaw = Array.isArray(parsed.findings) ? parsed.findings : []
       const questionsRaw = Array.isArray(parsed.questions) ? parsed.questions : []
+      const enforcementRaw = safeLine(parsed.enforcement || '')
 
       // Filter to only findings with valid source citations
       const validFindings = []
@@ -895,12 +938,19 @@ ${hasImage && issueHints ? `\n${issueHints}` : ''}`
 
         validFindings.push({
           class: normalizeClass(f?.class),
-          title: safeLine(f?.title || 'Possible issue'),
           likelihood: normalizeLikelihood(f?.likelihood),
+
+          // New grouped fields (with backwards-compatible fallbacks)
+          observed: safeLine(f?.observed || f?.seeing || f?.evidence || ''),
+          violation: safeLine(f?.violation || f?.rule || f?.title || 'Possible violation'),
+          violation_type: safeLine(f?.violation_type || f?.type || ''),
+
           why: safeLine(f?.why || ''),
           fix: safeLine(f?.fix || ''),
           deadline: safeLine(f?.deadline || ''),
-          source_ids: srcIds,
+          if_not_fixed: safeLine(f?.if_not_fixed || f?.consequence || ''),
+
+          source_ids: normalizeSourceIds(srcIds),
         })
       }
 
@@ -911,10 +961,10 @@ ${hasImage && issueHints ? `\n${issueHints}` : ''}`
           status,
           findings: validFindings,
           questions: questionsRaw,
+          enforcement: enforcementRaw,
         },
         { maxItems: maxFindings, includeFines, fullAudit }
       )
-
     } else if (parsed && parsed.mode === 'guidance') {
       status = 'guidance'
       message = renderGuidanceOutput({
@@ -922,7 +972,6 @@ ${hasImage && issueHints ? `\n${issueHints}` : ''}`
         steps: Array.isArray(parsed.steps) ? parsed.steps : [],
         questions: Array.isArray(parsed.questions) ? parsed.questions : [],
       })
-
     } else {
       // Fallback
       status = hasImage ? 'unclear' : 'guidance'
@@ -983,7 +1032,6 @@ ${hasImage && issueHints ? `\n${issueHints}` : ''}`
       },
       { status: 200 }
     )
-
   } catch (e) {
     logger.error('Chat route failed', { error: e?.message, stack: e?.stack })
     return NextResponse.json({ error: 'Server error. Please try again.' }, { status: 500 })
