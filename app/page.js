@@ -509,7 +509,11 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" style={{ maxWidth: '920px' }} onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-container"
+        style={{ maxWidth: '920px', maxHeight: '90vh', overflowY: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className={`modal-card pricing-modal ${ibmMono.className}`} style={{ padding: '32px' }}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
@@ -592,18 +596,29 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                   <span>Start 7-Day Trial</span>
                 </button>
 
-                <div style={{ borderTop: tier.popular ? '1px solid rgba(255,255,255,0.1)' : '1px solid var(--border-subtle)', paddingTop: '16px' }}>
+                <div
+                  style={{
+                    borderTop: tier.popular ? '1px solid rgba(255,255,255,0.12)' : '1px solid var(--border-subtle)',
+                    paddingTop: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}
+                >
                   {tier.features.map((feature, idx) => (
-                    <div key={idx} style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '8px', 
-                      fontSize: '13px', 
-                      marginBottom: '8px',
-                      opacity: 0.9
-                    }}>
-                      <span style={{ fontSize: '16px' }}>✓</span>
-                      <span>{feature}</span>
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        fontSize: '13px',
+                        lineHeight: 1.5,
+                        opacity: 0.92
+                      }}
+                    >
+                      <span style={{ fontSize: '14px', lineHeight: '20px' }}>✓</span>
+                      <span style={{ display: 'block' }}>{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -1322,6 +1337,7 @@ export default function Page() {
           background: var(--bg-2);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-full);
+          margin: 0 auto;
         }
 
         .doc-pill-icon {
