@@ -14,7 +14,7 @@ import SmartProgress from '@/components/SmartProgress'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
@@ -24,7 +24,7 @@ const isAdmin = false
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
@@ -38,6 +38,11 @@ const Icons = {
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  Sparkle: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
     </svg>
   ),
 }
@@ -73,13 +78,6 @@ const TYPEWRITER_LINES = [
   'Ask about Washtenaw County regulations.',
 ]
 
-/**
- * ✅ Smoother, calmer typewriter:
- * - No random typos/deletes
- * - Slower base speed + gentle jitter
- * - Natural pauses at punctuation
- * - Longer pause between lines
- */
 function useConsoleTypewriter(lines) {
   const [output, setOutput] = useState('')
   const [done, setDone] = useState(false)
@@ -93,7 +91,6 @@ function useConsoleTypewriter(lines) {
     let timeoutId = null
 
     const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1))
-
     const isPunc = (ch) => ['.', ',', '!', '?', ':', ';'].includes(ch)
     const isLongPunc = (ch) => ['.', '!', '?'].includes(ch)
 
@@ -107,13 +104,11 @@ function useConsoleTypewriter(lines) {
       const current = lines[lineIndex] || ''
       const ch = current[charIndex]
 
-      // finished all lines
       if (lineIndex >= lines.length) {
         setDone(true)
         return
       }
 
-      // finished current line -> commit + pause
       if (charIndex >= current.length) {
         printed = [...printed, buffer]
         buffer = ''
@@ -126,43 +121,34 @@ function useConsoleTypewriter(lines) {
           return
         }
 
-        // calm line break pause
         return schedule(rand(650, 900))
       }
 
-      // type next char
       buffer += ch
       charIndex += 1
       setOutput([...printed, buffer].join('\n'))
 
-      // base speed (slower + less jitter)
       let delay = rand(55, 95)
-
-      // natural pauses
       if (ch === '—') delay += rand(120, 220)
       if (isPunc(ch)) delay += rand(140, 260)
       if (isLongPunc(ch)) delay += rand(180, 320)
-
-      // tiny breath on spaces occasionally
       if (ch === ' ' && Math.random() < 0.12) delay += rand(40, 90)
 
       schedule(delay)
     }
 
-    // start a bit slower so it feels intentional
     schedule(650)
 
     return () => {
       cancelled = true
       if (timeoutId) clearTimeout(timeoutId)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lines])
 
   return { output, done }
 }
 
-function RotatingDocPill({ items, intervalMs = 2200, location = 'header' }) {
+function RotatingDocPill({ items, intervalMs = 2200 }) {
   const [idx, setIdx] = useState(0)
 
   const maxLen = useMemo(() => {
@@ -179,10 +165,13 @@ function RotatingDocPill({ items, intervalMs = 2200, location = 'header' }) {
   if (!items?.length) return null
 
   return (
-    <div className={`doc-pill-wrap ${location}`} aria-hidden="true">
+    <div className="doc-pill-wrap" aria-hidden="true">
       <div className="doc-pill" style={{ ['--doc-pill-item-width']: `${maxLen}ch` }}>
-        <span className="doc-pill-label">Indexed docs</span>
-        <span className="doc-pill-dot">•</span>
+        <span className="doc-pill-icon">
+          <Icons.Sparkle />
+        </span>
+        <span className="doc-pill-label">Indexed</span>
+        <span className="doc-pill-divider" />
         <span key={idx} className="doc-pill-item" title={items[idx]}>
           {items[idx]}
         </span>
@@ -222,7 +211,6 @@ function FooterLinks({ variant = 'landing' }) {
   )
 }
 
-/** ✅ Mobile-only action bar to avoid top overlap */
 function MobileLandingActions({ onShowPricing, onShowAuth }) {
   return (
     <div className={`landing-mobile-actions ${ibmMono.className}`}>
@@ -258,23 +246,26 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   }, [])
 
   return (
-    <div className={`${ibmMono.className} ibm-landing`}>
-      <div className="ibm-landing-topbar">
+    <div className={`${ibmMono.className} landing-root`}>
+      {/* Gradient mesh background */}
+      <div className="landing-gradient-bg" />
+      <div className="landing-grid-overlay" />
+
+      {/* Top bar */}
+      <header className="landing-topbar">
         <div className="plm-brand-wrap">
           <BrandLink variant="landing" />
         </div>
 
-        {/* TOP MIDDLE — fixed-size rotating docs pill */}
-        <div className="ibm-top-center">
-          <RotatingDocPill items={DEMO_DOCUMENTS} location="header" />
+        <div className="landing-top-center">
+          <RotatingDocPill items={DEMO_DOCUMENTS} />
         </div>
 
-        {/* ✅ Desktop-only top actions to prevent mobile overlap */}
-        <div className="ibm-top-actions desktop-only">
+        <nav className="landing-top-actions desktop-only">
           <div className="pricing-menu-wrapper" ref={menuRef}>
             <button
               type="button"
-              className="ibm-cta small secondary"
+              className="btn-nav ghost"
               onClick={() => setShowPricingMenu((v) => !v)}
               aria-expanded={showPricingMenu}
             >
@@ -282,52 +273,74 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </button>
 
             {showPricingMenu && (
-              <div className="pricing-menu">
-                <div className="pricing-menu-title">protocolLM access</div>
-                <div className="pricing-menu-price">
-                  <span className="money">$</span>
-                  <span className="money-num">100</span>
-                  <span className="money-suffix">/month</span>
+              <div className="pricing-dropdown">
+                <div className="pricing-dropdown-header">
+                  <span className="pricing-dropdown-title">protocolLM</span>
+                  <span className="pricing-dropdown-badge">Pro</span>
                 </div>
-                <div className="pricing-menu-sub">7-day free trial · Cancel anytime</div>
+                <div className="pricing-dropdown-amount">
+                  <span className="currency">$</span>
+                  <span className="amount">100</span>
+                  <span className="period">/mo</span>
+                </div>
+                <p className="pricing-dropdown-note">7-day free trial · Cancel anytime</p>
                 <button
                   type="button"
-                  className="ibm-cta small block"
+                  className="btn-primary block"
                   onClick={() => {
                     setShowPricingMenu(false)
                     onShowPricing()
                   }}
                 >
-                  Start trial
+                  Start free trial
                 </button>
               </div>
             )}
           </div>
 
-          <button onClick={onShowPricing} className="ibm-cta small" type="button">
+          <button onClick={onShowPricing} className="btn-primary" type="button">
             Start trial
           </button>
 
-          <button onClick={onShowAuth} className="ibm-cta small secondary" type="button">
+          <button onClick={onShowAuth} className="btn-nav ghost" type="button">
             Sign in
           </button>
+        </nav>
+      </header>
+
+      {/* Main hero */}
+      <main className="landing-hero">
+        <div className="hero-content">
+          <div className="hero-terminal">
+            <div className="terminal-header">
+              <span className="terminal-dot red" />
+              <span className="terminal-dot yellow" />
+              <span className="terminal-dot green" />
+              <span className="terminal-title">protocolLM</span>
+            </div>
+            <div className="terminal-body">
+              <pre className="terminal-output">
+                {typewriter}
+                {typewriterDone && <span className="cursor-block">▌</span>}
+              </pre>
+            </div>
+          </div>
+
+          <div className="hero-cta-row desktop-only">
+            <button onClick={onShowPricing} className="btn-hero-primary" type="button">
+              <span>Start 7-day free trial</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <button onClick={onShowAuth} className="btn-hero-secondary" type="button">
+              Sign in
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
 
-      <div className="ibm-landing-bg" />
-
-      <div className="ibm-landing-grid">
-        <section className="ibm-console-text">
-          <pre className="ibm-console-type">
-            {typewriter}
-            {typewriterDone && <span className="type-cursor">▌</span>}
-          </pre>
-        </section>
-      </div>
-
-      {/* ✅ Mobile action bar above footer links */}
       <MobileLandingActions onShowPricing={onShowPricing} onShowAuth={onShowAuth} />
-
       <FooterLinks variant="landing" />
     </div>
   )
@@ -426,33 +439,33 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-wrapper" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <div className={`modal-card ${ibmMono.className}`}>
-          <button onClick={onClose} className="modal-close-btn" aria-label="Close" type="button">
+          <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
           <div className="modal-header">
             <h2 className="modal-title">
               {mode === 'signin' && 'Welcome back'}
-              {mode === 'signup' && 'Create your account'}
+              {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
             <p className="modal-subtitle">
-              {mode === 'signin' && 'Sign in to access your compliance console'}
-              {mode === 'signup' && 'Start your 7-day free trial today'}
-              {mode === 'reset' && "Enter your email and we'll send reset instructions"}
+              {mode === 'signin' && 'Sign in to your compliance console'}
+              {mode === 'signup' && 'Start your 7-day free trial'}
+              {mode === 'reset' && "We'll send you reset instructions"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="modal-form">
-            <div className="form-field">
-              <label className="form-label">Email address</label>
+            <div className="form-group">
+              <label className="form-label">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@restaurant.com"
+                placeholder="you@company.com"
                 required
                 className="form-input"
                 autoComplete="email"
@@ -460,41 +473,41 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
             </div>
 
             {mode !== 'reset' && (
-              <div className="form-field">
+              <div className="form-group">
                 <label className="form-label">Password</label>
-                <div className="form-input-group">
+                <div className="form-input-wrap">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
+                    placeholder="••••••••"
                     required
                     className="form-input"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle-vis">
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
             )}
 
-            <button type="submit" disabled={loading || !isLoaded} className="btn-form-submit">
-              {loading && <span className="btn-spinner" />}
-              <span className="btn-label">{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}</span>
+            <button type="submit" disabled={loading || !isLoaded} className="btn-submit">
+              {loading && <span className="spinner" />}
+              <span>{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send link'}</span>
             </button>
           </form>
 
-          {message && <div className={`modal-alert ${messageKind}`}>{message}</div>}
+          {message && <div className={`modal-message ${messageKind}`}>{message}</div>}
 
           <div className="modal-footer">
             {mode === 'signin' && (
               <>
                 <button type="button" onClick={() => setMode('reset')} className="modal-link">
-                  Forgot your password?
+                  Forgot password?
                 </button>
                 <button type="button" onClick={() => setMode('signup')} className="modal-link">
-                  Need an account? <strong>Sign up free</strong>
+                  Create an account
                 </button>
               </>
             )}
@@ -522,40 +535,48 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-wrapper modal-wrapper-lg" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${ibmMono.className}`}>
-          <button onClick={onClose} className="modal-close-btn" aria-label="Close" type="button">
+      <div className="modal-container modal-container-lg" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-card pricing-modal ${ibmMono.className}`}>
+          <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
-          <div className="modal-header">
-            <h2 className="modal-title pricing-title">protocolLM access</h2>
-            <p className="modal-subtitle pricing-subtitle">Unlimited usage</p>
+          <div className="pricing-modal-header">
+            <div className="pricing-badge-row">
+              <span className="pricing-badge">Pro</span>
+            </div>
+            <h2 className="pricing-modal-title">protocolLM</h2>
+            <p className="pricing-modal-desc">Full compliance suite for food service</p>
           </div>
 
-          <div className="pricing-modal-amount">
-            <span className="pricing-currency">$</span>
-            <span className="pricing-number-lg">100</span>
-            <span className="pricing-period">/month</span>
+          <div className="pricing-modal-price">
+            <span className="price-currency">$</span>
+            <span className="price-value">100</span>
+            <span className="price-period">/month</span>
           </div>
 
-          <div className="pricing-modal-actions">
-            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-modal-primary" type="button">
-              {loading === 'monthly' && <span className="btn-spinner" />}
-              <span className="btn-label">Start 7-day free trial</span>
+          <ul className="pricing-features">
+            <li><span className="check">✓</span> Unlimited photo compliance checks</li>
+            <li><span className="check">✓</span> Full Washtenaw County database</li>
+            <li><span className="check">✓</span> Real-time regulation updates</li>
+            <li><span className="check">✓</span> Priority support</li>
+          </ul>
+
+          <div className="pricing-modal-buttons">
+            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-primary" type="button">
+              {loading === 'monthly' && <span className="spinner" />}
+              <span>Start 7-day free trial</span>
             </button>
 
-            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className="btn-pricing-modal-secondary" type="button">
-              {loading === 'annual' && <span className="btn-spinner" />}
-              <span className="btn-label">Annual plan · $1,000/year</span>
-              <span className="btn-badge">Save $200</span>
+            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className="btn-pricing-secondary" type="button">
+              {loading === 'annual' && <span className="spinner" />}
+              <span>Annual — $1,000/year</span>
+              <span className="save-badge">Save $200</span>
             </button>
           </div>
 
-          <p className="pricing-modal-note">
-            <span>7-day free trial · Cancel anytime</span>
-            <br />
-            <span>One license per restaurant location</span>
+          <p className="pricing-modal-terms">
+            7-day free trial · Cancel anytime · One license per location
           </p>
         </div>
       </div>
@@ -622,8 +643,7 @@ export default function Page() {
 
   useEffect(() => {
     requestAnimationFrame(() => scrollToBottom('auto'))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [scrollToBottom])
 
   useEffect(() => {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
@@ -933,13 +953,16 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="loading-screen">
+      <div className={`loading-screen ${ibmMono.className}`}>
         <div className="loading-content">
+          <div className="loading-logo">
+            <Image src={appleIcon} alt="protocolLM" width={48} height={48} priority />
+          </div>
           <div className="loading-spinner" />
-          <span className={`loading-text ${ibmMono.className}`}>
-            {loadingStage === 'auth' && 'Checking authentication…'}
+          <span className="loading-text">
+            {loadingStage === 'auth' && 'Authenticating…'}
             {loadingStage === 'subscription' && 'Loading subscription…'}
-            {loadingStage === 'ready' && 'Almost there…'}
+            {loadingStage === 'ready' && 'Almost ready…'}
           </span>
         </div>
       </div>
@@ -949,50 +972,68 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
+        /* ==========================================================================
+           Design System: IBM Retro × Stripe 2025
+           Electric blue accent from logo (#4A7CFF range)
+           ========================================================================== */
         :root {
-          --bg-0: #0e0e11;
-          --bg-1: #121218;
-          --bg-2: #15151a;
-          --ink-0: #f2f2f2;
-          --ink-1: #d9d9df;
-          --ink-2: #b9b9c4;
-          --line-0: #24242d;
-          --line-1: #2a2a32;
-          --line-2: #3a3a42;
-          --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+          /* Core palette */
+          --bg-0: #08090c;
+          --bg-1: #0d0f14;
+          --bg-2: #12151c;
+          --bg-3: #181c26;
+          
+          /* Text */
+          --ink-0: #f4f4f8;
+          --ink-1: #c4c7d4;
+          --ink-2: #8a8fa3;
+          --ink-3: #5c6178;
+          
+          /* Accent - Electric blue from logo */
+          --accent: #4a7cff;
+          --accent-glow: rgba(74, 124, 255, 0.35);
+          --accent-subtle: rgba(74, 124, 255, 0.12);
+          --accent-hover: #5d8aff;
+          
+          /* Borders */
+          --border-subtle: rgba(255, 255, 255, 0.06);
+          --border-default: rgba(255, 255, 255, 0.1);
+          --border-accent: rgba(74, 124, 255, 0.3);
+          --border-glow: rgba(74, 124, 255, 0.5);
+          
+          /* Shadows */
+          --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+          --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+          --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+          --shadow-glow: 0 0 40px rgba(74, 124, 255, 0.15);
+          
+          /* Radii */
+          --radius-sm: 8px;
+          --radius-md: 12px;
+          --radius-lg: 16px;
+          --radius-xl: 20px;
+          --radius-full: 9999px;
         }
 
-        *,
-        *::before,
-        *::after {
+        *, *::before, *::after {
           box-sizing: border-box;
         }
 
-        html,
-        body {
+        html, body {
           height: 100%;
           width: 100%;
-          max-width: 100%;
           margin: 0;
-
-          /* ✅ Use background-color (iOS rubber-band respects this more reliably) */
-          background-color: var(--bg-0) !important;
+          background-color: var(--bg-0);
           color: var(--ink-0);
-
-          /* ✅ Kill horizontal drift (right-side white strip) */
           overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ✅ Even stronger horizontal clamp where supported */
         @supports (overflow: clip) {
-          html,
-          body {
-            overflow-x: clip;
-          }
+          html, body { overflow-x: clip; }
         }
 
-        /* ✅ The REAL iOS fix:
-           paint a fixed dark backdrop behind everything so bounce can't reveal white */
         body::before {
           content: '';
           position: fixed;
@@ -1003,55 +1044,47 @@ export default function Page() {
         }
 
         @supports (-webkit-touch-callout: none) {
-          html {
-            height: -webkit-fill-available;
-            background-color: var(--bg-0) !important;
-          }
-          body {
-            min-height: -webkit-fill-available;
-            background-color: var(--bg-0) !important;
-          }
+          html { height: -webkit-fill-available; }
+          body { min-height: -webkit-fill-available; }
         }
 
         body {
           position: relative;
-          overscroll-behavior-x: none;
-          overscroll-behavior-y: none;
+          overscroll-behavior: none;
           -webkit-overflow-scrolling: touch;
         }
 
-        a,
-        button,
-        input,
-        textarea {
+        a, button, input, textarea {
           -webkit-tap-highlight-color: transparent;
         }
-        :focus,
-        :focus-visible {
-          outline: none !important;
-          box-shadow: none !important;
+
+        :focus, :focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+        }
+
+        button:focus, input:focus, textarea:focus {
+          outline: none;
         }
 
         ::selection {
-          background: rgba(217, 217, 223, 0.18);
+          background: var(--accent-subtle);
           color: var(--ink-0);
         }
 
-        ::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
-          background: rgba(217, 217, 223, 0.14);
-          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: var(--radius-full);
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(217, 217, 223, 0.2);
+          background: rgba(255, 255, 255, 0.15);
         }
 
+        /* ==========================================================================
+           Loading Screen
+           ========================================================================== */
         .loading-screen {
           position: fixed;
           inset: 0;
@@ -1061,32 +1094,57 @@ export default function Page() {
           background: var(--bg-0);
           z-index: 9999;
         }
+
         .loading-content {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 14px;
-        }
-        .loading-spinner {
-          width: 32px;
-          height: 32px;
-          border: 2px solid rgba(217, 217, 223, 0.2);
-          border-top-color: rgba(217, 217, 223, 0.7);
-          border-radius: 999px;
-          animation: spin 0.8s linear infinite;
-        }
-        .loading-text {
-          font-size: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ink-1);
-        }
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
+          gap: 20px;
         }
 
+        .loading-logo {
+          width: 64px;
+          height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .loading-logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        @keyframes pulse-glow {
+          0%, 100% { filter: drop-shadow(0 0 20px var(--accent-glow)); }
+          50% { filter: drop-shadow(0 0 40px var(--accent-glow)); }
+        }
+
+        .loading-spinner {
+          width: 24px;
+          height: 24px;
+          border: 2px solid var(--border-default);
+          border-top-color: var(--accent);
+          border-radius: var(--radius-full);
+          animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+          font-size: 11px;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        /* ==========================================================================
+           App Container
+           ========================================================================== */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
@@ -1095,315 +1153,502 @@ export default function Page() {
           background: var(--bg-0);
         }
 
-        /* ✅ Brand (icon + text) */
+        /* ==========================================================================
+           Brand
+           ========================================================================== */
         .plm-brand-wrap {
-          pointer-events: auto;
           display: flex;
           align-items: center;
         }
+
         .plm-brand {
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
           color: var(--ink-0);
           text-decoration: none;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          font-size: 22px;
-          padding: 6px 6px;
-          border-radius: 10px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          font-size: 18px;
+          padding: 8px 10px;
+          border-radius: var(--radius-md);
           display: inline-flex;
           align-items: center;
+          transition: background 0.2s ease;
         }
+
         .plm-brand:hover {
-          background: rgba(255, 255, 255, 0.04);
+          background: var(--accent-subtle);
         }
+
         .plm-brand-inner {
           display: inline-flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
         }
-        /* ✅ ~80% bigger mark */
+
         .plm-brand-mark {
-          width: 64px;
-          height: 64px;
+          width: 36px;
+          height: 36px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          flex: 0 0 auto;
+          flex-shrink: 0;
         }
+
         .plm-brand-mark img {
-          width: 100% !important;
-          height: 100% !important;
-          max-width: none !important;
+          width: 100%;
+          height: 100%;
           object-fit: contain;
-          display: block;
         }
 
         .plm-brand-text {
-          display: inline-block;
-          line-height: 1;
-          transform: translateY(1px);
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
 
         /* ==========================================================================
-           IBM Landing
+           Landing Page
            ========================================================================== */
-        .ibm-landing {
+        .landing-root {
           position: relative;
-          padding: 0;
-          padding-left: max(20px, env(safe-area-inset-left));
-          padding-right: max(20px, env(safe-area-inset-right));
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
-          align-items: center;
-          justify-content: center;
+          flex-direction: column;
           background: var(--bg-0);
-          color: var(--ink-0);
           overflow: hidden;
         }
 
-        .ibm-landing-topbar {
+        .landing-gradient-bg {
           position: absolute;
-          top: max(14px, env(safe-area-inset-top));
+          inset: 0;
+          background: 
+            radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-subtle), transparent),
+            radial-gradient(ellipse 60% 40% at 100% 0%, rgba(74, 124, 255, 0.08), transparent),
+            radial-gradient(ellipse 50% 30% at 0% 100%, rgba(74, 124, 255, 0.05), transparent);
+          pointer-events: none;
+        }
+
+        .landing-grid-overlay {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+          pointer-events: none;
+          opacity: 0.5;
+        }
+
+        /* Topbar */
+        .landing-topbar {
+          position: absolute;
+          top: 0;
           left: 0;
           right: 0;
           display: grid;
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
-          padding-left: max(18px, env(safe-area-inset-left));
-          padding-right: max(18px, env(safe-area-inset-right));
-          z-index: 6;
-          pointer-events: none;
+          padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 16px max(20px, env(safe-area-inset-left));
+          z-index: 10;
         }
-        .ibm-top-center {
+
+        .landing-top-center {
           justify-self: center;
-          display: flex;
-          justify-content: center;
-          pointer-events: none;
         }
-        .ibm-top-actions {
+
+        .landing-top-actions {
           justify-self: end;
           display: flex;
-          gap: 10px;
           align-items: center;
-          pointer-events: auto;
+          gap: 8px;
         }
 
         .desktop-only {
           display: flex;
         }
 
+        /* Navigation buttons */
+        .btn-nav {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 36px;
+          padding: 0 14px;
+          background: transparent;
+          color: var(--ink-1);
+          border: 1px solid transparent;
+          border-radius: var(--radius-md);
+          font-size: 13px;
+          font-weight: 500;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: inherit;
+        }
+
+        .btn-nav:hover {
+          color: var(--ink-0);
+          background: var(--accent-subtle);
+        }
+
+        .btn-nav.ghost {
+          color: var(--ink-2);
+        }
+
+        .btn-nav.ghost:hover {
+          color: var(--ink-0);
+        }
+
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 36px;
+          padding: 0 16px;
+          background: var(--accent);
+          color: white;
+          border: none;
+          border-radius: var(--radius-md);
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: inherit;
+          box-shadow: 0 2px 8px rgba(74, 124, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+          background: var(--accent-hover);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(74, 124, 255, 0.4);
+        }
+
+        .btn-primary.block {
+          width: 100%;
+        }
+
+        /* Pricing dropdown */
         .pricing-menu-wrapper {
           position: relative;
         }
 
-        .ibm-cta {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 9px 14px;
+        .pricing-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 260px;
           background: var(--bg-2);
-          color: var(--ink-0);
-          border: 1px solid var(--line-1);
-          border-radius: 10px;
-          text-transform: uppercase;
-          letter-spacing: 0.14em;
-          font-weight: 700;
-          font-size: 12px;
-          cursor: pointer;
-          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
-          transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-        }
-        .ibm-cta:hover {
-          transform: translateY(-1px);
-          background: #1c1c22;
-          border-color: #34343c;
-        }
-        .ibm-cta.secondary {
-          background: transparent;
-          color: var(--ink-1);
-        }
-        .ibm-cta.secondary:hover {
-          color: var(--ink-0);
-          background: rgba(255, 255, 255, 0.04);
-        }
-        .ibm-cta.small {
-          padding: 7px 11px;
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          border-radius: 9px;
-        }
-        .ibm-cta.block {
-          width: 100%;
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-lg);
+          padding: 20px;
+          box-shadow: var(--shadow-lg), var(--shadow-glow);
+          animation: dropdown-in 0.2s ease;
         }
 
-        .pricing-menu {
-          position: absolute;
-          right: 0;
-          margin-top: 8px;
-          background: var(--bg-1);
-          border: 1px solid var(--line-1);
-          border-radius: 10px;
-          padding: 10px;
-          min-width: 240px;
-          box-shadow: var(--shadow);
+        @keyframes dropdown-in {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .pricing-dropdown-header {
           display: flex;
-          flex-direction: column;
+          align-items: center;
           gap: 8px;
+          margin-bottom: 12px;
         }
-        .pricing-menu-title {
-          font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
+
+        .pricing-dropdown-title {
+          font-size: 14px;
+          font-weight: 700;
           color: var(--ink-0);
-          font-size: 11px;
+          letter-spacing: -0.01em;
         }
-        .pricing-menu-price {
+
+        .pricing-dropdown-badge {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--accent);
+          background: var(--accent-subtle);
+          padding: 3px 8px;
+          border-radius: var(--radius-sm);
+        }
+
+        .pricing-dropdown-amount {
           display: flex;
           align-items: baseline;
-          gap: 3px;
+          gap: 2px;
+          margin-bottom: 8px;
+        }
+
+        .pricing-dropdown-amount .currency {
+          font-size: 16px;
+          color: var(--ink-2);
+          font-weight: 500;
+        }
+
+        .pricing-dropdown-amount .amount {
+          font-size: 36px;
+          font-weight: 800;
           color: var(--ink-0);
+          letter-spacing: -0.03em;
+          font-family: ${outfit.style.fontFamily};
         }
-        .pricing-menu-price .money {
-          color: var(--ink-2);
+
+        .pricing-dropdown-amount .period {
           font-size: 14px;
-        }
-        .pricing-menu-price .money-num {
-          font-family: ${outfit.style.fontFamily}, ${inter.style.fontFamily}, system-ui;
-          font-size: 22px;
-          font-weight: 900;
-          letter-spacing: -0.02em;
-        }
-        .pricing-menu-price .money-suffix {
           color: var(--ink-2);
-          font-size: 12px;
           margin-left: 2px;
         }
-        .pricing-menu-sub {
+
+        .pricing-dropdown-note {
           font-size: 12px;
-          color: var(--ink-1);
-          line-height: 1.4;
+          color: var(--ink-2);
+          margin: 0 0 16px;
         }
 
-        .ibm-landing-bg {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(48, 48, 54, 0.26), transparent 52%),
-            radial-gradient(circle at 80% 0%, rgba(48, 48, 54, 0.18), transparent 44%),
-            linear-gradient(90deg, rgba(14, 14, 17, 0.98) 0%, rgba(16, 16, 20, 0.95) 100%);
-          pointer-events: none;
-        }
-
-        .ibm-landing-grid {
-          position: relative;
-          z-index: 2;
-          width: 100%;
-          max-width: 860px;
-          display: grid;
-          grid-template-columns: 1fr;
-          justify-items: center;
-          align-items: center;
-        }
-
-        .ibm-console-text {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-        }
-
-        .ibm-console-type {
-          margin: 0;
-          white-space: pre-wrap;
-          color: #e2e8f5;
-          font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-          line-height: 1.45;
-          font-size: 15px;
-          width: min(62ch, 100%);
-          text-align: center;
-          margin-left: auto;
-          margin-right: auto;
-        }
-
-        .type-cursor {
-          display: inline-block;
-          width: 10px;
-          animation: cursor-blink 1s steps(2, end) infinite;
-        }
-        @keyframes cursor-blink {
-          0%,
-          50% {
-            opacity: 1;
-          }
-          50.01%,
-          100% {
-            opacity: 0;
-          }
-        }
-
+        /* Doc pill */
         .doc-pill-wrap {
           display: flex;
           justify-content: center;
-          pointer-events: none;
         }
+
         .doc-pill {
-          pointer-events: none;
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 14px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-          color: rgba(242, 242, 242, 0.88);
+          padding: 8px 16px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-full);
+          box-shadow: var(--shadow-sm), 0 0 20px rgba(74, 124, 255, 0.1);
+        }
+
+        .doc-pill-icon {
+          color: var(--accent);
+          display: flex;
+          animation: sparkle-rotate 4s linear infinite;
+        }
+
+        @keyframes sparkle-rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .doc-pill-label {
           font-size: 11px;
+          font-weight: 600;
           letter-spacing: 0.1em;
           text-transform: uppercase;
+          color: var(--ink-2);
+        }
 
-          /* ✅ IMPORTANT: do NOT use 100vw/100dvw (causes right-side overflow on iOS) */
-          max-width: calc(100% - 28px);
+        .doc-pill-divider {
+          width: 1px;
+          height: 12px;
+          background: var(--border-default);
         }
-        .doc-pill-label {
-          opacity: 0.75;
-          white-space: nowrap;
-        }
-        .doc-pill-dot {
-          opacity: 0.45;
-          white-space: nowrap;
-        }
+
         .doc-pill-item {
-          text-transform: none;
-          letter-spacing: 0.02em;
-          opacity: 0.92;
-          display: inline-block;
-          width: var(--doc-pill-item-width, auto);
-          max-width: 60vw;
+          font-size: 12px;
+          color: var(--ink-1);
+          max-width: 200px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          animation: pillFade 2200ms ease both;
+          animation: pill-fade 2200ms ease both;
         }
-        @keyframes pillFade {
-          0% {
-            opacity: 0;
-            transform: translateY(2px);
-          }
-          14% {
-            opacity: 0.92;
-            transform: translateY(0);
-          }
-          86% {
-            opacity: 0.92;
-            transform: translateY(0);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-2px);
-          }
+
+        @keyframes pill-fade {
+          0% { opacity: 0; transform: translateY(4px); }
+          15% { opacity: 1; transform: translateY(0); }
+          85% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-4px); }
+        }
+
+        /* Hero */
+        .landing-hero {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 120px 24px 80px;
+        }
+
+        .hero-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 32px;
+          max-width: 640px;
+          width: 100%;
+        }
+
+        /* Terminal card */
+        .hero-terminal {
+          width: 100%;
+          background: var(--bg-1);
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-xl);
+          overflow: hidden;
+          box-shadow: var(--shadow-lg), var(--shadow-glow);
+        }
+
+        .terminal-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 18px;
+          background: var(--bg-2);
+          border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .terminal-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: var(--radius-full);
+        }
+
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #febc2e; }
+        .terminal-dot.green { background: #28c840; }
+
+        .terminal-title {
+          margin-left: auto;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--ink-2);
+          letter-spacing: 0.05em;
+        }
+
+        .terminal-body {
+          padding: 24px;
+          min-height: 180px;
+        }
+
+        .terminal-output {
+          margin: 0;
+          font-size: 15px;
+          line-height: 1.7;
+          color: var(--ink-1);
+          white-space: pre-wrap;
+        }
+
+        .cursor-block {
+          display: inline-block;
+          color: var(--accent);
+          animation: cursor-blink 1s steps(2) infinite;
+        }
+
+        @keyframes cursor-blink {
+          0%, 50% { opacity: 1; }
+          50.01%, 100% { opacity: 0; }
+        }
+
+        /* Hero CTAs */
+        .hero-cta-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .btn-hero-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          height: 48px;
+          padding: 0 24px;
+          background: var(--accent);
+          color: white;
+          border: none;
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: inherit;
+          box-shadow: 0 4px 16px rgba(74, 124, 255, 0.4);
+        }
+
+        .btn-hero-primary:hover {
+          background: var(--accent-hover);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(74, 124, 255, 0.5);
+        }
+
+        .btn-hero-secondary {
+          display: inline-flex;
+          align-items: center;
+          height: 48px;
+          padding: 0 24px;
+          background: transparent;
+          color: var(--ink-1);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: inherit;
+        }
+
+        .btn-hero-secondary:hover {
+          color: var(--ink-0);
+          border-color: var(--border-accent);
+          background: var(--accent-subtle);
+        }
+
+        /* Mobile actions */
+        .landing-mobile-actions {
+          position: absolute;
+          bottom: calc(max(20px, env(safe-area-inset-bottom)) + 52px);
+          left: 50%;
+          transform: translateX(-50%);
+          display: none;
+          align-items: center;
+          gap: 8px;
+          padding: 8px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-full);
+          box-shadow: var(--shadow-md);
+          z-index: 10;
+        }
+
+        .mob-cta {
+          height: 36px;
+          padding: 0 14px;
+          border-radius: var(--radius-full);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          border: none;
+          background: transparent;
+          color: var(--ink-1);
+          transition: all 0.2s ease;
+          font-family: inherit;
+        }
+
+        .mob-cta:hover {
+          color: var(--ink-0);
+        }
+
+        .mob-cta.primary {
+          background: var(--accent);
+          color: white;
+        }
+
+        .mob-cta.primary:hover {
+          background: var(--accent-hover);
         }
 
         /* Footer links */
@@ -1411,151 +1656,79 @@ export default function Page() {
           position: absolute;
           left: 50%;
           transform: translateX(-50%);
-          z-index: 6;
           display: flex;
           align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 8px 12px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
-          pointer-events: auto;
+          gap: 16px;
+          padding: 10px 20px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-full);
+          z-index: 10;
         }
+
         .plm-footer-links.landing {
-          bottom: max(16px, env(safe-area-inset-bottom));
+          bottom: max(20px, env(safe-area-inset-bottom));
         }
+
         .plm-footer-links.chat {
           position: static;
-          left: auto;
           transform: none;
-          margin-top: 10px;
-          width: fit-content;
-          margin-left: auto;
-          margin-right: auto;
+          margin: 12px auto 0;
         }
+
         .plm-footer-link {
-          color: rgba(242, 242, 242, 0.8);
+          color: var(--ink-2);
           text-decoration: none;
           font-size: 11px;
-          letter-spacing: 0.12em;
+          font-weight: 500;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
-          font-weight: 700;
+          transition: color 0.2s ease;
         }
+
         .plm-footer-link:hover {
           color: var(--ink-0);
         }
+
         .plm-footer-sep {
-          color: rgba(242, 242, 242, 0.35);
-          font-size: 12px;
-        }
-
-        /* ✅ Mobile landing action bar (prevents top overlap) */
-        .landing-mobile-actions {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          bottom: calc(max(16px, env(safe-area-inset-bottom)) + 54px);
-          z-index: 6;
-          display: none;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
-          pointer-events: auto;
-        }
-        .mob-cta {
-          height: 36px;
-          padding: 0 12px;
-          border-radius: 999px;
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          cursor: pointer;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: transparent;
-          color: rgba(242, 242, 242, 0.9);
-          white-space: nowrap;
-        }
-        .mob-cta.primary {
-          background: #2a2a32;
-          border-color: #34343c;
-          color: var(--ink-0);
-        }
-        .mob-cta.ghost:hover {
-          background: rgba(255, 255, 255, 0.04);
-        }
-        .mob-cta.primary:hover {
-          background: #34343c;
-        }
-
-        @media (max-width: 768px) {
-          .ibm-landing {
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
-          }
-
-          .ibm-landing-topbar {
-            grid-template-columns: 1fr;
-          }
-          .ibm-top-center {
-            display: none;
-          }
-
-          .desktop-only {
-            display: none !important;
-          }
-          .landing-mobile-actions {
-            display: inline-flex;
-          }
-
-          .ibm-console-type {
-            font-size: 14px;
-            width: min(54ch, 100%);
-          }
+          color: var(--ink-3);
         }
 
         /* ==========================================================================
-           Modals (unchanged)
+           Modals
            ========================================================================== */
         .modal-overlay {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(0, 0, 0, 0.62);
+          background: rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
-          animation: fadeIn 200ms ease;
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          animation: fade-in 0.2s ease;
         }
 
-        .modal-wrapper {
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .modal-container {
           width: 100%;
-          max-width: 420px;
-          animation: modalUp 240ms ease;
+          max-width: 400px;
+          animation: modal-up 0.25s ease;
         }
-        .modal-wrapper-lg {
-          max-width: 480px;
+
+        .modal-container-lg {
+          max-width: 440px;
         }
-        @keyframes modalUp {
+
+        @keyframes modal-up {
           from {
             opacity: 0;
-            transform: translateY(12px) scale(0.99);
+            transform: translateY(16px) scale(0.98);
           }
           to {
             opacity: 1;
@@ -1566,73 +1739,69 @@ export default function Page() {
         .modal-card {
           position: relative;
           background: var(--bg-1);
-          border: 1px solid var(--line-1);
-          border-radius: 16px;
-          box-shadow: 0 16px 50px rgba(0, 0, 0, 0.55);
-          padding: 28px;
-          overflow: hidden;
-          color: var(--ink-0);
-        }
-        @media (max-width: 480px) {
-          .modal-card {
-            padding: 22px 18px;
-          }
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-xl);
+          padding: 32px;
+          box-shadow: var(--shadow-lg), var(--shadow-glow);
         }
 
-        .modal-close-btn {
+        .modal-close {
           position: absolute;
-          top: 14px;
-          right: 14px;
+          top: 16px;
+          right: 16px;
           width: 32px;
           height: 32px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #1c1c22;
-          border: 1px solid var(--line-1);
-          border-radius: 9px;
-          color: var(--ink-1);
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
+          color: var(--ink-2);
           cursor: pointer;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-          z-index: 10;
+          transition: all 0.2s ease;
         }
-        .modal-close-btn:hover {
-          background: #22222a;
+
+        .modal-close:hover {
           color: var(--ink-0);
-          border-color: #34343c;
+          border-color: var(--border-default);
         }
 
         .modal-header {
           text-align: center;
-          margin-bottom: 18px;
+          margin-bottom: 24px;
         }
+
         .modal-title {
-          font-size: 20px;
-          font-weight: 800;
+          font-size: 22px;
+          font-weight: 700;
           letter-spacing: -0.02em;
-          margin: 0 0 6px;
+          margin: 0 0 8px;
           color: var(--ink-0);
         }
+
         .modal-subtitle {
-          font-size: 13px;
-          color: var(--ink-1);
-          line-height: 1.55;
+          font-size: 14px;
+          color: var(--ink-2);
           margin: 0;
         }
 
         .modal-form {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 16px;
         }
-        .form-field {
+
+        .form-group {
           display: flex;
           flex-direction: column;
           gap: 8px;
         }
+
         .form-label {
           font-size: 12px;
-          letter-spacing: 0.08em;
+          font-weight: 500;
+          letter-spacing: 0.05em;
           text-transform: uppercase;
           color: var(--ink-2);
         }
@@ -1641,26 +1810,28 @@ export default function Page() {
           width: 100%;
           height: 44px;
           padding: 0 14px;
-          background: #1a1a20;
-          border: 1px solid var(--line-1);
-          border-radius: 10px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
           color: var(--ink-0);
           font-size: 14px;
-          outline: none;
-          appearance: none;
-          -webkit-appearance: none;
-        }
-        .form-input::placeholder {
-          color: rgba(217, 217, 223, 0.45);
-        }
-        .form-input:focus {
-          border-color: #34343c;
+          font-family: inherit;
+          transition: border-color 0.2s ease;
         }
 
-        .form-input-group {
+        .form-input::placeholder {
+          color: var(--ink-3);
+        }
+
+        .form-input:focus {
+          border-color: var(--accent);
+        }
+
+        .form-input-wrap {
           position: relative;
         }
-        .form-toggle {
+
+        .form-toggle-vis {
           position: absolute;
           right: 12px;
           top: 50%;
@@ -1669,232 +1840,293 @@ export default function Page() {
           border: none;
           color: var(--ink-2);
           font-size: 12px;
-          letter-spacing: 0.08em;
+          font-weight: 500;
+          letter-spacing: 0.05em;
           text-transform: uppercase;
           cursor: pointer;
+          font-family: inherit;
         }
-        .form-toggle:hover {
+
+        .form-toggle-vis:hover {
           color: var(--ink-0);
         }
 
-        .btn-form-submit {
+        .btn-submit {
           width: 100%;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 10px;
-          height: 44px;
-          background: #2a2a32;
-          color: var(--ink-0);
-          border: 1px solid #34343c;
-          border-radius: 10px;
-          font-size: 12px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
+          background: var(--accent);
+          color: white;
+          border: none;
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 600;
           cursor: pointer;
-          transition: transform 0.15s ease, background 0.15s ease;
+          transition: all 0.2s ease;
+          font-family: inherit;
+          margin-top: 8px;
         }
-        .btn-form-submit:hover:not(:disabled) {
-          background: #34343c;
+
+        .btn-submit:hover:not(:disabled) {
+          background: var(--accent-hover);
           transform: translateY(-1px);
         }
-        .btn-form-submit:disabled {
+
+        .btn-submit:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
 
-        .btn-spinner {
+        .spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.25);
-          border-top-color: rgba(255, 255, 255, 0.8);
-          border-radius: 999px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: white;
+          border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
 
-        .modal-alert {
-          padding: 12px 14px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid var(--line-1);
-          border-radius: 12px;
-          margin-top: 14px;
+        .modal-message {
+          padding: 12px 16px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
           font-size: 13px;
-          line-height: 1.5;
           color: var(--ink-1);
           text-align: center;
+          margin-top: 16px;
         }
-        .modal-alert.ok {
-          border-color: rgba(16, 185, 129, 0.35);
+
+        .modal-message.ok {
+          border-color: rgba(40, 200, 64, 0.4);
+          color: #28c840;
         }
-        .modal-alert.err {
-          border-color: rgba(239, 68, 68, 0.35);
+
+        .modal-message.err {
+          border-color: rgba(255, 95, 87, 0.4);
+          color: #ff5f57;
         }
 
         .modal-footer {
-          margin-top: 16px;
+          margin-top: 20px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
         }
+
         .modal-link {
           background: none;
           border: none;
-          font-size: 12px;
-          letter-spacing: 0.06em;
+          font-size: 13px;
           color: var(--ink-2);
           cursor: pointer;
+          font-family: inherit;
+          transition: color 0.2s ease;
         }
+
         .modal-link:hover {
           color: var(--ink-0);
         }
+
         .modal-link strong {
-          color: var(--ink-0);
-          font-weight: 800;
+          color: var(--accent);
+          font-weight: 600;
         }
 
-        .pricing-title {
-          color: var(--ink-0);
-        }
-        .pricing-subtitle {
-          color: var(--ink-1);
-        }
-        .pricing-modal-amount {
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 4px;
-          margin: 12px 0 18px;
-        }
-        .pricing-currency {
-          font-size: 16px;
-          color: var(--ink-2);
-        }
-        .pricing-number-lg {
-          font-size: 56px;
-          font-weight: 900;
-          letter-spacing: -0.04em;
-          font-family: ${outfit.style.fontFamily}, ${inter.style.fontFamily}, system-ui;
-        }
-        .pricing-period {
-          font-size: 13px;
-          color: var(--ink-2);
-          margin-left: 4px;
-        }
-
-        .pricing-modal-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 12px;
-        }
-        .btn-pricing-modal-primary,
-        .btn-pricing-modal-secondary {
-          width: 100%;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          border-radius: 10px;
-          font-size: 12px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          cursor: pointer;
-          transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-        }
-        .btn-pricing-modal-primary {
-          background: #2a2a32;
-          border: 1px solid #34343c;
-          color: var(--ink-0);
-        }
-        .btn-pricing-modal-primary:hover:not(:disabled) {
-          background: #34343c;
-          transform: translateY(-1px);
-        }
-        .btn-pricing-modal-secondary {
-          background: transparent;
-          border: 1px solid var(--line-1);
-          color: var(--ink-0);
-        }
-        .btn-pricing-modal-secondary:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: #34343c;
-        }
-        .btn-pricing-modal-primary:disabled,
-        .btn-pricing-modal-secondary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .btn-badge {
-          font-size: 10px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          font-weight: 900;
-          color: var(--ink-0);
-          background: #2a2a32;
-          border: 1px solid #34343c;
-          padding: 3px 8px;
-          border-radius: 8px;
-        }
-        .pricing-modal-note {
+        /* Pricing modal */
+        .pricing-modal {
           text-align: center;
+        }
+
+        .pricing-modal-header {
+          margin-bottom: 20px;
+        }
+
+        .pricing-badge-row {
+          margin-bottom: 8px;
+        }
+
+        .pricing-badge {
+          display: inline-block;
           font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--accent);
+          background: var(--accent-subtle);
+          padding: 4px 12px;
+          border-radius: var(--radius-full);
+        }
+
+        .pricing-modal-title {
+          font-size: 26px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          margin: 0 0 6px;
+          color: var(--ink-0);
+        }
+
+        .pricing-modal-desc {
+          font-size: 14px;
           color: var(--ink-2);
           margin: 0;
         }
 
+        .pricing-modal-price {
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 2px;
+          margin: 24px 0;
+        }
+
+        .price-currency {
+          font-size: 20px;
+          color: var(--ink-2);
+          font-weight: 500;
+        }
+
+        .price-value {
+          font-size: 56px;
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          color: var(--ink-0);
+          font-family: ${outfit.style.fontFamily};
+        }
+
+        .price-period {
+          font-size: 16px;
+          color: var(--ink-2);
+          margin-left: 4px;
+        }
+
+        .pricing-features {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 24px;
+          text-align: left;
+        }
+
+        .pricing-features li {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 0;
+          font-size: 14px;
+          color: var(--ink-1);
+          border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .pricing-features li:last-child {
+          border-bottom: none;
+        }
+
+        .pricing-features .check {
+          color: var(--accent);
+          font-weight: 600;
+        }
+
+        .pricing-modal-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-bottom: 16px;
+        }
+
+        .btn-pricing-primary,
+        .btn-pricing-secondary {
+          width: 100%;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-family: inherit;
+        }
+
+        .btn-pricing-primary {
+          background: var(--accent);
+          color: white;
+          border: none;
+        }
+
+        .btn-pricing-primary:hover:not(:disabled) {
+          background: var(--accent-hover);
+          transform: translateY(-1px);
+        }
+
+        .btn-pricing-secondary {
+          background: transparent;
+          color: var(--ink-0);
+          border: 1px solid var(--border-default);
+        }
+
+        .btn-pricing-secondary:hover:not(:disabled) {
+          border-color: var(--border-accent);
+          background: var(--accent-subtle);
+        }
+
+        .btn-pricing-primary:disabled,
+        .btn-pricing-secondary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .save-badge {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: #28c840;
+          background: rgba(40, 200, 64, 0.15);
+          padding: 3px 8px;
+          border-radius: var(--radius-sm);
+        }
+
+        .pricing-modal-terms {
+          font-size: 12px;
+          color: var(--ink-3);
+          margin: 0;
+        }
+
         /* ==========================================================================
-           Chat (unchanged from your prior file)
+           Chat Interface
            ========================================================================== */
-        .chat-container {
+        .chat-root {
           flex: 1;
           display: flex;
           flex-direction: column;
           min-height: 0;
           background: var(--bg-0);
-          color: var(--ink-0);
           position: relative;
-          overflow: hidden;
-        }
-
-        .chat-container::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background: repeating-linear-gradient(
-            to bottom,
-            rgba(255, 255, 255, 0.02),
-            rgba(255, 255, 255, 0.02) 1px,
-            rgba(0, 0, 0, 0) 3px,
-            rgba(0, 0, 0, 0) 6px
-          );
-          opacity: 0.35;
-          mix-blend-mode: overlay;
         }
 
         .chat-topbar {
           width: 100%;
-          max-width: 960px;
+          max-width: 900px;
           margin: 0 auto;
-          padding: 14px 16px 10px;
-          padding-left: max(16px, env(safe-area-inset-left));
-          padding-right: max(16px, env(safe-area-inset-right));
+          padding: 16px 20px;
+          padding-left: max(20px, env(safe-area-inset-left));
+          padding-right: max(20px, env(safe-area-inset-right));
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
-          position: relative;
-          z-index: 2;
+          gap: 16px;
         }
+
         .chat-top-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
 
         .chat-messages {
@@ -1902,94 +2134,111 @@ export default function Page() {
           min-height: 0;
           overflow-y: auto;
           overscroll-behavior: contain;
+          padding: 0 20px 24px;
+        }
+
+        .chat-messages.empty {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .chat-empty-state {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 10px 16px 16px;
-          gap: 14px;
-          position: relative;
-          z-index: 2;
-        }
-        .chat-messages.empty {
-          justify-content: center;
-          padding-top: 0;
+          text-align: center;
+          max-width: 400px;
         }
 
-        .chat-empty-content {
-          max-width: 560px;
-          width: 100%;
-          text-align: left;
-          border: 1px dashed var(--line-1);
-          border-radius: 12px;
-          padding: 18px 18px 16px;
-          background: rgba(255, 255, 255, 0.02);
+        .chat-empty-icon {
+          width: 80px;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--accent-subtle);
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-xl);
+          color: var(--accent);
+          margin-bottom: 20px;
+          box-shadow: 0 0 40px rgba(74, 124, 255, 0.2);
         }
+
+        .chat-empty-icon svg {
+          width: 36px;
+          height: 36px;
+        }
+
         .chat-empty-title {
-          font-size: 13px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 900;
+          font-size: 18px;
+          font-weight: 700;
           color: var(--ink-0);
           margin: 0 0 8px;
+          letter-spacing: -0.01em;
         }
-        .chat-empty-text {
-          font-size: 13px;
-          line-height: 1.6;
-          color: var(--ink-1);
+
+        .chat-empty-desc {
+          font-size: 14px;
+          color: var(--ink-2);
           margin: 0;
+          line-height: 1.6;
         }
 
         .chat-history {
-          max-width: 820px;
+          max-width: 800px;
           margin: 0 auto;
           width: 100%;
-          padding: 12px 6px 10px;
           display: flex;
           flex-direction: column;
-          gap: 14px;
-          background: transparent;
+          gap: 16px;
+          padding-top: 16px;
         }
 
         .chat-message {
           display: flex;
           width: 100%;
         }
+
         .chat-message-user {
           justify-content: flex-end;
         }
+
         .chat-message-assistant {
           justify-content: flex-start;
         }
 
         .chat-bubble {
-          max-width: 92%;
-          padding: 12px 14px;
-          border-radius: 12px;
+          max-width: 85%;
+          padding: 14px 18px;
+          border-radius: var(--radius-lg);
           font-size: 14px;
           line-height: 1.65;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          color: var(--ink-0);
         }
+
         .chat-bubble-user {
-          background: rgba(255, 255, 255, 0.03);
-          border-style: dashed;
-          border-color: rgba(217, 217, 223, 0.25);
+          background: var(--accent);
+          color: white;
+          border-bottom-right-radius: var(--radius-sm);
         }
+
         .chat-bubble-assistant {
-          border-left: 3px solid rgba(217, 217, 223, 0.22);
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          color: var(--ink-1);
+          border-bottom-left-radius: var(--radius-sm);
         }
 
         .chat-bubble-image {
-          border-radius: 10px;
+          border-radius: var(--radius-md);
           overflow: hidden;
-          margin-bottom: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          margin-bottom: 12px;
         }
+
         .chat-bubble-image img {
           display: block;
           max-width: 100%;
-          max-height: 320px;
+          max-height: 300px;
           object-fit: contain;
         }
 
@@ -1998,146 +2247,236 @@ export default function Page() {
           font-style: italic;
         }
 
+        /* Chat input area */
         .chat-input-area {
           flex-shrink: 0;
-          background: var(--bg-0);
-          border-top: 1px solid var(--line-1);
-          box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.35);
-          position: relative;
-          z-index: 3;
+          background: linear-gradient(to top, var(--bg-0) 80%, transparent);
+          padding-top: 24px;
         }
 
         .chat-input-inner {
-          max-width: 820px;
+          max-width: 800px;
           margin: 0 auto;
-          padding: 14px 16px 18px;
-          padding-left: max(16px, env(safe-area-inset-left));
-          padding-right: max(16px, env(safe-area-inset-right));
-          padding-bottom: max(14px, env(safe-area-inset-bottom));
+          padding: 0 20px 20px;
+          padding-bottom: max(20px, env(safe-area-inset-bottom));
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          background: var(--bg-1);
-          border: 1px dashed rgba(217, 217, 223, 0.25);
-          border-radius: 12px;
-          font-size: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
+          gap: 12px;
+          padding: 10px 14px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-md);
+          margin-bottom: 12px;
+        }
+
+        .chat-attachment-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
           color: var(--ink-1);
-          margin-bottom: 10px;
+        }
+
+        .chat-attachment-icon {
+          color: var(--accent);
+        }
+
+        .chat-attachment-remove {
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--bg-3);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
+          color: var(--ink-2);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .chat-attachment-remove:hover {
+          color: var(--ink-0);
+          border-color: var(--border-default);
         }
 
         .chat-input-row {
           display: flex;
-          align-items: center;
-          gap: 10px;
+          align-items: flex-end;
+          gap: 12px;
         }
 
-        .chat-btn-icon {
-          width: 44px;
-          height: 44px;
-          padding: 0;
-          display: inline-flex;
+        .chat-camera-btn {
+          width: 48px;
+          height: 48px;
+          display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--bg-1);
-          border: 1px solid var(--line-1);
-          border-radius: 12px;
-          color: var(--ink-1);
+          background: var(--accent-subtle);
+          border: 1px solid var(--border-accent);
+          border-radius: var(--radius-md);
+          color: var(--accent);
           cursor: pointer;
-          transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+          box-shadow: 0 0 20px rgba(74, 124, 255, 0.15);
         }
-        .chat-btn-icon:hover {
-          transform: translateY(-1px);
-          background: #1c1c22;
-          border-color: #34343c;
-          color: var(--ink-0);
+
+        .chat-camera-btn:hover {
+          background: var(--accent);
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 20px rgba(74, 124, 255, 0.4);
+        }
+
+        .chat-input-wrapper {
+          flex: 1;
+          display: flex;
+          align-items: flex-end;
+          gap: 12px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          padding: 4px 4px 4px 16px;
+          transition: border-color 0.2s ease;
+        }
+
+        .chat-input-wrapper:focus-within {
+          border-color: var(--accent);
         }
 
         .chat-textarea {
           flex: 1;
-          min-height: 44px;
+          min-height: 40px;
           max-height: 160px;
-          padding: 11px 12px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
+          padding: 10px 0;
+          background: transparent;
+          border: none;
           color: var(--ink-0);
           font-size: 14px;
-          line-height: 1.35;
+          line-height: 1.4;
           resize: none;
-          outline: none !important;
-          box-shadow: none !important;
-          appearance: none;
-          -webkit-appearance: none;
           font-family: inherit;
         }
+
         .chat-textarea::placeholder {
-          color: rgba(217, 217, 223, 0.38);
+          color: var(--ink-3);
+        }
+
+        .chat-textarea:focus {
+          outline: none;
         }
 
         .chat-send-btn {
-          width: 44px;
-          height: 44px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #2a2a32;
-          border: 1px solid #34343c;
-          border-radius: 12px;
-          color: var(--ink-0);
+          background: var(--accent);
+          border: none;
+          border-radius: var(--radius-md);
+          color: white;
           cursor: pointer;
-          transition: transform 0.15s ease, background 0.15s ease;
+          transition: all 0.2s ease;
           flex-shrink: 0;
         }
+
         .chat-send-btn:hover:not(:disabled) {
-          background: #34343c;
-          transform: translateY(-1px);
+          background: var(--accent-hover);
         }
+
         .chat-send-btn:disabled {
-          opacity: 0.45;
+          opacity: 0.4;
           cursor: not-allowed;
         }
 
-        .chat-spinner {
+        .chat-send-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(217, 217, 223, 0.25);
-          border-top-color: rgba(217, 217, 223, 0.8);
-          border-radius: 999px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: white;
+          border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
 
         .chat-disclaimer {
-          margin-top: 10px;
           text-align: center;
           font-size: 11px;
-          letter-spacing: 0.06em;
-          color: rgba(217, 217, 223, 0.55);
+          color: var(--ink-3);
+          margin-top: 12px;
         }
 
-        @media (max-width: 640px) {
+        /* ==========================================================================
+           Responsive
+           ========================================================================== */
+        @media (max-width: 768px) {
+          .landing-topbar {
+            grid-template-columns: 1fr;
+            padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+          }
+
+          .landing-top-center {
+            display: none;
+          }
+
+          .desktop-only {
+            display: none !important;
+          }
+
+          .landing-mobile-actions {
+            display: flex;
+          }
+
+          .landing-hero {
+            padding: 100px 20px 100px;
+          }
+
+          .terminal-output {
+            font-size: 14px;
+          }
+
+          .plm-brand {
+            font-size: 16px;
+          }
+
+          .plm-brand-mark {
+            width: 32px;
+            height: 32px;
+          }
+
+          .chat-topbar {
+            padding: 12px 16px;
+          }
+
+          .chat-messages {
+            padding: 0 16px 20px;
+          }
+
           .chat-input-inner {
-            padding: 12px 14px 14px;
-            padding-left: max(14px, env(safe-area-inset-left));
-            padding-right: max(14px, env(safe-area-inset-right));
+            padding: 0 16px 16px;
           }
-          .chat-history {
-            padding: 10px 4px 10px;
-          }
+
           .chat-bubble {
-            max-width: 92%;
+            max-width: 90%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .modal-card {
+            padding: 24px 20px;
+          }
+
+          .pricing-modal-price .price-value {
+            font-size: 48px;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          *,
-          *::before,
-          *::after {
+          *, *::before, *::after {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
@@ -2154,7 +2493,7 @@ export default function Page() {
       />
 
       <div className="app-container">
-        <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg-0)' }}>
+        <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {!isAuthenticated ? (
             <LandingPage
               onShowPricing={() => setShowPricingModal(true)}
@@ -2164,27 +2503,32 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${ibmMono.className} chat-container`}>
-              <div className="chat-topbar">
+            <div className={`${ibmMono.className} chat-root`}>
+              <header className="chat-topbar">
                 <BrandLink variant="chat" />
 
-                <div className="chat-top-actions">
+                <nav className="chat-top-actions">
                   {hasActiveSubscription && (
-                    <button onClick={handleManageBilling} className="ibm-cta small secondary" type="button">
+                    <button onClick={handleManageBilling} className="btn-nav ghost" type="button">
                       Billing
                     </button>
                   )}
-                  <button onClick={handleSignOut} className="ibm-cta small secondary" type="button">
+                  <button onClick={handleSignOut} className="btn-nav ghost" type="button">
                     Log out
                   </button>
-                </div>
-              </div>
+                </nav>
+              </header>
 
               <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
                 {messages.length === 0 ? (
-                  <div className="chat-empty-content">
-                    <h2 className="chat-empty-title">Upload a photo or ask a question</h2>
-                    <p className="chat-empty-text">One-click photo checks for likely issues, or query the Washtenaw-focused database for a clear answer.</p>
+                  <div className="chat-empty-state">
+                    <div className="chat-empty-icon">
+                      <Icons.Camera />
+                    </div>
+                    <h2 className="chat-empty-title">Upload a photo for instant compliance check</h2>
+                    <p className="chat-empty-desc">
+                      Snap a photo of your kitchen, storage, or prep area. Our AI will identify potential violations before your next inspection.
+                    </p>
                   </div>
                 ) : (
                   <div className="chat-history">
@@ -2214,12 +2558,13 @@ export default function Page() {
 
                   {selectedImage && (
                     <div className="chat-attachment">
-                      <Icons.Camera />
-                      <span>Image attached</span>
+                      <div className="chat-attachment-info">
+                        <span className="chat-attachment-icon"><Icons.Camera /></span>
+                        <span>Image ready</span>
+                      </div>
                       <button
                         onClick={() => setSelectedImage(null)}
-                        className="chat-btn-icon"
-                        style={{ width: 32, height: 32, borderRadius: 10 }}
+                        className="chat-attachment-remove"
                         aria-label="Remove"
                         type="button"
                       >
@@ -2231,11 +2576,11 @@ export default function Page() {
                   <div className="chat-input-row">
                     <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 
-                    <button onClick={() => fileInputRef.current?.click()} className="chat-btn-icon" aria-label="Attach image" type="button">
+                    <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
                       <Icons.Camera />
                     </button>
 
-                    <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <form onSubmit={handleSend} className="chat-input-wrapper">
                       <textarea
                         ref={textAreaRef}
                         value={input}
@@ -2246,7 +2591,7 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Ask a question…"
+                        placeholder="Ask about regulations or describe what you see…"
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
@@ -2258,7 +2603,7 @@ export default function Page() {
                       />
 
                       <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className="chat-send-btn" aria-label="Send">
-                        {isSending ? <div className="chat-spinner" /> : <Icons.ArrowUp />}
+                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
