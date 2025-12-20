@@ -1,8 +1,9 @@
+// app/verify-email/page.js - IMPROVED: Show verification status
 'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Outfit, Inter } from 'next/font/google'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700', '800'] })
@@ -11,6 +12,7 @@ const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 export default function VerifyEmailPage() {
   const supabase = createClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -27,9 +29,10 @@ export default function VerifyEmailPage() {
         return
       }
 
+      // ✅ FIX: If email is verified, redirect to pricing
       if (user.email_confirmed_at) {
-        // Already verified, redirect home
-        router.push('/')
+        console.log('✅ Email already verified, redirecting to pricing')
+        router.push('/?showPricing=true&emailVerified=true')
         return
       }
 
@@ -113,8 +116,7 @@ export default function VerifyEmailPage() {
           <div className={`rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/70 ${inter.className}`}>
             <p className="mb-2">📧 <strong className="text-white/90">Check your email</strong></p>
             <p className="text-xs">
-              Click the verification link in your email to activate your account. 
-              The email may take a few minutes to arrive.
+              Click the verification link to activate your account and start your free trial.
             </p>
           </div>
 
@@ -142,7 +144,7 @@ export default function VerifyEmailPage() {
         </div>
 
         <div className={`mt-4 text-center text-xs text-white/40 ${inter.className}`}>
-          Already verified? <button onClick={() => router.push('/')} className="text-white/70 hover:text-white underline">Go to app</button>
+          After verifying, you'll be redirected to start your 7-day free trial
         </div>
       </div>
     </div>
