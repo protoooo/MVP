@@ -1,4 +1,5 @@
 // scripts/ingest-documents.js - COHERE VERSION
+// UPDATED with PDF coverage verification per Claude's recommendations
 import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
@@ -37,6 +38,9 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 const cohere = new CohereClient({ token: COHERE_KEY })
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+// Track low coverage PDFs for final summary
+const lowCoveragePDFs = []
 
 // Chunk text with overlap
 function chunkText(text, size = 1000, overlap = 150) {
@@ -189,6 +193,7 @@ function findPDFs() {
 }
 
 // Process one PDF with batch embedding
+// UPDATED with coverage verification per Claude's recommendations
 async function processPDF(file, fullPath, fileIndex, totalFiles) {
   console.log(`\n[${fileIndex + 1}/${totalFiles}] 📄 ${file}`)
   
@@ -205,6 +210,31 @@ async function processPDF(file, fullPath, fileIndex, totalFiles) {
       .trim()
     
     console.log(`   📊 ${parsed.numpages} pages, ${text.length.toLocaleString()} characters`)
+    
+    // NEW: Estimate coverage per Claude's recommendations
+    const avgCharsPerPage = text.length / parsed.numpages
+    const expectedCharsPerPage = 2000 // Typical for text-heavy PDF
+    const coverage = Math.min(100, (avgCharsPerPage / expectedCharsPerPage) * 100)
+    
+    console.log(`   📈 Estimated text extraction: ${coverage.toFixed(0)}%`)
+    
+    if (coverage < 50) {
+      console.log(`   ⚠️  WARNING: Low text extraction - might be image-based PDF or have complex formatting`)
+      lowCoveragePDFs.push({
+        file,
+        pages: parsed.numpages,
+        chars: text.length,
+        coverage: coverage.toFixed(0)
+      })
+    } else if (coverage < 70) {
+      console.log(`   ⚠️  NOTICE: Below average text extraction - some content may be missed`)
+      lowCoveragePDFs.push({
+        file,
+        pages: parsed.numpages,
+        chars: text.length,
+        coverage: coverage.toFixed(0)
+      })
+    }
     
     if (text.length < 100) {
       console.log(`   ⚠️ Too little text, skipping`)
@@ -237,7 +267,8 @@ async function processPDF(file, fullPath, fileIndex, totalFiles) {
             chunk_index: batchStart + idx,
             total_chunks: chunks.length,
             county: "washtenaw",
-            page_estimate: Math.floor(((batchStart + idx) / chunks.length) * parsed.numpages) + 1
+            page_estimate: Math.floor(((batchStart + idx) / chunks.length) * parsed.numpages) + 1,
+            extraction_coverage: coverage.toFixed(0) // NEW: Track coverage in metadata
           }
         }))
         
@@ -324,6 +355,19 @@ async function run() {
   console.log(`Failed chunks: ${totalFailed}`)
   console.log(`Duration: ${duration}s`)
   console.log(`Rate: ${(totalSuccess / parseFloat(duration)).toFixed(2)} chunks/sec`)
+  
+  // NEW: Report low coverage PDFs per Claude's recommendations
+  if (lowCoveragePDFs.length > 0) {
+    console.log("\n" + "=" .repeat(70))
+    console.log("⚠️  LOW COVERAGE PDFs - May Need OCR or Re-sourcing")
+    console.log("=" .repeat(70))
+    lowCoveragePDFs.forEach(pdf => {
+      console.log(`   ${pdf.file}`)
+      console.log(`      Pages: ${pdf.pages}, Chars: ${pdf.chars.toLocaleString()}, Coverage: ${pdf.coverage}%`)
+    })
+    console.log("\nThese PDFs may be image-based or have complex formatting.")
+    console.log("Consider using OCR tools or obtaining text-based versions.")
+  }
   
   const { count } = await supabase
     .from('documents')
