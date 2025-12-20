@@ -640,6 +640,9 @@ export default function Page() {
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
 
+  // ✅ ADD: subscription state
+  const [subscription, setSubscription] = useState(null)
+
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authInitialMode, setAuthInitialMode] = useState('signin')
   const [showPricingModal, setShowPricingModal] = useState(false)
@@ -715,6 +718,7 @@ export default function Page() {
     if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
 
+  // ✅ UPDATED: check email verification + policy acceptance + subscription; store sub; show pricing after verify redirect param
   useEffect(() => {
     let isMounted = true
 
@@ -723,6 +727,7 @@ export default function Page() {
       setSession(s)
 
       if (!s) {
+        setSubscription(null)
         setHasActiveSubscription(false)
         setShowPricingModal(false)
         setIsLoading(false)
@@ -730,6 +735,17 @@ export default function Page() {
       }
 
       try {
+        // ✅ FIX: Check if email is verified
+        if (!s.user.email_confirmed_at) {
+          console.log('❌ Email not verified - redirecting to verify page')
+          setSubscription(null)
+          setHasActiveSubscription(false)
+          setIsLoading(false)
+          router.replace('/verify-email')
+          return
+        }
+
+        // Check if user accepted terms
         const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('accepted_terms, accepted_privacy')
@@ -737,6 +753,7 @@ export default function Page() {
           .maybeSingle()
 
         if (!profile) {
+          setSubscription(null)
           setHasActiveSubscription(false)
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -745,6 +762,7 @@ export default function Page() {
 
         const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
         if (!accepted) {
+          setSubscription(null)
           setHasActiveSubscription(false)
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -753,6 +771,7 @@ export default function Page() {
 
         if (profileError) {
           console.error('❌ Profile check error:', profileError)
+          setSubscription(null)
           setHasActiveSubscription(false)
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -760,22 +779,27 @@ export default function Page() {
         }
       } catch (e) {
         console.error('❌ Policy check exception:', e)
+        setSubscription(null)
         setHasActiveSubscription(false)
         setIsLoading(false)
         router.replace('/accept-terms')
         return
       }
 
+      // ✅ FIX: Check for active subscription
       let active = false
+      let subData = null
       try {
         const { data: sub } = await supabase
           .from('subscriptions')
-          .select('status,current_period_end')
+          .select('status,current_period_end,trial_end')
           .eq('user_id', s.user.id)
           .in('status', ['active', 'trialing'])
           .order('current_period_end', { ascending: false })
           .limit(1)
           .maybeSingle()
+
+        subData = sub
 
         if (sub && sub.current_period_end) {
           const end = new Date(sub.current_period_end)
@@ -786,8 +810,20 @@ export default function Page() {
       }
 
       if (!isMounted) return
+      setSubscription(subData)
       setHasActiveSubscription(active)
       setIsLoading(false)
+
+      // ✅ FIX: If email just verified, show pricing modal
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search)
+        if (urlParams.get('emailVerified') === 'true' && !active) {
+          console.log('📧 Email verified - showing pricing modal')
+          setShowPricingModal(true)
+          // Clean URL
+          window.history.replaceState({}, '', '/')
+        }
+      }
     }
 
     async function init() {
@@ -2337,6 +2373,29 @@ export default function Page() {
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
+                  {/* ✅ Trial/Pro badge (before gear) */}
+                  {session && subscription && (
+                    <div
+                      style={{
+                        marginRight: '12px',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        letterSpacing: '0.02em',
+                        textTransform: 'uppercase',
+                        background:
+                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                        color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
+                        border: `1px solid ${
+                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'
+                        }`,
+                      }}
+                    >
+                      {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
+                    </div>
+                  )}
+
                   <div className="chat-settings-wrap" ref={settingsRef}>
                     <button
                       type="button"
@@ -2350,21 +2409,24 @@ export default function Page() {
 
                     {showSettingsMenu && (
                       <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                        {hasActiveSubscription && (
-                          <button
-                            type="button"
-                            className="chat-settings-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowSettingsMenu(false)
+                        {/* ✅ FIX: Show billing for ALL authenticated users */}
+                        <button
+                          type="button"
+                          className="chat-settings-item"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            if (hasActiveSubscription) {
                               handleManageBilling()
-                            }}
-                          >
-                            Billing
-                          </button>
-                        )}
+                            } else {
+                              setShowPricingModal(true)
+                            }
+                          }}
+                        >
+                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                        </button>
 
-                        {hasActiveSubscription && <div className="chat-settings-sep" />}
+                        <div className="chat-settings-sep" />
 
                         <button
                           type="button"
@@ -2497,7 +2559,9 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
+                  <p className="chat-disclaimer">
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
+                  </p>
                 </div>
               </div>
             </div>
