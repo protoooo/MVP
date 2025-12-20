@@ -1,9 +1,10 @@
+// app/api/contact/route.js - FIXED: support@protocollm.org
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { verifyCaptcha } from '@/lib/captchaVerification'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
-const SUPPORT_EMAIL = 'protocolLM <hello@protocollm.org>'
+const SUPPORT_EMAIL = 'protocolLM <support@protocollm.org>'
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'austinrnorthrop@gmail.com'
 
 export const dynamic = 'force-dynamic'
