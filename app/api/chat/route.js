@@ -12,6 +12,7 @@ import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics } from '@/lib/usage'
 import { validateSingleLocation, logSessionActivity } from '@/lib/licenseValidation'
+import { getUserMemory, updateMemory, generateGreeting, buildMemoryContext } from '@/lib/conversationMemory'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
