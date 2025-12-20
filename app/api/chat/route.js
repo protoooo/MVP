@@ -1,6 +1,6 @@
 // app/api/chat/route.js
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
-// Grounded in 24 indexed documents. Concise. Actionable. Professional.
+// UPDATED: Integrated license validation for multi-device, single-location enforcement
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -9,7 +9,7 @@ import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics } from '@/lib/usage'
-import { validateSingleLocation, logSessionActivity } from '@/lib/licenseValidation'
+import { validateSingleLocation } from '@/lib/licenseValidation'
 import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
 
 export const dynamic = 'force-dynamic'
@@ -347,7 +347,6 @@ function renderAuditOutput(payload, opts = {}) {
   const findings = Array.isArray(payload?.findings) ? payload.findings : []
   const questions = Array.isArray(payload?.questions) ? payload.questions : []
 
-  // CLEAR - everything looks good
   if (status === 'clear' || findings.length === 0) {
     const base = 'No violations detected.'
     if (questions.length > 0 && fullAudit) {
@@ -357,7 +356,6 @@ function renderAuditOutput(payload, opts = {}) {
     return sanitizeOutput(base)
   }
 
-  // FINDINGS
   const lines = ['Potential issues found:\n']
 
   for (const f of findings.slice(0, maxItems)) {
@@ -455,6 +453,18 @@ function buildCacheStats(usage) {
 }
 
 // ============================================================================
+// HELPER: Extract session info from request
+// ============================================================================
+
+function getSessionInfo(request) {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown'
+  const userAgent = request.headers.get('user-agent') || 'unknown'
+  
+  return { ip, userAgent }
+}
+
+// ============================================================================
 // MAIN HANDLER
 // ============================================================================
 
@@ -501,7 +511,7 @@ export async function POST(request) {
     const maxFindings = fullAudit ? 8 : 4
 
     // ========================================================================
-    // AUTH + MEMORY
+    // AUTH + LICENSE VALIDATION
     // ========================================================================
 
     let userId = null
@@ -527,43 +537,83 @@ export async function POST(request) {
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
-      if (userId && data?.user && !data.user.email_confirmed_at) {
+      if (!userId || !data?.user) {
+        return NextResponse.json({
+          error: 'Authentication required.',
+          code: 'UNAUTHORIZED',
+        }, { status: 401 })
+      }
+
+      // ✅ Email verification check
+      if (!data.user.email_confirmed_at) {
         return NextResponse.json({
           error: 'Please verify your email before using protocolLM.',
           code: 'EMAIL_NOT_VERIFIED',
         }, { status: 403 })
       }
 
-      if (userId) {
-        const sessionInfo = {
-          ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
-          userAgent: request.headers.get('user-agent') || 'unknown',
+      // ✅ LICENSE VALIDATION: Multi-device, single-location enforcement
+      const sessionInfo = getSessionInfo(request)
+      
+      logger.info('Validating license', {
+        userId,
+        ip: sessionInfo.ip.substring(0, 12) + '***',
+        userAgent: sessionInfo.userAgent.substring(0, 50)
+      })
+
+      const locationCheck = await validateSingleLocation(userId, sessionInfo)
+
+      if (!locationCheck.valid) {
+        logger.security('License validation failed', {
+          userId,
+          code: locationCheck.code,
+          error: locationCheck.error,
+          ip: sessionInfo.ip.substring(0, 12) + '***'
+        })
+
+        // Return specific error codes for different violation types
+        if (locationCheck.code === 'MULTI_LOCATION_ABUSE') {
+          return NextResponse.json({
+            error: locationCheck.error,
+            code: 'MULTI_LOCATION_ABUSE',
+            message: 'This license appears to be shared across multiple physical locations. Each location requires its own license ($100/month per location). Contact support@protocollm.org for multi-location pricing.'
+          }, { status: 403 })
         }
 
-        const locationCheck = await validateSingleLocation(userId, sessionInfo)
-
-        if (!locationCheck.valid) {
-          if (locationCheck.code === 'LOCATION_MISMATCH') {
-            return NextResponse.json({ error: locationCheck.error, code: 'LOCATION_MISMATCH' }, { status: 403 })
-          }
-          if (locationCheck.code === 'MULTI_LOCATION_ACCESS') {
-            return NextResponse.json({ error: locationCheck.error, code: 'MULTI_LOCATION_ACCESS' }, { status: 403 })
-          }
-          if (locationCheck.needsRegistration) {
-            return NextResponse.json({ error: 'Location registration required', code: 'LOCATION_NOT_REGISTERED' }, { status: 403 })
-          }
+        if (locationCheck.code === 'LOCATION_LIMIT_EXCEEDED') {
+          return NextResponse.json({
+            error: locationCheck.error,
+            code: 'LOCATION_LIMIT_EXCEEDED',
+            message: 'This license is being used from too many different locations. Each restaurant location requires its own license. Contact support@protocollm.org if you need help.'
+          }, { status: 403 })
         }
 
-        await logSessionActivity(userId, sessionInfo)
+        // Generic location validation failure
+        return NextResponse.json({
+          error: locationCheck.error || 'Location validation failed',
+          code: 'LOCATION_VALIDATION_FAILED'
+        }, { status: 403 })
+      }
 
-        try {
-          userMemory = await getUserMemory(userId)
-        } catch (e) {
-          logger.warn('Memory load failed', { error: e?.message })
-        }
+      // ✅ Location validation passed
+      logger.info('License validated', {
+        userId,
+        uniqueLocationsUsed: locationCheck.uniqueLocationsUsed,
+        locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***'
+      })
+
+      // Load user memory
+      try {
+        userMemory = await getUserMemory(userId)
+      } catch (e) {
+        logger.warn('Memory load failed', { error: e?.message })
       }
     } catch (e) {
-      logger.warn('Auth check failed', { error: e?.message })
+      logger.error('Auth/license check failed', { error: e?.message })
+      return NextResponse.json({
+        error: 'Authentication error. Please sign in again.',
+        code: 'AUTH_ERROR'
+      }, { status: 401 })
     }
 
     const anthropic = await getAnthropicClient()
