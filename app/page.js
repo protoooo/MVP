@@ -476,9 +476,9 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         'Unlimited usage (questions + photos)',
         'Haiku — fast answers for daily checks',
         'Best for quick scans and on-the-line clarity',
-        'Email support'
+        'Email support',
       ],
-      loadingKey: 'starter'
+      loadingKey: 'starter',
     },
     {
       name: 'Professional',
@@ -488,10 +488,10 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         'Unlimited usage (questions + photos)',
         'Sonnet — balanced, thorough responses',
         'Sharper guidance for tougher compliance calls',
-        'Priority support'
+        'Priority support',
       ],
       popular: true,
-      loadingKey: 'pro'
+      loadingKey: 'pro',
     },
     {
       name: 'Enterprise',
@@ -501,10 +501,10 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         'Unlimited usage (questions + photos)',
         'Opus — advanced reasoning for best answers',
         'Ideal for multi-location playbooks and reviews',
-        'Dedicated multi-location support'
+        'Dedicated multi-location support',
       ],
-      loadingKey: 'enterprise'
-    }
+      loadingKey: 'enterprise',
+    },
   ]
 
   return (
@@ -538,32 +538,32 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                   borderRadius: 'var(--radius-md)',
                   padding: '24px',
                   position: 'relative',
-                  color: tier.popular ? 'white' : 'var(--ink-0)'
+                  color: tier.popular ? 'white' : 'var(--ink-0)',
                 }}
               >
                 {tier.popular && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-10px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'var(--accent)',
-                    color: 'white',
-                    padding: '4px 12px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase'
-                  }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-10px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: 'var(--accent)',
+                      color: 'white',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     Recommended
                   </div>
                 )}
 
                 <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>
-                    {tier.name}
-                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>{tier.name}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
                     <span style={{ fontSize: '36px', fontWeight: '700' }}>${tier.price}</span>
                     <span style={{ fontSize: '14px', opacity: 0.7 }}>/month</span>
@@ -589,7 +589,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                     cursor: loading ? 'not-allowed' : 'pointer',
                     opacity: loading ? 0.5 : 1,
                     marginBottom: '16px',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   {loading === tier.loadingKey && <span className="spinner" />}
@@ -602,23 +602,16 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                     paddingTop: '16px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px'
+                    gap: '10px',
                   }}
                 >
+                  {/* ✅ FIX: consistent checkmark/text spacing using grid + fixed check column */}
                   {tier.features.map((feature, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '8px',
-                        fontSize: '13px',
-                        lineHeight: 1.5,
-                        opacity: 0.92
-                      }}
-                    >
-                      <span style={{ fontSize: '14px', lineHeight: '20px' }}>✓</span>
-                      <span style={{ display: 'block' }}>{feature}</span>
+                    <div key={idx} className="pricing-feature">
+                      <span className="pricing-feature-check" aria-hidden="true">
+                        ✓
+                      </span>
+                      <span className="pricing-feature-text">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -1746,6 +1739,32 @@ export default function Page() {
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 100%;
+        }
+
+        /* ✅ Pricing feature rows (FIX spacing between ✓ and text) */
+        .pricing-feature {
+          display: grid;
+          grid-template-columns: 16px 1fr;
+          column-gap: 10px;
+          align-items: start;
+          font-size: 13px;
+          line-height: 1.5;
+          opacity: 0.92;
+        }
+
+        .pricing-feature-check {
+          width: 16px;
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          line-height: 1;
+          margin-top: 2px;
+          font-size: 14px;
+        }
+
+        .pricing-feature-text {
+          display: block;
+          min-width: 0;
         }
 
         /* Pricing modal */
