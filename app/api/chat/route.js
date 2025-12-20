@@ -42,9 +42,9 @@ const VISION_TIMEOUT_MS = 20000
 const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
 
-// Retrieval config
-const TOPK_PER_QUERY = 18
-const MAX_DOCS_FOR_CONTEXT = 28
+// Retrieval config - UPDATED per Claude's recommendations
+const TOPK_PER_QUERY = 25  // up from 18
+const MAX_DOCS_FOR_CONTEXT = 40  // up from 28
 const PER_SOURCE_CAP = 4
 
 const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
@@ -94,6 +94,32 @@ function clampShort(s, max = 140) {
   const x = safeLine(s || '')
   if (!x) return ''
   return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
+}
+
+// ============================================================================
+// KEYWORD EXTRACTION - NEW per Claude's recommendations
+// ============================================================================
+
+function extractSearchKeywords(text) {
+  const keywords = []
+  
+  // Common compliance topics
+  const topics = [
+    'temperature', 'cooling', 'reheating', 'storage', 'cross contamination',
+    'hand washing', 'gloves', 'sanitizer', 'date marking', 'labels',
+    'pest', 'cleaning', 'surfaces', 'equipment', 'utensils',
+    'thermometer', 'food safety', 'violation', 'inspection', 'permit',
+    'refrigeration', 'hot holding', 'cold holding', 'thawing', 'cooking',
+    'raw meat', 'ready to eat', 'contamination', 'employee health',
+    'chemicals', 'toxic', 'allergen', 'sink', 'drainage', 'ventilation'
+  ]
+  
+  const lower = text.toLowerCase()
+  topics.forEach(topic => {
+    if (lower.includes(topic)) keywords.push(topic)
+  })
+  
+  return keywords
 }
 
 // ============================================================================
@@ -198,7 +224,7 @@ function stableSortByScore(a, b) {
   return pa - pb
 }
 
-function diversifyBySource(docs, { maxTotal = 28, perSourceCap = 4 } = {}) {
+function diversifyBySource(docs, { maxTotal = 40, perSourceCap = 4 } = {}) {
   const bySource = new Map()
 
   for (const d of docs || []) {
@@ -437,6 +463,23 @@ function renderGuidanceOutput(payload) {
 }
 
 // ============================================================================
+// USER-FRIENDLY ERROR MESSAGES - NEW per Claude's recommendations
+// ============================================================================
+
+function getUserFriendlyErrorMessage(errorMessage) {
+  if (errorMessage === 'VISION_TIMEOUT') {
+    return 'Photo analysis took too long. Try a smaller image or wait 10 seconds and try again.'
+  } else if (errorMessage === 'RETRIEVAL_TIMEOUT') {
+    return 'Document search timed out. Please try again.'
+  } else if (errorMessage === 'ANSWER_TIMEOUT') {
+    return 'Response generation timed out. System may be busy - try again in 10 seconds.'
+  } else if (errorMessage === 'EMBEDDING_TIMEOUT') {
+    return 'Search processing timed out. Please try again.'
+  }
+  return 'Unable to process request. Please try again.'
+}
+
+// ============================================================================
 // LOGGING
 // ============================================================================
 
@@ -633,7 +676,7 @@ export async function POST(request) {
     const searchDocumentsFn = await getSearchDocuments()
 
     // ========================================================================
-    // VISION SCAN (if image) — NO HARDCODED "HARD FOCUS" LIST
+    // VISION SCAN (if image) — UPDATED per Claude's recommendations
     // ========================================================================
 
     let vision = {
@@ -659,18 +702,37 @@ export async function POST(request) {
                     type: 'text',
                     text: `Scan this food service photo for potential compliance issues.
 
+You are analyzing this for a Washtenaw County, Michigan restaurant that wants to catch violations BEFORE the health inspector does.
+
 Rules:
-- Only list observations that could matter for compliance.
-- Do not narrate the scene.
-- If you're unsure, include it but mark it as uncertain/possible.
-- Provide search_terms that will help retrieve the most relevant regulation excerpts from the knowledge base.
+- List EVERYTHING that might be a problem, even if you're not 100% certain
+- Focus on the Top 10 violation categories:
+  1. Temperature control (coolers, hot holding)
+  2. Cross contamination (raw/ready-to-eat separation)
+  3. Hand hygiene (sinks, soap, towels)
+  4. Food storage (floor clearance, labeling, date marking)
+  5. Cleaning/sanitizing (equipment, utensils, surfaces)
+  6. Pest evidence (droppings, nests, access points)
+  7. Employee health (bare hand contact, gloves misuse)
+  8. Chemical storage (toxics near food)
+  9. Equipment maintenance (broken seals, rust, damage)
+  10. Facility sanitation (floors, walls, ceilings, drains)
+
+- If something MIGHT be a violation, flag it. The user wants to know.
+- Don't narrate the scene. Only list actionable compliance observations.
+- Provide search_terms that will pull the most relevant regulation excerpts.
 
 Return JSON only:
 {
-  "summary": "one sentence",
-  "search_terms": "keywords for document lookup",
-  "issues": [{"issue": "short description of the potential issue", "why": "why it matters"}],
-  "facts": ["observable compliance-relevant facts (no fluff)"]
+  "summary": "one sentence overview",
+  "search_terms": "keywords for document lookup (e.g., 'temperature control cooler storage 41F')",
+  "issues": [
+    {
+      "issue": "specific observation (e.g., 'uncovered food containers in walk-in cooler')",
+      "why": "potential violation (e.g., 'could allow contamination, might violate covered storage rules')"
+    }
+  ],
+  "facts": ["observable compliance-relevant details (no fluff)"]
 }`,
                   },
                 ],
@@ -695,7 +757,7 @@ Return JSON only:
             vision.issues = parsedVision.issues
               .map((i) => ({ issue: safeLine(i?.issue || ''), why: safeLine(i?.why || '') }))
               .filter((i) => i.issue)
-              .slice(0, 6)
+              .slice(0, 8)  // Increased from 6 to catch more issues
           }
 
           if (Array.isArray(parsedVision.facts)) {
@@ -704,11 +766,19 @@ Return JSON only:
         }
       } catch (e) {
         logger.warn('Vision scan failed', { error: e?.message })
+        // Return user-friendly error for vision timeout
+        if (e?.message === 'VISION_TIMEOUT') {
+          return NextResponse.json(
+            { error: getUserFriendlyErrorMessage('VISION_TIMEOUT') },
+            { status: 408 }
+          )
+        }
       }
     }
 
     // ========================================================================
-    // DOCUMENT RETRIEVAL — NO HARDCODED BASELINE KEYWORD PACK
+    // DOCUMENT RETRIEVAL — UPDATED per Claude's recommendations
+    // Multi-angle retrieval for better coverage of 24 PDFs
     // ========================================================================
 
     const visionContext = [
@@ -720,15 +790,32 @@ Return JSON only:
       .join(' ')
       .slice(0, 700)
 
+    // Extract keywords from user input for focused searches
+    const userKeywords = extractSearchKeywords(effectivePrompt)
+    const visionKeywords = vision.issues.map((i) => i.issue).join(' ').slice(0, 200)
+
+    // Build multiple search queries for better coverage
     const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
 
-    const queryIssues = vision.issues.map((i) => i.issue).join(' ').slice(0, 400)
+    const queryIssues = vision.issues.slice(0, 2).map((i) => i.issue).join(' ').slice(0, 400)
 
-    const queries = [queryMain]
-    if (queryIssues) queries.push(queryIssues)
+    // UPDATED: Multi-angle retrieval queries
+    const queries = [
+      queryMain,  // User's question + vision scan summary
+      queryIssues,  // Specific issues detected in photo
+      // Add targeted searches for better coverage
+      `${effectivePrompt.slice(0, 300)} Washtenaw County Michigan regulations`,
+      `${visionContext.slice(0, 300)} food safety violations`,
+      userKeywords.slice(0, 5).join(' ') + ' Washtenaw County food code',
+      visionKeywords,  // Top issues as search terms
+      'Priority violations Michigan food code',  // Broad safety net
+    ]
+      .filter(Boolean)
+      .filter((q) => q.length > 10)  // Remove empty/short queries
+      .slice(0, 5)  // Max 5 queries
 
     let allDocs = []
     try {
@@ -745,6 +832,12 @@ Return JSON only:
       allDocs = diversifyBySource(allDocs, { maxTotal: MAX_DOCS_FOR_CONTEXT, perSourceCap: PER_SOURCE_CAP })
     } catch (e) {
       logger.warn('Retrieval failed', { error: e?.message })
+      if (e?.message === 'RETRIEVAL_TIMEOUT') {
+        return NextResponse.json(
+          { error: getUserFriendlyErrorMessage('RETRIEVAL_TIMEOUT') },
+          { status: 408 }
+        )
+      }
     }
 
     const ctx = buildExcerptContext(allDocs, { prefix: 'DOC', maxChars: 34000, startAt: 1 })
@@ -760,12 +853,34 @@ ${ctx.contextText || 'No documents retrieved.'}`
     } catch {}
 
     // ========================================================================
-    // SYSTEM PROMPT
+    // SYSTEM PROMPT — UPDATED per Claude's recommendations
+    // Added Washtenaw-specific context
     // ========================================================================
 
     const systemPrompt = `You are protocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-${memoryContext ? `${memoryContext}\n\n` : ''}Your knowledge base is the provided reference excerpts. Do not assume anything outside those excerpts.
+${memoryContext ? `${memoryContext}\n\n` : ''}
+
+JURISDICTION CONTEXT:
+- You enforce the Michigan Modified Food Code as adopted by Washtenaw County
+- Washtenaw County Environmental Health Division performs inspections
+- Violations follow Michigan Administrative Procedures Act (3-strike process before license action)
+
+VIOLATION CLASSIFICATION (Washtenaw County):
+- P (Priority): Direct food safety hazard. Must fix IMMEDIATELY at inspection or within 10 days.
+  Examples: Improper food temps, no handwashing, cross contamination, pest presence
+- Pf (Priority Foundation): Supports priority items. Fix within 10 days.
+  Examples: No thermometer, missing sanitizer test strips, no soap at hand sink
+- C (Core): General sanitation/maintenance. Fix within 90 days.
+  Examples: Dirty floors, broken ceiling tiles, improper lighting
+
+ENFORCEMENT ESCALATION (per Washtenaw County):
+1. Routine inspection identifies violation → Opportunity #1 to fix
+2. Follow-up fails → Office Conference with health department
+3. Still not fixed → Informal Hearing
+4. Still not fixed → License limited/suspended/revoked + possible Formal Hearing appeal
+
+Your knowledge base is the provided reference excerpts. Do not assume anything outside those excerpts.
 
 RULES:
 1. Be concise. Short sentences. No fluff.
@@ -777,12 +892,7 @@ RULES:
 7. If the photo looks compliant, say: "No violations detected." and stop.
 8. Don't narrate the scene. Get to the point.
 9. Don't ask if this is residential/commercial. Assume food service.
-10. Do not prioritize any one document. Use whichever excerpt best supports the finding.
-
-VIOLATION CLASSES:
-- P (Priority): Direct food safety hazard. Fix immediately.
-- Pf (Priority Foundation): Supports priority items. Fix within 10 days.
-- C (Core): General sanitation. Fix within 90 days.
+10. Prioritize Washtenaw County documents over general guidance.
 
 OUTPUT FORMAT (JSON only):
 
@@ -885,6 +995,11 @@ Max findings: ${maxFindings}`
       if (cacheStats) logger.info('Cache stats', cacheStats)
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
+      // Return user-friendly error message
+      return NextResponse.json(
+        { error: getUserFriendlyErrorMessage(e?.message) },
+        { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
+      )
     }
 
     // ========================================================================
@@ -972,6 +1087,7 @@ Max findings: ${maxFindings}`
       status,
       durationMs: Date.now() - startedAt,
       docsRetrieved: allDocs.length,
+      queriesUsed: queries.length,
       fullAudit,
       includeFines,
       cacheHit: cacheStats?.cache_hit || false,
@@ -993,6 +1109,7 @@ Max findings: ${maxFindings}`
           status,
           fullAudit,
           docsRetrieved: allDocs.length,
+          queriesUsed: queries.length,
           durationMs: Date.now() - startedAt,
           cache: cacheStats || null,
         },
