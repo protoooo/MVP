@@ -1,5 +1,9 @@
 // app/api/chat/route.js
-// FINAL-FORM: Structured, non-scare output. No sources shown. No C/P/Pf letters shown.
+// FINAL-FORM: Violation-focused, probability-based, no obvious scene narration.
+// - No "welcome/greeting" messages.
+// - No "From the photo:" obvious observations shown to the user.
+// - Quick scan (default): only flag issues that are actually supported + likely visible.
+// - Full audit (opt-in): allows targeted follow-up photo requests / clarifying questions.
 // - Findings must be excerpt-backed.
 // - Enforcement/fines only if user asks or includeLegal flag.
 // - Criminal penalties only if user explicitly asks.
@@ -12,7 +16,7 @@ import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics } from '@/lib/usage'
 import { validateSingleLocation, logSessionActivity } from '@/lib/licenseValidation'
-import { getUserMemory, updateMemory, generateGreeting, buildMemoryContext } from '@/lib/conversationMemory'
+import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -49,7 +53,6 @@ const TOPK = 18
 const PINNED_TOPK = 8
 
 // If your corpus has a concept of global/statewide docs, these may work.
-// If not, they’ll just fail harmlessly (caught).
 const GLOBAL_FALLBACK_KEYS = ['global', 'michigan', 'state', 'all']
 
 // Pinned queries:
@@ -95,6 +98,7 @@ function sanitizePlainText(text) {
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
+  // strip numbered prefixes if model sneaks them in
   out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
 
   const HARD_LIMIT = 2600
@@ -147,36 +151,6 @@ function getLastUserText(messages) {
     }
   }
   return ''
-}
-
-function countUserTurns(messages) {
-  if (!Array.isArray(messages)) return 0
-  let n = 0
-  for (const m of messages) if (m?.role === 'user') n++
-  return n
-}
-
-// ✅ Treat "first turn" as the first user message in the chat session.
-// In your client, the first API call typically sends `[userMessage]` (length 1, not 0).
-function isFirstTurn(messages) {
-  return countUserTurns(messages) <= 1
-}
-
-// ✅ "First time ever" detection. Works with many possible memory shapes.
-function isMemoryEmpty(m) {
-  if (!m) return true
-  if (typeof m === 'string') return m.trim().length === 0
-
-  if (typeof m.messageCount === 'number' && m.messageCount > 0) return false
-  if (typeof m.totalTurns === 'number' && m.totalTurns > 0) return false
-  if (typeof m.totalMessages === 'number' && m.totalMessages > 0) return false
-  if (typeof m.summary === 'string' && m.summary.trim().length > 0) return false
-  if (Array.isArray(m.recentTurns) && m.recentTurns.length > 0) return false
-  if (Array.isArray(m.history) && m.history.length > 0) return false
-  if (Array.isArray(m.memories) && m.memories.length > 0) return false
-
-  if (typeof m === 'object' && Object.keys(m).length > 0) return false
-  return true
 }
 
 function wantsFullAudit(text) {
@@ -330,7 +304,6 @@ function classLabel(cls) {
 }
 
 function classMeaning(cls) {
-  // From Washtenaw Violation Types: P reduces illness hazard; Pf supports P; C general sanitation.
   if (cls === 'P') return 'Directly reduces a foodborne illness hazard.'
   if (cls === 'Pf') return 'Supports Priority compliance (supplies, equipment, facilities, programs).'
   if (cls === 'C') return 'General sanitation and facility maintenance.'
@@ -356,6 +329,45 @@ function pickSourcesFromIds(sourceIds, excerptIndex) {
   return used
 }
 
+function clampShort(s, max = 160) {
+  const x = safeLine(s || '')
+  if (!x) return ''
+  return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
+}
+
+// Remove “scene narration” openers that create liability and feel like obvious observations.
+function isSceneNarration(line) {
+  const t = safeLine(line || '').toLowerCase()
+  if (!t) return false
+  return (
+    t.startsWith('welcome') ||
+    t.startsWith('i can see') ||
+    t.startsWith('i see ') ||
+    t.startsWith('from the photo') ||
+    t.includes('in the photo') ||
+    t.includes('pictured') ||
+    t.includes('looks like you have') ||
+    t.includes('your kitchen') ||
+    t.includes('your sink')
+  )
+}
+
+function normalizeOpeningLine(line, { hasImage, hasFindings } = {}) {
+  const l = safeLine(line || '')
+  if (!l) {
+    if (hasImage && hasFindings) return 'Here are the inspection-relevant issues most likely to matter.'
+    if (hasImage && !hasFindings) return 'No obvious inspection issues are visible in this photo.'
+    return 'Here is the inspection-relevant guidance.'
+  }
+  if (isSceneNarration(l)) {
+    if (hasImage && hasFindings) return 'Here are the inspection-relevant issues most likely to matter.'
+    if (hasImage && !hasFindings) return 'No obvious inspection issues are visible in this photo.'
+    return 'Here is the inspection-relevant guidance.'
+  }
+  return l
+}
+
+// Targeted “next photo” / “do now” blocks (only used in full audit).
 function renderDoNowBlock(doNow, photoRequests) {
   const dn = Array.isArray(doNow) ? doNow.map(safeLine).filter(Boolean) : []
   const pr = Array.isArray(photoRequests) ? photoRequests.map(safeLine).filter(Boolean) : []
@@ -374,7 +386,6 @@ function renderDoNowBlock(doNow, photoRequests) {
 }
 
 // Enforcement/fines: factual, optional, non-scare.
-// (Derived from Washtenaw Enforcement Action + Act 92 admin fine section.)
 function renderLegalContextBlock({ includeLegal = false, includeCriminal = false } = {}) {
   if (!includeLegal) return ''
 
@@ -385,104 +396,118 @@ function renderLegalContextBlock({ includeLegal = false, includeCriminal = false
   ]
 
   if (includeCriminal) {
-    lines.push('- Act 92 also contains criminal penalties for certain violations (misdemeanor/felony language). If you want that breakdown, say: "show criminal penalties".')
+    lines.push('- Act 92 also contains criminal penalties for certain violations. If you want that breakdown, say: "show criminal penalties".')
   }
 
   return sanitizePlainText(lines.join('\n'))
 }
 
-function clampShort(s, max = 160) {
-  const x = safeLine(s || '')
-  if (!x) return ''
-  return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
-}
-
-// User-facing rendering: no sources, no excerpt IDs, no letter classes.
-function renderAuditPlainText(payload, maxItems, includeLegal = false, includeCriminal = false) {
-  const opening = sanitizePlainText(payload?.opening_line || '')
+// User-facing rendering: violation-focused. No scene description. No sources. No excerpt IDs.
+function renderAuditPlainText(payload, { maxItems, includeLegal = false, includeCriminal = false, fullAudit = false } = {}) {
   const auditStatus = safeLine(payload?.audit_status || 'unknown')
-
-  // Clear: only a positive line. Nothing else.
-  if (auditStatus === 'clear') {
-    return sanitizePlainText(opening || 'Everything looks great here. Great job.')
-  }
-
-  const observations = Array.isArray(payload?.observations) ? payload.observations : []
-  const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
-  const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
   const findings = Array.isArray(payload?.findings) ? payload.findings : []
   const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
+  const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
+  const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
 
+  // Clear: short + non-absolute
+  if (auditStatus === 'clear') {
+    const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: false })
+    return sanitizePlainText(opening || 'No obvious inspection issues are visible in this photo.')
+  }
+
+  // Needs info (full audit only): no scene recap, just what to verify next.
+  if (auditStatus === 'needs_info' || findings.length === 0) {
+    const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: false })
+    const out = []
+    out.push(opening || 'No clear inspection issue can be confirmed from this photo alone.')
+
+    if (fullAudit) {
+      const block = renderDoNowBlock(doNow, photoRequests)
+      if (block) {
+        out.push('')
+        out.push(block)
+      }
+
+      if (questions.length > 0) {
+        out.push('')
+        out.push('To confirm:')
+        for (const q of questions.slice(0, 3)) {
+          const qq = clampShort(q, 180)
+          if (!qq) continue
+          out.push(`- ${qq}`)
+        }
+      }
+    } else {
+      out.push('')
+      out.push('Tip: say "full audit" if you want me to request the exact close-ups needed to verify hidden requirements.')
+    }
+
+    return sanitizePlainText(out.join('\n'))
+  }
+
+  // Findings
+  const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: true })
   const out = []
-  out.push(opening || 'Here is what I can tell from what was provided.')
+  out.push(opening || 'Here are the inspection-relevant issues most likely to matter.')
 
-  if (observations.length) {
+  out.push('')
+  out.push('Potential inspection issues:')
+
+  for (const f of findings.slice(0, maxItems || 4)) {
+    const cls = normalizeClass(f?.class)
+    const label = classLabel(cls)
+    const meaning = classMeaning(cls)
+    const title = clampShort(f?.title || 'Possible issue', 140)
+    const why = clampShort(f?.why || '', 170)
+    const fix = clampShort(f?.fix || '', 170)
+    const likelihood = normalizeLikelihood(f?.likelihood)
+    const deadlineRaw = safeLine(f?.deadline || '')
+    const deadline = deadlineRaw || computeDeadlineByClass(cls)
+
     out.push('')
-    out.push('From the photo:')
-    for (const o of observations.slice(0, 4)) {
-      const line = clampShort(o, 180)
-      if (!line) continue
-      out.push(`- ${line}`)
-    }
+    out.push(`${label} — ${title}`)
+    out.push(`- What it means: ${meaning}`)
+    out.push(`- Correction window: ${deadline}`)
+    if (likelihood !== 'Unclear') out.push(`- Confidence: ${likelihood}`)
+    if (why) out.push(`- Why it matters: ${why}`)
+    if (fix) out.push(`- What to do: ${fix}`)
   }
 
-  const doNowBlock = renderDoNowBlock(doNow, photoRequests)
-  if (doNowBlock) {
-    out.push('')
-    out.push(doNowBlock)
-  }
-
-  if (findings.length > 0) {
-    out.push('')
-    out.push('Potential inspection issues:')
-
-    for (const f of findings.slice(0, maxItems)) {
-      const cls = normalizeClass(f?.class)
-      const label = classLabel(cls)
-      const meaning = classMeaning(cls)
-      const title = clampShort(f?.title || 'Possible issue', 140)
-      const why = clampShort(f?.why || '', 170)
-      const fix = clampShort(f?.fix || '', 170)
-      const likelihood = normalizeLikelihood(f?.likelihood)
-      const deadlineRaw = safeLine(f?.deadline || '')
-      const deadline = deadlineRaw || computeDeadlineByClass(cls)
-
+  if (fullAudit) {
+    const doNowBlock = renderDoNowBlock(doNow, photoRequests)
+    if (doNowBlock) {
       out.push('')
-      out.push(`${label} — ${title}`)
-      out.push(`- What it means: ${meaning}`)
-      out.push(`- Correction window: ${deadline}`)
-      if (likelihood !== 'Unclear') out.push(`- Confidence: ${likelihood}`)
-      if (why) out.push(`- Why it matters: ${why}`)
-      if (fix) out.push(`- What to do: ${fix}`)
+      out.push(doNowBlock)
     }
 
-    const legal = renderLegalContextBlock({ includeLegal, includeCriminal })
-    if (legal) {
+    if (questions.length > 0) {
       out.push('')
-      out.push(legal)
+      out.push('To confirm:')
+      for (const q of questions.slice(0, 3)) {
+        const qq = clampShort(q, 180)
+        if (!qq) continue
+        out.push(`- ${qq}`)
+      }
     }
   }
 
-  if (questions.length > 0) {
+  const legal = renderLegalContextBlock({ includeLegal, includeCriminal })
+  if (legal) {
     out.push('')
-    out.push('To confirm:')
-    for (const q of questions.slice(0, 3)) {
-      const qq = clampShort(q, 180)
-      if (!qq) continue
-      out.push(`- ${qq}`)
-    }
+    out.push(legal)
   }
 
   return sanitizePlainText(out.join('\n'))
 }
 
 function renderGuidancePlainText(payload) {
-  const opening = sanitizePlainText(payload?.opening_line || '')
+  const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: false, hasFindings: false })
   const steps = Array.isArray(payload?.guidance_steps) ? payload.guidance_steps : []
   const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
 
   const out = []
-  out.push(opening || 'Here is the safest way to handle that:')
+  out.push(opening || 'Here is the safest inspection-relevant guidance:')
 
   for (const s of steps.slice(0, 7)) {
     const line = clampShort(s, 180)
@@ -533,16 +558,40 @@ function buildCacheStats(usage) {
 }
 
 async function runPinnedRetrieval(searchDocumentsFn, county, q, k) {
-  // Try county first
   const primary = await withTimeout(searchDocumentsFn(q, county, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(() => [])
   if (Array.isArray(primary) && primary.length) return primary
 
-  // Fallback keys
   for (const key of GLOBAL_FALLBACK_KEYS) {
     const alt = await withTimeout(searchDocumentsFn(q, key, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED_GLOBAL').catch(() => [])
     if (Array.isArray(alt) && alt.length) return alt
   }
   return []
+}
+
+// Filter out “location / residential / what kind of kitchen is this” questions.
+// Keep only questions that help confirm a specific potential compliance issue.
+function filterClarifyingQuestions(questions) {
+  const qs = Array.isArray(questions) ? questions.map(safeLine).filter(Boolean) : []
+  if (!qs.length) return []
+
+  const banned = [
+    /residential/i,
+    /\bhome\b/i,
+    /\bhouse\b/i,
+    /\bapartment\b/i,
+    /personal kitchen/i,
+    /is this a restaurant/i,
+    /food service establishment/i,
+    /commercial kitchen/i,
+    /what county/i,
+    /what state/i,
+    /where is this/i,
+    /your location/i,
+  ]
+
+  return qs
+    .filter((q) => !banned.some((rx) => rx.test(q)))
+    .slice(0, 3)
 }
 
 export async function POST(request) {
@@ -575,13 +624,12 @@ export async function POST(request) {
     const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
 
     const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for food safety issues.' : '')
+    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for food safety compliance issues.' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    const firstTurn = isFirstTurn(messages)
     const fullAudit = wantsFullAudit(effectiveUserPrompt) || Boolean(body?.fullAudit)
     const maxFindings = fullAudit ? 10 : 4
 
@@ -589,10 +637,9 @@ export async function POST(request) {
     const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
     const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
 
-    // ✅ ENHANCED: Auth with location validation + memory
+    // ✅ Auth with location validation + memory (no greetings)
     let userId = null
     let userMemory = null
-    let greeting = null
 
     try {
       const cookieStore = await cookies()
@@ -648,25 +695,9 @@ export async function POST(request) {
 
         await logSessionActivity(userId, sessionInfo)
 
-        // ✅ GET USER MEMORY (after auth + location is valid)
+        // ✅ Load memory (non-blocking)
         try {
           userMemory = await getUserMemory(userId)
-
-          // ✅ NATURAL GREETING (only for first user turn of the chat)
-          if (firstTurn) {
-            const firstEverUse =
-              !userMemory ||
-              isMemoryEmpty(userMemory) ||
-              userMemory?.meta?.firstUseComplete === false ||
-              userMemory?.firstUseComplete === false
-
-            if (firstEverUse) {
-              greeting =
-                'Welcome to protocolLM — I can help you stay inspection-ready. Ask a question or upload a photo and I’ll tell you what to fix first.'
-            } else {
-              greeting = generateGreeting(userMemory)
-            }
-          }
         } catch (e) {
           logger.warn('Memory load failed (non-blocking)', { error: e?.message })
         }
@@ -678,10 +709,11 @@ export async function POST(request) {
     const anthropic = await getAnthropicClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // 1) Conservative vision scan (NO legal claims)
+    // 1) Vision scan (internal hints only; do NOT narrate the scene; avoid generic checklists unless full audit)
     let vision = {
       summary: '',
       search_terms: '',
+      // internal only:
       visible_facts: [],
       possible_issues: [],
       unclear: [],
@@ -703,25 +735,30 @@ export async function POST(request) {
                   { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
                   {
                     type: 'text',
-                    text: `You are doing a conservative kitchen photo scan.
+                    text: `You are scanning a photo for food-service compliance risks in Washtenaw County, Michigan.
 
-Rules:
-- Only describe what is clearly visible.
-- Do NOT claim a code violation.
-- Provide helpful "do_now" actions that are safe and do not assume a violation.
-- Keep it short. No emojis.
+Important:
+- Assume the user is trying to stay compliant as a food service establishment.
+- Do NOT ask "is this residential" or anything about location.
+- Do NOT output generic checklists in quick scans.
+- Only include possible_issues if the photo contains a specific visual signal that could indicate a compliance problem.
+- If there are no signals, keep possible_issues/do_now/photo_requests empty.
+
+Mode:
+- quick_scan = ${fullAudit ? 'false' : 'true'}
+- full_audit = ${fullAudit ? 'true' : 'false'}
 
 Return ONLY valid JSON:
 {
-  "summary": "one short sentence about what the photo shows",
+  "summary": "one short sentence (internal use; do not narrate details)",
   "search_terms": "short keywords for regulation lookup",
-  "visible_facts": ["short factual observations (no guesses)"],
+  "visible_facts": ["short factual notes for retrieval only (no guesses)"],
   "possible_issues": [
-    {"issue":"short issue","needs_check":"what to verify (thermometer/label/test strip/etc)"}
+    {"issue":"short possible issue","needs_check":"what specific close-up or verification would confirm"}
   ],
-  "do_now": ["safe immediate actions (no violation claims)"],
-  "photo_requests": ["what close-up photo would confirm this best"],
-  "unclear": ["things you cannot confirm from the photo"]
+  "do_now": ["only if a specific risk signal exists (no generic reminders)"],
+  "photo_requests": ["only if a specific risk signal exists (close-ups to confirm)"],
+  "unclear": ["specific uncertainties tied to a visible signal only"]
 }`,
                   },
                 ],
@@ -773,7 +810,12 @@ Return ONLY valid JSON:
     }
 
     // 2) Retrieval
-    const visionHints = [vision.search_terms, ...(vision.visible_facts || []), ...(vision.possible_issues || []).map((x) => x.issue)]
+    const visionHints = [
+      vision.search_terms,
+      // keep visible_facts internal for retrieval, but don’t flood the model with scene narration
+      ...(vision.visible_facts || []).slice(0, 6),
+      ...(vision.possible_issues || []).map((x) => x.issue),
+    ]
       .filter(Boolean)
       .join(' ')
       .slice(0, 600)
@@ -831,20 +873,31 @@ ${mainCtx.contextText || 'No dynamic excerpts retrieved.'}`
       memoryContext = ''
     }
 
-    // 3) Model prompt
+    // 3) Model prompt (explicitly forbid scene narration + location questions)
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
 ${memoryContext ? `${memoryContext}\n\n` : ''}Tone:
 - Professional, plain language, concise.
 - No emojis. No markdown. No hashtags. No numbered lists.
-- Do not mention sources, document names, page numbers, or "excerpt" in user-facing fields.
+- Do not narrate what is in the image. Do not list obvious observations.
+- Do not ask where the photo was taken or whether it is residential/commercial.
+
+Goal:
+- Identify potential inspection issues (with uncertainty) and remediation steps.
+- Use probability language. Avoid absolute certainty.
 
 Grounding rules (strict):
 - You may ONLY use rules from the provided excerpts.
 - Any item in audit.findings MUST include at least one valid excerpt id in source_ids.
 - If you cannot cite it, do NOT put it in findings. Put it in clarifying_questions instead.
 
+Quick scan vs full audit:
+- quick_scan = ${fullAudit ? 'false' : 'true'}
+- In quick scan: only include findings that can be reasonably supported by the photo + excerpts. Avoid generic questions and avoid “verify you have X” unless the image suggests it is missing/incorrect.
+- In full audit: you may ask up to 3 targeted questions and request close-ups, but ONLY when needed to confirm a specific suspected issue.
+
 Output rules:
+- opening_line must be outcome-focused (risk/clear), not a description of the scene.
 - Use class only as P / Pf / C / Unclear (server will render full labels).
 - Keep each field short (single sentence where requested).
 
@@ -883,25 +936,20 @@ Hard caps:
 - max findings = ${maxFindings}
 `
 
-    const factsBlock =
-      vision.visible_facts?.length > 0
-        ? `Visible facts:\n${vision.visible_facts.map((x) => `- ${x}`).join('\n')}`
-        : 'Visible facts: None provided.'
-
+    // Provide minimal, non-narrative hints to reduce “obvious observation” output
     const possibleIssuesBlock =
       vision.possible_issues?.length > 0
-        ? `Possible things to verify:\n${vision.possible_issues
-            .map((x) => `- ${x.issue}${x.needs_check ? ` (Verify: ${x.needs_check})` : ''}`)
-            .join('\n')}`
-        : 'Possible things to verify: None listed.'
+        ? `Possible risk signals to verify (do not narrate, use only as hints):
+${vision.possible_issues
+  .map((x) => `- ${x.issue}${x.needs_check ? ` (Verify: ${x.needs_check})` : ''}`)
+  .join('\n')}`
+        : 'Possible risk signals to verify: None detected.'
 
     const questionBlock = `User request:
 ${effectiveUserPrompt || (hasImage ? 'Analyze photo.' : '')}
 
-${hasImage ? `Photo summary:
-${vision.summary || 'No summary available.'}
-
-${factsBlock}
+${hasImage ? `Internal scan hint:
+${vision.search_terms || ''}
 
 ${possibleIssuesBlock}` : ''}`.trim()
 
@@ -965,7 +1013,8 @@ ${possibleIssuesBlock}` : ''}`.trim()
     if (parsed && parsed.mode === 'audit') {
       const auditPayload = parsed.audit || {}
       const findingsRaw = Array.isArray(auditPayload.findings) ? auditPayload.findings : []
-      const questions = Array.isArray(parsed.clarifying_questions) ? parsed.clarifying_questions : []
+      const questionsRaw = Array.isArray(parsed.clarifying_questions) ? parsed.clarifying_questions : []
+      const questions = fullAudit ? filterClarifyingQuestions(questionsRaw) : []
       const modelOpening = safeLine(parsed.opening_line || '')
 
       // Only allow excerpt-backed findings through
@@ -986,50 +1035,47 @@ ${possibleIssuesBlock}` : ''}`.trim()
         })
       }
 
-      const hasAnyChecks = (vision.possible_issues || []).length > 0 || (vision.unclear || []).length > 0 || questions.length > 0
+      // Quick scan: never force “needs_info” just because something isn’t visible.
+      // Full audit: allow “needs_info” when we have targeted checks/questions.
+      const hasAnyChecks =
+        fullAudit &&
+        ((vision.possible_issues || []).length > 0 ||
+          (vision.unclear || []).length > 0 ||
+          (vision.photo_requests || []).length > 0 ||
+          questions.length > 0)
 
       if (supportedFindings.length > 0) {
         status = 'findings'
         message = renderAuditPlainText(
           {
             audit_status: 'findings',
-            opening_line: modelOpening || 'I noticed a few things worth tightening up before an inspection.',
+            opening_line: modelOpening,
             findings: supportedFindings,
             clarifying_questions: questions,
-            do_now: vision.do_now || [],
-            photo_requests: vision.photo_requests || [],
-            observations: (vision.visible_facts || []).slice(0, 4),
+            do_now: fullAudit ? vision.do_now || [] : [],
+            photo_requests: fullAudit ? vision.photo_requests || [] : [],
           },
-          maxFindings,
-          includeLegal,
-          includeCriminal
+          { maxItems: maxFindings, includeLegal, includeCriminal, fullAudit }
         )
       } else {
         if (!hasAnyChecks) {
           status = 'clear'
           message = renderAuditPlainText(
-            { audit_status: 'clear', opening_line: modelOpening || 'Everything looks great here. Great job.' },
-            maxFindings,
-            false,
-            false
+            { audit_status: 'clear', opening_line: modelOpening },
+            { maxItems: maxFindings, includeLegal: false, includeCriminal: false, fullAudit }
           )
         } else {
           status = 'needs_info'
           message = renderAuditPlainText(
             {
               audit_status: 'needs_info',
-              opening_line:
-                modelOpening ||
-                'I cannot confirm a specific inspection issue from this photo alone. Here is what I would check next.',
+              opening_line: modelOpening || 'No clear inspection issue can be confirmed from this photo alone.',
               findings: [],
               clarifying_questions: questions,
               do_now: vision.do_now || [],
               photo_requests: vision.photo_requests || [],
-              observations: (vision.visible_facts || []).slice(0, 4),
             },
-            maxFindings,
-            false,
-            false
+            { maxItems: maxFindings, includeLegal: false, includeCriminal: false, fullAudit }
           )
         }
       }
@@ -1043,29 +1089,19 @@ ${possibleIssuesBlock}` : ''}`.trim()
     } else {
       status = hasImage ? 'needs_info' : 'guidance'
       const fallback = modelText || (hasImage ? 'Analysis timed out. Please try again.' : 'Please try again.')
-      const doNowBlock = renderDoNowBlock(vision.do_now, vision.photo_requests)
+      const doNowBlock = fullAudit ? renderDoNowBlock(vision.do_now, vision.photo_requests) : ''
       message = sanitizePlainText(doNowBlock ? `${fallback}\n\n${doNowBlock}` : fallback)
     }
-
-    // ✅ Keep the version without greeting for memory storage
-    const responseForMemory = message
 
     // ✅ UPDATE MEMORY AFTER SUCCESSFUL RESPONSE
     if (userId && effectiveUserPrompt) {
       await updateMemory(userId, {
         userMessage: effectiveUserPrompt,
-        assistantResponse: responseForMemory,
+        assistantResponse: message,
         mode: hasImage ? 'vision' : 'text',
-
-        // ✅ Mark onboarding complete so next time is “welcome back”
         meta: { firstUseComplete: true },
         firstUseComplete: true,
       }).catch((err) => logger.warn('Memory update failed', { error: err?.message }))
-    }
-
-    // ✅ PREPEND GREETING IF IT EXISTS (only on first user turn of chat)
-    if (greeting && firstTurn) {
-      message = `${greeting}\n\n${message}`
     }
 
     logger.info('Response complete', {
