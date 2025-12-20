@@ -35,7 +35,52 @@ async function getSearchDocuments() {
   return searchDocuments
 }
 
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
+// Model selection based on subscription tier
+async function getModelForUser(userId, supabase) {
+  try {
+    const { data: subscription, error } = await supabase
+      .from('subscriptions')
+      .select('plan, price_id, status')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !subscription) {
+      logger.warn('No subscription found for model selection', { userId })
+      throw new Error('No active subscription')
+    }
+
+    // Map price IDs to Claude models
+    const modelMap = {
+      // Starter tier - Haiku ($99/mo, 98% margin at heavy usage)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: 'claude-haiku-4-20250514',
+      
+      // Professional tier - Sonnet ($149/mo, 85% margin at heavy usage)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY]: 'claude-sonnet-4-20250514',
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'claude-sonnet-4-20250514', // Legacy
+      
+      // Enterprise tier - Opus ($249/mo, designed for multi-location)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'claude-opus-4-20250514',
+    }
+
+    const selectedModel = modelMap[subscription.price_id] || 'claude-sonnet-4-20250514'
+    
+    logger.info('Model selected for user', { 
+      userId, 
+      plan: subscription.plan,
+      priceId: subscription.price_id?.substring(0, 15) + '***',
+      model: selectedModel.split('-')[1]
+    })
+
+    return selectedModel
+
+  } catch (error) {
+    logger.error('Model selection failed', { error: error.message, userId })
+    return 'claude-sonnet-4-20250514'
+  }
+}
 
 // Time budgets
 const VISION_TIMEOUT_MS = 20000
@@ -199,99 +244,76 @@ function wantsFineInfo(text) {
 
 function dedupeByText(items) {
   const seen = new Set()
-  const out = []
-  for (const it of items || []) {
-    const key = (it?.text || '').slice(0, 1600)
-    if (!key) continue
-    if (seen.has(key)) continue
+  return items.filter((item) => {
+    if (!item?.text) return false
+    const key = item.text.slice(0, 200).toLowerCase()
+    if (seen.has(key)) return false
     seen.add(key)
-    out.push(it)
-  }
-  return out
+    return true
+  })
 }
 
-function stableSortByScore(a, b) {
-  const sa = Number(a?.score || 0)
-  const sb = Number(b?.score || 0)
-  if (sb !== sa) return sb - sa
-
-  const srcA = safeLine(a?.source || '')
-  const srcB = safeLine(b?.source || '')
-  if (srcA !== srcB) return srcA.localeCompare(srcB)
-
-  const pa = Number(a?.page || 0)
-  const pb = Number(b?.page || 0)
-  return pa - pb
+function sanitizeDocText(str) {
+  if (!str || typeof str !== 'string') return ''
+  return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').replace(/\s+/g, ' ').trim()
 }
 
-function diversifyBySource(docs, { maxTotal = 40, perSourceCap = 4 } = {}) {
-  const bySource = new Map()
+function normalizeTitle(title) {
+  if (!title || typeof title !== 'string') return ''
+  const t = title.trim()
+  if (!t) return ''
+  return t[0].toUpperCase() + t.slice(1)
+}
 
-  for (const d of docs || []) {
-    const src = safeLine(d?.source || 'Unknown') || 'Unknown'
-    if (!bySource.has(src)) bySource.set(src, [])
-    bySource.get(src).push(d)
-  }
+function normalizeSource(source) {
+  if (!source || typeof source !== 'string') return ''
+  const s = source.trim()
+  const parts = s.split('/').filter(Boolean)
+  return normalizeTitle(parts[parts.length - 1] || '')
+}
 
-  for (const [src, arr] of bySource.entries()) {
-    arr.sort(stableSortByScore)
-    bySource.set(src, arr)
-  }
+function pickTopDocs(documents, k = MAX_DOCS_FOR_CONTEXT, perSourceCap = PER_SOURCE_CAP) {
+  if (!Array.isArray(documents)) return []
+  const bySource = {}
+  const result = []
 
-  const sources = Array.from(bySource.keys()).sort((a, b) => a.localeCompare(b))
-  const picked = []
-  const pickedCount = new Map(sources.map((s) => [s, 0]))
+  for (const doc of documents) {
+    const source = normalizeSource(doc?.metadata?.source || 'Unknown')
+    const text = sanitizeDocText(doc?.text || '')
+    if (!text) continue
 
-  let progressed = true
-  while (picked.length < maxTotal && progressed) {
-    progressed = false
-    for (const src of sources) {
-      if (picked.length >= maxTotal) break
-      const used = pickedCount.get(src) || 0
-      if (used >= perSourceCap) continue
-
-      const arr = bySource.get(src) || []
-      if (arr.length === 0) continue
-
-      const next = arr.shift()
-      if (!next) continue
-
-      picked.push(next)
-      pickedCount.set(src, used + 1)
-      progressed = true
+    bySource[source] = bySource[source] || []
+    if (bySource[source].length < perSourceCap) {
+      bySource[source].push({ ...doc, metadata: { ...doc.metadata, source }, text })
     }
   }
 
-  return picked
-}
+  const flattened = Object.values(bySource).flat()
+  flattened.sort((a, b) => (b?.similarity || 0) - (a?.similarity || 0))
 
-function buildExcerptContext(docs, opts = {}) {
-  const prefix = opts.prefix || 'DOC'
-  const MAX_CHARS = opts.maxChars || 34000
-  const startAt = opts.startAt || 1
-
-  const excerpts = []
-  let buf = ''
-  let n = startAt
-
-  for (const d of docs || []) {
-    const source = safeLine(d?.source || 'Unknown')
-    const page = d?.page ? ` (p.${d.page})` : ''
-    const text = safeText(d?.text || '')
-    if (!text) continue
-
-    const id = `${prefix}_${n}`
-    const header = `[${id}] ${source}${page}\n`
-    const chunk = `${header}${text}\n\n`
-
-    if (buf.length + chunk.length > MAX_CHARS) break
-
-    excerpts.push({ id, source, page: d?.page || null })
-    buf += chunk
-    n++
+  for (const doc of flattened) {
+    if (result.length >= k) break
+    result.push(doc)
   }
 
-  return { excerptIndex: excerpts, contextText: buf.trim() }
+  return result
+}
+
+// ============================================================================
+// FILETYPE HELPERS
+// ============================================================================
+
+function isProbablyImage(item) {
+  if (!item) return false
+  const text = typeof item === 'string' ? item : item?.text || item?.content
+  if (typeof text !== 'string') return false
+  const lower = text.toLowerCase()
+  return lower.includes('data:image') || lower.includes('.jpg') || lower.includes('.jpeg') || lower.includes('.png')
+}
+
+function hasStructuredVisionContent(content) {
+  if (!Array.isArray(content)) return false
+  return content.some((c) => c?.type === 'image' || (typeof c === 'object' && c?.data_url))
 }
 
 // ============================================================================
@@ -299,178 +321,27 @@ function buildExcerptContext(docs, opts = {}) {
 // ============================================================================
 
 function extractJsonObject(text) {
-  const raw = safeText(text || '')
-  if (!raw) return null
-  const unfenced = raw.replace(/```json/gi, '```').replace(/```/g, '')
-  const first = unfenced.indexOf('{')
-  const last = unfenced.lastIndexOf('}')
-  if (first === -1 || last === -1 || last <= first) return null
-  const candidate = unfenced.slice(first, last + 1)
+  if (!text || typeof text !== 'string') return null
+  const start = text.indexOf('{')
+  const end = text.lastIndexOf('}')
+  if (start === -1 || end === -1 || end <= start) return null
+  const candidate = text.slice(start, end + 1)
+
   try {
     return JSON.parse(candidate)
-  } catch {
-    return null
-  }
+  } catch {}
+  return null
 }
 
 // ============================================================================
-// VIOLATION CLASSIFICATION
-// ============================================================================
-
-function normalizeLikelihood(x) {
-  const v = safeLine(x)
-  if (ALLOWED_LIKELIHOOD.has(v)) return v
-  return 'Unclear'
-}
-
-function normalizeClass(x) {
-  const v = safeLine(x)
-  if (ALLOWED_CLASS.has(v)) return v
-  return 'Unclear'
-}
-
-function classLabel(cls) {
-  if (cls === 'P') return 'Priority'
-  if (cls === 'Pf') return 'Priority Foundation'
-  if (cls === 'C') return 'Core'
-  return 'Unclear'
-}
-
-function deadlineByClass(cls) {
-  if (cls === 'P') return 'Immediately'
-  if (cls === 'Pf') return 'Within 10 days'
-  if (cls === 'C') return 'Within 90 days'
-  return 'Check with inspector'
-}
-
-function pickSourcesFromIds(sourceIds, excerptIndex) {
-  const map = new Map((excerptIndex || []).map((e) => [e.id, e]))
-  const used = []
-  for (const sid of sourceIds || []) {
-    const id = safeLine(sid)
-    if (!id) continue
-    const ex = map.get(id)
-    if (ex) used.push(ex)
-  }
-  return used
-}
-
-function normalizeSourceIds(x) {
-  if (!Array.isArray(x)) return []
-  return x.map(safeLine).filter(Boolean).slice(0, 6)
-}
-
-// ============================================================================
-// OUTPUT RENDERING (USER-FACING: NO SOURCES/CITATIONS)
-// ============================================================================
-
-function renderAuditOutput(payload, opts = {}) {
-  const { maxItems = 4, includeFines = false, fullAudit = false } = opts
-  const status = safeLine(payload?.status || 'unknown')
-  const findings = Array.isArray(payload?.findings) ? payload.findings : []
-  const questions = Array.isArray(payload?.questions) ? payload.questions : []
-  const enforcement = safeLine(payload?.enforcement || '')
-
-  if (status === 'clear' || findings.length === 0) {
-    const base = 'No violations detected.'
-    if (questions.length > 0 && fullAudit) {
-      const qs = questions
-        .slice(0, 2)
-        .map((q, i) => `To confirm (${i + 1}): ${clampShort(q, 160)}`)
-        .join('\n')
-      return sanitizeOutput(`${base}\n\n${qs}`)
-    }
-    return sanitizeOutput(base)
-  }
-
-  const lines = ['Potential issues found:', '']
-
-  findings.slice(0, maxItems).forEach((f, idx) => {
-    const cls = normalizeClass(f?.class)
-    const likelihood = normalizeLikelihood(f?.likelihood)
-
-    const observed = clampShort(f?.observed || f?.seeing || f?.evidence || '', 240)
-    const violation = clampShort(f?.violation || f?.rule || f?.title || 'Possible violation', 240)
-    const vtype = clampShort(f?.violation_type || f?.type || '', 160)
-
-    const why = clampShort(f?.why || '', 240)
-    const fix = clampShort(f?.fix || '', 240)
-    const deadline = safeLine(f?.deadline) || deadlineByClass(cls)
-    const ifNotFixed = clampShort(f?.if_not_fixed || f?.consequence || '', 240)
-
-    const title = vtype || clampShort(violation, 70) || 'Compliance issue'
-
-    const metaBits = [`${classLabel(cls)}`, `Fix by: ${deadline}`]
-    if (likelihood !== 'Unclear') metaBits.push(`Confidence: ${likelihood}`)
-
-    lines.push(`Issue ${idx + 1} — ${title}`)
-    lines.push(metaBits.join(' • '))
-
-    if (observed) lines.push(`Observed: ${observed}`)
-    if (violation) lines.push(`Violation: ${violation}`)
-
-    if (why) lines.push(`Why it matters: ${why}`)
-    if (fix) lines.push(`Remediation: ${fix}`)
-    if (ifNotFixed) lines.push(`If not fixed: ${ifNotFixed}`)
-
-    lines.push('')
-  })
-
-  if (includeFines && enforcement) {
-    lines.push('If not corrected:')
-    lines.push(enforcement)
-    lines.push('')
-  }
-
-  if (questions.length > 0 && fullAudit) {
-    for (const q of questions.slice(0, 2)) {
-      const qq = clampShort(q, 180)
-      if (qq) lines.push(`To clarify: ${qq}`)
-    }
-  }
-
-  return sanitizeOutput(lines.join('\n'))
-}
-
-function renderGuidanceOutput(payload) {
-  const answer = safeLine(payload?.answer || '')
-  const steps = Array.isArray(payload?.steps) ? payload.steps : []
-  const questions = Array.isArray(payload?.questions) ? payload.questions : []
-
-  const lines = []
-
-  if (answer) lines.push(answer)
-
-  if (steps.length > 0) {
-    lines.push('')
-    lines.push('Recommended steps:')
-    steps.slice(0, 6).forEach((s, i) => {
-      const step = clampShort(s, 200)
-      if (step) lines.push(`${i + 1}) ${step}`)
-    })
-  }
-
-  if (questions.length > 0) {
-    lines.push('')
-    lines.push('Clarifying questions:')
-    questions.slice(0, 2).forEach((q, i) => {
-      const qq = clampShort(q, 200)
-      if (qq) lines.push(`${i + 1}) ${qq}`)
-    })
-  }
-
-  return sanitizeOutput(lines.join('\n'))
-}
-
-// ============================================================================
-// USER-FRIENDLY ERROR MESSAGES - NEW per Claude's recommendations
+// ERROR HANDLING
 // ============================================================================
 
 function getUserFriendlyErrorMessage(errorMessage) {
   if (errorMessage === 'VISION_TIMEOUT') {
-    return 'Photo analysis took too long. Try a smaller image or wait 10 seconds and try again.'
+    return 'Vision processing timed out. Please try again with a clearer image or smaller file.'
   } else if (errorMessage === 'RETRIEVAL_TIMEOUT') {
-    return 'Document search timed out. Please try again.'
+    return 'Search timed out. Try again with a shorter question.'
   } else if (errorMessage === 'ANSWER_TIMEOUT') {
     return 'Response generation timed out. System may be busy - try again in 10 seconds.'
   } else if (errorMessage === 'EMBEDDING_TIMEOUT') {
@@ -571,38 +442,89 @@ export async function POST(request) {
 
     let userId = null
     let userMemory = null
+    let CLAUDE_MODEL = 'claude-sonnet-4-20250514'
 
     try {
       const cookieStore = await cookies()
+
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         {
           cookies: {
-            getAll() {
-              return cookieStore.getAll()
+            get(name) {
+              return cookieStore.get(name)
             },
-            setAll(cookiesToSet) {
-              try {
-                cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-              } catch {}
+            set(name, value, options) {
+              cookieStore.set(name, value, options)
+            },
+            remove(name, options) {
+              cookieStore.set(name, '', { ...options, maxAge: 0 })
             },
           },
         }
       )
 
-      const { data } = await supabase.auth.getUser()
-      userId = data?.user?.id || null
+      let supabaseAuth
 
-      if (!userId || !data?.user) {
-        return NextResponse.json({ error: 'Authentication required.', code: 'UNAUTHORIZED' }, { status: 401 })
+      const bearerToken = request.headers.get('authorization')
+      if (bearerToken && bearerToken.startsWith('Bearer ')) {
+        const token = bearerToken.slice(7)
+        supabaseAuth = await supabase.auth.getUser(token)
+      } else {
+        supabaseAuth = await supabase.auth.getUser()
       }
 
-      if (!data.user.email_confirmed_at) {
-        return NextResponse.json(
-          { error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' },
-          { status: 403 }
-        )
+      if (supabaseAuth.error || !supabaseAuth.data?.user) {
+        logger.warn('Supabase auth failed', { error: supabaseAuth.error?.message })
+        return NextResponse.json({ error: 'Auth failed' }, { status: 401 })
+      }
+
+      const user = supabaseAuth.data.user
+      userId = user.id
+
+      // ✅ Trial check (must not override subscription check)
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('status, cancel_at_period_end, current_period_end, price_id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (subError) {
+        logger.warn('Subscription lookup failed', { error: subError.message })
+      }
+
+      const hasActiveSubscription = subscription && ['active', 'trialing'].includes(subscription.status)
+
+      if (!hasActiveSubscription) {
+        const { data: license, error: licenseError } = await supabase
+          .from('licenses')
+          .select('trial_ends_at, status')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (licenseError) {
+          logger.error('License lookup failed', { error: licenseError.message })
+          return NextResponse.json({ error: 'License lookup failed' }, { status: 500 })
+        }
+
+        if (!license || license.status !== 'active') {
+          return NextResponse.json(
+            { error: 'No active trial or subscription found.', code: 'NO_SUBSCRIPTION' },
+            { status: 403 }
+          )
+        }
+
+        if (license.trial_ends_at && new Date(license.trial_ends_at) < new Date()) {
+          return NextResponse.json(
+            { error: 'Trial expired. Please subscribe to continue.', code: 'TRIAL_EXPIRED' },
+            { status: 403 }
+          )
+        }
       }
 
       const sessionInfo = getSessionInfo(request)
@@ -658,6 +580,9 @@ export async function POST(request) {
         uniqueLocationsUsed: locationCheck.uniqueLocationsUsed,
         locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
+
+      // Select Claude model based on subscription tier
+      CLAUDE_MODEL = await getModelForUser(userId, supabase)
 
       try {
         userMemory = await getUserMemory(userId)
@@ -778,346 +703,256 @@ Return JSON only:
 
     // ========================================================================
     // DOCUMENT RETRIEVAL — UPDATED per Claude's recommendations
-    // Multi-angle retrieval for better coverage of 24 PDFs
     // ========================================================================
 
-    const visionContext = [
-      vision.searchTerms,
-      ...vision.facts.slice(0, 6),
-      ...vision.issues.map((i) => i.issue),
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .slice(0, 700)
+    let retrieval = {
+      documents: [],
+      queryTerms: [],
+      keywordHits: [],
+    }
 
-    // Extract keywords from user input for focused searches
-    const userKeywords = extractSearchKeywords(effectivePrompt)
-    const visionKeywords = vision.issues.map((i) => i.issue).join(' ').slice(0, 200)
+    const shouldSearchDocs = hasImage || effectivePrompt.length >= 4
 
-    // Build multiple search queries for better coverage
-    const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code']
-      .filter(Boolean)
-      .join(' ')
-      .slice(0, 900)
+    if (shouldSearchDocs) {
+      try {
+        const searchKeywords = extractSearchKeywords(effectivePrompt)
+        const limitPerSource = hasImage ? 4 : 5  // more conservative per-source limit when vision is present
 
-    const queryIssues = vision.issues.slice(0, 2).map((i) => i.issue).join(' ').slice(0, 400)
+        const retrievalPromise = searchDocumentsFn({
+          query: effectivePrompt || vision.summary || 'food safety',
+          topK: hasImage ? 18 : TOPK_PER_QUERY,  // reduced topK when vision present to focus results
+          county,
+          maxDocsForContext: hasImage ? 22 : MAX_DOCS_FOR_CONTEXT,  // limit context when vision already adds signal
+          perSourceCap: limitPerSource,
+          preferredTerms: searchKeywords,
+          includeFullText: true,
+        })
 
-    // UPDATED: Multi-angle retrieval queries
-    const queries = [
-      queryMain,  // User's question + vision scan summary
-      queryIssues,  // Specific issues detected in photo
-      // Add targeted searches for better coverage
-      `${effectivePrompt.slice(0, 300)} Washtenaw County Michigan regulations`,
-      `${visionContext.slice(0, 300)} food safety violations`,
-      userKeywords.slice(0, 5).join(' ') + ' Washtenaw County food code',
-      visionKeywords,  // Top issues as search terms
-      'Priority violations Michigan food code',  // Broad safety net
-    ]
-      .filter(Boolean)
-      .filter((q) => q.length > 10)  // Remove empty/short queries
-      .slice(0, 5)  // Max 5 queries
+        const retrievalResult = await withTimeout(retrievalPromise, RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT')
 
-    let allDocs = []
-    try {
-      const results = await Promise.all(
-        queries.map((q) =>
-          withTimeout(searchDocumentsFn(q, county, TOPK_PER_QUERY), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT').catch(
-            () => []
+        if (retrievalResult?.documents?.length) {
+          retrieval.documents = pickTopDocs(retrievalResult.documents, hasImage ? 28 : MAX_DOCS_FOR_CONTEXT, limitPerSource)
+          retrieval.queryTerms = retrievalResult.keywords || []
+          retrieval.keywordHits = retrievalResult.hits || []
+        }
+      } catch (e) {
+        logger.warn('Document retrieval failed', { error: e?.message })
+        if (e?.message === 'RETRIEVAL_TIMEOUT') {
+          return NextResponse.json(
+            { error: getUserFriendlyErrorMessage('RETRIEVAL_TIMEOUT') },
+            { status: 408 }
           )
-        )
-      )
-
-      allDocs = dedupeByText(results.flat().filter(Boolean))
-      allDocs.sort(stableSortByScore)
-      allDocs = diversifyBySource(allDocs, { maxTotal: MAX_DOCS_FOR_CONTEXT, perSourceCap: PER_SOURCE_CAP })
-    } catch (e) {
-      logger.warn('Retrieval failed', { error: e?.message })
-      if (e?.message === 'RETRIEVAL_TIMEOUT') {
-        return NextResponse.json(
-          { error: getUserFriendlyErrorMessage('RETRIEVAL_TIMEOUT') },
-          { status: 408 }
-        )
+        }
       }
     }
 
-    const ctx = buildExcerptContext(allDocs, { prefix: 'DOC', maxChars: 34000, startAt: 1 })
-    const excerptIndex = [...ctx.excerptIndex]
+    // ========================================================================
+    // MEMORY
+    // ========================================================================
 
-    const excerptBlock = `Reference documents (cite by ID):
-${ctx.contextText || 'No documents retrieved.'}`
-
-    // Memory context
     let memoryContext = ''
-    try {
-      memoryContext = buildMemoryContext(userMemory) || ''
-    } catch {}
-
-    // ========================================================================
-    // SYSTEM PROMPT — UPDATED per Claude's recommendations
-    // Added Washtenaw-specific context
-    // ========================================================================
-
-    const systemPrompt = `You are protocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
-
-${memoryContext ? `${memoryContext}\n\n` : ''}
-
-JURISDICTION CONTEXT:
-- You enforce the Michigan Modified Food Code as adopted by Washtenaw County
-- Washtenaw County Environmental Health Division performs inspections
-- Violations follow Michigan Administrative Procedures Act (3-strike process before license action)
-
-VIOLATION CLASSIFICATION (Washtenaw County):
-- P (Priority): Direct food safety hazard. Must fix IMMEDIATELY at inspection or within 10 days.
-  Examples: Improper food temps, no handwashing, cross contamination, pest presence
-- Pf (Priority Foundation): Supports priority items. Fix within 10 days.
-  Examples: No thermometer, missing sanitizer test strips, no soap at hand sink
-- C (Core): General sanitation/maintenance. Fix within 90 days.
-  Examples: Dirty floors, broken ceiling tiles, improper lighting
-
-ENFORCEMENT ESCALATION (per Washtenaw County):
-1. Routine inspection identifies violation → Opportunity #1 to fix
-2. Follow-up fails → Office Conference with health department
-3. Still not fixed → Informal Hearing
-4. Still not fixed → License limited/suspended/revoked + possible Formal Hearing appeal
-
-Your knowledge base is the provided reference excerpts. Do not assume anything outside those excerpts.
-
-RULES:
-1. Be concise. Short sentences. No fluff.
-2. No markdown formatting (no **, no #, no bullet lists).
-3. No emojis.
-4. Ground every finding in the reference excerpts. Every finding must include source_ids.
-5. If you can't support it from the excerpts, do not call it a violation.
-6. Use probability language: "very likely", "likely", "possible".
-7. If the photo looks compliant, say: "No violations detected." and stop.
-8. Don't narrate the scene. Get to the point.
-9. Don't ask if this is residential/commercial. Assume food service.
-10. Prioritize Washtenaw County documents over general guidance.
-
-OUTPUT FORMAT (JSON only):
-
-For image analysis:
-{
-  "mode": "audit",
-  "status": "clear" | "findings",
-  "findings": [
-    {
-      "class": "P|Pf|C|Unclear",
-      "likelihood": "Very likely|Likely|Possible|Unclear",
-
-      "observed": "What you see in the photo (one sentence, evidence only).",
-
-      "violation": "What violation this would be, phrased as a requirement being violated (one sentence).",
-      "violation_type": "Short category label (example: Chemical storage, Hand sink use, Date marking, Temperature control).",
-
-      "why": "One sentence on risk/impact (must be supported by excerpts).",
-      "fix": "One sentence corrective action.",
-      "deadline": "Immediately|Within 10 days|Within 90 days",
-      "if_not_fixed": "One sentence on likely inspection/enforcement outcome per excerpts (only if supported).",
-
-      "source_ids": ["DOC_1"]
+    if (userMemory) {
+      memoryContext = buildMemoryContext(userMemory)
     }
-  ],
-  "enforcement": "Only if user asked about fines/penalties/what happens if. Must be supported by excerpts.",
-  "questions": ["only if genuinely needed for clarification"]
-}
-
-For questions without images:
-{
-  "mode": "guidance",
-  "answer": "direct answer",
-  "steps": ["actionable steps if applicable"],
-  "questions": ["clarifying questions if needed"]
-}
-
-Max findings: ${maxFindings}`
 
     // ========================================================================
-    // QUESTION CONTEXT
+    // PROMPT BUILDING
     // ========================================================================
 
-    const issueHints =
-      vision.issues.length > 0 ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}` : ''
+    const today = new Date()
+    const dateStr = today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
 
-    const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}${
-      hasImage && issueHints ? `\n\n${issueHints}` : ''
-    }`
+    const finesClause = includeFines
+      ? 'Return fines: "Yes" and provide fines range (e.g., "$125-$500"). If fines vary, explain.'
+      : 'Return fines: "No" (user did not request fines).'
+
+    const findingCount = Math.max(Math.min(maxFindings, 10), 3)
+
+    const docSummaries = retrieval.documents
+      .map((doc, idx) => {
+        const title = doc.metadata?.title || doc.metadata?.source || `Document ${idx + 1}`
+        const text = sanitizeDocText(doc.text || '')
+        const snippet = text.slice(0, 500)
+        return `- ${title}: ${snippet}`
+      })
+      .join('\n')
+
+    const keywordString = retrieval.keywordHits
+      .slice(0, 20)
+      .map((k) => `${k.keyword} (${k.count})`)
+      .join(', ')
+
+    const hasDocContext = Boolean(docSummaries)
+
+    const instruction = `
+You are ProtocolLM, a compliance assistant focused on Washtenaw County, Michigan food safety rules.
+Today's date: ${dateStr}.
+
+User request: ${effectivePrompt || '[image only]'}
+
+${hasImage ? `VISION SUMMARY: ${vision.summary}\nVISION SEARCH TERMS: ${vision.searchTerms}\nVISION FACTS: ${vision.facts.join(', ')}` : ''}
+
+DOCUMENTS (ranked, concise):
+${docSummaries || '- No documents found'}
+
+KEYWORD HITS: ${keywordString || 'None'}
+
+MEMORY (user context):
+${memoryContext || 'No prior context.'}
+
+You MUST:
+- Cite source titles in parentheses at the end of sentences (e.g., "Use handwashing sink only for hands (Handwashing Sink Requirements)"). Use "Vision Scan" for image-only findings.
+- Base answers strictly on documents and vision facts; if unknown, say "Not in docs".
+- Keep answers concise, clear, and bullet-structured. Avoid markdown code fences.
+- Only include the top ${findingCount} issues.
+- Avoid duplicates; merge similar points.
+- If the user asks for a checklist or action plan, provide the steps clearly.
+- ${finesClause}
+- Tone: concise, confident, enforcement-focused.
+- County is ${county || 'Washtenaw County'}.
+`
 
     // ========================================================================
-    // GENERATE RESPONSE
+    // SAFETY + ANSWER GENERATION (with vision + retrieval)
     // ========================================================================
 
-    let modelText = ''
-    let parsed = null
+    const promptParts = [
+      {
+        role: 'assistant',
+        content: [
+          {
+            type: 'text',
+            text: instruction,
+          },
+        ],
+      },
+    ]
+
+    if (hasImage && imageBase64) {
+      promptParts.push({
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
+          { type: 'text', text: 'Analyze this image for food safety compliance.' },
+        ],
+      })
+    }
+
+    promptParts.push({
+      role: 'user',
+      content: [{ type: 'text', text: effectivePrompt || 'Identify compliance issues.' }],
+    })
+
+    const inputTokensEstimate = JSON.stringify(promptParts).length * 1.2
+
+    // Log prompt preview
+    logger.debug('Prompt preview', {
+      userId,
+      hasImage,
+      promptSnippet: clampShort(effectivePrompt, 200),
+      docCount: retrieval.documents.length,
+      keywords: retrieval.queryTerms,
+      inputTokensEstimate,
+    })
+
+    let modelResponseText = ''
+    let usageStats = null
     let cacheStats = null
 
     try {
-      const finalMessages = []
-
-      if (hasImage && imageBase64) {
-        finalMessages.push({
-          role: 'user',
-          content: [
-            { type: 'text', text: excerptBlock, cache_control: { type: 'ephemeral' } },
-            { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
-            { type: 'text', text: questionBlock },
-          ],
-        })
-      } else {
-        finalMessages.push({
-          role: 'user',
-          content: [
-            { type: 'text', text: excerptBlock, cache_control: { type: 'ephemeral' } },
-            { type: 'text', text: questionBlock },
-          ],
-        })
-      }
-
-      const answerResp = await withTimeout(
+      const resp = await withTimeout(
         anthropic.messages.create({
           model: CLAUDE_MODEL,
-          temperature: 0.15,
-          max_tokens: fullAudit ? 1300 : 950,
-          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
-          messages: finalMessages,
+          max_tokens: 650,
+          temperature: 0.2,
+          top_p: 0.999,
+          messages: promptParts,
+          stop_sequences: ['<STOP>'],
+          metadata: {
+            county,
+            hasImage,
+            userId,
+            retrievalDocs: retrieval.documents.length,
+            keywordMatches: retrieval.keywordHits.length,
+          },
         }),
         ANSWER_TIMEOUT_MS,
         'ANSWER_TIMEOUT'
       )
 
-      modelText = answerResp.content
-        .filter((b) => b.type === 'text')
-        .map((b) => b.text)
-        .join('')
+      const textBlocks = resp?.content?.filter((b) => b.type === 'text') || []
+      modelResponseText = textBlocks.map((b) => b.text).join('\n').trim()
 
-      parsed = extractJsonObject(modelText)
-      cacheStats = buildCacheStats(answerResp.usage)
-      if (cacheStats) logger.info('Cache stats', cacheStats)
+      usageStats = resp?.usage
+      cacheStats = buildCacheStats(resp?.usage)
     } catch (e) {
-      logger.error('Generation failed', { error: e?.message })
-      // Return user-friendly error message
+      logger.error('Anthropic call failed', { error: e?.message, userId, hasImage })
+      if (e?.message === 'ANSWER_TIMEOUT') {
+        return NextResponse.json(
+          { error: getUserFriendlyErrorMessage('ANSWER_TIMEOUT') },
+          { status: 408 }
+        )
+      }
       return NextResponse.json(
-        { error: getUserFriendlyErrorMessage(e?.message) },
-        { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
+        { error: 'Model error. Please try again in a moment.' },
+        { status: 500 }
       )
     }
 
     // ========================================================================
-    // RENDER OUTPUT
+    // RESPONSE + LOGGING
     // ========================================================================
 
-    let message = ''
-    let status = 'unknown'
+    const cleaned = sanitizeOutput(modelResponseText)
+    const latency = Date.now() - startedAt
 
-    if (parsed && parsed.mode === 'audit') {
-      const findingsRaw = Array.isArray(parsed.findings) ? parsed.findings : []
-      const questionsRaw = Array.isArray(parsed.questions) ? parsed.questions : []
-      const enforcementRaw = safeLine(parsed.enforcement || '')
-
-      const validFindings = []
-      for (const f of findingsRaw.slice(0, maxFindings)) {
-        const srcIds = Array.isArray(f?.source_ids) ? f.source_ids : []
-        const usable = pickSourcesFromIds(srcIds, excerptIndex)
-        if (usable.length === 0) continue
-
-        validFindings.push({
-          class: normalizeClass(f?.class),
-          likelihood: normalizeLikelihood(f?.likelihood),
-
-          observed: safeLine(f?.observed || f?.seeing || f?.evidence || ''),
-          violation: safeLine(f?.violation || f?.rule || f?.title || 'Possible violation'),
-          violation_type: safeLine(f?.violation_type || f?.type || ''),
-
-          why: safeLine(f?.why || ''),
-          fix: safeLine(f?.fix || ''),
-          deadline: safeLine(f?.deadline || ''),
-          if_not_fixed: safeLine(f?.if_not_fixed || f?.consequence || ''),
-
-          source_ids: normalizeSourceIds(srcIds),
-        })
-      }
-
-      status = validFindings.length > 0 ? 'findings' : 'clear'
-
-      message = renderAuditOutput(
-        {
-          status,
-          findings: validFindings,
-          questions: questionsRaw,
-          enforcement: enforcementRaw,
-        },
-        { maxItems: maxFindings, includeFines, fullAudit }
-      )
-    } else if (parsed && parsed.mode === 'guidance') {
-      status = 'guidance'
-      message = renderGuidanceOutput({
-        answer: parsed.answer || '',
-        steps: Array.isArray(parsed.steps) ? parsed.steps : [],
-        questions: Array.isArray(parsed.questions) ? parsed.questions : [],
-      })
-    } else {
-      status = hasImage ? 'unclear' : 'guidance'
-      message = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
+    const responsePayload = {
+      reply: cleaned,
+      docs_used: retrieval.documents.length,
+      keywords: retrieval.queryTerms,
+      usage: usageStats,
+      cache: cacheStats,
+      latency_ms: latency,
+      vision_summary: vision.summary,
+      vision_issues: vision.issues,
+      vision_facts: vision.facts,
     }
 
-    // ========================================================================
-    // UPDATE MEMORY
-    // ========================================================================
-
-    if (userId && effectivePrompt) {
-      try {
-        await updateMemory(userId, {
-          userMessage: effectivePrompt,
-          assistantResponse: message,
-          mode: hasImage ? 'vision' : 'text',
-          meta: { firstUseComplete: true },
-          firstUseComplete: true,
-        })
-      } catch (err) {
-        logger.warn('Memory update failed', { error: err?.message })
-      }
-    }
-
-    // ========================================================================
-    // LOG + RETURN
-    // ========================================================================
-
-    logger.info('Response complete', {
-      hasImage,
-      status,
-      durationMs: Date.now() - startedAt,
-      docsRetrieved: allDocs.length,
-      queriesUsed: queries.length,
-      fullAudit,
-      includeFines,
-      cacheHit: cacheStats?.cache_hit || false,
-    })
-
-    await safeLogUsage({
+    // Log usage (non-blocking)
+    safeLogUsage({
       userId,
-      mode: hasImage ? 'vision' : 'chat',
-      success: true,
-      durationMs: Date.now() - startedAt,
+      hasImage,
+      prompt: clampShort(effectivePrompt, 200),
+      docCount: retrieval.documents.length,
+      model: CLAUDE_MODEL,
+      latency_ms: latency,
+      cache: cacheStats,
+      usage: usageStats,
     })
 
-    return NextResponse.json(
-      {
-        message,
-        _meta: {
-          model: CLAUDE_MODEL,
-          hasImage,
-          status,
-          fullAudit,
-          docsRetrieved: allDocs.length,
-          queriesUsed: queries.length,
-          durationMs: Date.now() - startedAt,
-          cache: cacheStats || null,
-        },
-      },
-      { status: 200 }
-    )
+    // Persist memory update (non-blocking)
+    if (userId && effectivePrompt && cleaned) {
+      try {
+        const newMemory = updateMemory(userMemory, {
+          prompt: effectivePrompt,
+          response: cleaned,
+          timestamp: new Date().toISOString(),
+        })
+
+        await updateMemory(userId, newMemory)
+      } catch (e) {
+        logger.warn('Memory update failed', { error: e?.message })
+      }
+    }
+
+    return NextResponse.json(responsePayload)
   } catch (e) {
-    logger.error('Chat route failed', { error: e?.message, stack: e?.stack })
-    return NextResponse.json({ error: 'Server error. Please try again.' }, { status: 500 })
+    logger.error('Chat handler failed', { error: e?.message })
+    return NextResponse.json({ error: 'Unexpected server error.' }, { status: 500 })
   }
 }
