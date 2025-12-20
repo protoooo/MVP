@@ -2,10 +2,7 @@
 
 import { useState } from 'react'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
-import { Outfit } from 'next/font/google'
 import InfoPageLayout from '@/components/InfoPageLayout'
-
-const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700'] })
 
 export default function Contact() {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' })
@@ -61,117 +58,229 @@ export default function Contact() {
       subtitle="Reach our compliance team for product questions, billing help, or data requests. We respond quickly during business hours."
       eyebrow="Support"
     >
-      <div className="space-y-6">
-        <section className="rounded-xl border border-[#2a2a32] bg-[#15151a] p-6">
-          <h2 className={`text-xl font-bold ${outfit.className}`}>Get in touch</h2>
-          <p className="mt-3">We&apos;re local to Washtenaw County and here to support operators.</p>
+      <div className="info-section">
+        <h2 className="info-section-title">Get in Touch</h2>
+        <p>We're local to Washtenaw County and here to support operators.</p>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-[#24242d] bg-[#121218] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2F5D8A]">Email</p>
-              <a href="mailto:support@protocollm.org" className="mt-1 block text-[15px] font-semibold underline underline-offset-2">
-                support@protocollm.org
-              </a>
-              <p className="mt-1 text-[13px] text-[#9ca3af]">Responses within 24-48 hours.</p>
+        <div style={{ display: 'grid', gap: '12px', marginTop: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
+          <div style={{ 
+            padding: '16px', 
+            background: 'var(--bg-3)', 
+            border: '1px solid var(--border-subtle)', 
+            borderRadius: 'var(--radius-sm)' 
+          }}>
+            <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
+              Email
             </div>
-
-            <div className="rounded-lg border border-[#24242d] bg-[#121218] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2F5D8A]">Business hours</p>
-              <p className="mt-1 text-[15px] font-semibold">Mon - Fri, 9:00 AM - 6:00 PM EST</p>
-              <p className="mt-1 text-[13px] text-[#9ca3af]">We monitor urgent production issues after hours.</p>
-            </div>
+            <a href="mailto:support@protocollm.org" style={{ display: 'block', fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
+              support@protocollm.org
+            </a>
+            <p style={{ fontSize: '13px', color: 'var(--ink-2)', margin: 0 }}>
+              Responses within 24-48 hours.
+            </p>
           </div>
 
-          <div className="mt-4 rounded-lg border border-[#24242d] bg-[#121218] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2F5D8A]">Location</p>
-            <p className="mt-1 text-[15px] font-semibold">Washtenaw County, Michigan</p>
-            <p className="mt-1 text-[13px] text-[#9ca3af]">Serving restaurants and food operators statewide.</p>
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-[#2F5D8A] border-l-4 bg-[#15151a] p-6">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-md bg-[#1c1c22] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ring-1 ring-[#2F5D8A]">
-            Response promise
-          </div>
-          <p className="mt-2">We prioritize health-code critical issues and strive to resolve support tickets quickly.</p>
-        </section>
-
-        <section className="rounded-xl border border-[#2a2a32] bg-[#15151a] p-6">
-          <h2 className={`text-xl font-bold ${outfit.className}`}>Send us a message</h2>
-
-          {submitted ? (
-            <div className="mt-4 rounded-xl border border-[#2F5D8A] bg-[#1c1c22] p-6 text-center">
-              <p className={`text-lg font-bold ${outfit.className}`}>Message sent!</p>
-              <p className="mt-2 text-[15px]">We&apos;ve received your message and will respond within 24-48 hours.</p>
+          <div style={{ 
+            padding: '16px', 
+            background: 'var(--bg-3)', 
+            border: '1px solid var(--border-subtle)', 
+            borderRadius: 'var(--radius-sm)' 
+          }}>
+            <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
+              Business Hours
             </div>
-          ) : (
-            <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label className="text-[13px] font-semibold">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full rounded-lg border border-[#2a2a32] bg-[#121218] px-4 py-3 text-[15px] placeholder:text-[#52637A] focus:border-[#2F5D8A] focus:outline-none focus:ring-2 focus:ring-[#2F5D8A]/40"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[13px] font-semibold">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full rounded-lg border border-[#2a2a32] bg-[#121218] px-4 py-3 text-[15px] placeholder:text-[#52637A] focus:border-[#2F5D8A] focus:outline-none focus:ring-2 focus:ring-[#2F5D8A]/40"
-                  />
-                </div>
-              </div>
+            <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
+              Mon - Fri, 9AM - 6PM EST
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--ink-2)', margin: 0 }}>
+              We monitor urgent production issues after hours.
+            </p>
+          </div>
+        </div>
 
-              <div className="space-y-1">
-                <label className="text-[13px] font-semibold">Subject</label>
+        <div style={{ 
+          padding: '16px', 
+          background: 'var(--bg-3)', 
+          border: '1px solid var(--border-subtle)', 
+          borderRadius: 'var(--radius-sm)',
+          marginTop: '12px'
+        }}>
+          <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
+            Location
+          </div>
+          <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
+            Washtenaw County, Michigan
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--ink-2)', margin: 0 }}>
+            Serving restaurants and food operators statewide.
+          </p>
+        </div>
+      </div>
+
+      <div className="info-highlight">
+        <div className="info-highlight-title">Response Promise</div>
+        <p>
+          We prioritize health-code critical issues and strive to resolve support tickets quickly.
+        </p>
+      </div>
+
+      <div className="info-section">
+        <h2 className="info-section-title">Send Us a Message</h2>
+
+        {submitted ? (
+          <div style={{ 
+            padding: '24px', 
+            textAlign: 'center', 
+            background: 'var(--bg-3)', 
+            border: '1px solid var(--accent)', 
+            borderRadius: 'var(--radius-md)',
+            marginTop: '20px'
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink-0)', margin: '0 0 8px' }}>
+              Message Sent!
+            </h3>
+            <p style={{ fontSize: '15px', color: 'var(--ink-1)', margin: 0 }}>
+              We've received your message and will respond within 24-48 hours.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
+            <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+                  Name
+                </label>
                 <input
                   type="text"
-                  name="subject"
+                  name="name"
                   required
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  className="w-full rounded-lg border border-[#2a2a32] bg-[#121218] px-4 py-3 text-[15px] placeholder:text-[#52637A] focus:border-[#2F5D8A] focus:outline-none focus:ring-2 focus:ring-[#2F5D8A]/40"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    padding: '0 12px',
+                    background: 'var(--bg-3)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--ink-0)',
+                    fontSize: '14px'
+                  }}
                 />
               </div>
-
-              <div className="space-y-1">
-                <label className="text-[13px] font-semibold">Message</label>
-                <textarea
-                  name="message"
-                  rows="4"
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
                   required
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="w-full rounded-lg border border-[#2a2a32] bg-[#121218] px-4 py-3 text-[15px] placeholder:text-[#52637A] focus:border-[#2F5D8A] focus:outline-none focus:ring-2 focus:ring-[#2F5D8A]/40"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    padding: '0 12px',
+                    background: 'var(--bg-3)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--ink-0)',
+                    fontSize: '14px'
+                  }}
                 />
               </div>
+            </div>
 
-              {error ? <p className="text-[14px] font-medium text-[#ef4444]">{error}</p> : null}
+            <div style={{ marginTop: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+                Subject
+              </label>
+              <input
+                type="text"
+                name="subject"
+                required
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                style={{
+                  width: '100%',
+                  height: '42px',
+                  padding: '0 12px',
+                  background: 'var(--bg-3)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--ink-0)',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  type="submit"
-                  disabled={loading || !isLoaded}
-                  className="inline-flex items-center justify-center rounded-full bg-[#2F5D8A] px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-[#1F4E7A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#15151a] focus:ring-[#2F5D8A] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {loading ? 'Sending…' : 'Send message'}
-                </button>
-                <p className="text-[13px] text-[#9ca3af]">We use reCAPTCHA to protect this form.</p>
-              </div>
+            <div style={{ marginTop: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+                Message
+              </label>
+              <textarea
+                name="message"
+                rows="5"
+                required
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: 'var(--bg-3)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--ink-0)',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
 
-              <RecaptchaBadge />
-            </form>
-          )}
-        </section>
+            {error && (
+              <p style={{ 
+                marginTop: '16px', 
+                padding: '12px', 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 'var(--radius-sm)',
+                color: '#ef4444', 
+                fontSize: '14px' 
+              }}>
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !isLoaded}
+              style={{
+                width: '100%',
+                height: '44px',
+                marginTop: '20px',
+                background: loading || !isLoaded ? 'var(--bg-3)' : 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: loading || !isLoaded ? 'not-allowed' : 'pointer',
+                opacity: loading || !isLoaded ? 0.5 : 1,
+                transition: 'background 0.15s ease'
+              }}
+            >
+              {loading ? 'Sending…' : 'Send Message'}
+            </button>
+
+            <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--ink-2)', textAlign: 'center' }}>
+              We use reCAPTCHA to protect this form.
+            </p>
+
+            <RecaptchaBadge />
+          </form>
+        )}
       </div>
     </InfoPageLayout>
   )
