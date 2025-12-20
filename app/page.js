@@ -24,24 +24,24 @@ const isAdmin = false
 
 const Icons = {
   Camera: () => (
-    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   X: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Sparkle: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
     </svg>
   ),
@@ -185,7 +185,7 @@ function BrandLink({ variant = 'landing' }) {
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={32} height={32} priority />
+          <Image src={appleIcon} alt="" width={64} height={64} priority />
         </span>
         <span className="plm-brand-text">protocolLM</span>
       </span>
@@ -193,9 +193,9 @@ function BrandLink({ variant = 'landing' }) {
   )
 }
 
-function FooterLinks({ variant = 'landing' }) {
+function FooterLinks() {
   return (
-    <div className={`plm-footer-links ${variant === 'chat' ? 'chat' : 'landing'} ${ibmMono.className}`}>
+    <div className={`plm-footer-links ${ibmMono.className}`}>
       <Link className="plm-footer-link" href="/terms">
         Terms
       </Link>
@@ -247,11 +247,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
   return (
     <div className={`${ibmMono.className} landing-root`}>
-      {/* Gradient mesh background */}
       <div className="landing-gradient-bg" />
       <div className="landing-grid-overlay" />
 
-      {/* Top bar */}
       <header className="landing-topbar">
         <div className="plm-brand-wrap">
           <BrandLink variant="landing" />
@@ -265,7 +263,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="pricing-menu-wrapper" ref={menuRef}>
             <button
               type="button"
-              className="btn-nav ghost"
+              className="btn-nav"
               onClick={() => setShowPricingMenu((v) => !v)}
               aria-expanded={showPricingMenu}
             >
@@ -274,14 +272,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
             {showPricingMenu && (
               <div className="pricing-dropdown">
-                <div className="pricing-dropdown-header">
-                  <span className="pricing-dropdown-title">protocolLM</span>
-                  <span className="pricing-dropdown-badge">Pro</span>
-                </div>
                 <div className="pricing-dropdown-amount">
                   <span className="currency">$</span>
                   <span className="amount">100</span>
-                  <span className="period">/mo</span>
+                  <span className="period">/month</span>
                 </div>
                 <p className="pricing-dropdown-note">7-day free trial · Cancel anytime</p>
                 <button
@@ -302,13 +296,12 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             Start trial
           </button>
 
-          <button onClick={onShowAuth} className="btn-nav ghost" type="button">
+          <button onClick={onShowAuth} className="btn-nav" type="button">
             Sign in
           </button>
         </nav>
       </header>
 
-      {/* Main hero */}
       <main className="landing-hero">
         <div className="hero-content">
           <div className="hero-terminal">
@@ -316,7 +309,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               <span className="terminal-dot red" />
               <span className="terminal-dot yellow" />
               <span className="terminal-dot green" />
-              <span className="terminal-title">protocolLM</span>
             </div>
             <div className="terminal-body">
               <pre className="terminal-output">
@@ -341,7 +333,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       </main>
 
       <MobileLandingActions onShowPricing={onShowPricing} onShowAuth={onShowAuth} />
-      <FooterLinks variant="landing" />
+      <FooterLinks />
     </div>
   )
 }
@@ -447,15 +439,10 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
           <div className="modal-header">
             <h2 className="modal-title">
-              {mode === 'signin' && 'Welcome back'}
+              {mode === 'signin' && 'Sign in'}
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className="modal-subtitle">
-              {mode === 'signin' && 'Sign in to your compliance console'}
-              {mode === 'signup' && 'Start your 7-day free trial'}
-              {mode === 'reset' && "We'll send you reset instructions"}
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="modal-form">
@@ -513,7 +500,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
             )}
             {mode === 'signup' && (
               <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                Already have an account? <strong>Sign in</strong>
+                Already have an account? Sign in
               </button>
             )}
             {mode === 'reset' && (
@@ -535,32 +522,17 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container modal-container-lg" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <div className={`modal-card pricing-modal ${ibmMono.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
-
-          <div className="pricing-modal-header">
-            <div className="pricing-badge-row">
-              <span className="pricing-badge">Pro</span>
-            </div>
-            <h2 className="pricing-modal-title">protocolLM</h2>
-            <p className="pricing-modal-desc">Full compliance suite for food service</p>
-          </div>
 
           <div className="pricing-modal-price">
             <span className="price-currency">$</span>
             <span className="price-value">100</span>
             <span className="price-period">/month</span>
           </div>
-
-          <ul className="pricing-features">
-            <li><span className="check">✓</span> Unlimited photo compliance checks</li>
-            <li><span className="check">✓</span> Full Washtenaw County database</li>
-            <li><span className="check">✓</span> Real-time regulation updates</li>
-            <li><span className="check">✓</span> Priority support</li>
-          </ul>
 
           <div className="pricing-modal-buttons">
             <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-primary" type="button">
@@ -956,13 +928,15 @@ export default function Page() {
       <div className={`loading-screen ${ibmMono.className}`}>
         <div className="loading-content">
           <div className="loading-logo">
-            <Image src={appleIcon} alt="protocolLM" width={48} height={48} priority />
+            <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
           </div>
-          <div className="loading-spinner" />
+          <div className="loading-bar">
+            <div className="loading-bar-fill" />
+          </div>
           <span className="loading-text">
-            {loadingStage === 'auth' && 'Authenticating…'}
-            {loadingStage === 'subscription' && 'Loading subscription…'}
-            {loadingStage === 'ready' && 'Almost ready…'}
+            {loadingStage === 'auth' && 'Authenticating'}
+            {loadingStage === 'subscription' && 'Loading'}
+            {loadingStage === 'ready' && 'Ready'}
           </span>
         </div>
       </div>
@@ -973,61 +947,43 @@ export default function Page() {
     <>
       <style jsx global>{`
         /* ==========================================================================
-           Design System: IBM Retro × Stripe 2025
-           Electric blue accent from logo (#4A7CFF range)
+           Design System: protocolLM
+           Professional. Serious. Effective.
            ========================================================================== */
         :root {
-          /* Core palette */
-          --bg-0: #08090c;
-          --bg-1: #0d0f14;
-          --bg-2: #12151c;
-          --bg-3: #181c26;
+          --bg-0: #0a0a0c;
+          --bg-1: #0f1012;
+          --bg-2: #151618;
+          --bg-3: #1c1d21;
           
-          /* Text */
-          --ink-0: #f4f4f8;
-          --ink-1: #c4c7d4;
-          --ink-2: #8a8fa3;
-          --ink-3: #5c6178;
+          --ink-0: #f5f5f7;
+          --ink-1: #a1a1a6;
+          --ink-2: #6e6e73;
+          --ink-3: #48484a;
           
-          /* Accent - Electric blue from logo */
           --accent: #4a7cff;
-          --accent-glow: rgba(74, 124, 255, 0.35);
-          --accent-subtle: rgba(74, 124, 255, 0.12);
-          --accent-hover: #5d8aff;
+          --accent-dim: rgba(74, 124, 255, 0.15);
+          --accent-glow: rgba(74, 124, 255, 0.4);
           
-          /* Borders */
           --border-subtle: rgba(255, 255, 255, 0.06);
           --border-default: rgba(255, 255, 255, 0.1);
-          --border-accent: rgba(74, 124, 255, 0.3);
-          --border-glow: rgba(74, 124, 255, 0.5);
+          --border-accent: rgba(74, 124, 255, 0.35);
           
-          /* Shadows */
-          --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-          --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-          --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
-          --shadow-glow: 0 0 40px rgba(74, 124, 255, 0.15);
-          
-          /* Radii */
           --radius-sm: 8px;
           --radius-md: 12px;
           --radius-lg: 16px;
-          --radius-xl: 20px;
           --radius-full: 9999px;
         }
 
-        *, *::before, *::after {
-          box-sizing: border-box;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
 
         html, body {
           height: 100%;
-          width: 100%;
           margin: 0;
-          background-color: var(--bg-0);
+          background: var(--bg-0);
           color: var(--ink-0);
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
         }
 
         @supports (overflow: clip) {
@@ -1040,7 +996,6 @@ export default function Page() {
           inset: 0;
           background: var(--bg-0);
           z-index: -1;
-          pointer-events: none;
         }
 
         @supports (-webkit-touch-callout: none) {
@@ -1048,42 +1003,26 @@ export default function Page() {
           body { min-height: -webkit-fill-available; }
         }
 
-        body {
-          position: relative;
-          overscroll-behavior: none;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        a, button, input, textarea {
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        :focus, :focus-visible {
-          outline: 2px solid var(--accent);
-          outline-offset: 2px;
-        }
-
-        button:focus, input:focus, textarea:focus {
-          outline: none;
-        }
+        a, button, input, textarea { -webkit-tap-highlight-color: transparent; }
+        :focus { outline: none; }
 
         ::selection {
-          background: var(--accent-subtle);
+          background: var(--accent-dim);
           color: var(--ink-0);
         }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-full);
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.12);
         }
 
         /* ==========================================================================
-           Loading Screen
+           Loading
            ========================================================================== */
         .loading-screen {
           position: fixed;
@@ -1099,16 +1038,12 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 20px;
+          gap: 24px;
         }
 
         .loading-logo {
           width: 64px;
           height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          animation: pulse-glow 2s ease-in-out infinite;
         }
 
         .loading-logo img {
@@ -1117,33 +1052,36 @@ export default function Page() {
           object-fit: contain;
         }
 
-        @keyframes pulse-glow {
-          0%, 100% { filter: drop-shadow(0 0 20px var(--accent-glow)); }
-          50% { filter: drop-shadow(0 0 40px var(--accent-glow)); }
+        .loading-bar {
+          width: 120px;
+          height: 2px;
+          background: var(--bg-3);
+          border-radius: var(--radius-full);
+          overflow: hidden;
         }
 
-        .loading-spinner {
-          width: 24px;
-          height: 24px;
-          border: 2px solid var(--border-default);
-          border-top-color: var(--accent);
+        .loading-bar-fill {
+          height: 100%;
+          width: 40%;
+          background: var(--accent);
           border-radius: var(--radius-full);
-          animation: spin 0.8s linear infinite;
+          animation: loading-slide 1s ease-in-out infinite;
+        }
+
+        @keyframes loading-slide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(350%); }
         }
 
         .loading-text {
           font-size: 11px;
-          letter-spacing: 0.15em;
+          letter-spacing: 0.2em;
           text-transform: uppercase;
           color: var(--ink-2);
         }
 
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
         /* ==========================================================================
-           App Container
+           App
            ========================================================================== */
         .app-container {
           min-height: 100vh;
@@ -1156,40 +1094,28 @@ export default function Page() {
         /* ==========================================================================
            Brand
            ========================================================================== */
-        .plm-brand-wrap {
-          display: flex;
-          align-items: center;
-        }
-
         .plm-brand {
           color: var(--ink-0);
           text-decoration: none;
-          font-weight: 600;
-          letter-spacing: 0.02em;
-          font-size: 18px;
-          padding: 8px 10px;
-          border-radius: var(--radius-md);
           display: inline-flex;
           align-items: center;
-          transition: background 0.2s ease;
+          padding: 6px;
+          margin: -6px;
+          border-radius: var(--radius-md);
+          transition: opacity 0.15s ease;
         }
 
-        .plm-brand:hover {
-          background: var(--accent-subtle);
-        }
+        .plm-brand:hover { opacity: 0.8; }
 
         .plm-brand-inner {
-          display: inline-flex;
+          display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
         }
 
         .plm-brand-mark {
-          width: 36px;
-          height: 36px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+          width: 64px;
+          height: 64px;
           flex-shrink: 0;
         }
 
@@ -1200,12 +1126,13 @@ export default function Page() {
         }
 
         .plm-brand-text {
-          font-weight: 700;
-          letter-spacing: -0.01em;
+          font-size: 20px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
         }
 
         /* ==========================================================================
-           Landing Page
+           Landing
            ========================================================================== */
         .landing-root {
           position: relative;
@@ -1220,26 +1147,23 @@ export default function Page() {
         .landing-gradient-bg {
           position: absolute;
           inset: 0;
-          background: 
-            radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-subtle), transparent),
-            radial-gradient(ellipse 60% 40% at 100% 0%, rgba(74, 124, 255, 0.08), transparent),
-            radial-gradient(ellipse 50% 30% at 0% 100%, rgba(74, 124, 255, 0.05), transparent);
+          background:
+            radial-gradient(ellipse 80% 60% at 50% -30%, rgba(74, 124, 255, 0.08), transparent),
+            radial-gradient(ellipse 50% 40% at 90% 10%, rgba(74, 124, 255, 0.04), transparent);
           pointer-events: none;
         }
 
         .landing-grid-overlay {
           position: absolute;
           inset: 0;
-          background-image: 
-            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-          background-size: 60px 60px;
-          mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+          background-image:
+            linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+          background-size: 80px 80px;
+          mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
           pointer-events: none;
-          opacity: 0.5;
         }
 
-        /* Topbar */
         .landing-topbar {
           position: absolute;
           top: 0;
@@ -1248,138 +1172,78 @@ export default function Page() {
           display: grid;
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
-          padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 16px max(20px, env(safe-area-inset-left));
+          padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px max(24px, env(safe-area-inset-left));
           z-index: 10;
         }
 
-        .landing-top-center {
-          justify-self: center;
-        }
-
+        .landing-top-center { justify-self: center; }
         .landing-top-actions {
           justify-self: end;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
         }
 
-        .desktop-only {
-          display: flex;
-        }
+        .desktop-only { display: flex; }
 
-        /* Navigation buttons */
         .btn-nav {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
           height: 36px;
           padding: 0 14px;
           background: transparent;
           color: var(--ink-1);
-          border: 1px solid transparent;
-          border-radius: var(--radius-md);
+          border: none;
+          border-radius: var(--radius-sm);
           font-size: 13px;
           font-weight: 500;
-          letter-spacing: 0.02em;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: color 0.15s ease, background 0.15s ease;
           font-family: inherit;
         }
 
         .btn-nav:hover {
           color: var(--ink-0);
-          background: var(--accent-subtle);
-        }
-
-        .btn-nav.ghost {
-          color: var(--ink-2);
-        }
-
-        .btn-nav.ghost:hover {
-          color: var(--ink-0);
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .btn-primary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
           height: 36px;
           padding: 0 16px;
           background: var(--accent);
-          color: white;
+          color: #fff;
           border: none;
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           font-size: 13px;
           font-weight: 600;
-          letter-spacing: 0.02em;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: background 0.15s ease, transform 0.15s ease;
           font-family: inherit;
-          box-shadow: 0 2px 8px rgba(74, 124, 255, 0.3);
         }
 
         .btn-primary:hover {
-          background: var(--accent-hover);
+          background: #5a8aff;
           transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(74, 124, 255, 0.4);
         }
 
-        .btn-primary.block {
-          width: 100%;
-        }
+        .btn-primary.block { width: 100%; }
 
-        /* Pricing dropdown */
-        .pricing-menu-wrapper {
-          position: relative;
-        }
+        .pricing-menu-wrapper { position: relative; }
 
         .pricing-dropdown {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
-          min-width: 260px;
+          min-width: 240px;
           background: var(--bg-2);
-          border: 1px solid var(--border-accent);
-          border-radius: var(--radius-lg);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
           padding: 20px;
-          box-shadow: var(--shadow-lg), var(--shadow-glow);
-          animation: dropdown-in 0.2s ease;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          animation: dropdown-in 0.15s ease;
         }
 
         @keyframes dropdown-in {
-          from {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .pricing-dropdown-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 12px;
-        }
-
-        .pricing-dropdown-title {
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--ink-0);
-          letter-spacing: -0.01em;
-        }
-
-        .pricing-dropdown-badge {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--accent);
-          background: var(--accent-subtle);
-          padding: 3px 8px;
-          border-radius: var(--radius-sm);
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .pricing-dropdown-amount {
@@ -1392,12 +1256,11 @@ export default function Page() {
         .pricing-dropdown-amount .currency {
           font-size: 16px;
           color: var(--ink-2);
-          font-weight: 500;
         }
 
         .pricing-dropdown-amount .amount {
-          font-size: 36px;
-          font-weight: 800;
+          font-size: 32px;
+          font-weight: 700;
           color: var(--ink-0);
           letter-spacing: -0.03em;
           font-family: ${outfit.style.fontFamily};
@@ -1416,51 +1279,47 @@ export default function Page() {
         }
 
         /* Doc pill */
-        .doc-pill-wrap {
-          display: flex;
-          justify-content: center;
-        }
+        .doc-pill-wrap { display: flex; justify-content: center; }
 
         .doc-pill {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 8px 16px;
+          padding: 8px 14px;
           background: var(--bg-2);
-          border: 1px solid var(--border-accent);
+          border: 1px solid var(--border-subtle);
           border-radius: var(--radius-full);
-          box-shadow: var(--shadow-sm), 0 0 20px rgba(74, 124, 255, 0.1);
         }
 
         .doc-pill-icon {
           color: var(--accent);
           display: flex;
-          animation: sparkle-rotate 4s linear infinite;
+          animation: spin-slow 8s linear infinite;
         }
 
-        @keyframes sparkle-rotate {
+        @keyframes spin-slow {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
 
         .doc-pill-label {
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 600;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-2);
         }
 
         .doc-pill-divider {
           width: 1px;
-          height: 12px;
-          background: var(--border-default);
+          height: 10px;
+          background: var(--border-subtle);
         }
 
         .doc-pill-item {
-          font-size: 12px;
+          font-size: 11px;
           color: var(--ink-1);
-          max-width: 200px;
+          max-width: 180px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1468,10 +1327,10 @@ export default function Page() {
         }
 
         @keyframes pill-fade {
-          0% { opacity: 0; transform: translateY(4px); }
-          15% { opacity: 1; transform: translateY(0); }
-          85% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(-4px); }
+          0% { opacity: 0; transform: translateY(3px); }
+          12% { opacity: 1; transform: translateY(0); }
+          88% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-3px); }
         }
 
         /* Hero */
@@ -1480,7 +1339,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 120px 24px 80px;
+          padding: 140px 24px 100px;
         }
 
         .hero-content {
@@ -1488,32 +1347,30 @@ export default function Page() {
           flex-direction: column;
           align-items: center;
           gap: 32px;
-          max-width: 640px;
+          max-width: 580px;
           width: 100%;
         }
 
-        /* Terminal card */
         .hero-terminal {
           width: 100%;
           background: var(--bg-1);
-          border: 1px solid var(--border-accent);
-          border-radius: var(--radius-xl);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
           overflow: hidden;
-          box-shadow: var(--shadow-lg), var(--shadow-glow);
         }
 
         .terminal-header {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 14px 18px;
+          gap: 6px;
+          padding: 12px 14px;
           background: var(--bg-2);
           border-bottom: 1px solid var(--border-subtle);
         }
 
         .terminal-dot {
-          width: 12px;
-          height: 12px;
+          width: 10px;
+          height: 10px;
           border-radius: var(--radius-full);
         }
 
@@ -1521,159 +1378,125 @@ export default function Page() {
         .terminal-dot.yellow { background: #febc2e; }
         .terminal-dot.green { background: #28c840; }
 
-        .terminal-title {
-          margin-left: auto;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--ink-2);
-          letter-spacing: 0.05em;
-        }
-
         .terminal-body {
-          padding: 24px;
-          min-height: 180px;
+          padding: 20px;
+          min-height: 160px;
         }
 
         .terminal-output {
           margin: 0;
-          font-size: 15px;
+          font-size: 14px;
           line-height: 1.7;
           color: var(--ink-1);
           white-space: pre-wrap;
         }
 
         .cursor-block {
-          display: inline-block;
           color: var(--accent);
-          animation: cursor-blink 1s steps(2) infinite;
+          animation: blink 1s steps(2) infinite;
         }
 
-        @keyframes cursor-blink {
+        @keyframes blink {
           0%, 50% { opacity: 1; }
           50.01%, 100% { opacity: 0; }
         }
 
-        /* Hero CTAs */
         .hero-cta-row {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
         .btn-hero-primary {
           display: inline-flex;
           align-items: center;
-          gap: 10px;
-          height: 48px;
-          padding: 0 24px;
+          gap: 8px;
+          height: 44px;
+          padding: 0 20px;
           background: var(--accent);
-          color: white;
+          color: #fff;
           border: none;
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: background 0.15s ease, transform 0.15s ease;
           font-family: inherit;
-          box-shadow: 0 4px 16px rgba(74, 124, 255, 0.4);
         }
 
         .btn-hero-primary:hover {
-          background: var(--accent-hover);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(74, 124, 255, 0.5);
+          background: #5a8aff;
+          transform: translateY(-1px);
         }
 
         .btn-hero-secondary {
-          display: inline-flex;
-          align-items: center;
-          height: 48px;
-          padding: 0 24px;
+          height: 44px;
+          padding: 0 20px;
           background: transparent;
           color: var(--ink-1);
           border: 1px solid var(--border-default);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           font-size: 14px;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: color 0.15s ease, border-color 0.15s ease;
           font-family: inherit;
         }
 
         .btn-hero-secondary:hover {
           color: var(--ink-0);
-          border-color: var(--border-accent);
-          background: var(--accent-subtle);
+          border-color: var(--ink-3);
         }
 
         /* Mobile actions */
         .landing-mobile-actions {
           position: absolute;
-          bottom: calc(max(20px, env(safe-area-inset-bottom)) + 52px);
+          bottom: calc(max(20px, env(safe-area-inset-bottom)) + 50px);
           left: 50%;
           transform: translateX(-50%);
           display: none;
           align-items: center;
-          gap: 8px;
-          padding: 8px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-accent);
-          border-radius: var(--radius-full);
-          box-shadow: var(--shadow-md);
-          z-index: 10;
-        }
-
-        .mob-cta {
-          height: 36px;
-          padding: 0 14px;
-          border-radius: var(--radius-full);
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.02em;
-          cursor: pointer;
-          border: none;
-          background: transparent;
-          color: var(--ink-1);
-          transition: all 0.2s ease;
-          font-family: inherit;
-        }
-
-        .mob-cta:hover {
-          color: var(--ink-0);
-        }
-
-        .mob-cta.primary {
-          background: var(--accent);
-          color: white;
-        }
-
-        .mob-cta.primary:hover {
-          background: var(--accent-hover);
-        }
-
-        /* Footer links */
-        .plm-footer-links {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 10px 20px;
+          gap: 6px;
+          padding: 6px;
           background: var(--bg-2);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-full);
           z-index: 10;
         }
 
-        .plm-footer-links.landing {
-          bottom: max(20px, env(safe-area-inset-bottom));
+        .mob-cta {
+          height: 34px;
+          padding: 0 14px;
+          border-radius: var(--radius-full);
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          background: transparent;
+          color: var(--ink-1);
+          font-family: inherit;
+          transition: color 0.15s ease, background 0.15s ease;
         }
 
-        .plm-footer-links.chat {
-          position: static;
-          transform: none;
-          margin: 12px auto 0;
+        .mob-cta:hover { color: var(--ink-0); }
+
+        .mob-cta.primary {
+          background: var(--accent);
+          color: #fff;
+        }
+
+        .mob-cta.primary:hover { background: #5a8aff; }
+
+        /* Footer links */
+        .plm-footer-links {
+          position: absolute;
+          bottom: max(20px, env(safe-area-inset-bottom));
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          z-index: 10;
         }
 
         .plm-footer-link {
@@ -1681,18 +1504,13 @@ export default function Page() {
           text-decoration: none;
           font-size: 11px;
           font-weight: 500;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
-          transition: color 0.2s ease;
+          transition: color 0.15s ease;
         }
 
-        .plm-footer-link:hover {
-          color: var(--ink-0);
-        }
-
-        .plm-footer-sep {
-          color: var(--ink-3);
-        }
+        .plm-footer-link:hover { color: var(--ink-0); }
+        .plm-footer-sep { color: var(--ink-3); }
 
         /* ==========================================================================
            Modals
@@ -1701,13 +1519,13 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(8px);
+          background: rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
-          animation: fade-in 0.2s ease;
+          animation: fade-in 0.15s ease;
         }
 
         @keyframes fade-in {
@@ -1717,73 +1535,53 @@ export default function Page() {
 
         .modal-container {
           width: 100%;
-          max-width: 400px;
-          animation: modal-up 0.25s ease;
-        }
-
-        .modal-container-lg {
-          max-width: 440px;
+          max-width: 380px;
+          animation: modal-up 0.2s ease;
         }
 
         @keyframes modal-up {
-          from {
-            opacity: 0;
-            transform: translateY(16px) scale(0.98);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .modal-card {
           position: relative;
           background: var(--bg-1);
-          border: 1px solid var(--border-accent);
-          border-radius: var(--radius-xl);
-          padding: 32px;
-          box-shadow: var(--shadow-lg), var(--shadow-glow);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          padding: 28px;
         }
 
         .modal-close {
           position: absolute;
           top: 16px;
           right: 16px;
-          width: 32px;
-          height: 32px;
+          width: 28px;
+          height: 28px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
+          background: transparent;
+          border: none;
           color: var(--ink-2);
           cursor: pointer;
-          transition: all 0.2s ease;
+          border-radius: var(--radius-sm);
+          transition: color 0.15s ease, background 0.15s ease;
         }
 
         .modal-close:hover {
           color: var(--ink-0);
-          border-color: var(--border-default);
+          background: rgba(255, 255, 255, 0.04);
         }
 
-        .modal-header {
-          text-align: center;
-          margin-bottom: 24px;
-        }
+        .modal-header { margin-bottom: 24px; }
 
         .modal-title {
-          font-size: 22px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          margin: 0 0 8px;
-          color: var(--ink-0);
-        }
-
-        .modal-subtitle {
-          font-size: 14px;
-          color: var(--ink-2);
+          font-size: 18px;
+          font-weight: 600;
           margin: 0;
+          color: var(--ink-0);
+          letter-spacing: -0.01em;
         }
 
         .modal-form {
@@ -1801,35 +1599,28 @@ export default function Page() {
         .form-label {
           font-size: 12px;
           font-weight: 500;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.04em;
           text-transform: uppercase;
           color: var(--ink-2);
         }
 
         .form-input {
           width: 100%;
-          height: 44px;
-          padding: 0 14px;
+          height: 42px;
+          padding: 0 12px;
           background: var(--bg-2);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-md);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
           color: var(--ink-0);
           font-size: 14px;
           font-family: inherit;
-          transition: border-color 0.2s ease;
+          transition: border-color 0.15s ease;
         }
 
-        .form-input::placeholder {
-          color: var(--ink-3);
-        }
+        .form-input::placeholder { color: var(--ink-3); }
+        .form-input:focus { border-color: var(--accent); }
 
-        .form-input:focus {
-          border-color: var(--accent);
-        }
-
-        .form-input-wrap {
-          position: relative;
-        }
+        .form-input-wrap { position: relative; }
 
         .form-toggle-vis {
           position: absolute;
@@ -1839,83 +1630,68 @@ export default function Page() {
           background: none;
           border: none;
           color: var(--ink-2);
-          font-size: 12px;
-          font-weight: 500;
-          letter-spacing: 0.05em;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
           text-transform: uppercase;
           cursor: pointer;
           font-family: inherit;
         }
 
-        .form-toggle-vis:hover {
-          color: var(--ink-0);
-        }
+        .form-toggle-vis:hover { color: var(--ink-0); }
 
         .btn-submit {
           width: 100%;
-          height: 44px;
+          height: 42px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
+          gap: 8px;
           background: var(--accent);
-          color: white;
+          color: #fff;
           border: none;
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s ease;
           font-family: inherit;
+          transition: background 0.15s ease;
           margin-top: 8px;
         }
 
-        .btn-submit:hover:not(:disabled) {
-          background: var(--accent-hover);
-          transform: translateY(-1px);
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
+        .btn-submit:hover:not(:disabled) { background: #5a8aff; }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .spinner {
-          width: 16px;
-          height: 16px;
+          width: 14px;
+          height: 14px;
           border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
+          border-top-color: #fff;
           border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
 
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .modal-message {
-          padding: 12px 16px;
+          padding: 10px 12px;
           background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           font-size: 13px;
           color: var(--ink-1);
           text-align: center;
           margin-top: 16px;
         }
 
-        .modal-message.ok {
-          border-color: rgba(40, 200, 64, 0.4);
-          color: #28c840;
-        }
-
-        .modal-message.err {
-          border-color: rgba(255, 95, 87, 0.4);
-          color: #ff5f57;
-        }
+        .modal-message.ok { color: #28c840; }
+        .modal-message.err { color: #ff5f57; }
 
         .modal-footer {
           margin-top: 20px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
 
         .modal-link {
@@ -1925,63 +1701,19 @@ export default function Page() {
           color: var(--ink-2);
           cursor: pointer;
           font-family: inherit;
-          transition: color 0.2s ease;
         }
 
-        .modal-link:hover {
-          color: var(--ink-0);
-        }
-
-        .modal-link strong {
-          color: var(--accent);
-          font-weight: 600;
-        }
+        .modal-link:hover { color: var(--ink-0); }
 
         /* Pricing modal */
-        .pricing-modal {
-          text-align: center;
-        }
-
-        .pricing-modal-header {
-          margin-bottom: 20px;
-        }
-
-        .pricing-badge-row {
-          margin-bottom: 8px;
-        }
-
-        .pricing-badge {
-          display: inline-block;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--accent);
-          background: var(--accent-subtle);
-          padding: 4px 12px;
-          border-radius: var(--radius-full);
-        }
-
-        .pricing-modal-title {
-          font-size: 26px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          margin: 0 0 6px;
-          color: var(--ink-0);
-        }
-
-        .pricing-modal-desc {
-          font-size: 14px;
-          color: var(--ink-2);
-          margin: 0;
-        }
+        .pricing-modal { text-align: center; }
 
         .pricing-modal-price {
           display: flex;
           align-items: baseline;
           justify-content: center;
           gap: 2px;
-          margin: 24px 0;
+          margin-bottom: 28px;
         }
 
         .price-currency {
@@ -1992,42 +1724,16 @@ export default function Page() {
 
         .price-value {
           font-size: 56px;
-          font-weight: 800;
-          letter-spacing: -0.04em;
+          font-weight: 700;
           color: var(--ink-0);
+          letter-spacing: -0.04em;
           font-family: ${outfit.style.fontFamily};
         }
 
         .price-period {
           font-size: 16px;
           color: var(--ink-2);
-          margin-left: 4px;
-        }
-
-        .pricing-features {
-          list-style: none;
-          padding: 0;
-          margin: 0 0 24px;
-          text-align: left;
-        }
-
-        .pricing-features li {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px 0;
-          font-size: 14px;
-          color: var(--ink-1);
-          border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .pricing-features li:last-child {
-          border-bottom: none;
-        }
-
-        .pricing-features .check {
-          color: var(--accent);
-          font-weight: 600;
+          margin-left: 2px;
         }
 
         .pricing-modal-buttons {
@@ -2040,29 +1746,26 @@ export default function Page() {
         .btn-pricing-primary,
         .btn-pricing-secondary {
           width: 100%;
-          height: 48px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
-          border-radius: var(--radius-md);
+          gap: 8px;
+          border-radius: var(--radius-sm);
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s ease;
           font-family: inherit;
+          transition: background 0.15s ease, border-color 0.15s ease;
         }
 
         .btn-pricing-primary {
           background: var(--accent);
-          color: white;
+          color: #fff;
           border: none;
         }
 
-        .btn-pricing-primary:hover:not(:disabled) {
-          background: var(--accent-hover);
-          transform: translateY(-1px);
-        }
+        .btn-pricing-primary:hover:not(:disabled) { background: #5a8aff; }
 
         .btn-pricing-secondary {
           background: transparent;
@@ -2071,35 +1774,31 @@ export default function Page() {
         }
 
         .btn-pricing-secondary:hover:not(:disabled) {
-          border-color: var(--border-accent);
-          background: var(--accent-subtle);
+          border-color: var(--ink-3);
         }
 
         .btn-pricing-primary:disabled,
-        .btn-pricing-secondary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
+        .btn-pricing-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .save-badge {
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 700;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.04em;
           text-transform: uppercase;
           color: #28c840;
-          background: rgba(40, 200, 64, 0.15);
-          padding: 3px 8px;
-          border-radius: var(--radius-sm);
+          background: rgba(40, 200, 64, 0.12);
+          padding: 3px 6px;
+          border-radius: 4px;
         }
 
         .pricing-modal-terms {
-          font-size: 12px;
+          font-size: 11px;
           color: var(--ink-3);
           margin: 0;
         }
 
         /* ==========================================================================
-           Chat Interface
+           Chat
            ========================================================================== */
         .chat-root {
           flex: 1;
@@ -2107,26 +1806,24 @@ export default function Page() {
           flex-direction: column;
           min-height: 0;
           background: var(--bg-0);
-          position: relative;
         }
 
         .chat-topbar {
           width: 100%;
-          max-width: 900px;
+          max-width: 880px;
           margin: 0 auto;
-          padding: 16px 20px;
-          padding-left: max(20px, env(safe-area-inset-left));
-          padding-right: max(20px, env(safe-area-inset-right));
+          padding: 16px 24px;
+          padding-left: max(24px, env(safe-area-inset-left));
+          padding-right: max(24px, env(safe-area-inset-right));
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 16px;
         }
 
         .chat-top-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 4px;
         }
 
         .chat-messages {
@@ -2134,7 +1831,7 @@ export default function Page() {
           min-height: 0;
           overflow-y: auto;
           overscroll-behavior: contain;
-          padding: 0 20px 24px;
+          padding: 0 24px 32px;
         }
 
         .chat-messages.empty {
@@ -2144,54 +1841,24 @@ export default function Page() {
         }
 
         .chat-empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
           text-align: center;
-          max-width: 400px;
+          max-width: 360px;
         }
 
-        .chat-empty-icon {
-          width: 80px;
-          height: 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--accent-subtle);
-          border: 1px solid var(--border-accent);
-          border-radius: var(--radius-xl);
-          color: var(--accent);
-          margin-bottom: 20px;
-          box-shadow: 0 0 40px rgba(74, 124, 255, 0.2);
-        }
-
-        .chat-empty-icon svg {
-          width: 36px;
-          height: 36px;
-        }
-
-        .chat-empty-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: var(--ink-0);
-          margin: 0 0 8px;
-          letter-spacing: -0.01em;
-        }
-
-        .chat-empty-desc {
-          font-size: 14px;
+        .chat-empty-text {
+          font-size: 15px;
           color: var(--ink-2);
-          margin: 0;
           line-height: 1.6;
+          margin: 0;
         }
 
         .chat-history {
-          max-width: 800px;
+          max-width: 760px;
           margin: 0 auto;
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 24px;
           padding-top: 16px;
         }
 
@@ -2200,45 +1867,34 @@ export default function Page() {
           width: 100%;
         }
 
-        .chat-message-user {
-          justify-content: flex-end;
-        }
-
-        .chat-message-assistant {
-          justify-content: flex-start;
-        }
+        .chat-message-user { justify-content: flex-end; }
+        .chat-message-assistant { justify-content: flex-start; }
 
         .chat-bubble {
-          max-width: 85%;
-          padding: 14px 18px;
-          border-radius: var(--radius-lg);
+          max-width: 80%;
           font-size: 14px;
-          line-height: 1.65;
+          line-height: 1.7;
         }
 
         .chat-bubble-user {
-          background: var(--accent);
-          color: white;
-          border-bottom-right-radius: var(--radius-sm);
+          color: var(--ink-0);
         }
 
         .chat-bubble-assistant {
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
           color: var(--ink-1);
-          border-bottom-left-radius: var(--radius-sm);
         }
 
         .chat-bubble-image {
           border-radius: var(--radius-md);
           overflow: hidden;
           margin-bottom: 12px;
+          display: inline-block;
         }
 
         .chat-bubble-image img {
           display: block;
           max-width: 100%;
-          max-height: 300px;
+          max-height: 280px;
           object-fit: contain;
         }
 
@@ -2247,101 +1903,124 @@ export default function Page() {
           font-style: italic;
         }
 
-        /* Chat input area */
+        /* Chat input */
         .chat-input-area {
           flex-shrink: 0;
-          background: linear-gradient(to top, var(--bg-0) 80%, transparent);
-          padding-top: 24px;
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-0);
         }
 
         .chat-input-inner {
-          max-width: 800px;
+          max-width: 760px;
           margin: 0 auto;
-          padding: 0 20px 20px;
-          padding-bottom: max(20px, env(safe-area-inset-bottom));
+          padding: 16px 24px 24px;
+          padding-bottom: max(24px, env(safe-area-inset-bottom));
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
-          gap: 12px;
-          padding: 10px 14px;
+          gap: 10px;
+          padding: 8px 12px;
           background: var(--bg-2);
-          border: 1px solid var(--border-accent);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           margin-bottom: 12px;
-        }
-
-        .chat-attachment-info {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
+          font-size: 12px;
           color: var(--ink-1);
         }
 
-        .chat-attachment-icon {
-          color: var(--accent);
-        }
+        .chat-attachment-icon { color: var(--accent); display: flex; }
 
         .chat-attachment-remove {
-          width: 28px;
-          height: 28px;
+          width: 24px;
+          height: 24px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--bg-3);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
+          background: transparent;
+          border: none;
           color: var(--ink-2);
           cursor: pointer;
-          transition: all 0.2s ease;
+          border-radius: var(--radius-sm);
         }
 
-        .chat-attachment-remove:hover {
-          color: var(--ink-0);
-          border-color: var(--border-default);
-        }
+        .chat-attachment-remove:hover { color: var(--ink-0); }
 
         .chat-input-row {
           display: flex;
           align-items: flex-end;
-          gap: 12px;
+          gap: 10px;
+        }
+
+        /* Camera button with trace animation */
+        .chat-camera-wrap {
+          position: relative;
+          flex-shrink: 0;
         }
 
         .chat-camera-btn {
-          width: 48px;
-          height: 48px;
+          position: relative;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--accent-subtle);
-          border: 1px solid var(--border-accent);
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
           border-radius: var(--radius-md);
-          color: var(--accent);
+          color: var(--ink-1);
           cursor: pointer;
-          transition: all 0.2s ease;
-          flex-shrink: 0;
-          box-shadow: 0 0 20px rgba(74, 124, 255, 0.15);
+          transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+          z-index: 1;
         }
 
         .chat-camera-btn:hover {
-          background: var(--accent);
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 20px rgba(74, 124, 255, 0.4);
+          color: var(--accent);
+          border-color: var(--border-accent);
+          background: var(--accent-dim);
+        }
+
+        /* Tracing border animation */
+        .camera-trace {
+          position: absolute;
+          inset: -2px;
+          border-radius: calc(var(--radius-md) + 2px);
+          pointer-events: none;
+          overflow: hidden;
+        }
+
+        .camera-trace::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          padding: 2px;
+          border-radius: inherit;
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            var(--accent) 60deg,
+            transparent 120deg
+          );
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          animation: trace-rotate 3s linear infinite;
+        }
+
+        @keyframes trace-rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          gap: 12px;
           background: var(--bg-2);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-lg);
-          padding: 4px 4px 4px 16px;
-          transition: border-color 0.2s ease;
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          transition: border-color 0.15s ease;
         }
 
         .chat-input-wrapper:focus-within {
@@ -2350,9 +2029,9 @@ export default function Page() {
 
         .chat-textarea {
           flex: 1;
-          min-height: 40px;
+          min-height: 44px;
           max-height: 160px;
-          padding: 10px 0;
+          padding: 12px 14px;
           background: transparent;
           border: none;
           color: var(--ink-0);
@@ -2362,43 +2041,31 @@ export default function Page() {
           font-family: inherit;
         }
 
-        .chat-textarea::placeholder {
-          color: var(--ink-3);
-        }
-
-        .chat-textarea:focus {
-          outline: none;
-        }
+        .chat-textarea::placeholder { color: var(--ink-3); }
+        .chat-textarea:focus { outline: none; }
 
         .chat-send-btn {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--accent);
+          background: transparent;
           border: none;
-          border-radius: var(--radius-md);
-          color: white;
+          color: var(--ink-2);
           cursor: pointer;
-          transition: all 0.2s ease;
           flex-shrink: 0;
+          transition: color 0.15s ease;
         }
 
-        .chat-send-btn:hover:not(:disabled) {
-          background: var(--accent-hover);
-        }
-
-        .chat-send-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
+        .chat-send-btn:hover:not(:disabled) { color: var(--accent); }
+        .chat-send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .chat-send-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
+          border: 2px solid var(--border-subtle);
+          border-top-color: var(--accent);
           border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
@@ -2416,69 +2083,35 @@ export default function Page() {
         @media (max-width: 768px) {
           .landing-topbar {
             grid-template-columns: 1fr;
-            padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
           }
 
-          .landing-top-center {
-            display: none;
-          }
+          .landing-top-center { display: none; }
+          .desktop-only { display: none !important; }
+          .landing-mobile-actions { display: flex; }
 
-          .desktop-only {
-            display: none !important;
-          }
+          .landing-hero { padding: 120px 20px 120px; }
+          .terminal-output { font-size: 13px; }
 
-          .landing-mobile-actions {
-            display: flex;
-          }
+          .plm-brand-mark { width: 48px; height: 48px; }
+          .plm-brand-text { font-size: 17px; }
 
-          .landing-hero {
-            padding: 100px 20px 100px;
-          }
-
-          .terminal-output {
-            font-size: 14px;
-          }
-
-          .plm-brand {
-            font-size: 16px;
-          }
-
-          .plm-brand-mark {
-            width: 32px;
-            height: 32px;
-          }
-
-          .chat-topbar {
-            padding: 12px 16px;
-          }
-
-          .chat-messages {
-            padding: 0 16px 20px;
-          }
-
-          .chat-input-inner {
-            padding: 0 16px 16px;
-          }
-
-          .chat-bubble {
-            max-width: 90%;
-          }
+          .chat-topbar { padding: 12px 16px; }
+          .chat-messages { padding: 0 16px 24px; }
+          .chat-input-inner { padding: 12px 16px 20px; }
+          .chat-bubble { max-width: 88%; }
         }
 
         @media (max-width: 480px) {
-          .modal-card {
-            padding: 24px 20px;
-          }
-
-          .pricing-modal-price .price-value {
-            font-size: 48px;
-          }
+          .modal-card { padding: 24px 20px; }
+          .price-value { font-size: 48px; }
+          .plm-brand-mark { width: 44px; height: 44px; }
+          .plm-brand-text { font-size: 16px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
             animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
           }
         }
@@ -2506,14 +2139,13 @@ export default function Page() {
             <div className={`${ibmMono.className} chat-root`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
-
                 <nav className="chat-top-actions">
                   {hasActiveSubscription && (
-                    <button onClick={handleManageBilling} className="btn-nav ghost" type="button">
+                    <button onClick={handleManageBilling} className="btn-nav" type="button">
                       Billing
                     </button>
                   )}
-                  <button onClick={handleSignOut} className="btn-nav ghost" type="button">
+                  <button onClick={handleSignOut} className="btn-nav" type="button">
                     Log out
                   </button>
                 </nav>
@@ -2522,12 +2154,8 @@ export default function Page() {
               <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
-                    <div className="chat-empty-icon">
-                      <Icons.Camera />
-                    </div>
-                    <h2 className="chat-empty-title">Upload a photo for instant compliance check</h2>
-                    <p className="chat-empty-desc">
-                      Snap a photo of your kitchen, storage, or prep area. Our AI will identify potential violations before your next inspection.
+                    <p className="chat-empty-text">
+                      Upload a photo or ask a question about Washtenaw County food safety regulations.
                     </p>
                   </div>
                 ) : (
@@ -2558,10 +2186,8 @@ export default function Page() {
 
                   {selectedImage && (
                     <div className="chat-attachment">
-                      <div className="chat-attachment-info">
-                        <span className="chat-attachment-icon"><Icons.Camera /></span>
-                        <span>Image ready</span>
-                      </div>
+                      <span className="chat-attachment-icon"><Icons.Camera /></span>
+                      <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
                         className="chat-attachment-remove"
@@ -2576,11 +2202,14 @@ export default function Page() {
                   <div className="chat-input-row">
                     <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 
-                    <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
-                      <Icons.Camera />
-                    </button>
+                    <div className="chat-camera-wrap">
+                      <div className="camera-trace" />
+                      <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
+                        <Icons.Camera />
+                      </button>
+                    </div>
 
-                    <form onSubmit={handleSend} className="chat-input-wrapper">
+                    <div className="chat-input-wrapper">
                       <textarea
                         ref={textAreaRef}
                         value={input}
@@ -2591,7 +2220,7 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Ask about regulations or describe what you see…"
+                        placeholder="Ask a question…"
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
@@ -2602,14 +2231,13 @@ export default function Page() {
                         }}
                       />
 
-                      <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className="chat-send-btn" aria-label="Send">
+                      <button type="button" onClick={handleSend} disabled={(!input.trim() && !selectedImage) || isSending} className="chat-send-btn" aria-label="Send">
                         {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
                       </button>
-                    </form>
+                    </div>
                   </div>
 
                   <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
-                  <FooterLinks variant="chat" />
                 </div>
               </div>
             </div>
