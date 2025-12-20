@@ -247,8 +247,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
   return (
     <div className={`${ibmMono.className} landing-root`}>
-      <div className="landing-gradient-bg" />
-      <div className="landing-grid-overlay" />
+      <div className="landing-bg" />
 
       <header className="landing-topbar">
         <div className="plm-brand-wrap">
@@ -933,11 +932,6 @@ export default function Page() {
           <div className="loading-bar">
             <div className="loading-bar-fill" />
           </div>
-          <span className="loading-text">
-            {loadingStage === 'auth' && 'Authenticating'}
-            {loadingStage === 'subscription' && 'Loading'}
-            {loadingStage === 'ready' && 'Ready'}
-          </span>
         </div>
       </div>
     )
@@ -947,27 +941,25 @@ export default function Page() {
     <>
       <style jsx global>{`
         /* ==========================================================================
-           Design System: protocolLM
-           Professional. Serious. Effective.
+           protocolLM Design System
            ========================================================================== */
         :root {
-          --bg-0: #0a0a0c;
-          --bg-1: #0f1012;
-          --bg-2: #151618;
-          --bg-3: #1c1d21;
+          --bg-0: #09090b;
+          --bg-1: #0c0c0e;
+          --bg-2: #131316;
+          --bg-3: #1a1a1f;
           
-          --ink-0: #f5f5f7;
-          --ink-1: #a1a1a6;
-          --ink-2: #6e6e73;
-          --ink-3: #48484a;
+          --ink-0: #fafafa;
+          --ink-1: #a0a0a8;
+          --ink-2: #636369;
+          --ink-3: #3f3f46;
           
-          --accent: #4a7cff;
-          --accent-dim: rgba(74, 124, 255, 0.15);
-          --accent-glow: rgba(74, 124, 255, 0.4);
+          --accent: #3b82f6;
+          --accent-hover: #2563eb;
+          --accent-dim: rgba(59, 130, 246, 0.1);
           
-          --border-subtle: rgba(255, 255, 255, 0.06);
-          --border-default: rgba(255, 255, 255, 0.1);
-          --border-accent: rgba(74, 124, 255, 0.35);
+          --border-subtle: rgba(255, 255, 255, 0.05);
+          --border-default: rgba(255, 255, 255, 0.08);
           
           --radius-sm: 8px;
           --radius-md: 12px;
@@ -984,10 +976,6 @@ export default function Page() {
           color: var(--ink-0);
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
-        }
-
-        @supports (overflow: clip) {
-          html, body { overflow-x: clip; }
         }
 
         body::before {
@@ -1014,11 +1002,8 @@ export default function Page() {
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.06);
           border-radius: var(--radius-full);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.12);
         }
 
         /* ==========================================================================
@@ -1038,7 +1023,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 24px;
+          gap: 32px;
         }
 
         .loading-logo {
@@ -1053,7 +1038,7 @@ export default function Page() {
         }
 
         .loading-bar {
-          width: 120px;
+          width: 100px;
           height: 2px;
           background: var(--bg-3);
           border-radius: var(--radius-full);
@@ -1062,22 +1047,14 @@ export default function Page() {
 
         .loading-bar-fill {
           height: 100%;
-          width: 40%;
+          width: 30%;
           background: var(--accent);
-          border-radius: var(--radius-full);
           animation: loading-slide 1s ease-in-out infinite;
         }
 
         @keyframes loading-slide {
           0% { transform: translateX(-100%); }
-          100% { transform: translateX(350%); }
-        }
-
-        .loading-text {
-          font-size: 11px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: var(--ink-2);
+          100% { transform: translateX(400%); }
         }
 
         /* ==========================================================================
@@ -1099,13 +1076,10 @@ export default function Page() {
           text-decoration: none;
           display: inline-flex;
           align-items: center;
-          padding: 6px;
-          margin: -6px;
-          border-radius: var(--radius-md);
           transition: opacity 0.15s ease;
         }
 
-        .plm-brand:hover { opacity: 0.8; }
+        .plm-brand:hover { opacity: 0.7; }
 
         .plm-brand-inner {
           display: flex;
@@ -1144,23 +1118,10 @@ export default function Page() {
           overflow: hidden;
         }
 
-        .landing-gradient-bg {
+        .landing-bg {
           position: absolute;
           inset: 0;
-          background:
-            radial-gradient(ellipse 80% 60% at 50% -30%, rgba(74, 124, 255, 0.08), transparent),
-            radial-gradient(ellipse 50% 40% at 90% 10%, rgba(74, 124, 255, 0.04), transparent);
-          pointer-events: none;
-        }
-
-        .landing-grid-overlay {
-          position: absolute;
-          inset: 0;
-          background-image:
-            linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-          background-size: 80px 80px;
-          mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+          background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 130, 246, 0.06), transparent 70%);
           pointer-events: none;
         }
 
@@ -1181,7 +1142,7 @@ export default function Page() {
           justify-self: end;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
         }
 
         .desktop-only { display: flex; }
@@ -1196,14 +1157,11 @@ export default function Page() {
           font-size: 13px;
           font-weight: 500;
           cursor: pointer;
-          transition: color 0.15s ease, background 0.15s ease;
+          transition: color 0.15s ease;
           font-family: inherit;
         }
 
-        .btn-nav:hover {
-          color: var(--ink-0);
-          background: rgba(255, 255, 255, 0.04);
-        }
+        .btn-nav:hover { color: var(--ink-0); }
 
         .btn-primary {
           height: 36px;
@@ -1215,15 +1173,11 @@ export default function Page() {
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
-          transition: background 0.15s ease, transform 0.15s ease;
+          transition: background 0.15s ease;
           font-family: inherit;
         }
 
-        .btn-primary:hover {
-          background: #5a8aff;
-          transform: translateY(-1px);
-        }
-
+        .btn-primary:hover { background: var(--accent-hover); }
         .btn-primary.block { width: 100%; }
 
         .pricing-menu-wrapper { position: relative; }
@@ -1237,7 +1191,7 @@ export default function Page() {
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
           padding: 20px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
           animation: dropdown-in 0.15s ease;
         }
 
@@ -1269,7 +1223,6 @@ export default function Page() {
         .pricing-dropdown-amount .period {
           font-size: 14px;
           color: var(--ink-2);
-          margin-left: 2px;
         }
 
         .pricing-dropdown-note {
@@ -1294,18 +1247,12 @@ export default function Page() {
         .doc-pill-icon {
           color: var(--accent);
           display: flex;
-          animation: spin-slow 8s linear infinite;
-        }
-
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
         }
 
         .doc-pill-label {
           font-size: 10px;
           font-weight: 600;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
           color: var(--ink-2);
         }
@@ -1347,7 +1294,7 @@ export default function Page() {
           flex-direction: column;
           align-items: center;
           gap: 32px;
-          max-width: 580px;
+          max-width: 560px;
           width: 100%;
         }
 
@@ -1379,14 +1326,14 @@ export default function Page() {
         .terminal-dot.green { background: #28c840; }
 
         .terminal-body {
-          padding: 20px;
+          padding: 24px;
           min-height: 160px;
         }
 
         .terminal-output {
           margin: 0;
           font-size: 14px;
-          line-height: 1.7;
+          line-height: 1.75;
           color: var(--ink-1);
           white-space: pre-wrap;
         }
@@ -1420,14 +1367,11 @@ export default function Page() {
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: background 0.15s ease, transform 0.15s ease;
+          transition: background 0.15s ease;
           font-family: inherit;
         }
 
-        .btn-hero-primary:hover {
-          background: #5a8aff;
-          transform: translateY(-1px);
-        }
+        .btn-hero-primary:hover { background: var(--accent-hover); }
 
         .btn-hero-secondary {
           height: 44px;
@@ -1451,13 +1395,13 @@ export default function Page() {
         /* Mobile actions */
         .landing-mobile-actions {
           position: absolute;
-          bottom: calc(max(20px, env(safe-area-inset-bottom)) + 50px);
+          bottom: calc(max(20px, env(safe-area-inset-bottom)) + 44px);
           left: 50%;
           transform: translateX(-50%);
           display: none;
           align-items: center;
-          gap: 6px;
-          padding: 6px;
+          gap: 4px;
+          padding: 4px;
           background: var(--bg-2);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-full);
@@ -1475,7 +1419,7 @@ export default function Page() {
           background: transparent;
           color: var(--ink-1);
           font-family: inherit;
-          transition: color 0.15s ease, background 0.15s ease;
+          transition: color 0.15s ease;
         }
 
         .mob-cta:hover { color: var(--ink-0); }
@@ -1485,7 +1429,7 @@ export default function Page() {
           color: #fff;
         }
 
-        .mob-cta.primary:hover { background: #5a8aff; }
+        .mob-cta.primary:hover { background: var(--accent-hover); }
 
         /* Footer links */
         .plm-footer-links {
@@ -1504,7 +1448,7 @@ export default function Page() {
           text-decoration: none;
           font-size: 11px;
           font-weight: 500;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.04em;
           text-transform: uppercase;
           transition: color 0.15s ease;
         }
@@ -1519,7 +1463,7 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(0, 0, 0, 0.75);
+          background: rgba(0, 0, 0, 0.8);
           backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
@@ -1535,7 +1479,7 @@ export default function Page() {
 
         .modal-container {
           width: 100%;
-          max-width: 380px;
+          max-width: 360px;
           animation: modal-up 0.2s ease;
         }
 
@@ -1566,13 +1510,10 @@ export default function Page() {
           color: var(--ink-2);
           cursor: pointer;
           border-radius: var(--radius-sm);
-          transition: color 0.15s ease, background 0.15s ease;
+          transition: color 0.15s ease;
         }
 
-        .modal-close:hover {
-          color: var(--ink-0);
-          background: rgba(255, 255, 255, 0.04);
-        }
+        .modal-close:hover { color: var(--ink-0); }
 
         .modal-header { margin-bottom: 24px; }
 
@@ -1581,7 +1522,6 @@ export default function Page() {
           font-weight: 600;
           margin: 0;
           color: var(--ink-0);
-          letter-spacing: -0.01em;
         }
 
         .modal-form {
@@ -1599,7 +1539,7 @@ export default function Page() {
         .form-label {
           font-size: 12px;
           font-weight: 500;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.03em;
           text-transform: uppercase;
           color: var(--ink-2);
         }
@@ -1632,7 +1572,7 @@ export default function Page() {
           color: var(--ink-2);
           font-size: 11px;
           font-weight: 600;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.03em;
           text-transform: uppercase;
           cursor: pointer;
           font-family: inherit;
@@ -1659,7 +1599,7 @@ export default function Page() {
           margin-top: 8px;
         }
 
-        .btn-submit:hover:not(:disabled) { background: #5a8aff; }
+        .btn-submit:hover:not(:disabled) { background: var(--accent-hover); }
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .spinner {
@@ -1683,8 +1623,8 @@ export default function Page() {
           margin-top: 16px;
         }
 
-        .modal-message.ok { color: #28c840; }
-        .modal-message.err { color: #ff5f57; }
+        .modal-message.ok { color: #22c55e; }
+        .modal-message.err { color: #ef4444; }
 
         .modal-footer {
           margin-top: 20px;
@@ -1719,7 +1659,6 @@ export default function Page() {
         .price-currency {
           font-size: 20px;
           color: var(--ink-2);
-          font-weight: 500;
         }
 
         .price-value {
@@ -1733,7 +1672,6 @@ export default function Page() {
         .price-period {
           font-size: 16px;
           color: var(--ink-2);
-          margin-left: 2px;
         }
 
         .pricing-modal-buttons {
@@ -1765,7 +1703,7 @@ export default function Page() {
           border: none;
         }
 
-        .btn-pricing-primary:hover:not(:disabled) { background: #5a8aff; }
+        .btn-pricing-primary:hover:not(:disabled) { background: var(--accent-hover); }
 
         .btn-pricing-secondary {
           background: transparent;
@@ -1773,9 +1711,7 @@ export default function Page() {
           border: 1px solid var(--border-default);
         }
 
-        .btn-pricing-secondary:hover:not(:disabled) {
-          border-color: var(--ink-3);
-        }
+        .btn-pricing-secondary:hover:not(:disabled) { border-color: var(--ink-3); }
 
         .btn-pricing-primary:disabled,
         .btn-pricing-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -1783,10 +1719,10 @@ export default function Page() {
         .save-badge {
           font-size: 10px;
           font-weight: 700;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.03em;
           text-transform: uppercase;
-          color: #28c840;
-          background: rgba(40, 200, 64, 0.12);
+          color: #22c55e;
+          background: rgba(34, 197, 94, 0.1);
           padding: 3px 6px;
           border-radius: 4px;
         }
@@ -1842,7 +1778,7 @@ export default function Page() {
 
         .chat-empty-state {
           text-align: center;
-          max-width: 360px;
+          max-width: 400px;
         }
 
         .chat-empty-text {
@@ -1858,7 +1794,7 @@ export default function Page() {
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 32px;
           padding-top: 16px;
         }
 
@@ -1871,18 +1807,13 @@ export default function Page() {
         .chat-message-assistant { justify-content: flex-start; }
 
         .chat-bubble {
-          max-width: 80%;
-          font-size: 14px;
+          max-width: 75%;
+          font-size: 15px;
           line-height: 1.7;
         }
 
-        .chat-bubble-user {
-          color: var(--ink-0);
-        }
-
-        .chat-bubble-assistant {
-          color: var(--ink-1);
-        }
+        .chat-bubble-user { color: var(--ink-0); }
+        .chat-bubble-assistant { color: var(--ink-1); }
 
         .chat-bubble-image {
           border-radius: var(--radius-md);
@@ -1941,7 +1872,6 @@ export default function Page() {
           border: none;
           color: var(--ink-2);
           cursor: pointer;
-          border-radius: var(--radius-sm);
         }
 
         .chat-attachment-remove:hover { color: var(--ink-0); }
@@ -1952,14 +1882,8 @@ export default function Page() {
           gap: 10px;
         }
 
-        /* Camera button with trace animation */
-        .chat-camera-wrap {
-          position: relative;
-          flex-shrink: 0;
-        }
-
+        /* Camera button - subtle glow on hover only */
         .chat-camera-btn {
-          position: relative;
           width: 44px;
           height: 44px;
           display: flex;
@@ -1968,49 +1892,15 @@ export default function Page() {
           background: var(--bg-2);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-md);
-          color: var(--ink-1);
+          color: var(--accent);
           cursor: pointer;
-          transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-          z-index: 1;
+          flex-shrink: 0;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         .chat-camera-btn:hover {
-          color: var(--accent);
-          border-color: var(--border-accent);
-          background: var(--accent-dim);
-        }
-
-        /* Tracing border animation */
-        .camera-trace {
-          position: absolute;
-          inset: -2px;
-          border-radius: calc(var(--radius-md) + 2px);
-          pointer-events: none;
-          overflow: hidden;
-        }
-
-        .camera-trace::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          padding: 2px;
-          border-radius: inherit;
-          background: conic-gradient(
-            from 0deg,
-            transparent 0deg,
-            var(--accent) 60deg,
-            transparent 120deg
-          );
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask-composite: exclude;
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          animation: trace-rotate 3s linear infinite;
-        }
-
-        @keyframes trace-rotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
         .chat-input-wrapper {
@@ -2074,7 +1964,7 @@ export default function Page() {
           text-align: center;
           font-size: 11px;
           color: var(--ink-3);
-          margin-top: 12px;
+          margin-top: 14px;
         }
 
         /* ==========================================================================
@@ -2099,7 +1989,7 @@ export default function Page() {
           .chat-topbar { padding: 12px 16px; }
           .chat-messages { padding: 0 16px 24px; }
           .chat-input-inner { padding: 12px 16px 20px; }
-          .chat-bubble { max-width: 88%; }
+          .chat-bubble { max-width: 85%; }
         }
 
         @media (max-width: 480px) {
@@ -2202,12 +2092,9 @@ export default function Page() {
                   <div className="chat-input-row">
                     <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 
-                    <div className="chat-camera-wrap">
-                      <div className="camera-trace" />
-                      <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
-                        <Icons.Camera />
-                      </button>
-                    </div>
+                    <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
+                      <Icons.Camera />
+                    </button>
 
                     <div className="chat-input-wrapper">
                       <textarea
