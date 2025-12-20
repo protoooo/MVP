@@ -975,12 +975,15 @@ export default function Page() {
           max-width: 100%;
           margin: 0;
 
+          /* ✅ Use background-color (iOS rubber-band respects this more reliably) */
           background-color: var(--bg-0) !important;
           color: var(--ink-0);
 
+          /* ✅ Kill horizontal drift (right-side white strip) */
           overflow-x: hidden;
         }
 
+        /* ✅ Even stronger horizontal clamp where supported */
         @supports (overflow: clip) {
           html,
           body {
@@ -988,6 +991,8 @@ export default function Page() {
           }
         }
 
+        /* ✅ The REAL iOS fix:
+           paint a fixed dark backdrop behind everything so bounce can't reveal white */
         body::before {
           content: '';
           position: fixed;
@@ -1090,6 +1095,7 @@ export default function Page() {
           background: var(--bg-0);
         }
 
+        /* ✅ Brand (icon + text) */
         .plm-brand-wrap {
           pointer-events: auto;
           display: flex;
@@ -1115,6 +1121,7 @@ export default function Page() {
           align-items: center;
           gap: 10px;
         }
+        /* ✅ ~80% bigger mark */
         .plm-brand-mark {
           width: 64px;
           height: 64px;
@@ -1356,6 +1363,8 @@ export default function Page() {
           font-size: 11px;
           letter-spacing: 0.1em;
           text-transform: uppercase;
+
+          /* ✅ IMPORTANT: do NOT use 100vw/100dvw (causes right-side overflow on iOS) */
           max-width: calc(100% - 28px);
         }
         .doc-pill-label {
@@ -1397,6 +1406,7 @@ export default function Page() {
           }
         }
 
+        /* Footer links */
         .plm-footer-links {
           position: absolute;
           left: 50%;
@@ -1441,6 +1451,7 @@ export default function Page() {
           font-size: 12px;
         }
 
+        /* ✅ Mobile landing action bar (prevents top overlap) */
         .landing-mobile-actions {
           position: absolute;
           left: 50%;
@@ -1837,7 +1848,7 @@ export default function Page() {
         }
 
         /* ==========================================================================
-           Chat
+           Chat (unchanged from your prior file)
            ========================================================================== */
         .chat-container {
           flex: 1;
@@ -1904,242 +1915,28 @@ export default function Page() {
           padding-top: 0;
         }
 
-        /* ========================================================================
-           ENHANCED EMPTY STATE
-           ======================================================================== */
-
         .chat-empty-content {
-          max-width: 680px;
+          max-width: 560px;
           width: 100%;
-          margin: 0 auto;
-          padding: 32px 24px;
-        }
-
-        .empty-header {
-          text-align: center;
-          margin-bottom: 32px;
-        }
-
-        .empty-icon {
-          width: 64px;
-          height: 64px;
-          margin: 0 auto 20px;
-          background: linear-gradient(135deg, #2a2a32 0%, #34343c 100%);
-          border: 2px solid #44444c;
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .empty-icon svg {
-          width: 32px;
-          height: 32px;
-          color: var(--ink-0);
-        }
-
-        .empty-title {
-          font-size: 22px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          color: var(--ink-0);
-          margin: 0 0 12px 0;
-          font-family: ${outfit.style.fontFamily}, ${inter.style.fontFamily}, system-ui;
-        }
-
-        .empty-subtitle {
-          font-size: 15px;
-          color: var(--ink-1);
-          margin: 0;
-          line-height: 1.5;
-        }
-
-        .empty-options {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-bottom: 24px;
-        }
-
-        .empty-option {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          cursor: pointer;
-          transition: all 0.2s ease;
           text-align: left;
-          position: relative;
-          overflow: hidden;
+          border: 1px dashed var(--line-1);
+          border-radius: 12px;
+          padding: 18px 18px 16px;
+          background: rgba(255, 255, 255, 0.02);
         }
-
-        .empty-option:hover {
-          background: rgba(255, 255, 255, 0.04);
-          border-color: rgba(255, 255, 255, 0.12);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .empty-option.primary {
-          background: linear-gradient(135deg, #2a2a32 0%, #34343c 100%);
-          border: 2px solid #44444c;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .empty-option.primary:hover {
-          background: linear-gradient(135deg, #34343c 0%, #3e3e46 100%);
-          border-color: #54545c;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        }
-
-        .empty-option-icon {
-          width: 48px;
-          height: 48px;
-          flex-shrink: 0;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--ink-0);
-        }
-
-        .empty-option.primary .empty-option-icon {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .empty-option-icon.secondary {
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .empty-option-icon svg {
-          width: 24px;
-          height: 24px;
-        }
-
-        .empty-option-content {
-          flex: 1;
-        }
-
-        .empty-option-title {
-          font-size: 15px;
-          font-weight: 700;
-          color: var(--ink-0);
-          margin-bottom: 4px;
-          letter-spacing: -0.01em;
-        }
-
-        .empty-option-hint {
+        .chat-empty-title {
           font-size: 13px;
-          color: var(--ink-2);
-          line-height: 1.4;
-        }
-
-        .empty-option-badge {
-          position: absolute;
-          top: 12px;
-          right: 12px;
-          background: rgba(217, 217, 223, 0.15);
-          border: 1px solid rgba(217, 217, 223, 0.25);
-          padding: 4px 10px;
-          border-radius: 999px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.02em;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
+          font-weight: 900;
           color: var(--ink-0);
+          margin: 0 0 8px;
         }
-
-        .empty-footer {
-          margin-top: 24px;
-        }
-
-        .empty-tip {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 14px 16px;
-          background: rgba(217, 217, 223, 0.03);
-          border: 1px dashed rgba(217, 217, 223, 0.15);
-          border-radius: 10px;
+        .chat-empty-text {
           font-size: 13px;
           line-height: 1.6;
           color: var(--ink-1);
-        }
-
-        .empty-tip svg {
-          flex-shrink: 0;
-          margin-top: 2px;
-          color: var(--ink-2);
-        }
-
-        @media (max-width: 640px) {
-          .chat-empty-content {
-            padding: 24px 16px;
-          }
-
-          .empty-header {
-            margin-bottom: 24px;
-          }
-
-          .empty-icon {
-            width: 56px;
-            height: 56px;
-          }
-
-          .empty-icon svg {
-            width: 28px;
-            height: 28px;
-          }
-
-          .empty-title {
-            font-size: 19px;
-          }
-
-          .empty-subtitle {
-            font-size: 14px;
-          }
-
-          .empty-option {
-            padding: 14px 16px;
-            gap: 12px;
-          }
-
-          .empty-option-icon {
-            width: 44px;
-            height: 44px;
-          }
-
-          .empty-option-icon svg {
-            width: 22px;
-            height: 22px;
-          }
-
-          .empty-option-title {
-            font-size: 14px;
-          }
-
-          .empty-option-hint {
-            font-size: 12px;
-          }
-
-          .empty-option-badge {
-            position: static;
-            margin-top: 8px;
-            align-self: flex-start;
-          }
-
-          .empty-tip {
-            padding: 12px 14px;
-            font-size: 12px;
-          }
+          margin: 0;
         }
 
         .chat-history {
@@ -2306,134 +2103,6 @@ export default function Page() {
           cursor: not-allowed;
         }
 
-        /* ========================================================================
-           ENHANCED CAMERA BUTTON - 90s Retro with Animation
-           ======================================================================== */
-
-        .chat-btn-camera {
-          position: relative;
-          width: 52px;
-          height: 52px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #2a2a32 0%, #34343c 100%);
-          border: 2px solid #44444c;
-          border-radius: 12px;
-          color: var(--ink-0);
-          cursor: pointer;
-          transition: all 0.2s ease;
-          flex-shrink: 0;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-          overflow: visible;
-        }
-
-        .chat-btn-camera:hover {
-          transform: translateY(-2px) scale(1.02);
-          background: linear-gradient(135deg, #34343c 0%, #3e3e46 100%);
-          border-color: #54545c;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        }
-
-        .chat-btn-camera:active {
-          transform: translateY(0) scale(0.98);
-        }
-
-        .chat-btn-camera svg {
-          width: 28px;
-          height: 28px;
-          position: relative;
-          z-index: 2;
-          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        }
-
-        .camera-pulse-ring {
-          position: absolute;
-          inset: -4px;
-          border-radius: 14px;
-          border: 2px solid rgba(217, 217, 223, 0.4);
-          animation: camera-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-          pointer-events: none;
-        }
-
-        @keyframes camera-pulse {
-          0% {
-            transform: scale(1);
-            opacity: 0.6;
-            border-color: rgba(217, 217, 223, 0.4);
-          }
-          50% {
-            transform: scale(1.08);
-            opacity: 0.3;
-            border-color: rgba(217, 217, 223, 0.6);
-          }
-          100% {
-            transform: scale(1);
-            opacity: 0.6;
-            border-color: rgba(217, 217, 223, 0.4);
-          }
-        }
-
-        .chat-btn-camera::before {
-          content: 'Scan your kitchen';
-          position: absolute;
-          bottom: calc(100% + 12px);
-          left: 50%;
-          transform: translateX(-50%) translateY(4px);
-          background: #1c1c22;
-          color: var(--ink-0);
-          padding: 8px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.02em;
-          white-space: nowrap;
-          opacity: 0;
-          pointer-events: none;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-          border: 1px solid #34343c;
-        }
-
-        .chat-btn-camera::after {
-          content: '';
-          position: absolute;
-          bottom: calc(100% + 4px);
-          left: 50%;
-          transform: translateX(-50%);
-          width: 0;
-          height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top: 6px solid #1c1c22;
-          opacity: 0;
-          pointer-events: none;
-          transition: all 0.2s ease;
-        }
-
-        .chat-btn-camera:hover::before,
-        .chat-btn-camera:hover::after {
-          opacity: 1;
-          transform: translateX(-50%) translateY(0);
-        }
-
-        @media (max-width: 640px) {
-          .chat-btn-camera {
-            width: 48px;
-            height: 48px;
-          }
-
-          .chat-btn-camera svg {
-            width: 24px;
-            height: 24px;
-          }
-
-          .chat-btn-camera::before,
-          .chat-btn-camera::after {
-            display: none;
-          }
-        }
-
         .chat-spinner {
           width: 16px;
           height: 16px;
@@ -2514,97 +2183,8 @@ export default function Page() {
               <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
                 {messages.length === 0 ? (
                   <div className="chat-empty-content">
-                    <div className="empty-header">
-                      <div className="empty-icon">
-                        <Icons.Camera />
-                      </div>
-                      <h2 className="empty-title">Photo analysis is your secret weapon</h2>
-                      <p className="empty-subtitle">Catch violations before the inspector does. Three ways to start:</p>
-                    </div>
-
-                    <div className="empty-options">
-                      <button onClick={() => fileInputRef.current?.click()} className="empty-option primary" type="button">
-                        <div className="empty-option-icon">
-                          <Icons.Camera />
-                        </div>
-                        <div className="empty-option-content">
-                          <div className="empty-option-title">Snap your kitchen</div>
-                          <div className="empty-option-hint">Walk-in cooler, prep station, or dish area</div>
-                        </div>
-                        <div className="empty-option-badge">Most popular</div>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setInput('What temp should chicken be cooled to within 2 hours?')
-                          requestAnimationFrame(() => {
-                            if (textAreaRef.current) {
-                              textAreaRef.current.focus()
-                              textAreaRef.current.style.height = 'auto'
-                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                            }
-                          })
-                        }}
-                        className="empty-option"
-                        type="button"
-                      >
-                        <div className="empty-option-icon secondary">
-                          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="empty-option-content">
-                          <div className="empty-option-title">Ask a quick question</div>
-                          <div className="empty-option-hint">Temperature logs, labeling, storage rules</div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setInput('Walk me through proper three-compartment sink setup and usage')
-                          requestAnimationFrame(() => {
-                            if (textAreaRef.current) {
-                              textAreaRef.current.focus()
-                              textAreaRef.current.style.height = 'auto'
-                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                            }
-                          })
-                        }}
-                        className="empty-option"
-                        type="button"
-                      >
-                        <div className="empty-option-icon secondary">
-                          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="empty-option-content">
-                          <div className="empty-option-title">Deep-dive a topic</div>
-                          <div className="empty-option-hint">Get step-by-step guidance on specific areas</div>
-                        </div>
-                      </button>
-                    </div>
-
-                    <div className="empty-footer">
-                      <div className="empty-tip">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Pro tip: Take photos during off-hours when everything looks good. Use them to train new staff.</span>
-                      </div>
-                    </div>
+                    <h2 className="chat-empty-title">Upload a photo or ask a question</h2>
+                    <p className="chat-empty-text">One-click photo checks for likely issues, or query the Washtenaw-focused database for a clear answer.</p>
                   </div>
                 ) : (
                   <div className="chat-history">
@@ -2651,10 +2231,8 @@ export default function Page() {
                   <div className="chat-input-row">
                     <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 
-                    {/* ✅ Enhanced camera button */}
-                    <button onClick={() => fileInputRef.current?.click()} className="chat-btn-camera" aria-label="Take a photo" type="button">
+                    <button onClick={() => fileInputRef.current?.click()} className="chat-btn-icon" aria-label="Attach image" type="button">
                       <Icons.Camera />
-                      <span className="camera-pulse-ring" />
                     </button>
 
                     <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', gap: 10, alignItems: 'center' }}>
