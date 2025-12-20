@@ -534,21 +534,29 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </div>
 
           <div className="pricing-modal-buttons">
-            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="btn-pricing-primary" type="button">
+            <button
+              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+              disabled={!!loading}
+              className="btn-pricing-primary"
+              type="button"
+            >
               {loading === 'monthly' && <span className="spinner" />}
               <span>Start 7-day free trial</span>
             </button>
 
-            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading} className="btn-pricing-secondary" type="button">
+            <button
+              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
+              disabled={!!loading}
+              className="btn-pricing-secondary"
+              type="button"
+            >
               {loading === 'annual' && <span className="spinner" />}
               <span>Annual — $1,000/year</span>
               <span className="save-badge">Save $200</span>
             </button>
           </div>
 
-          <p className="pricing-modal-terms">
-            7-day free trial · Cancel anytime · One license per location
-          </p>
+          <p className="pricing-modal-terms">7-day free trial · Cancel anytime · One license per location</p>
         </div>
       </div>
     </div>
@@ -948,19 +956,19 @@ export default function Page() {
           --bg-1: #0c0c0e;
           --bg-2: #131316;
           --bg-3: #1a1a1f;
-          
+
           --ink-0: #fafafa;
           --ink-1: #a0a0a8;
           --ink-2: #636369;
           --ink-3: #3f3f46;
-          
+
           --accent: #3b82f6;
           --accent-hover: #2563eb;
           --accent-dim: rgba(59, 130, 246, 0.1);
-          
+
           --border-subtle: rgba(255, 255, 255, 0.05);
           --border-default: rgba(255, 255, 255, 0.08);
-          
+
           --radius-sm: 8px;
           --radius-md: 12px;
           --radius-lg: 16px;
@@ -973,9 +981,11 @@ export default function Page() {
           height: 100%;
           margin: 0;
           background: var(--bg-0);
+          background-color: var(--bg-0);
           color: var(--ink-0);
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
+          overscroll-behavior-y: none;
         }
 
         body::before {
@@ -1742,6 +1752,14 @@ export default function Page() {
           flex-direction: column;
           min-height: 0;
           background: var(--bg-0);
+
+          /* ✅ Fix “wonky”/white overscroll by forcing a contained viewport */
+          height: 100dvh;
+          overflow: hidden;
+        }
+
+        @supports (-webkit-touch-callout: none) {
+          .chat-root { height: -webkit-fill-available; }
         }
 
         .chat-topbar {
@@ -1754,6 +1772,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-shrink: 0;
         }
 
         .chat-top-actions {
@@ -1766,8 +1785,13 @@ export default function Page() {
           flex: 1;
           min-height: 0;
           overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
           padding: 0 24px 32px;
+
+          /* ✅ Make sure the scroll area never reveals “white” behind */
+          background: var(--bg-0);
         }
 
         .chat-messages.empty {
@@ -1796,11 +1820,13 @@ export default function Page() {
           flex-direction: column;
           gap: 32px;
           padding-top: 16px;
+          padding-bottom: 6px;
         }
 
         .chat-message {
           display: flex;
           width: 100%;
+          align-items: flex-start;
         }
 
         .chat-message-user { justify-content: flex-end; }
@@ -1810,6 +1836,7 @@ export default function Page() {
           max-width: 75%;
           font-size: 15px;
           line-height: 1.7;
+          display: block;
         }
 
         .chat-bubble-user { color: var(--ink-0); }
@@ -1829,7 +1856,16 @@ export default function Page() {
           object-fit: contain;
         }
 
+        /* ✅ Replaces the inline <span style={{whiteSpace:'pre-wrap'}} ...> with a real block */
+        .chat-content {
+          display: block;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+
         .chat-thinking {
+          display: block;
           color: var(--ink-2);
           font-style: italic;
         }
@@ -1911,6 +1947,7 @@ export default function Page() {
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-md);
           transition: border-color 0.15s ease;
+          min-width: 0;
         }
 
         .chat-input-wrapper:focus-within {
@@ -1929,6 +1966,7 @@ export default function Page() {
           line-height: 1.4;
           resize: none;
           font-family: inherit;
+          min-width: 0;
         }
 
         .chat-textarea::placeholder { color: var(--ink-3); }
@@ -1986,9 +2024,23 @@ export default function Page() {
           .plm-brand-mark { width: 48px; height: 48px; }
           .plm-brand-text { font-size: 17px; }
 
-          .chat-topbar { padding: 12px 16px; }
-          .chat-messages { padding: 0 16px 24px; }
-          .chat-input-inner { padding: 12px 16px 20px; }
+          /* ✅ Replace chat mobile CSS blocks (tight + stable + safe area aware) */
+          .chat-topbar {
+            padding: 12px 16px;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-top: max(12px, env(safe-area-inset-top));
+          }
+
+          .chat-messages {
+            padding: 0 16px calc(24px + env(safe-area-inset-bottom));
+          }
+
+          .chat-input-inner {
+            padding: 12px 16px 18px;
+            padding-bottom: max(18px, env(safe-area-inset-bottom));
+          }
+
           .chat-bubble { max-width: 85%; }
         }
 
@@ -2041,7 +2093,11 @@ export default function Page() {
                 </nav>
               </header>
 
-              <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+              >
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
                     <p className="chat-empty-text">
@@ -2051,17 +2107,21 @@ export default function Page() {
                 ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
+                      <div
+                        key={idx}
+                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                      >
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
                               <img src={msg.image} alt="Uploaded" />
                             </div>
                           )}
+
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <span className="chat-thinking">Analyzing…</span>
+                            <div className="chat-thinking">Analyzing…</div>
                           ) : (
-                            <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
+                            <div className="chat-content">{msg.content}</div>
                           )}
                         </div>
                       </div>
@@ -2076,7 +2136,9 @@ export default function Page() {
 
                   {selectedImage && (
                     <div className="chat-attachment">
-                      <span className="chat-attachment-icon"><Icons.Camera /></span>
+                      <span className="chat-attachment-icon">
+                        <Icons.Camera />
+                      </span>
                       <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
@@ -2090,9 +2152,20 @@ export default function Page() {
                   )}
 
                   <div className="chat-input-row">
-                    <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleImageChange}
+                    />
 
-                    <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="chat-camera-btn"
+                      aria-label="Upload photo"
+                      type="button"
+                    >
                       <Icons.Camera />
                     </button>
 
@@ -2118,13 +2191,21 @@ export default function Page() {
                         }}
                       />
 
-                      <button type="button" onClick={handleSend} disabled={(!input.trim() && !selectedImage) || isSending} className="chat-send-btn" aria-label="Send">
+                      <button
+                        type="button"
+                        onClick={handleSend}
+                        disabled={(!input.trim() && !selectedImage) || isSending}
+                        className="chat-send-btn"
+                        aria-label="Send"
+                      >
                         {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
                       </button>
                     </div>
                   </div>
 
-                  <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
+                  <p className="chat-disclaimer">
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
+                  </p>
                 </div>
               </div>
             </div>
