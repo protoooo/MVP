@@ -228,21 +228,6 @@ function FooterLinks() {
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
-  const [showPricingMenu, setShowPricingMenu] = useState(false)
-  const menuRef = useRef(null)
-
-  useEffect(() => {
-    const onDown = (e) => {
-      if (!menuRef.current) return
-      if (!menuRef.current.contains(e.target)) setShowPricingMenu(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('touchstart', onDown, { passive: true })
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('touchstart', onDown)
-    }
-  }, [])
 
   return (
     <div className={`${ibmMono.className} landing-root`}>
@@ -257,48 +242,14 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <RotatingDocPill items={DEMO_DOCUMENTS} />
         </div>
 
-        {/* ✅ Single actions area: prevents duplicate "Sign in" rendering */}
+        {/* ✅ Single actions area: Start trial + Sign in */}
         <nav className="landing-top-actions" aria-label="Top actions">
-          {/* Desktop-only group (Pricing + Start trial) */}
           <div className="landing-top-actions-desktop desktop-only">
-            <div className="pricing-menu-wrapper" ref={menuRef}>
-              <button
-                type="button"
-                className="btn-nav"
-                onClick={() => setShowPricingMenu((v) => !v)}
-                aria-expanded={showPricingMenu}
-              >
-                Pricing
-              </button>
-
-              {showPricingMenu && (
-                <div className="pricing-dropdown">
-                  <div className="pricing-dropdown-amount">
-                    <span className="currency">$</span>
-                    <span className="amount">100</span>
-                    <span className="period">/month</span>
-                  </div>
-                  <p className="pricing-dropdown-note">7-day free trial · Cancel anytime</p>
-                  <button
-                    type="button"
-                    className="btn-primary block"
-                    onClick={() => {
-                      setShowPricingMenu(false)
-                      onShowPricing()
-                    }}
-                  >
-                    Start free trial
-                  </button>
-                </div>
-              )}
-            </div>
-
             <button onClick={onShowPricing} className="btn-primary" type="button">
               Start trial
             </button>
           </div>
 
-          {/* Sign in (always rendered, styled like mobile on small screens) */}
           <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
             Sign in
           </button>
@@ -321,7 +272,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          {/* ✅ Removed: mid-page CTA button under terminal */}
+          <div className="mobile-start mobile-only">
+            <button className="btn-primary" onClick={onShowPricing} type="button">
+              Start trial
+            </button>
+          </div>
         </div>
       </main>
 
@@ -517,30 +472,24 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
       name: 'Starter',
       price: 49,
       priceId: STARTER_MONTHLY,
-      model: 'Haiku',
-      speed: 'Fast',
       features: [
-        'Unlimited text questions',
-        'Unlimited photo scans',
-        'Same regulation database',
+        'Unlimited usage (questions + photos)',
+        'Haiku — fast answers for daily checks',
+        'Best for quick scans and on-the-line clarity',
         'Email support'
       ],
-      description: 'Fast - perfect for daily checks',
       loadingKey: 'starter'
     },
     {
       name: 'Professional',
       price: 99,
       priceId: PRO_MONTHLY,
-      model: 'Sonnet',
-      speed: 'Balanced',
       features: [
-        'Unlimited text questions',
-        'Unlimited photo scans',
-        'Advanced reasoning',
+        'Unlimited usage (questions + photos)',
+        'Sonnet — balanced, thorough responses',
+        'Sharper guidance for tougher compliance calls',
         'Priority support'
       ],
-      description: 'Most accurate for compliance',
       popular: true,
       loadingKey: 'pro'
     },
@@ -548,15 +497,12 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
       name: 'Enterprise',
       price: 199,
       priceId: ENTERPRISE_MONTHLY,
-      model: 'Opus',
-      speed: 'Deep Knowledge',
       features: [
-        'Unlimited text questions',
-        'Unlimited photo scans',
-        'Deep compliance LLM responses',
+        'Unlimited usage (questions + photos)',
+        'Opus — advanced reasoning for best answers',
+        'Ideal for multi-location playbooks and reviews',
         'Dedicated multi-location support'
       ],
-      description: 'For restaurant groups',
       loadingKey: 'enterprise'
     }
   ]
@@ -614,15 +560,9 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                   <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>
                     {tier.name}
                   </div>
-                  <div style={{ fontSize: '11px', opacity: 0.7, marginBottom: '12px' }}>
-                    Claude {tier.model} LLM • {tier.speed}
-                  </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
                     <span style={{ fontSize: '36px', fontWeight: '700' }}>${tier.price}</span>
                     <span style={{ fontSize: '14px', opacity: 0.7 }}>/month</span>
-                  </div>
-                  <div style={{ fontSize: '12px', opacity: 0.7, lineHeight: '1.4' }}>
-                    {tier.description}
                   </div>
                 </div>
 
@@ -1299,7 +1239,7 @@ export default function Page() {
           left: 0;
           right: 0;
           display: grid;
-          grid-template-columns: 1fr auto 1fr;
+          grid-template-columns: auto 1fr auto;
           align-items: center;
           padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
             max(24px, env(safe-area-inset-left));
@@ -1367,69 +1307,11 @@ export default function Page() {
           width: 100%;
         }
 
-        .pricing-menu-wrapper {
-          position: relative;
-        }
-
-        .pricing-dropdown {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          min-width: 240px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-md);
-          padding: 20px;
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-          animation: dropdown-in 0.15s ease;
-        }
-
-        @keyframes dropdown-in {
-          from {
-            opacity: 0;
-            transform: translateY(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .pricing-dropdown-amount {
-          display: flex;
-          align-items: baseline;
-          gap: 2px;
-          margin-bottom: 8px;
-        }
-
-        .pricing-dropdown-amount .currency {
-          font-size: 16px;
-          color: var(--ink-2);
-        }
-
-        .pricing-dropdown-amount .amount {
-          font-size: 32px;
-          font-weight: 700;
-          color: var(--ink-0);
-          letter-spacing: -0.03em;
-          font-family: ${outfit.style.fontFamily};
-        }
-
-        .pricing-dropdown-amount .period {
-          font-size: 14px;
-          color: var(--ink-2);
-        }
-
-        .pricing-dropdown-note {
-          font-size: 12px;
-          color: var(--ink-2);
-          margin: 0 0 16px;
-        }
-
         /* Doc pill */
         .doc-pill-wrap {
           display: flex;
           justify-content: center;
+          width: 100%;
         }
 
         .doc-pill {
@@ -1523,6 +1405,16 @@ export default function Page() {
           padding: 12px 14px;
           background: var(--bg-2);
           border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .mobile-start {
+          width: 100%;
+          display: none;
+        }
+
+        .mobile-start .btn-primary {
+          width: 100%;
+          justify-content: center;
         }
 
         .terminal-dot {
@@ -2353,6 +2245,10 @@ export default function Page() {
           /* ✅ Tiny extra shrink on mobile empty prompt for cleaner wrap */
           .chat-empty-text {
             font-size: 13px;
+          }
+
+          .mobile-start {
+            display: flex;
           }
         }
 
