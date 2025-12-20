@@ -42,12 +42,12 @@ export default function PrivacyPolicy() {
 
         <section className="rounded-xl border border-[#2F5D8A] border-l-4 bg-[#15151a] p-6">
           <div className="mb-3 inline-flex items-center gap-2 rounded-md bg-[#1c1c22] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ring-1 ring-[#2F5D8A]">
-            2. AI Processing & Third-Party Services
+            2. LLM Processing & Third-Party Services
           </div>
           <h2 className={`text-xl font-bold ${outfit.className}`}>How we process your data</h2>
           
           <p className="mt-4">
-            protocolLM uses artificial intelligence services provided by <strong>Anthropic</strong> (Claude) for text analysis and response generation,
+            protocolLM uses large language model services provided by <strong>Anthropic</strong> (Claude) for text analysis and response generation,
             and <strong>Cohere</strong> for document search and embedding. When you use our Service:
           </p>
 
@@ -62,7 +62,7 @@ export default function PrivacyPolicy() {
             </li>
             <li>Processing occurs on secure servers operated by these providers in accordance with their respective privacy policies.</li>
             <li>
-              <strong>No public training:</strong> Your individual business data and images are NOT used to train public AI models. Data may be retained temporarily to
+              <strong>No public training:</strong> Your individual business data and images are NOT used to train public LLM models. Data may be retained temporarily to
               operate the platform, comply with law, or prevent misuse, as specified in each provider's data retention policy.
             </li>
             <li>
