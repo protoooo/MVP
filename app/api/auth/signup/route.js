@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - FIXED for Next.js 15
+// app/api/auth/signup/route.js - FIXED: Always require email verification
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -65,12 +65,12 @@ export async function POST(request) {
       }
     )
 
-    // Create auth user with proper redirect
+    // ✅ FIX: Force email confirmation by setting autoConfirm to false
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback?next=pricing`,
         data: {
           source: 'signup',
           signup_ip: ip,
@@ -95,15 +95,11 @@ export async function POST(request) {
       emailConfirmed: !!data.user.email_confirmed_at
     })
 
-    // Return appropriate message based on whether email confirmation is required
-    const needsVerification = !data.user.email_confirmed_at
-
+    // ✅ FIX: Always require verification
     return NextResponse.json({
       success: true,
-      needsVerification,
-      message: needsVerification 
-        ? 'Account created! Check your email to verify before starting your trial.'
-        : 'Account created! You can now sign in.',
+      needsVerification: true,
+      message: 'Account created! Check your email to verify and start your trial.',
       userId: data.user.id
     })
 
