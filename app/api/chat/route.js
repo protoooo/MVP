@@ -1,12 +1,9 @@
-// app/api/chat/route.js
+// app/api/chat/route.js - COMPLETE FIXED VERSION
 // FINAL-FORM: Violation-focused, probability-based, no obvious scene narration.
-// - No "welcome/greeting" messages.
-// - No "From the photo:" obvious observations shown to the user.
-// - Quick scan (default): only flag issues that are actually supported + likely visible.
-// - Full audit (opt-in): allows targeted follow-up photo requests / clarifying questions.
-// - Findings must be excerpt-backed.
-// - Enforcement/fines only if user asks or includeLegal flag.
-// - Criminal penalties only if user explicitly asks.
+// ✅ FIXES:
+// - Better error handling for memory system
+// - Improved logging for debugging
+// - Graceful fallback if memory unavailable
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -52,13 +49,9 @@ const RETRIEVAL_TIMEOUT_MS = 9000
 const TOPK = 18
 const PINNED_TOPK = 8
 
-// If your corpus has a concept of global/statewide docs, these may work.
 const GLOBAL_FALLBACK_KEYS = ['global', 'michigan', 'state', 'all']
 
-// Pinned queries:
-// - Washtenaw Violation Types (category definitions + correction windows)
-// - Washtenaw Enforcement Action (3 opportunities)
-// - Act 92 (admin fines + penalties) for optional “legal context”
+// Pinned queries for Washtenaw County regulations
 const PINNED_QUERIES = [
   'Washtenaw County Violation Types Priority Priority Foundation Core When the Violation Needs to Be Corrected corrected immediately within 10 days within 90 days enforcement actions repeated',
   'Washtenaw County Enforcement Action Progressive Enforcement Action Opportunity Number 1 Opportunity Number 2 Opportunity Number 3 Office Conference Informal Hearing Formal Hearing license limited suspended revoked',
@@ -67,7 +60,7 @@ const PINNED_QUERIES = [
   '289.5109 written report of the violation before subjecting persons to the penalties',
 ]
 
-// Ranking sources for internal excerpt ordering (NOT shown to users)
+// Ranking sources for internal excerpt ordering
 const SOURCE_PRIORITY = {
   washtenaw: [/washtenaw/i, /violation\s*types/i, /enforcement\s*action/i],
   michigan: [/act\s*92/i, /mcl/i, /michigan/i, /289\.\d+/i, /modified.*food.*code/i],
@@ -82,11 +75,11 @@ function safeText(x) {
   if (typeof x !== 'string') return ''
   return x.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim()
 }
+
 function safeLine(x) {
   return safeText(x).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim()
 }
 
-// Output sanitizer: no emojis/markdown-y noise, safe length cap
 function sanitizePlainText(text) {
   let out = safeText(text || '')
   out = out.replace(/[`#*]/g, '')
@@ -98,7 +91,6 @@ function sanitizePlainText(text) {
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
-  // strip numbered prefixes if model sneaks them in
   out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
 
   const HARD_LIMIT = 2600
@@ -166,7 +158,6 @@ function wantsFullAudit(text) {
   )
 }
 
-// “Legal context” should be opt-in (no scare tactics).
 function wantsLegalContext(text) {
   const t = safeLine(text).toLowerCase()
   if (!t) return false
@@ -184,7 +175,6 @@ function wantsLegalContext(text) {
   )
 }
 
-// Criminal penalty language should be EXTRA opt-in.
 function wantsCriminalContext(text) {
   const t = safeLine(text).toLowerCase()
   if (!t) return false
@@ -335,7 +325,6 @@ function clampShort(s, max = 160) {
   return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
 }
 
-// Remove “scene narration” openers that create liability and feel like obvious observations.
 function isSceneNarration(line) {
   const t = safeLine(line || '').toLowerCase()
   if (!t) return false
@@ -367,7 +356,6 @@ function normalizeOpeningLine(line, { hasImage, hasFindings } = {}) {
   return l
 }
 
-// Targeted “next photo” / “do now” blocks (only used in full audit).
 function renderDoNowBlock(doNow, photoRequests) {
   const dn = Array.isArray(doNow) ? doNow.map(safeLine).filter(Boolean) : []
   const pr = Array.isArray(photoRequests) ? photoRequests.map(safeLine).filter(Boolean) : []
@@ -385,7 +373,6 @@ function renderDoNowBlock(doNow, photoRequests) {
   return out.length ? out.join('\n') : ''
 }
 
-// Enforcement/fines: factual, optional, non-scare.
 function renderLegalContextBlock({ includeLegal = false, includeCriminal = false } = {}) {
   if (!includeLegal) return ''
 
@@ -402,7 +389,6 @@ function renderLegalContextBlock({ includeLegal = false, includeCriminal = false
   return sanitizePlainText(lines.join('\n'))
 }
 
-// User-facing rendering: violation-focused. No scene description. No sources. No excerpt IDs.
 function renderAuditPlainText(payload, { maxItems, includeLegal = false, includeCriminal = false, fullAudit = false } = {}) {
   const auditStatus = safeLine(payload?.audit_status || 'unknown')
   const findings = Array.isArray(payload?.findings) ? payload.findings : []
@@ -410,13 +396,11 @@ function renderAuditPlainText(payload, { maxItems, includeLegal = false, include
   const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
   const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
 
-  // Clear: short + non-absolute
   if (auditStatus === 'clear') {
     const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: false })
     return sanitizePlainText(opening || 'No obvious inspection issues are visible in this photo.')
   }
 
-  // Needs info (full audit only): no scene recap, just what to verify next.
   if (auditStatus === 'needs_info' || findings.length === 0) {
     const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: false })
     const out = []
@@ -446,7 +430,6 @@ function renderAuditPlainText(payload, { maxItems, includeLegal = false, include
     return sanitizePlainText(out.join('\n'))
   }
 
-  // Findings
   const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: true })
   const out = []
   out.push(opening || 'Here are the inspection-relevant issues most likely to matter.')
@@ -568,8 +551,6 @@ async function runPinnedRetrieval(searchDocumentsFn, county, q, k) {
   return []
 }
 
-// Filter out “location / residential / what kind of kitchen is this” questions.
-// Keep only questions that help confirm a specific potential compliance issue.
 function filterClarifyingQuestions(questions) {
   const qs = Array.isArray(questions) ? questions.map(safeLine).filter(Boolean) : []
   if (!qs.length) return []
@@ -598,6 +579,12 @@ export async function POST(request) {
   const startedAt = Date.now()
 
   try {
+    // ✅ FIX: Early validation and logging
+    logger.info('Chat request received', { 
+      url: request.url,
+      method: request.method 
+    })
+
     if (!process.env.ANTHROPIC_API_KEY) {
       logger.error('ANTHROPIC_API_KEY not configured')
       return NextResponse.json({ error: 'AI service not configured. Please contact support.' }, { status: 500 })
@@ -633,11 +620,10 @@ export async function POST(request) {
     const fullAudit = wantsFullAudit(effectiveUserPrompt) || Boolean(body?.fullAudit)
     const maxFindings = fullAudit ? 10 : 4
 
-    // ✅ Non-scare defaults:
     const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
     const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
 
-    // ✅ Auth with location validation + memory (no greetings)
+    // ✅ FIX: Auth with better error handling and memory
     let userId = null
     let userMemory = null
 
@@ -659,7 +645,7 @@ export async function POST(request) {
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
-      // ✅ Email verification check
+      // Email verification check
       if (userId && data?.user && !data.user.email_confirmed_at) {
         return NextResponse.json(
           {
@@ -670,7 +656,7 @@ export async function POST(request) {
         )
       }
 
-      // ✅ Validate single location license
+      // Validate single location license
       if (userId) {
         const sessionInfo = {
           ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
@@ -695,11 +681,17 @@ export async function POST(request) {
 
         await logSessionActivity(userId, sessionInfo)
 
-        // ✅ Load memory (non-blocking)
+        // ✅ FIX: Load memory with better error handling
         try {
           userMemory = await getUserMemory(userId)
+          logger.info('Memory loaded', { 
+            userId, 
+            hasMemory: !!userMemory,
+            interactionCount: userMemory?.interaction_count || 0
+          })
         } catch (e) {
-          logger.warn('Memory load failed (non-blocking)', { error: e?.message })
+          logger.warn('Memory load failed (non-blocking)', { error: e?.message, userId })
+          // Continue without memory - non-blocking error
         }
       }
     } catch (e) {
@@ -709,11 +701,10 @@ export async function POST(request) {
     const anthropic = await getAnthropicClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // 1) Vision scan (internal hints only; do NOT narrate the scene; avoid generic checklists unless full audit)
+    // Vision scan
     let vision = {
       summary: '',
       search_terms: '',
-      // internal only:
       visible_facts: [],
       possible_issues: [],
       unclear: [],
@@ -809,10 +800,9 @@ Return ONLY valid JSON:
       }
     }
 
-    // 2) Retrieval
+    // Retrieval
     const visionHints = [
       vision.search_terms,
-      // keep visible_facts internal for retrieval, but don’t flood the model with scene narration
       ...(vision.visible_facts || []).slice(0, 6),
       ...(vision.possible_issues || []).map((x) => x.issue),
     ]
@@ -865,15 +855,25 @@ ${pinnedCtx.contextText || 'No pinned excerpts retrieved.'}`
     const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
 ${mainCtx.contextText || 'No dynamic excerpts retrieved.'}`
 
-    // ✅ BUILD MEMORY CONTEXT
+    // ✅ FIX: BUILD MEMORY CONTEXT with error handling
     let memoryContext = ''
     try {
       memoryContext = buildMemoryContext(userMemory) || ''
-    } catch {
+      if (memoryContext) {
+        logger.info('Memory context built', { 
+          userId, 
+          contextLength: memoryContext.length 
+        })
+      }
+    } catch (e) {
+      logger.warn('Memory context build failed (non-blocking)', { 
+        error: e?.message, 
+        userId 
+      })
       memoryContext = ''
     }
 
-    // 3) Model prompt (explicitly forbid scene narration + location questions)
+    // Model prompt
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
 ${memoryContext ? `${memoryContext}\n\n` : ''}Tone:
@@ -893,7 +893,7 @@ Grounding rules (strict):
 
 Quick scan vs full audit:
 - quick_scan = ${fullAudit ? 'false' : 'true'}
-- In quick scan: only include findings that can be reasonably supported by the photo + excerpts. Avoid generic questions and avoid “verify you have X” unless the image suggests it is missing/incorrect.
+- In quick scan: only include findings that can be reasonably supported by the photo + excerpts. Avoid generic questions and avoid "verify you have X" unless the image suggests it is missing/incorrect.
 - In full audit: you may ask up to 3 targeted questions and request close-ups, but ONLY when needed to confirm a specific suspected issue.
 
 Output rules:
@@ -936,7 +936,6 @@ Hard caps:
 - max findings = ${maxFindings}
 `
 
-    // Provide minimal, non-narrative hints to reduce “obvious observation” output
     const possibleIssuesBlock =
       vision.possible_issues?.length > 0
         ? `Possible risk signals to verify (do not narrate, use only as hints):
@@ -953,7 +952,7 @@ ${vision.search_terms || ''}
 
 ${possibleIssuesBlock}` : ''}`.trim()
 
-    // 4) Final answer
+    // Final answer
     let modelText = ''
     let parsed = null
     let cacheStats = null
@@ -1006,7 +1005,7 @@ ${possibleIssuesBlock}` : ''}`.trim()
       logger.error('Generation failed', { error: e?.message })
     }
 
-    // 5) Render
+    // Render
     let message = ''
     let status = 'unknown'
 
@@ -1017,7 +1016,6 @@ ${possibleIssuesBlock}` : ''}`.trim()
       const questions = fullAudit ? filterClarifyingQuestions(questionsRaw) : []
       const modelOpening = safeLine(parsed.opening_line || '')
 
-      // Only allow excerpt-backed findings through
       const supportedFindings = []
       for (const f of findingsRaw.slice(0, maxFindings)) {
         const srcIds = Array.isArray(f?.source_ids) ? f.source_ids : []
@@ -1035,8 +1033,6 @@ ${possibleIssuesBlock}` : ''}`.trim()
         })
       }
 
-      // Quick scan: never force “needs_info” just because something isn’t visible.
-      // Full audit: allow “needs_info” when we have targeted checks/questions.
       const hasAnyChecks =
         fullAudit &&
         ((vision.possible_issues || []).length > 0 ||
@@ -1093,15 +1089,24 @@ ${possibleIssuesBlock}` : ''}`.trim()
       message = sanitizePlainText(doNowBlock ? `${fallback}\n\n${doNowBlock}` : fallback)
     }
 
-    // ✅ UPDATE MEMORY AFTER SUCCESSFUL RESPONSE
+    // ✅ FIX: UPDATE MEMORY AFTER SUCCESSFUL RESPONSE with better error handling
     if (userId && effectiveUserPrompt) {
-      await updateMemory(userId, {
-        userMessage: effectiveUserPrompt,
-        assistantResponse: message,
-        mode: hasImage ? 'vision' : 'text',
-        meta: { firstUseComplete: true },
-        firstUseComplete: true,
-      }).catch((err) => logger.warn('Memory update failed', { error: err?.message }))
+      try {
+        await updateMemory(userId, {
+          userMessage: effectiveUserPrompt,
+          assistantResponse: message,
+          mode: hasImage ? 'vision' : 'text',
+          meta: { firstUseComplete: true },
+          firstUseComplete: true,
+        })
+        logger.info('Memory updated successfully', { userId })
+      } catch (err) {
+        logger.warn('Memory update failed (non-blocking)', { 
+          error: err?.message, 
+          userId 
+        })
+        // Don't block response if memory update fails
+      }
     }
 
     logger.info('Response complete', {
@@ -1117,6 +1122,8 @@ ${possibleIssuesBlock}` : ''}`.trim()
       cache_hit: cacheStats?.cache_hit || false,
       cache_read_input_tokens: cacheStats?.cache_read_input_tokens || 0,
       cache_savings_pct: cacheStats?.cache_savings_pct || 0,
+      userId: userId || 'anonymous',
+      memoryUsed: !!memoryContext
     })
 
     await safeLogUsage({
@@ -1145,7 +1152,7 @@ ${possibleIssuesBlock}` : ''}`.trim()
       { status: 200 }
     )
   } catch (e) {
-    logger.error('Chat route failed', { error: e?.message })
+    logger.error('Chat route failed', { error: e?.message, stack: e?.stack })
     return NextResponse.json({ error: 'Server error. Please try again.' }, { status: 500 })
   }
 }
