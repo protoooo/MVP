@@ -45,6 +45,20 @@ const Icons = {
       <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
     </svg>
   ),
+  Gear: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path
+        d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
 }
 
 const DEMO_DOCUMENTS = [
@@ -242,52 +256,49 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <RotatingDocPill items={DEMO_DOCUMENTS} />
         </div>
 
-        {/* Desktop actions (top-right) */}
-        <nav className="landing-top-actions desktop-only">
-          <div className="pricing-menu-wrapper" ref={menuRef}>
-            <button
-              type="button"
-              className="btn-nav"
-              onClick={() => setShowPricingMenu((v) => !v)}
-              aria-expanded={showPricingMenu}
-            >
-              Pricing
-            </button>
+        {/* ✅ Single actions area: prevents duplicate "Sign in" rendering */}
+        <nav className="landing-top-actions" aria-label="Top actions">
+          {/* Desktop-only group (Pricing + Start trial) */}
+          <div className="landing-top-actions-desktop desktop-only">
+            <div className="pricing-menu-wrapper" ref={menuRef}>
+              <button
+                type="button"
+                className="btn-nav"
+                onClick={() => setShowPricingMenu((v) => !v)}
+                aria-expanded={showPricingMenu}
+              >
+                Pricing
+              </button>
 
-            {showPricingMenu && (
-              <div className="pricing-dropdown">
-                <div className="pricing-dropdown-amount">
-                  <span className="currency">$</span>
-                  <span className="amount">100</span>
-                  <span className="period">/month</span>
+              {showPricingMenu && (
+                <div className="pricing-dropdown">
+                  <div className="pricing-dropdown-amount">
+                    <span className="currency">$</span>
+                    <span className="amount">100</span>
+                    <span className="period">/month</span>
+                  </div>
+                  <p className="pricing-dropdown-note">7-day free trial · Cancel anytime</p>
+                  <button
+                    type="button"
+                    className="btn-primary block"
+                    onClick={() => {
+                      setShowPricingMenu(false)
+                      onShowPricing()
+                    }}
+                  >
+                    Start free trial
+                  </button>
                 </div>
-                <p className="pricing-dropdown-note">7-day free trial · Cancel anytime</p>
-                <button
-                  type="button"
-                  className="btn-primary block"
-                  onClick={() => {
-                    setShowPricingMenu(false)
-                    onShowPricing()
-                  }}
-                >
-                  Start free trial
-                </button>
-              </div>
-            )}
+              )}
+            </div>
+
+            <button onClick={onShowPricing} className="btn-primary" type="button">
+              Start trial
+            </button>
           </div>
 
-          <button onClick={onShowPricing} className="btn-primary" type="button">
-            Start trial
-          </button>
-
-          <button onClick={onShowAuth} className="btn-nav" type="button">
-            Sign in
-          </button>
-        </nav>
-
-        {/* Mobile: Sign in in top-right (text only) */}
-        <nav className="landing-top-auth mobile-only" aria-label="Mobile auth">
-          <button onClick={onShowAuth} className="landing-top-link" type="button">
+          {/* Sign in (always rendered, styled like mobile on small screens) */}
+          <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
             Sign in
           </button>
         </nav>
@@ -309,15 +320,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          {/* ✅ Desktop: REMOVE mid-page CTA buttons (Start trial / Sign in) — keep only top-right actions */}
-          {/* (Intentionally removed) */}
-
-          {/* Mobile: centered Start Trial button under the terminal */}
-          <div className="hero-cta-mobile mobile-only">
-            <button onClick={onShowPricing} className="btn-mobile-trial" type="button">
-              Start 7-day free trial
-            </button>
-          </div>
+          {/* ✅ Removed: mid-page CTA button under terminal */}
         </div>
       </main>
 
@@ -586,6 +589,23 @@ export default function Page() {
 
   const isAuthenticated = !!session
 
+  // ✅ Chat settings menu (gear dropdown)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const settingsRef = useRef(null)
+
+  useEffect(() => {
+    const onDown = (e) => {
+      if (!settingsRef.current) return
+      if (!settingsRef.current.contains(e.target)) setShowSettingsMenu(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('touchstart', onDown, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('touchstart', onDown)
+    }
+  }, [])
+
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
@@ -810,6 +830,7 @@ export default function Page() {
 
   const handleSignOut = async () => {
     try {
+      setShowSettingsMenu(false)
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Sign out error', e)
@@ -961,7 +982,9 @@ export default function Page() {
           --radius-full: 9999px;
         }
 
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
           box-sizing: border-box;
         }
 
@@ -1166,34 +1189,18 @@ export default function Page() {
           justify-self: end;
           display: flex;
           align-items: center;
+          gap: 8px;
+        }
+
+        .landing-top-actions-desktop {
+          display: flex;
+          align-items: center;
           gap: 4px;
         }
 
-        .landing-top-auth {
-          justify-self: end;
-          display: flex;
-          align-items: center;
-        }
-
-        /* ✅ Mobile Sign in: white + nudged left + slightly higher */
-        .landing-top-link {
-          background: transparent;
-          border: none;
-          padding: 0;
-          margin: 0;
-          cursor: pointer;
-          color: var(--ink-0);
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          transition: opacity 0.15s ease;
-          font-family: inherit;
-          white-space: nowrap;
-          line-height: 1;
-        }
-
-        .landing-top-link:hover {
-          opacity: 0.8;
+        /* ✅ Mobile/desktop sign-in button (single node, styled per breakpoint) */
+        .landing-signin-btn {
+          /* inherits btn-nav styles on desktop */
         }
 
         .btn-nav {
@@ -1436,81 +1443,6 @@ export default function Page() {
           100% {
             opacity: 0;
           }
-        }
-
-        .hero-cta-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .btn-hero-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          height: 44px;
-          padding: 0 20px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s ease;
-          font-family: inherit;
-        }
-
-        .btn-hero-primary:hover {
-          background: var(--accent-hover);
-        }
-
-        .btn-hero-secondary {
-          height: 44px;
-          padding: 0 20px;
-          background: transparent;
-          color: var(--ink-1);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: color 0.15s ease, border-color 0.15s ease;
-          font-family: inherit;
-        }
-
-        .btn-hero-secondary:hover {
-          color: var(--ink-0);
-          border-color: var(--ink-3);
-        }
-
-        /* Mobile CTA under terminal */
-        .hero-cta-mobile {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: -8px;
-        }
-
-        .btn-mobile-trial {
-          width: 100%;
-          max-width: 340px;
-          height: 44px;
-          padding: 0 18px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: background 0.15s ease;
-          font-family: inherit;
-        }
-
-        .btn-mobile-trial:hover {
-          background: var(--accent-hover);
         }
 
         /* Footer links */
@@ -1916,6 +1848,71 @@ export default function Page() {
           gap: 4px;
         }
 
+        /* ✅ Settings gear dropdown */
+        .chat-settings-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .chat-settings-btn {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: none;
+          border-radius: var(--radius-sm);
+          color: var(--ink-1);
+          cursor: pointer;
+          transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .chat-settings-btn:hover {
+          color: var(--ink-0);
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .chat-settings-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 180px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
+          padding: 8px;
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+          animation: dropdown-in 0.15s ease;
+          z-index: 50;
+        }
+
+        .chat-settings-item {
+          width: 100%;
+          text-align: left;
+          padding: 10px 10px;
+          background: transparent;
+          border: none;
+          border-radius: var(--radius-sm);
+          color: var(--ink-0);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background 0.15s ease;
+        }
+
+        .chat-settings-item:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-settings-sep {
+          height: 1px;
+          background: var(--border-subtle);
+          margin: 6px 2px;
+        }
+
         .chat-messages {
           flex: 1;
           min-height: 0;
@@ -2195,13 +2192,17 @@ export default function Page() {
             font-size: 18px;
           }
 
-          /* ✅ Nudge sign-in left + slightly higher on mobile */
-          .landing-top-auth {
-            margin-right: 0px;
-          }
-          .landing-top-link {
+          /* ✅ Sign-in as small white text on mobile */
+          .landing-signin-btn {
+            height: auto !important;
+            padding: 0 !important;
             margin-right: 6px;
             transform: translateY(-1px);
+            color: var(--ink-0) !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.04em !important;
+            line-height: 1 !important;
           }
 
           .chat-topbar {
@@ -2245,10 +2246,6 @@ export default function Page() {
           .plm-brand-text {
             font-size: 17px;
           }
-
-          .btn-mobile-trial {
-            max-width: 320px;
-          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -2283,15 +2280,50 @@ export default function Page() {
             <div className={`${ibmMono.className} chat-root`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
-                <nav className="chat-top-actions">
-                  {hasActiveSubscription && (
-                    <button onClick={handleManageBilling} className="btn-nav" type="button">
-                      Billing
+                <nav className="chat-top-actions" aria-label="Chat actions">
+                  <div className="chat-settings-wrap" ref={settingsRef}>
+                    <button
+                      type="button"
+                      className="chat-settings-btn"
+                      onClick={() => setShowSettingsMenu((v) => !v)}
+                      aria-expanded={showSettingsMenu}
+                      aria-label="Settings"
+                    >
+                      <Icons.Gear />
                     </button>
-                  )}
-                  <button onClick={handleSignOut} className="btn-nav" type="button">
-                    Log out
-                  </button>
+
+                    {showSettingsMenu && (
+                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
+                        {hasActiveSubscription && (
+                          <button
+                            type="button"
+                            className="chat-settings-item"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              handleManageBilling()
+                            }}
+                          >
+                            Billing
+                          </button>
+                        )}
+
+                        {hasActiveSubscription && <div className="chat-settings-sep" />}
+
+                        <button
+                          type="button"
+                          className="chat-settings-item"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            handleSignOut()
+                          }}
+                        >
+                          Log out
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </nav>
               </header>
 
@@ -2315,7 +2347,9 @@ export default function Page() {
                           msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'
                         }`}
                       >
-                        <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+                        <div
+                          className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
+                        >
                           {msg.image && (
                             <div className="chat-bubble-image">
                               <img src={msg.image} alt="Uploaded" />
