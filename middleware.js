@@ -4,6 +4,11 @@ import { NextResponse } from 'next/server'
 export async function middleware(request) {
   const { pathname } = request.nextUrl
   
+  // ✅ FIX: Skip all API routes entirely to prevent 404s
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+  
   // Create response with security headers
   const response = NextResponse.next({
     request: {
@@ -19,9 +24,8 @@ export async function middleware(request) {
   // Skip auth for public routes
   const publicRoutes = ['/auth', '/terms', '/privacy', '/contact']
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-  const isApiRoute = pathname.startsWith('/api')
   
-  if (isPublicRoute || isApiRoute) {
+  if (isPublicRoute) {
     return response
   }
 
@@ -54,6 +58,7 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // ✅ FIX: Explicitly exclude API routes from matcher
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
