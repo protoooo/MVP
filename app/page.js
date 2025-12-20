@@ -285,7 +285,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </button>
         </nav>
 
-        {/* ✅ Mobile: Sign in in top-right (text only, no pill) */}
+        {/* Mobile: Sign in in top-right (text only) */}
         <nav className="landing-top-auth mobile-only" aria-label="Mobile auth">
           <button onClick={onShowAuth} className="landing-top-link" type="button">
             Sign in
@@ -321,7 +321,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </button>
           </div>
 
-          {/* ✅ Mobile: centered Start Trial button under the terminal */}
+          {/* Mobile: centered Start Trial button under the terminal */}
           <div className="hero-cta-mobile mobile-only">
             <button onClick={onShowPricing} className="btn-mobile-trial" type="button">
               Start 7-day free trial
@@ -946,9 +946,6 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        /* ==========================================================================
-           protocolLM Design System
-           ========================================================================== */
         :root {
           --bg-0: #09090b;
           --bg-1: #0c0c0e;
@@ -1014,9 +1011,7 @@ export default function Page() {
           border-radius: var(--radius-full);
         }
 
-        /* ==========================================================================
-           Loading
-           ========================================================================== */
+        /* Loading */
         .loading-screen {
           position: fixed;
           inset: 0;
@@ -1065,9 +1060,7 @@ export default function Page() {
           100% { transform: translateX(400%); }
         }
 
-        /* ==========================================================================
-           App
-           ========================================================================== */
+        /* App */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
@@ -1076,9 +1069,7 @@ export default function Page() {
           background: var(--bg-0);
         }
 
-        /* ==========================================================================
-           Brand
-           ========================================================================== */
+        /* Brand */
         .plm-brand {
           color: var(--ink-0);
           text-decoration: none;
@@ -1114,13 +1105,10 @@ export default function Page() {
           white-space: nowrap;
         }
 
-        /* Helpers */
         .desktop-only { display: flex; }
         .mobile-only { display: none; }
 
-        /* ==========================================================================
-           Landing
-           ========================================================================== */
+        /* Landing */
         .landing-root {
           position: relative;
           min-height: 100vh;
@@ -1166,22 +1154,24 @@ export default function Page() {
           align-items: center;
         }
 
+        /* ✅ Mobile Sign in: white + nudged left + slightly higher */
         .landing-top-link {
           background: transparent;
           border: none;
           padding: 0;
           margin: 0;
           cursor: pointer;
-          color: var(--ink-2);
+          color: var(--ink-0);
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.04em;
-          transition: color 0.15s ease;
+          transition: opacity 0.15s ease;
           font-family: inherit;
           white-space: nowrap;
+          line-height: 1;
         }
 
-        .landing-top-link:hover { color: var(--ink-0); }
+        .landing-top-link:hover { opacity: 0.8; }
 
         .btn-nav {
           height: 36px;
@@ -1428,7 +1418,7 @@ export default function Page() {
           border-color: var(--ink-3);
         }
 
-        /* ✅ Mobile CTA under terminal */
+        /* Mobile CTA under terminal */
         .hero-cta-mobile {
           width: 100%;
           display: flex;
@@ -1480,9 +1470,7 @@ export default function Page() {
         .plm-footer-link:hover { color: var(--ink-0); }
         .plm-footer-sep { color: var(--ink-3); }
 
-        /* ==========================================================================
-           Modals
-           ========================================================================== */
+        /* Modals */
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -1560,12 +1548,13 @@ export default function Page() {
           gap: 8px;
         }
 
+        /* ✅ Email/Password label text to white */
         .form-label {
           font-size: 12px;
-          font-weight: 500;
+          font-weight: 600;
           letter-spacing: 0.03em;
           text-transform: uppercase;
-          color: var(--ink-2);
+          color: var(--ink-0);
         }
 
         .form-input {
@@ -1658,16 +1647,32 @@ export default function Page() {
           gap: 8px;
         }
 
+        /* ✅ Forgot password / Create account => white */
         .modal-link {
           background: none;
           border: none;
           font-size: 13px;
-          color: var(--ink-2);
+          color: var(--ink-0);
           cursor: pointer;
           font-family: inherit;
+          opacity: 0.92;
         }
 
-        .modal-link:hover { color: var(--ink-0); }
+        .modal-link:hover { opacity: 1; }
+
+        /* ✅ Turnstile/Recaptcha line -> one line (shrink only enough) */
+        .modal-card .recaptcha-badge,
+        .modal-card .turnstile-badge,
+        .modal-card .captcha-badge,
+        .modal-card [data-turnstile-badge],
+        .modal-card [data-recaptcha-badge] {
+          font-size: 10px !important;
+          white-space: nowrap !important;
+          line-height: 1.2 !important;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+        }
 
         /* Pricing modal */
         .pricing-modal { text-align: center; }
@@ -1757,17 +1762,13 @@ export default function Page() {
           margin: 0;
         }
 
-        /* ==========================================================================
-           Chat
-           ========================================================================== */
+        /* Chat */
         .chat-root {
           flex: 1;
           display: flex;
           flex-direction: column;
           min-height: 0;
           background: var(--bg-0);
-
-          /* ✅ Fix “wonky”/white overscroll by forcing a contained viewport */
           height: 100dvh;
           overflow: hidden;
         }
@@ -1803,8 +1804,6 @@ export default function Page() {
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
           padding: 0 24px 32px;
-
-          /* ✅ Make sure the scroll area never reveals “white” behind */
           background: var(--bg-0);
         }
 
@@ -1819,8 +1818,9 @@ export default function Page() {
           max-width: 400px;
         }
 
+        /* ✅ Slightly smaller so "regulations." doesn't get stranded */
         .chat-empty-text {
-          font-size: 15px;
+          font-size: 14px;
           color: var(--ink-2);
           line-height: 1.6;
           margin: 0;
@@ -1837,12 +1837,7 @@ export default function Page() {
           padding-bottom: 6px;
         }
 
-        .chat-message {
-          display: flex;
-          width: 100%;
-          align-items: flex-start;
-        }
-
+        .chat-message { display: flex; width: 100%; align-items: flex-start; }
         .chat-message-user { justify-content: flex-end; }
         .chat-message-assistant { justify-content: flex-start; }
 
@@ -1870,7 +1865,6 @@ export default function Page() {
           object-fit: contain;
         }
 
-        /* ✅ Replaces the inline <span style={{whiteSpace:'pre-wrap'}} ...> with a real block */
         .chat-content {
           display: block;
           white-space: pre-wrap;
@@ -1884,7 +1878,6 @@ export default function Page() {
           font-style: italic;
         }
 
-        /* Chat input */
         .chat-input-area {
           flex-shrink: 0;
           border-top: 1px solid var(--border-subtle);
@@ -1932,7 +1925,7 @@ export default function Page() {
           gap: 10px;
         }
 
-        /* Camera button - subtle glow on hover only */
+        /* ✅ Camera button: blue border */
         .chat-camera-btn {
           width: 44px;
           height: 44px;
@@ -1940,7 +1933,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
+          border: 1px solid var(--accent);
           border-radius: var(--radius-md);
           color: var(--accent);
           cursor: pointer;
@@ -1949,7 +1942,7 @@ export default function Page() {
         }
 
         .chat-camera-btn:hover {
-          border-color: var(--accent);
+          border-color: var(--accent-hover);
           box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
@@ -1964,9 +1957,7 @@ export default function Page() {
           min-width: 0;
         }
 
-        .chat-input-wrapper:focus-within {
-          border-color: var(--accent);
-        }
+        .chat-input-wrapper:focus-within { border-color: var(--accent); }
 
         .chat-textarea {
           flex: 1;
@@ -2019,11 +2010,8 @@ export default function Page() {
           margin-top: 14px;
         }
 
-        /* ==========================================================================
-           Responsive
-           ========================================================================== */
+        /* Responsive */
         @media (max-width: 768px) {
-          /* ✅ Mobile topbar: logo left, Sign in right */
           .landing-topbar {
             display: flex;
             align-items: center;
@@ -2041,11 +2029,16 @@ export default function Page() {
           .landing-hero { padding: 120px 20px 120px; }
           .terminal-output { font-size: 13px; }
 
-          /* ✅ Logo + text bump on mobile (logo ~25%, text +1) */
           .plm-brand-mark { width: 60px; height: 60px; }
           .plm-brand-text { font-size: 18px; }
 
-          /* ✅ Replace chat mobile CSS blocks (tight + stable + safe area aware) */
+          /* ✅ Nudge sign-in left + slightly higher on mobile */
+          .landing-top-auth { margin-right: 0px; }
+          .landing-top-link {
+            margin-right: 6px;
+            transform: translateY(-1px);
+          }
+
           .chat-topbar {
             padding: 12px 16px;
             padding-left: max(16px, env(safe-area-inset-left));
@@ -2053,9 +2046,7 @@ export default function Page() {
             padding-top: max(12px, env(safe-area-inset-top));
           }
 
-          .chat-messages {
-            padding: 0 16px calc(24px + env(safe-area-inset-bottom));
-          }
+          .chat-messages { padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
 
           .chat-input-inner {
             padding: 12px 16px 18px;
@@ -2063,13 +2054,15 @@ export default function Page() {
           }
 
           .chat-bubble { max-width: 85%; }
+
+          /* ✅ Tiny extra shrink on mobile empty prompt for cleaner wrap */
+          .chat-empty-text { font-size: 13px; }
         }
 
         @media (max-width: 480px) {
           .modal-card { padding: 24px 20px; }
           .price-value { font-size: 48px; }
 
-          /* ✅ Slightly smaller but still +~25% vs old 44px */
           .plm-brand-mark { width: 55px; height: 55px; }
           .plm-brand-text { font-size: 17px; }
 
