@@ -1,6 +1,6 @@
 // app/api/chat/route.js
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
-// UPDATED: Integrated license validation for multi-device, single-location enforcement
+// COMPLETE: Multi-user, single-location license enforcement
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -511,7 +511,7 @@ export async function POST(request) {
     const maxFindings = fullAudit ? 8 : 4
 
     // ========================================================================
-    // AUTH + LICENSE VALIDATION
+    // AUTH + LICENSE VALIDATION (Multi-user, Single-location)
     // ========================================================================
 
     let userId = null
@@ -544,7 +544,7 @@ export async function POST(request) {
         }, { status: 401 })
       }
 
-      // ✅ Email verification check
+      // Email verification check
       if (!data.user.email_confirmed_at) {
         return NextResponse.json({
           error: 'Please verify your email before using protocolLM.',
@@ -552,7 +552,7 @@ export async function POST(request) {
         }, { status: 403 })
       }
 
-      // ✅ LICENSE VALIDATION: Multi-device, single-location enforcement
+      // ✅ LICENSE VALIDATION: Multi-user, single-location enforcement
       const sessionInfo = getSessionInfo(request)
       
       logger.info('Validating license', {
