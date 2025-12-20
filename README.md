@@ -458,3 +458,6 @@ git push origin feature/your-feature
 ---
 
 Made in Washtenaw County for Washtenaw County 🍽️
+
+
+**code, project structure, and concept are proprietary and legal action will be taken if anything is stolen or reproduced**
