@@ -12,8 +12,6 @@ import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics } from '@/lib/usage'
 import { validateSingleLocation, logSessionActivity } from '@/lib/licenseValidation'
-
-// ✅ Claude memory import (Step 1)
 import { getUserMemory, updateMemory, generateGreeting, buildMemoryContext } from '@/lib/conversationMemory'
 
 export const dynamic = 'force-dynamic'
@@ -108,7 +106,10 @@ function sanitizePlainText(text) {
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
-  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms)),
+  ])
 }
 
 function extractBase64FromDataUrl(dataUrl) {
@@ -146,6 +147,36 @@ function getLastUserText(messages) {
     }
   }
   return ''
+}
+
+function countUserTurns(messages) {
+  if (!Array.isArray(messages)) return 0
+  let n = 0
+  for (const m of messages) if (m?.role === 'user') n++
+  return n
+}
+
+// ✅ Treat "first turn" as the first user message in the chat session.
+// In your client, the first API call typically sends `[userMessage]` (length 1, not 0).
+function isFirstTurn(messages) {
+  return countUserTurns(messages) <= 1
+}
+
+// ✅ "First time ever" detection. Works with many possible memory shapes.
+function isMemoryEmpty(m) {
+  if (!m) return true
+  if (typeof m === 'string') return m.trim().length === 0
+
+  if (typeof m.messageCount === 'number' && m.messageCount > 0) return false
+  if (typeof m.totalTurns === 'number' && m.totalTurns > 0) return false
+  if (typeof m.totalMessages === 'number' && m.totalMessages > 0) return false
+  if (typeof m.summary === 'string' && m.summary.trim().length > 0) return false
+  if (Array.isArray(m.recentTurns) && m.recentTurns.length > 0) return false
+  if (Array.isArray(m.history) && m.history.length > 0) return false
+  if (Array.isArray(m.memories) && m.memories.length > 0) return false
+
+  if (typeof m === 'object' && Object.keys(m).length > 0) return false
+  return true
 }
 
 function wantsFullAudit(text) {
@@ -354,9 +385,7 @@ function renderLegalContextBlock({ includeLegal = false, includeCriminal = false
   ]
 
   if (includeCriminal) {
-    lines.push(
-      '- Act 92 also contains criminal penalties for certain violations (misdemeanor/felony language). If you want that breakdown, say: "show criminal penalties".'
-    )
+    lines.push('- Act 92 also contains criminal penalties for certain violations (misdemeanor/felony language). If you want that breakdown, say: "show criminal penalties".')
   }
 
   return sanitizePlainText(lines.join('\n'))
@@ -505,18 +534,12 @@ function buildCacheStats(usage) {
 
 async function runPinnedRetrieval(searchDocumentsFn, county, q, k) {
   // Try county first
-  const primary = await withTimeout(searchDocumentsFn(q, county, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(
-    () => []
-  )
+  const primary = await withTimeout(searchDocumentsFn(q, county, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(() => [])
   if (Array.isArray(primary) && primary.length) return primary
 
   // Fallback keys
   for (const key of GLOBAL_FALLBACK_KEYS) {
-    const alt = await withTimeout(
-      searchDocumentsFn(q, key, k),
-      RETRIEVAL_TIMEOUT_MS,
-      'RETRIEVAL_TIMEOUT_PINNED_GLOBAL'
-    ).catch(() => [])
+    const alt = await withTimeout(searchDocumentsFn(q, key, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED_GLOBAL').catch(() => [])
     if (Array.isArray(alt) && alt.length) return alt
   }
   return []
@@ -558,6 +581,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
+    const firstTurn = isFirstTurn(messages)
     const fullAudit = wantsFullAudit(effectiveUserPrompt) || Boolean(body?.fullAudit)
     const maxFindings = fullAudit ? 10 : 4
 
@@ -565,14 +589,8 @@ export async function POST(request) {
     const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
     const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
 
-    // ✅ Determine first turn (client sends 1 user msg on first prompt)
-    const userMsgCount = messages.filter((m) => m?.role === 'user').length
-    const isFirstTurn = userMsgCount <= 1
-
-    // ✅ ENHANCED: Auth with location validation
+    // ✅ ENHANCED: Auth with location validation + memory
     let userId = null
-
-    // ✅ Claude Step 2: memory vars
     let userMemory = null
     let greeting = null
 
@@ -594,7 +612,7 @@ export async function POST(request) {
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
-      // ✅ NEW: Email verification check
+      // ✅ Email verification check
       if (userId && data?.user && !data.user.email_confirmed_at) {
         return NextResponse.json(
           {
@@ -605,7 +623,7 @@ export async function POST(request) {
         )
       }
 
-      // ✅ NEW: Validate single location license
+      // ✅ Validate single location license
       if (userId) {
         const sessionInfo = {
           ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
@@ -616,46 +634,41 @@ export async function POST(request) {
 
         if (!locationCheck.valid) {
           if (locationCheck.code === 'LOCATION_MISMATCH') {
-            return NextResponse.json(
-              {
-                error: locationCheck.error,
-                code: 'LOCATION_MISMATCH',
-              },
-              { status: 403 }
-            )
+            return NextResponse.json({ error: locationCheck.error, code: 'LOCATION_MISMATCH' }, { status: 403 })
           }
 
           if (locationCheck.code === 'MULTI_LOCATION_ACCESS') {
-            return NextResponse.json(
-              {
-                error: locationCheck.error,
-                code: 'MULTI_LOCATION_ACCESS',
-              },
-              { status: 403 }
-            )
+            return NextResponse.json({ error: locationCheck.error, code: 'MULTI_LOCATION_ACCESS' }, { status: 403 })
           }
 
           if (locationCheck.needsRegistration) {
-            return NextResponse.json(
-              {
-                error: 'Location registration required',
-                code: 'LOCATION_NOT_REGISTERED',
-              },
-              { status: 403 }
-            )
+            return NextResponse.json({ error: 'Location registration required', code: 'LOCATION_NOT_REGISTERED' }, { status: 403 })
           }
         }
 
         await logSessionActivity(userId, sessionInfo)
 
-        // ✅ Claude Step 3: load memory + greeting (only first turn)
+        // ✅ GET USER MEMORY (after auth + location is valid)
         try {
           userMemory = await getUserMemory(userId)
-          if (isFirstTurn && userMemory) {
-            greeting = generateGreeting(userMemory)
+
+          // ✅ NATURAL GREETING (only for first user turn of the chat)
+          if (firstTurn) {
+            const firstEverUse =
+              !userMemory ||
+              isMemoryEmpty(userMemory) ||
+              userMemory?.meta?.firstUseComplete === false ||
+              userMemory?.firstUseComplete === false
+
+            if (firstEverUse) {
+              greeting =
+                'Welcome to protocolLM — I can help you stay inspection-ready. Ask a question or upload a photo and I’ll tell you what to fix first.'
+            } else {
+              greeting = generateGreeting(userMemory)
+            }
           }
-        } catch (err) {
-          logger.warn('Memory load failed (non-blocking)', { error: err?.message })
+        } catch (e) {
+          logger.warn('Memory load failed (non-blocking)', { error: e?.message })
         }
       }
     } catch (e) {
@@ -724,32 +737,32 @@ Return ONLY valid JSON:
           .map((b) => b.text)
           .join('')
 
-        const parsed = extractJsonObject(visionText)
-        if (parsed) {
-          vision.summary = safeLine(parsed.summary || '')
-          vision.search_terms = safeLine(parsed.search_terms || '')
+        const parsedVision = extractJsonObject(visionText)
+        if (parsedVision) {
+          vision.summary = safeLine(parsedVision.summary || '')
+          vision.search_terms = safeLine(parsedVision.search_terms || '')
 
-          if (Array.isArray(parsed.visible_facts)) {
-            vision.visible_facts = parsed.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
+          if (Array.isArray(parsedVision.visible_facts)) {
+            vision.visible_facts = parsedVision.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
           }
 
-          if (Array.isArray(parsed.possible_issues)) {
-            vision.possible_issues = parsed.possible_issues
+          if (Array.isArray(parsedVision.possible_issues)) {
+            vision.possible_issues = parsedVision.possible_issues
               .map((i) => ({ issue: safeLine(i?.issue || ''), needs_check: safeLine(i?.needs_check || '') }))
               .filter((i) => i.issue)
               .slice(0, 8)
           }
 
-          if (Array.isArray(parsed.do_now)) {
-            vision.do_now = parsed.do_now.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
+          if (Array.isArray(parsedVision.do_now)) {
+            vision.do_now = parsedVision.do_now.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
           }
 
-          if (Array.isArray(parsed.photo_requests)) {
-            vision.photo_requests = parsed.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
+          if (Array.isArray(parsedVision.photo_requests)) {
+            vision.photo_requests = parsedVision.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
           }
 
-          if (Array.isArray(parsed.unclear)) {
-            vision.unclear = parsed.unclear.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
+          if (Array.isArray(parsedVision.unclear)) {
+            vision.unclear = parsedVision.unclear.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
           }
         } else {
           vision.summary = safeLine(visionText).slice(0, 220)
@@ -765,7 +778,10 @@ Return ONLY valid JSON:
       .join(' ')
       .slice(0, 600)
 
-    const retrievalQuery = [effectiveUserPrompt, visionHints, 'Washtenaw County Michigan food service'].filter(Boolean).join(' ').slice(0, 900)
+    const retrievalQuery = [effectiveUserPrompt, visionHints, 'Washtenaw County Michigan food service']
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 900)
 
     let mainDocs = []
     let pinnedDocs = []
@@ -807,13 +823,11 @@ ${pinnedCtx.contextText || 'No pinned excerpts retrieved.'}`
     const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
 ${mainCtx.contextText || 'No dynamic excerpts retrieved.'}`
 
-    // ✅ Claude Step 4: memory context at top of system prompt
+    // ✅ BUILD MEMORY CONTEXT
     let memoryContext = ''
     try {
-      memoryContext = buildMemoryContext(userMemory)
-      memoryContext = safeText(memoryContext || '')
-    } catch (err) {
-      logger.warn('Memory context build failed (non-blocking)', { error: err?.message })
+      memoryContext = buildMemoryContext(userMemory) || ''
+    } catch {
       memoryContext = ''
     }
 
@@ -870,7 +884,9 @@ Hard caps:
 `
 
     const factsBlock =
-      vision.visible_facts?.length > 0 ? `Visible facts:\n${vision.visible_facts.map((x) => `- ${x}`).join('\n')}` : 'Visible facts: None provided.'
+      vision.visible_facts?.length > 0
+        ? `Visible facts:\n${vision.visible_facts.map((x) => `- ${x}`).join('\n')}`
+        : 'Visible facts: None provided.'
 
     const possibleIssuesBlock =
       vision.possible_issues?.length > 0
@@ -991,7 +1007,12 @@ ${possibleIssuesBlock}` : ''}`.trim()
       } else {
         if (!hasAnyChecks) {
           status = 'clear'
-          message = renderAuditPlainText({ audit_status: 'clear', opening_line: modelOpening || 'Everything looks great here. Great job.' }, maxFindings, false, false)
+          message = renderAuditPlainText(
+            { audit_status: 'clear', opening_line: modelOpening || 'Everything looks great here. Great job.' },
+            maxFindings,
+            false,
+            false
+          )
         } else {
           status = 'needs_info'
           message = renderAuditPlainText(
@@ -1026,17 +1047,24 @@ ${possibleIssuesBlock}` : ''}`.trim()
       message = sanitizePlainText(doNowBlock ? `${fallback}\n\n${doNowBlock}` : fallback)
     }
 
-    // ✅ Claude Step 5: update memory after successful response
+    // ✅ Keep the version without greeting for memory storage
+    const responseForMemory = message
+
+    // ✅ UPDATE MEMORY AFTER SUCCESSFUL RESPONSE
     if (userId && effectiveUserPrompt) {
       await updateMemory(userId, {
         userMessage: effectiveUserPrompt,
-        assistantResponse: message,
+        assistantResponse: responseForMemory,
         mode: hasImage ? 'vision' : 'text',
+
+        // ✅ Mark onboarding complete so next time is “welcome back”
+        meta: { firstUseComplete: true },
+        firstUseComplete: true,
       }).catch((err) => logger.warn('Memory update failed', { error: err?.message }))
     }
 
-    // ✅ Claude Step 5: prepend greeting if it exists (first turn only)
-    if (greeting && isFirstTurn) {
+    // ✅ PREPEND GREETING IF IT EXISTS (only on first user turn of chat)
+    if (greeting && firstTurn) {
       message = `${greeting}\n\n${message}`
     }
 
