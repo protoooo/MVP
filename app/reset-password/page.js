@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { IBM_Plex_Mono } from 'next/font/google'
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 export default function ResetPasswordPage() {
   const router = useRouter()
