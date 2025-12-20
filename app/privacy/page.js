@@ -3,7 +3,7 @@
 import { Outfit } from 'next/font/google'
 import InfoPageLayout from '@/components/InfoPageLayout'
 
-const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700', '800'] })
+const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700'] })
 
 export default function PrivacyPolicy() {
   return (
