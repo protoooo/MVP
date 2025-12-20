@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { IBM_Plex_Mono } from 'next/font/google'
+import Link from 'next/link'
+import Image from 'next/image'
+import appleIcon from '@/app/apple-icon.png'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -19,6 +22,11 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.dataset.view = 'chat'
+  }, [])
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -91,7 +99,6 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Sign out the recovery session
       try {
         await supabase.auth.signOut()
       } catch (signOutErr) {
@@ -111,109 +118,157 @@ export default function ResetPasswordPage() {
     <>
       <style jsx global>{`
         :root {
-          --bg-0: #0e0e11;
-          --bg-1: #121218;
-          --bg-2: #15151a;
-          --ink-0: #f2f2f2;
-          --ink-1: #d9d9df;
-          --ink-2: #b9b9c4;
-          --line-0: #24242d;
-          --line-1: #2a2a32;
-          --line-2: #3a3a42;
+          --bg-0: #09090b;
+          --bg-1: #0c0c0e;
+          --bg-2: #131316;
+          --bg-3: #1a1a1f;
+
+          --ink-0: #fafafa;
+          --ink-1: #a0a0a8;
+          --ink-2: #636369;
+          --ink-3: #3f3f46;
+
+          --accent: #3b82f6;
+          --accent-hover: #2563eb;
+          --accent-dim: rgba(59, 130, 246, 0.1);
+
+          --border-subtle: rgba(255, 255, 255, 0.05);
+          --border-default: rgba(255, 255, 255, 0.08);
+
+          --radius-sm: 8px;
+          --radius-md: 12px;
+          --radius-lg: 16px;
         }
 
-        html,
-        body {
+        html, body {
+          height: 100%;
           margin: 0;
-          padding: 0;
           background: var(--bg-0);
           color: var(--ink-0);
-          height: 100%;
-          overflow-x: hidden;
-        }
-
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background: var(--bg-0);
-          z-index: -1;
-          pointer-events: none;
         }
 
         .reset-page {
           min-height: 100vh;
           min-height: 100dvh;
+          background: var(--bg-0);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .reset-topbar {
+          width: 100%;
+          max-width: 880px;
+          margin: 0 auto;
+          padding: 16px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .reset-brand {
+          color: var(--ink-0);
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          transition: opacity 0.15s ease;
+        }
+
+        .reset-brand:hover { opacity: 0.7; }
+
+        .reset-brand-inner {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .reset-brand-mark {
+          width: 48px;
+          height: 48px;
+        }
+
+        .reset-brand-mark img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .reset-brand-text {
+          font-size: 17px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+
+        .reset-back {
+          font-size: 13px;
+          color: var(--ink-1);
+          text-decoration: none;
+        }
+
+        .reset-back:hover {
+          color: var(--ink-0);
+        }
+
+        .reset-content {
+          flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px;
-          padding-left: max(24px, env(safe-area-inset-left));
-          padding-right: max(24px, env(safe-area-inset-right));
-          background: var(--bg-0);
+          padding: 40px 24px;
         }
 
         .reset-card {
           width: 100%;
           max-width: 420px;
-          background: var(--bg-1);
-          border: 1px solid var(--line-1);
-          border-radius: 16px;
-          padding: 28px;
-          box-shadow: 0 16px 50px rgba(0, 0, 0, 0.55);
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          padding: 32px;
         }
 
         .reset-header {
           text-align: center;
-          margin-bottom: 24px;
+          margin-bottom: 28px;
         }
 
         .reset-title {
-          font-size: 20px;
-          font-weight: 800;
+          font-size: 24px;
+          font-weight: 700;
           letter-spacing: -0.02em;
           margin: 0 0 8px;
           color: var(--ink-0);
         }
 
         .reset-subtitle {
-          font-size: 13px;
+          font-size: 14px;
           color: var(--ink-1);
-          line-height: 1.55;
           margin: 0;
         }
 
-        .reset-status {
-          padding: 12px 14px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid var(--line-1);
-          border-radius: 12px;
-          margin-bottom: 20px;
-          font-size: 13px;
-          line-height: 1.5;
-          color: var(--ink-1);
-          text-align: center;
-        }
-
         .reset-alert {
-          padding: 12px 14px;
-          border-radius: 12px;
+          padding: 16px;
+          border-radius: var(--radius-sm);
           margin-bottom: 20px;
-          font-size: 13px;
-          line-height: 1.5;
+          font-size: 14px;
+          line-height: 1.6;
           text-align: center;
         }
 
         .reset-alert.error {
-          background: rgba(239, 68, 68, 0.12);
-          border: 1px solid rgba(239, 68, 68, 0.35);
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.3);
           color: #fca5a5;
         }
 
         .reset-alert.success {
-          background: rgba(16, 185, 129, 0.12);
-          border: 1px solid rgba(16, 185, 129, 0.35);
+          background: rgba(34, 197, 94, 0.1);
+          border: 1px solid rgba(34, 197, 94, 0.3);
           color: #6ee7b7;
+        }
+
+        .reset-alert.loading {
+          background: var(--bg-3);
+          border: 1px solid var(--border-subtle);
+          color: var(--ink-1);
         }
 
         .reset-form {
@@ -230,10 +285,9 @@ export default function ResetPasswordPage() {
 
         .form-label {
           font-size: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ink-2);
           font-weight: 600;
+          letter-spacing: 0.02em;
+          color: var(--ink-1);
         }
 
         .form-input-group {
@@ -242,24 +296,18 @@ export default function ResetPasswordPage() {
 
         .form-input {
           width: 100%;
-          height: 44px;
+          height: 42px;
           padding: 0 14px;
-          background: #1a1a20;
-          border: 1px solid var(--line-1);
-          border-radius: 10px;
+          background: var(--bg-3);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
           color: var(--ink-0);
           font-size: 14px;
-          outline: none;
-          appearance: none;
-          -webkit-appearance: none;
-        }
-
-        .form-input::placeholder {
-          color: rgba(217, 217, 223, 0.45);
         }
 
         .form-input:focus {
-          border-color: #34343c;
+          outline: none;
+          border-color: var(--accent);
         }
 
         .form-toggle {
@@ -271,10 +319,8 @@ export default function ResetPasswordPage() {
           border: none;
           color: var(--ink-2);
           font-size: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          cursor: pointer;
           font-weight: 600;
+          cursor: pointer;
         }
 
         .form-toggle:hover {
@@ -283,172 +329,183 @@ export default function ResetPasswordPage() {
 
         .reset-btn {
           width: 100%;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
-          height: 44px;
-          background: #2a2a32;
-          color: var(--ink-0);
-          border: 1px solid #34343c;
-          border-radius: 10px;
-          font-size: 12px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
+          gap: 8px;
+          background: var(--accent);
+          color: #fff;
+          border: none;
+          border-radius: var(--radius-sm);
+          font-size: 14px;
+          font-weight: 600;
           cursor: pointer;
-          transition: transform 0.15s ease, background 0.15s ease;
+          transition: background 0.15s ease;
+          margin-top: 4px;
         }
 
         .reset-btn:hover:not(:disabled) {
-          background: #34343c;
-          transform: translateY(-1px);
+          background: var(--accent-hover);
         }
 
         .reset-btn:disabled {
-          opacity: 0.6;
+          opacity: 0.5;
           cursor: not-allowed;
         }
 
         .btn-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.25);
-          border-top-color: rgba(255, 255, 255, 0.8);
-          border-radius: 999px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
           animation: spin 0.6s linear infinite;
         }
 
         @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
+          to { transform: rotate(360deg); }
         }
 
         .reset-footer {
           margin-top: 20px;
           padding-top: 20px;
-          border-top: 1px solid var(--line-1);
-          display: flex;
-          justify-content: center;
+          border-top: 1px solid var(--border-subtle);
+          text-align: center;
         }
 
         .reset-link {
-          background: none;
-          border: none;
-          font-size: 12px;
-          letter-spacing: 0.06em;
+          font-size: 13px;
           color: var(--ink-2);
-          cursor: pointer;
           text-decoration: underline;
-          text-underline-offset: 2px;
+          cursor: pointer;
         }
 
         .reset-link:hover {
           color: var(--ink-0);
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
           .reset-card {
-            padding: 22px 18px;
+            padding: 24px;
+          }
+
+          .reset-brand-mark {
+            width: 40px;
+            height: 40px;
+          }
+
+          .reset-brand-text {
+            font-size: 15px;
           }
         }
       `}</style>
 
       <div className={`${ibmMono.className} reset-page`}>
-        <div className="reset-card">
-          <div className="reset-header">
-            <h1 className="reset-title">Reset your password</h1>
-            <p className="reset-subtitle">Choose a new password to secure your account.</p>
-          </div>
+        <header className="reset-topbar">
+          <Link href="/" className="reset-brand">
+            <span className="reset-brand-inner">
+              <span className="reset-brand-mark">
+                <Image src={appleIcon} alt="" width={64} height={64} priority />
+              </span>
+              <span className="reset-brand-text">protocolLM</span>
+            </span>
+          </Link>
+          <button onClick={handleBackHome} className="reset-back">
+            ← Back
+          </button>
+        </header>
 
-          {verifying && !fatalError && (
-            <div className="reset-status">
-              Verifying your reset link…
+        <div className="reset-content">
+          <div className="reset-card">
+            <div className="reset-header">
+              <h1 className="reset-title">Reset Your Password</h1>
+              <p className="reset-subtitle">Choose a new password to secure your account.</p>
             </div>
-          )}
 
-          {fatalError && (
-            <div className="reset-alert error">
-              {fatalError}
-            </div>
-          )}
-
-          {!verifying && !fatalError && !success && (
-            <form onSubmit={handleSubmit} className="reset-form">
-              {formError && (
-                <div className="reset-alert error">
-                  {formError}
-                </div>
-              )}
-
-              <div className="form-field">
-                <label className="form-label">New password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  required
-                  className="form-input"
-                />
+            {verifying && !fatalError && (
+              <div className="reset-alert loading">
+                Verifying your reset link…
               </div>
+            )}
 
-              <div className="form-field">
-                <label className="form-label">Confirm password</label>
-                <div className="form-input-group">
+            {fatalError && (
+              <div className="reset-alert error">
+                {fatalError}
+              </div>
+            )}
+
+            {!verifying && !fatalError && !success && (
+              <form onSubmit={handleSubmit} className="reset-form">
+                {formError && (
+                  <div className="reset-alert error">
+                    {formError}
+                  </div>
+                )}
+
+                <div className="form-field">
+                  <label className="form-label">New Password</label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
                     required
                     className="form-input"
                   />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)} 
-                    className="form-toggle"
-                  >
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="reset-btn"
-              >
-                {loading && <span className="btn-spinner" />}
-                <span>{loading ? 'Updating…' : 'Update password'}</span>
+                <div className="form-field">
+                  <label className="form-label">Confirm Password</label>
+                  <div className="form-input-group">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      required
+                      className="form-input"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)} 
+                      className="form-toggle"
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="reset-btn"
+                >
+                  {loading && <span className="btn-spinner" />}
+                  <span>{loading ? 'Updating…' : 'Update Password'}</span>
+                </button>
+              </form>
+            )}
+
+            {success && (
+              <>
+                <div className="reset-alert success">
+                  Your password has been reset successfully! You can now sign in with your new password.
+                </div>
+                <button
+                  onClick={() => router.push('/')}
+                  className="reset-btn"
+                >
+                  Go to Sign In
+                </button>
+              </>
+            )}
+
+            <div className="reset-footer">
+              <button onClick={handleBackHome} className="reset-link">
+                Back to home
               </button>
-            </form>
-          )}
-
-          {success && (
-            <>
-              <div className="reset-alert success">
-                Your password has been reset successfully! You can now sign in with your new password.
-              </div>
-              <button
-                type="button"
-                onClick={() => router.push('/')}
-                className="reset-btn"
-              >
-                Go to sign in
-              </button>
-            </>
-          )}
-
-          <div className="reset-footer">
-            <button
-              type="button"
-              onClick={handleBackHome}
-              className="reset-link"
-            >
-              Back to home
-            </button>
+            </div>
           </div>
         </div>
       </div>
