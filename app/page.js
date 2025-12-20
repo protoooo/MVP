@@ -16,8 +16,9 @@ const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800']
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
-const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
+const STARTER_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY
+const PRO_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
+const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -227,21 +228,6 @@ function FooterLinks() {
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
-  const [showPricingMenu, setShowPricingMenu] = useState(false)
-  const menuRef = useRef(null)
-
-  useEffect(() => {
-    const onDown = (e) => {
-      if (!menuRef.current) return
-      if (!menuRef.current.contains(e.target)) setShowPricingMenu(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('touchstart', onDown, { passive: true })
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('touchstart', onDown)
-    }
-  }, [])
 
   return (
     <div className={`${ibmMono.className} landing-root`}>
@@ -256,48 +242,14 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <RotatingDocPill items={DEMO_DOCUMENTS} />
         </div>
 
-        {/* ✅ Single actions area: prevents duplicate "Sign in" rendering */}
+        {/* ✅ Single actions area: Start trial + Sign in */}
         <nav className="landing-top-actions" aria-label="Top actions">
-          {/* Desktop-only group (Pricing + Start trial) */}
           <div className="landing-top-actions-desktop desktop-only">
-            <div className="pricing-menu-wrapper" ref={menuRef}>
-              <button
-                type="button"
-                className="btn-nav"
-                onClick={() => setShowPricingMenu((v) => !v)}
-                aria-expanded={showPricingMenu}
-              >
-                Pricing
-              </button>
-
-              {showPricingMenu && (
-                <div className="pricing-dropdown">
-                  <div className="pricing-dropdown-amount">
-                    <span className="currency">$</span>
-                    <span className="amount">100</span>
-                    <span className="period">/month</span>
-                  </div>
-                  <p className="pricing-dropdown-note">7-day free trial · Cancel anytime</p>
-                  <button
-                    type="button"
-                    className="btn-primary block"
-                    onClick={() => {
-                      setShowPricingMenu(false)
-                      onShowPricing()
-                    }}
-                  >
-                    Start free trial
-                  </button>
-                </div>
-              )}
-            </div>
-
             <button onClick={onShowPricing} className="btn-primary" type="button">
               Start trial
             </button>
           </div>
 
-          {/* Sign in (always rendered, styled like mobile on small screens) */}
           <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
             Sign in
           </button>
@@ -320,7 +272,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          {/* ✅ Removed: mid-page CTA button under terminal */}
+          <div className="mobile-start mobile-only">
+            <button className="btn-primary" onClick={onShowPricing} type="button">
+              Start trial
+            </button>
+          </div>
         </div>
       </main>
 
@@ -511,44 +467,168 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
+  const tiers = [
+    {
+      name: 'Starter',
+      price: 49,
+      priceId: STARTER_MONTHLY,
+      features: [
+        'Unlimited usage (questions + photos)',
+        'Haiku — fast answers for daily checks',
+        'Best for quick scans and on-the-line clarity',
+        'Email support'
+      ],
+      loadingKey: 'starter'
+    },
+    {
+      name: 'Professional',
+      price: 99,
+      priceId: PRO_MONTHLY,
+      features: [
+        'Unlimited usage (questions + photos)',
+        'Sonnet — balanced, thorough responses',
+        'Sharper guidance for tougher compliance calls',
+        'Priority support'
+      ],
+      popular: true,
+      loadingKey: 'pro'
+    },
+    {
+      name: 'Enterprise',
+      price: 199,
+      priceId: ENTERPRISE_MONTHLY,
+      features: [
+        'Unlimited usage (questions + photos)',
+        'Opus — advanced reasoning for best answers',
+        'Ideal for multi-location playbooks and reviews',
+        'Dedicated multi-location support'
+      ],
+      loadingKey: 'enterprise'
+    }
+  ]
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card pricing-modal ${ibmMono.className}`}>
+      <div
+        className="modal-container"
+        style={{ maxWidth: '920px', maxHeight: '90vh', overflowY: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={`modal-card pricing-modal ${ibmMono.className}`} style={{ padding: '32px' }}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
-          <div className="pricing-modal-price">
-            <span className="price-currency">$</span>
-            <span className="price-value">100</span>
-            <span className="price-period">/month</span>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>
+              Choose Your Plan
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>
+              7-day free trial • Cancel anytime • Unlimited usage on all plans
+            </p>
           </div>
 
-          <div className="pricing-modal-buttons">
-            <button
-              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-              disabled={!!loading}
-              className="btn-pricing-primary"
-              type="button"
-            >
-              {loading === 'monthly' && <span className="spinner" />}
-              <span>Start 7-day free trial</span>
-            </button>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+            {tiers.map((tier) => (
+              <div
+                key={tier.name}
+                style={{
+                  background: tier.popular ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : 'var(--bg-2)',
+                  border: tier.popular ? '2px solid var(--accent)' : '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '24px',
+                  position: 'relative',
+                  color: tier.popular ? 'white' : 'var(--ink-0)'
+                }}
+              >
+                {tier.popular && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-10px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'var(--accent)',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase'
+                  }}>
+                    Recommended
+                  </div>
+                )}
 
-            <button
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading}
-              className="btn-pricing-secondary"
-              type="button"
-            >
-              {loading === 'annual' && <span className="spinner" />}
-              <span>Annual — $1,000/year</span>
-              <span className="save-badge">Save $200</span>
-            </button>
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>
+                    {tier.name}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '36px', fontWeight: '700' }}>${tier.price}</span>
+                    <span style={{ fontSize: '14px', opacity: 0.7 }}>/month</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => onCheckout(tier.priceId, tier.loadingKey)}
+                  disabled={!!loading}
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: tier.popular ? 'white' : 'var(--accent)',
+                    color: tier.popular ? 'var(--bg-1)' : 'white',
+                    border: 'none',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.5 : 1,
+                    marginBottom: '16px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {loading === tier.loadingKey && <span className="spinner" />}
+                  <span>Start 7-Day Trial</span>
+                </button>
+
+                <div
+                  style={{
+                    borderTop: tier.popular ? '1px solid rgba(255,255,255,0.12)' : '1px solid var(--border-subtle)',
+                    paddingTop: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}
+                >
+                  {tier.features.map((feature, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        fontSize: '13px',
+                        lineHeight: 1.5,
+                        opacity: 0.92
+                      }}
+                    >
+                      <span style={{ fontSize: '14px', lineHeight: '20px' }}>✓</span>
+                      <span style={{ display: 'block' }}>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <p className="pricing-modal-terms">7-day free trial · Cancel anytime · One license per location</p>
+          <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '24px', textAlign: 'center' }}>
+            All plans: Unlimited usage • Same Washtenaw County database • 7-day free trial • Cancel anytime
+          </p>
         </div>
       </div>
     </div>
@@ -1174,7 +1254,7 @@ export default function Page() {
           left: 0;
           right: 0;
           display: grid;
-          grid-template-columns: 1fr auto 1fr;
+          grid-template-columns: auto 1fr auto;
           align-items: center;
           padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
             max(24px, env(safe-area-inset-left));
@@ -1242,69 +1322,11 @@ export default function Page() {
           width: 100%;
         }
 
-        .pricing-menu-wrapper {
-          position: relative;
-        }
-
-        .pricing-dropdown {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          min-width: 240px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-md);
-          padding: 20px;
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-          animation: dropdown-in 0.15s ease;
-        }
-
-        @keyframes dropdown-in {
-          from {
-            opacity: 0;
-            transform: translateY(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .pricing-dropdown-amount {
-          display: flex;
-          align-items: baseline;
-          gap: 2px;
-          margin-bottom: 8px;
-        }
-
-        .pricing-dropdown-amount .currency {
-          font-size: 16px;
-          color: var(--ink-2);
-        }
-
-        .pricing-dropdown-amount .amount {
-          font-size: 32px;
-          font-weight: 700;
-          color: var(--ink-0);
-          letter-spacing: -0.03em;
-          font-family: ${outfit.style.fontFamily};
-        }
-
-        .pricing-dropdown-amount .period {
-          font-size: 14px;
-          color: var(--ink-2);
-        }
-
-        .pricing-dropdown-note {
-          font-size: 12px;
-          color: var(--ink-2);
-          margin: 0 0 16px;
-        }
-
         /* Doc pill */
         .doc-pill-wrap {
           display: flex;
           justify-content: center;
+          width: 100%;
         }
 
         .doc-pill {
@@ -1315,6 +1337,7 @@ export default function Page() {
           background: var(--bg-2);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-full);
+          margin: 0 auto;
         }
 
         .doc-pill-icon {
@@ -1398,6 +1421,16 @@ export default function Page() {
           padding: 12px 14px;
           background: var(--bg-2);
           border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .mobile-start {
+          width: 100%;
+          display: none;
+        }
+
+        .mobile-start .btn-primary {
+          width: 100%;
+          justify-content: center;
         }
 
         .terminal-dot {
@@ -2228,6 +2261,10 @@ export default function Page() {
           /* ✅ Tiny extra shrink on mobile empty prompt for cleaner wrap */
           .chat-empty-text {
             font-size: 13px;
+          }
+
+          .mobile-start {
+            display: flex;
           }
         }
 
