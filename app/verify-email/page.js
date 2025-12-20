@@ -1,9 +1,9 @@
-// app/verify-email/page.js - IMPROVED: Show verification status
+// app/verify-email/page.js - COMPLETE FILE with auto-redirect after verification
 'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Outfit, Inter } from 'next/font/google'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700', '800'] })
@@ -12,7 +12,6 @@ const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 export default function VerifyEmailPage() {
   const supabase = createClient()
   const router = useRouter()
-  const searchParams = useSearchParams()
   
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -29,7 +28,7 @@ export default function VerifyEmailPage() {
         return
       }
 
-      // ✅ FIX: If email is verified, redirect to pricing
+      // If email is verified, redirect to pricing to start trial
       if (user.email_confirmed_at) {
         console.log('✅ Email already verified, redirecting to pricing')
         router.push('/?showPricing=true&emailVerified=true')
