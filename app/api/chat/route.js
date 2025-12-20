@@ -106,10 +106,7 @@ function sanitizePlainText(text) {
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms)),
-  ])
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
 }
 
 function extractBase64FromDataUrl(dataUrl) {
@@ -300,7 +297,6 @@ function classLabel(cls) {
 }
 
 function classMeaning(cls) {
-  // From Washtenaw Violation Types: P reduces illness hazard; Pf supports P; C general sanitation.
   if (cls === 'P') return 'Directly reduces a foodborne illness hazard.'
   if (cls === 'Pf') return 'Supports Priority compliance (supplies, equipment, facilities, programs).'
   if (cls === 'C') return 'General sanitation and facility maintenance.'
@@ -344,7 +340,6 @@ function renderDoNowBlock(doNow, photoRequests) {
 }
 
 // Enforcement/fines: factual, optional, non-scare.
-// (Derived from Washtenaw Enforcement Action + Act 92 admin fine section.)
 function renderLegalContextBlock({ includeLegal = false, includeCriminal = false } = {}) {
   if (!includeLegal) return ''
 
@@ -372,7 +367,6 @@ function renderAuditPlainText(payload, maxItems, includeLegal = false, includeCr
   const opening = sanitizePlainText(payload?.opening_line || '')
   const auditStatus = safeLine(payload?.audit_status || 'unknown')
 
-  // Clear: only a positive line. Nothing else.
   if (auditStatus === 'clear') {
     return sanitizePlainText(opening || 'Everything looks great here. Great job.')
   }
@@ -503,21 +497,11 @@ function buildCacheStats(usage) {
 }
 
 async function runPinnedRetrieval(searchDocumentsFn, county, q, k) {
-  // Try county first
-  const primary = await withTimeout(
-    searchDocumentsFn(q, county, k),
-    RETRIEVAL_TIMEOUT_MS,
-    'RETRIEVAL_TIMEOUT_PINNED'
-  ).catch(() => [])
+  const primary = await withTimeout(searchDocumentsFn(q, county, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(() => [])
   if (Array.isArray(primary) && primary.length) return primary
 
-  // Fallback keys
   for (const key of GLOBAL_FALLBACK_KEYS) {
-    const alt = await withTimeout(
-      searchDocumentsFn(q, key, k),
-      RETRIEVAL_TIMEOUT_MS,
-      'RETRIEVAL_TIMEOUT_PINNED_GLOBAL'
-    ).catch(() => [])
+    const alt = await withTimeout(searchDocumentsFn(q, key, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED_GLOBAL').catch(() => [])
     if (Array.isArray(alt) && alt.length) return alt
   }
   return []
@@ -566,8 +550,15 @@ export async function POST(request) {
     const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
     const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
 
-    // ✅ ENHANCED: Auth with location validation
+    // ✅ First-turn detection (client usually sends the current user msg in `messages`)
+    const userTurns = messages.filter((m) => m?.role === 'user').length
+    const isFirstTurn = userTurns <= 1
+
+    // ✅ ENHANCED: Auth with location validation + memory
     let userId = null
+    let userMemory = null
+    let greeting = null
+
     try {
       const cookieStore = await cookies()
       const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
@@ -582,55 +573,63 @@ export async function POST(request) {
           },
         },
       })
-      
+
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
-      // ✅ NEW: Email verification check
+      // ✅ Email verification check
       if (userId && data?.user && !data.user.email_confirmed_at) {
-        return NextResponse.json({ 
-          error: 'Please verify your email address before using protocolLM. Check your inbox for the verification link.',
-          code: 'EMAIL_NOT_VERIFIED'
-        }, { status: 403 })
+        return NextResponse.json(
+          {
+            error: 'Please verify your email address before using protocolLM. Check your inbox for the verification link.',
+            code: 'EMAIL_NOT_VERIFIED',
+          },
+          { status: 403 }
+        )
       }
 
-      // ✅ NEW: Validate single location license
+      // ✅ Validate single location license
       if (userId) {
         const sessionInfo = {
-          ip: request.headers.get('x-forwarded-for')?.split(',')[0] || 
-              request.headers.get('x-real-ip') || 
-              'unknown',
-          userAgent: request.headers.get('user-agent') || 'unknown'
+          ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
+          userAgent: request.headers.get('user-agent') || 'unknown',
         }
 
         const locationCheck = await validateSingleLocation(userId, sessionInfo)
 
         if (!locationCheck.valid) {
           if (locationCheck.code === 'LOCATION_MISMATCH') {
-            return NextResponse.json({ 
-              error: locationCheck.error,
-              code: 'LOCATION_MISMATCH'
-            }, { status: 403 })
+            return NextResponse.json({ error: locationCheck.error, code: 'LOCATION_MISMATCH' }, { status: 403 })
           }
 
           if (locationCheck.code === 'MULTI_LOCATION_ACCESS') {
-            return NextResponse.json({ 
-              error: locationCheck.error,
-              code: 'MULTI_LOCATION_ACCESS'
-            }, { status: 403 })
+            return NextResponse.json({ error: locationCheck.error, code: 'MULTI_LOCATION_ACCESS' }, { status: 403 })
           }
 
           if (locationCheck.needsRegistration) {
-            return NextResponse.json({ 
-              error: 'Location registration required',
-              code: 'LOCATION_NOT_REGISTERED'
-            }, { status: 403 })
+            return NextResponse.json({ error: 'Location registration required', code: 'LOCATION_NOT_REGISTERED' }, { status: 403 })
           }
+
+          return NextResponse.json({ error: locationCheck.error || 'Access denied.', code: locationCheck.code || 'ACCESS_DENIED' }, { status: 403 })
         }
 
         await logSessionActivity(userId, sessionInfo)
-      }
 
+        // ✅ GET USER MEMORY
+        userMemory = await getUserMemory(userId).catch((err) => {
+          logger.warn('Memory fetch failed (non-blocking)', { error: err?.message })
+          return null
+        })
+
+        // ✅ GENERATE GREETING (only for first turn)
+        if (isFirstTurn && userMemory) {
+          try {
+            greeting = generateGreeting(userMemory)
+          } catch (err) {
+            logger.warn('Greeting generation failed (non-blocking)', { error: err?.message })
+          }
+        }
+      }
     } catch (e) {
       logger.warn('Auth check failed (continuing)', { error: e?.message })
     }
@@ -697,32 +696,32 @@ Return ONLY valid JSON:
           .map((b) => b.text)
           .join('')
 
-        const parsed = extractJsonObject(visionText)
-        if (parsed) {
-          vision.summary = safeLine(parsed.summary || '')
-          vision.search_terms = safeLine(parsed.search_terms || '')
+        const parsedVision = extractJsonObject(visionText)
+        if (parsedVision) {
+          vision.summary = safeLine(parsedVision.summary || '')
+          vision.search_terms = safeLine(parsedVision.search_terms || '')
 
-          if (Array.isArray(parsed.visible_facts)) {
-            vision.visible_facts = parsed.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
+          if (Array.isArray(parsedVision.visible_facts)) {
+            vision.visible_facts = parsedVision.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
           }
 
-          if (Array.isArray(parsed.possible_issues)) {
-            vision.possible_issues = parsed.possible_issues
+          if (Array.isArray(parsedVision.possible_issues)) {
+            vision.possible_issues = parsedVision.possible_issues
               .map((i) => ({ issue: safeLine(i?.issue || ''), needs_check: safeLine(i?.needs_check || '') }))
               .filter((i) => i.issue)
               .slice(0, 8)
           }
 
-          if (Array.isArray(parsed.do_now)) {
-            vision.do_now = parsed.do_now.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
+          if (Array.isArray(parsedVision.do_now)) {
+            vision.do_now = parsedVision.do_now.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
           }
 
-          if (Array.isArray(parsed.photo_requests)) {
-            vision.photo_requests = parsed.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
+          if (Array.isArray(parsedVision.photo_requests)) {
+            vision.photo_requests = parsedVision.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
           }
 
-          if (Array.isArray(parsed.unclear)) {
-            vision.unclear = parsed.unclear.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
+          if (Array.isArray(parsedVision.unclear)) {
+            vision.unclear = parsedVision.unclear.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
           }
         } else {
           vision.summary = safeLine(visionText).slice(0, 220)
@@ -733,32 +732,19 @@ Return ONLY valid JSON:
     }
 
     // 2) Retrieval
-    const visionHints = [
-      vision.search_terms,
-      ...(vision.visible_facts || []),
-      ...(vision.possible_issues || []).map((x) => x.issue),
-    ]
+    const visionHints = [vision.search_terms, ...(vision.visible_facts || []), ...(vision.possible_issues || []).map((x) => x.issue)]
       .filter(Boolean)
       .join(' ')
       .slice(0, 600)
 
-    const retrievalQuery = [effectiveUserPrompt, visionHints, 'Washtenaw County Michigan food service']
-      .filter(Boolean)
-      .join(' ')
-      .slice(0, 900)
+    const retrievalQuery = [effectiveUserPrompt, visionHints, 'Washtenaw County Michigan food service'].filter(Boolean).join(' ').slice(0, 900)
 
     let mainDocs = []
     let pinnedDocs = []
     try {
-      const mainPromise = withTimeout(
-        searchDocumentsFn(retrievalQuery, county, TOPK),
-        RETRIEVAL_TIMEOUT_MS,
-        'RETRIEVAL_TIMEOUT_MAIN'
-      )
+      const mainPromise = withTimeout(searchDocumentsFn(retrievalQuery, county, TOPK), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_MAIN')
 
-      const pinnedPromise = Promise.all(
-        PINNED_QUERIES.map((q) => runPinnedRetrieval(searchDocumentsFn, county, q, PINNED_TOPK))
-      )
+      const pinnedPromise = Promise.all(PINNED_QUERIES.map((q) => runPinnedRetrieval(searchDocumentsFn, county, q, PINNED_TOPK)))
 
       const [m, pList] = await Promise.all([mainPromise.catch(() => []), pinnedPromise])
       mainDocs = Array.isArray(m) ? m : []
@@ -793,10 +779,19 @@ ${pinnedCtx.contextText || 'No pinned excerpts retrieved.'}`
     const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
 ${mainCtx.contextText || 'No dynamic excerpts retrieved.'}`
 
+    // ✅ BUILD MEMORY CONTEXT
+    let memoryContext = ''
+    try {
+      if (userMemory) memoryContext = buildMemoryContext(userMemory) || ''
+    } catch (e) {
+      logger.warn('Memory context build failed (non-blocking)', { error: e?.message })
+      memoryContext = ''
+    }
+
     // 3) Model prompt
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-Tone:
+${memoryContext ? `${memoryContext}\n\n` : ''}Tone:
 - Professional, plain language, concise.
 - No emojis. No markdown. No hashtags. No numbered lists.
 - Do not mention sources, document names, page numbers, or "excerpt" in user-facing fields.
@@ -860,12 +855,16 @@ Hard caps:
     const questionBlock = `User request:
 ${effectiveUserPrompt || (hasImage ? 'Analyze photo.' : '')}
 
-${hasImage ? `Photo summary:
+${
+  hasImage
+    ? `Photo summary:
 ${vision.summary || 'No summary available.'}
 
 ${factsBlock}
 
-${possibleIssuesBlock}` : ''}`.trim()
+${possibleIssuesBlock}`
+    : ''
+}`.trim()
 
     // 4) Final answer
     let modelText = ''
@@ -948,8 +947,7 @@ ${possibleIssuesBlock}` : ''}`.trim()
         })
       }
 
-      const hasAnyChecks =
-        (vision.possible_issues || []).length > 0 || (vision.unclear || []).length > 0 || questions.length > 0
+      const hasAnyChecks = (vision.possible_issues || []).length > 0 || (vision.unclear || []).length > 0 || questions.length > 0
 
       if (supportedFindings.length > 0) {
         status = 'findings'
@@ -970,12 +968,7 @@ ${possibleIssuesBlock}` : ''}`.trim()
       } else {
         if (!hasAnyChecks) {
           status = 'clear'
-          message = renderAuditPlainText(
-            { audit_status: 'clear', opening_line: modelOpening || 'Everything looks great here. Great job.' },
-            maxFindings,
-            false,
-            false
-          )
+          message = renderAuditPlainText({ audit_status: 'clear', opening_line: modelOpening || 'Everything looks great here. Great job.' }, maxFindings, false, false)
         } else {
           status = 'needs_info'
           message = renderAuditPlainText(
@@ -1008,6 +1001,20 @@ ${possibleIssuesBlock}` : ''}`.trim()
       const fallback = modelText || (hasImage ? 'Analysis timed out. Please try again.' : 'Please try again.')
       const doNowBlock = renderDoNowBlock(vision.do_now, vision.photo_requests)
       message = sanitizePlainText(doNowBlock ? `${fallback}\n\n${doNowBlock}` : fallback)
+    }
+
+    // ✅ UPDATE MEMORY AFTER SUCCESSFUL RESPONSE (non-blocking)
+    if (userId && effectiveUserPrompt) {
+      updateMemory(userId, {
+        userMessage: effectiveUserPrompt,
+        assistantResponse: message,
+        mode: hasImage ? 'vision' : 'text',
+      }).catch((err) => logger.warn('Memory update failed', { error: err?.message }))
+    }
+
+    // ✅ PREPEND GREETING IF IT EXISTS (first turn only)
+    if (greeting && isFirstTurn) {
+      message = `${safeText(greeting)}\n\n${message}`
     }
 
     logger.info('Response complete', {
