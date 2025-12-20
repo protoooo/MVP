@@ -12,6 +12,8 @@ import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics } from '@/lib/usage'
 import { validateSingleLocation, logSessionActivity } from '@/lib/licenseValidation'
+
+// ✅ Claude memory import (Step 1)
 import { getUserMemory, updateMemory, generateGreeting, buildMemoryContext } from '@/lib/conversationMemory'
 
 export const dynamic = 'force-dynamic'
@@ -297,6 +299,7 @@ function classLabel(cls) {
 }
 
 function classMeaning(cls) {
+  // From Washtenaw Violation Types: P reduces illness hazard; Pf supports P; C general sanitation.
   if (cls === 'P') return 'Directly reduces a foodborne illness hazard.'
   if (cls === 'Pf') return 'Supports Priority compliance (supplies, equipment, facilities, programs).'
   if (cls === 'C') return 'General sanitation and facility maintenance.'
@@ -340,6 +343,7 @@ function renderDoNowBlock(doNow, photoRequests) {
 }
 
 // Enforcement/fines: factual, optional, non-scare.
+// (Derived from Washtenaw Enforcement Action + Act 92 admin fine section.)
 function renderLegalContextBlock({ includeLegal = false, includeCriminal = false } = {}) {
   if (!includeLegal) return ''
 
@@ -350,7 +354,9 @@ function renderLegalContextBlock({ includeLegal = false, includeCriminal = false
   ]
 
   if (includeCriminal) {
-    lines.push('- Act 92 also contains criminal penalties for certain violations (misdemeanor/felony language). If you want that breakdown, say: "show criminal penalties".')
+    lines.push(
+      '- Act 92 also contains criminal penalties for certain violations (misdemeanor/felony language). If you want that breakdown, say: "show criminal penalties".'
+    )
   }
 
   return sanitizePlainText(lines.join('\n'))
@@ -367,6 +373,7 @@ function renderAuditPlainText(payload, maxItems, includeLegal = false, includeCr
   const opening = sanitizePlainText(payload?.opening_line || '')
   const auditStatus = safeLine(payload?.audit_status || 'unknown')
 
+  // Clear: only a positive line. Nothing else.
   if (auditStatus === 'clear') {
     return sanitizePlainText(opening || 'Everything looks great here. Great job.')
   }
@@ -497,11 +504,19 @@ function buildCacheStats(usage) {
 }
 
 async function runPinnedRetrieval(searchDocumentsFn, county, q, k) {
-  const primary = await withTimeout(searchDocumentsFn(q, county, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(() => [])
+  // Try county first
+  const primary = await withTimeout(searchDocumentsFn(q, county, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(
+    () => []
+  )
   if (Array.isArray(primary) && primary.length) return primary
 
+  // Fallback keys
   for (const key of GLOBAL_FALLBACK_KEYS) {
-    const alt = await withTimeout(searchDocumentsFn(q, key, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED_GLOBAL').catch(() => [])
+    const alt = await withTimeout(
+      searchDocumentsFn(q, key, k),
+      RETRIEVAL_TIMEOUT_MS,
+      'RETRIEVAL_TIMEOUT_PINNED_GLOBAL'
+    ).catch(() => [])
     if (Array.isArray(alt) && alt.length) return alt
   }
   return []
@@ -550,12 +565,14 @@ export async function POST(request) {
     const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
     const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
 
-    // ✅ First-turn detection (client usually sends the current user msg in `messages`)
-    const userTurns = messages.filter((m) => m?.role === 'user').length
-    const isFirstTurn = userTurns <= 1
+    // ✅ Determine first turn (client sends 1 user msg on first prompt)
+    const userMsgCount = messages.filter((m) => m?.role === 'user').length
+    const isFirstTurn = userMsgCount <= 1
 
-    // ✅ ENHANCED: Auth with location validation + memory
+    // ✅ ENHANCED: Auth with location validation
     let userId = null
+
+    // ✅ Claude Step 2: memory vars
     let userMemory = null
     let greeting = null
 
@@ -577,7 +594,7 @@ export async function POST(request) {
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
-      // ✅ Email verification check
+      // ✅ NEW: Email verification check
       if (userId && data?.user && !data.user.email_confirmed_at) {
         return NextResponse.json(
           {
@@ -588,7 +605,7 @@ export async function POST(request) {
         )
       }
 
-      // ✅ Validate single location license
+      // ✅ NEW: Validate single location license
       if (userId) {
         const sessionInfo = {
           ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
@@ -599,35 +616,46 @@ export async function POST(request) {
 
         if (!locationCheck.valid) {
           if (locationCheck.code === 'LOCATION_MISMATCH') {
-            return NextResponse.json({ error: locationCheck.error, code: 'LOCATION_MISMATCH' }, { status: 403 })
+            return NextResponse.json(
+              {
+                error: locationCheck.error,
+                code: 'LOCATION_MISMATCH',
+              },
+              { status: 403 }
+            )
           }
 
           if (locationCheck.code === 'MULTI_LOCATION_ACCESS') {
-            return NextResponse.json({ error: locationCheck.error, code: 'MULTI_LOCATION_ACCESS' }, { status: 403 })
+            return NextResponse.json(
+              {
+                error: locationCheck.error,
+                code: 'MULTI_LOCATION_ACCESS',
+              },
+              { status: 403 }
+            )
           }
 
           if (locationCheck.needsRegistration) {
-            return NextResponse.json({ error: 'Location registration required', code: 'LOCATION_NOT_REGISTERED' }, { status: 403 })
+            return NextResponse.json(
+              {
+                error: 'Location registration required',
+                code: 'LOCATION_NOT_REGISTERED',
+              },
+              { status: 403 }
+            )
           }
-
-          return NextResponse.json({ error: locationCheck.error || 'Access denied.', code: locationCheck.code || 'ACCESS_DENIED' }, { status: 403 })
         }
 
         await logSessionActivity(userId, sessionInfo)
 
-        // ✅ GET USER MEMORY
-        userMemory = await getUserMemory(userId).catch((err) => {
-          logger.warn('Memory fetch failed (non-blocking)', { error: err?.message })
-          return null
-        })
-
-        // ✅ GENERATE GREETING (only for first turn)
-        if (isFirstTurn && userMemory) {
-          try {
+        // ✅ Claude Step 3: load memory + greeting (only first turn)
+        try {
+          userMemory = await getUserMemory(userId)
+          if (isFirstTurn && userMemory) {
             greeting = generateGreeting(userMemory)
-          } catch (err) {
-            logger.warn('Greeting generation failed (non-blocking)', { error: err?.message })
           }
+        } catch (err) {
+          logger.warn('Memory load failed (non-blocking)', { error: err?.message })
         }
       }
     } catch (e) {
@@ -696,32 +724,32 @@ Return ONLY valid JSON:
           .map((b) => b.text)
           .join('')
 
-        const parsedVision = extractJsonObject(visionText)
-        if (parsedVision) {
-          vision.summary = safeLine(parsedVision.summary || '')
-          vision.search_terms = safeLine(parsedVision.search_terms || '')
+        const parsed = extractJsonObject(visionText)
+        if (parsed) {
+          vision.summary = safeLine(parsed.summary || '')
+          vision.search_terms = safeLine(parsed.search_terms || '')
 
-          if (Array.isArray(parsedVision.visible_facts)) {
-            vision.visible_facts = parsedVision.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
+          if (Array.isArray(parsed.visible_facts)) {
+            vision.visible_facts = parsed.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
           }
 
-          if (Array.isArray(parsedVision.possible_issues)) {
-            vision.possible_issues = parsedVision.possible_issues
+          if (Array.isArray(parsed.possible_issues)) {
+            vision.possible_issues = parsed.possible_issues
               .map((i) => ({ issue: safeLine(i?.issue || ''), needs_check: safeLine(i?.needs_check || '') }))
               .filter((i) => i.issue)
               .slice(0, 8)
           }
 
-          if (Array.isArray(parsedVision.do_now)) {
-            vision.do_now = parsedVision.do_now.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
+          if (Array.isArray(parsed.do_now)) {
+            vision.do_now = parsed.do_now.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
           }
 
-          if (Array.isArray(parsedVision.photo_requests)) {
-            vision.photo_requests = parsedVision.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
+          if (Array.isArray(parsed.photo_requests)) {
+            vision.photo_requests = parsed.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
           }
 
-          if (Array.isArray(parsedVision.unclear)) {
-            vision.unclear = parsedVision.unclear.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
+          if (Array.isArray(parsed.unclear)) {
+            vision.unclear = parsed.unclear.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
           }
         } else {
           vision.summary = safeLine(visionText).slice(0, 220)
@@ -779,12 +807,13 @@ ${pinnedCtx.contextText || 'No pinned excerpts retrieved.'}`
     const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
 ${mainCtx.contextText || 'No dynamic excerpts retrieved.'}`
 
-    // ✅ BUILD MEMORY CONTEXT
+    // ✅ Claude Step 4: memory context at top of system prompt
     let memoryContext = ''
     try {
-      if (userMemory) memoryContext = buildMemoryContext(userMemory) || ''
-    } catch (e) {
-      logger.warn('Memory context build failed (non-blocking)', { error: e?.message })
+      memoryContext = buildMemoryContext(userMemory)
+      memoryContext = safeText(memoryContext || '')
+    } catch (err) {
+      logger.warn('Memory context build failed (non-blocking)', { error: err?.message })
       memoryContext = ''
     }
 
@@ -841,9 +870,7 @@ Hard caps:
 `
 
     const factsBlock =
-      vision.visible_facts?.length > 0
-        ? `Visible facts:\n${vision.visible_facts.map((x) => `- ${x}`).join('\n')}`
-        : 'Visible facts: None provided.'
+      vision.visible_facts?.length > 0 ? `Visible facts:\n${vision.visible_facts.map((x) => `- ${x}`).join('\n')}` : 'Visible facts: None provided.'
 
     const possibleIssuesBlock =
       vision.possible_issues?.length > 0
@@ -855,16 +882,12 @@ Hard caps:
     const questionBlock = `User request:
 ${effectiveUserPrompt || (hasImage ? 'Analyze photo.' : '')}
 
-${
-  hasImage
-    ? `Photo summary:
+${hasImage ? `Photo summary:
 ${vision.summary || 'No summary available.'}
 
 ${factsBlock}
 
-${possibleIssuesBlock}`
-    : ''
-}`.trim()
+${possibleIssuesBlock}` : ''}`.trim()
 
     // 4) Final answer
     let modelText = ''
@@ -1003,18 +1026,18 @@ ${possibleIssuesBlock}`
       message = sanitizePlainText(doNowBlock ? `${fallback}\n\n${doNowBlock}` : fallback)
     }
 
-    // ✅ UPDATE MEMORY AFTER SUCCESSFUL RESPONSE (non-blocking)
+    // ✅ Claude Step 5: update memory after successful response
     if (userId && effectiveUserPrompt) {
-      updateMemory(userId, {
+      await updateMemory(userId, {
         userMessage: effectiveUserPrompt,
         assistantResponse: message,
         mode: hasImage ? 'vision' : 'text',
       }).catch((err) => logger.warn('Memory update failed', { error: err?.message }))
     }
 
-    // ✅ PREPEND GREETING IF IT EXISTS (first turn only)
+    // ✅ Claude Step 5: prepend greeting if it exists (first turn only)
     if (greeting && isFirstTurn) {
-      message = `${safeText(greeting)}\n\n${message}`
+      message = `${greeting}\n\n${message}`
     }
 
     logger.info('Response complete', {
