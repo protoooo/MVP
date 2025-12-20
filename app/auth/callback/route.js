@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - FIXED for Next.js 15
+// app/auth/callback/route.js - COMPLETE FILE with proper redirect flow
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -9,6 +9,7 @@ export async function GET(request) {
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
   const type = requestUrl.searchParams.get('type')
+  const next = requestUrl.searchParams.get('next') // Get redirect destination
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
 
@@ -16,6 +17,7 @@ export async function GET(request) {
     hasCode: !!code,
     hasError: !!error,
     type,
+    next,
     baseUrl,
   })
 
@@ -30,7 +32,7 @@ export async function GET(request) {
     return NextResponse.redirect(`${baseUrl}/?error=no_code`)
   }
 
-  const cookieStore = await cookies()  // ✅ NOW AWAITED
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -73,16 +75,20 @@ export async function GET(request) {
 
     console.log('✅ Session established:', data.user.email)
 
-    // Password recovery flow - STOP HERE
+    // Password recovery flow - redirect to reset page
     if (type === 'recovery') {
       console.log('🔐 Password recovery, redirecting to reset page')
       return NextResponse.redirect(`${baseUrl}/reset-password`)
     }
 
-    // For regular login/signup - redirect to home and let page.js handle the rest
+    // Email verification complete - redirect to pricing to start trial
+    if (next === 'pricing') {
+      console.log('✅ Email verified, redirecting to pricing to start trial')
+      return NextResponse.redirect(`${baseUrl}/?showPricing=true&emailVerified=true`)
+    }
+
+    // Regular login - redirect to home (let page.js handle subscription checks)
     console.log('✅ Regular auth flow, redirecting to home')
-    
-    // Simple redirect - let the frontend handle subscription checks
     return NextResponse.redirect(baseUrl)
 
   } catch (error) {
