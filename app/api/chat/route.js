@@ -1,9 +1,6 @@
-// app/api/chat/route.js - COMPLETE FIXED VERSION
-// FINAL-FORM: Violation-focused, probability-based, no obvious scene narration.
-// ✅ FIXES:
-// - Better error handling for memory system
-// - Improved logging for debugging
-// - Graceful fallback if memory unavailable
+// app/api/chat/route.js
+// ProtocolLM - Washtenaw County Food Safety Compliance Engine
+// Grounded in 24 indexed documents. Concise. Actionable. Professional.
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -45,31 +42,17 @@ const VISION_TIMEOUT_MS = 20000
 const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
 
-// Retrieval
-const TOPK = 18
-const PINNED_TOPK = 8
-
-const GLOBAL_FALLBACK_KEYS = ['global', 'michigan', 'state', 'all']
-
-// Pinned queries for Washtenaw County regulations
-const PINNED_QUERIES = [
-  'Washtenaw County Violation Types Priority Priority Foundation Core When the Violation Needs to Be Corrected corrected immediately within 10 days within 90 days enforcement actions repeated',
-  'Washtenaw County Enforcement Action Progressive Enforcement Action Opportunity Number 1 Opportunity Number 2 Opportunity Number 3 Office Conference Informal Hearing Formal Hearing license limited suspended revoked',
-  '289.5105 Administrative fines or costs department may impose administrative fine $500 first offense $1,000 second subsequent offense costs of investigation written notice warning minor violations',
-  '289.5107 Violations penalties misdemeanor fine $250 $2,500 90 days felony 4 years $10,000 costs of investigation',
-  '289.5109 written report of the violation before subjecting persons to the penalties',
-]
-
-// Ranking sources for internal excerpt ordering
-const SOURCE_PRIORITY = {
-  washtenaw: [/washtenaw/i, /violation\s*types/i, /enforcement\s*action/i],
-  michigan: [/act\s*92/i, /mcl/i, /michigan/i, /289\.\d+/i, /modified.*food.*code/i],
-  fda: [/fda.*food.*code/i],
-  guides: [/cooking.*temp/i, /cooling.*foods/i, /cross.*contam/i, /date.*mark/i],
-}
+// Retrieval config
+const TOPK_PER_QUERY = 18
+const MAX_DOCS_FOR_CONTEXT = 28
+const PER_SOURCE_CAP = 4
 
 const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
 const ALLOWED_CLASS = new Set(['P', 'Pf', 'C', 'Unclear'])
+
+// ============================================================================
+// TEXT UTILITIES
+// ============================================================================
 
 function safeText(x) {
   if (typeof x !== 'string') return ''
@@ -80,7 +63,7 @@ function safeLine(x) {
   return safeText(x).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim()
 }
 
-function sanitizePlainText(text) {
+function sanitizeOutput(text) {
   let out = safeText(text || '')
   out = out.replace(/[`#*]/g, '')
   out = out.replace(/\u2022/g, '')
@@ -93,10 +76,10 @@ function sanitizePlainText(text) {
 
   out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
 
-  const HARD_LIMIT = 2600
+  const HARD_LIMIT = 2400
   if (out.length > HARD_LIMIT) {
     out = out.slice(0, HARD_LIMIT).trimEnd()
-    out += '\n\nTip: say "full audit" to list more.'
+    out += '\n\n[Response trimmed. Ask a follow-up for more detail.]'
   }
   return out.trim()
 }
@@ -107,6 +90,16 @@ function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
     new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms)),
   ])
 }
+
+function clampShort(s, max = 140) {
+  const x = safeLine(s || '')
+  if (!x) return ''
+  return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
+}
+
+// ============================================================================
+// IMAGE HELPERS
+// ============================================================================
 
 function extractBase64FromDataUrl(dataUrl) {
   if (!dataUrl || typeof dataUrl !== 'string') return null
@@ -126,6 +119,10 @@ function getMediaTypeFromDataUrl(dataUrl) {
   if (dataUrl.includes('data:image/webp')) return 'image/webp'
   return 'image/jpeg'
 }
+
+// ============================================================================
+// MESSAGE PARSING
+// ============================================================================
 
 function getLastUserText(messages) {
   if (!Array.isArray(messages)) return ''
@@ -153,51 +150,27 @@ function wantsFullAudit(text) {
     t.includes('full-audit') ||
     t.includes('everything you see') ||
     t.includes('check everything') ||
-    t.includes('scan everything') ||
-    t.includes('complete audit')
+    t.includes('complete audit') ||
+    t.includes('detailed scan')
   )
 }
 
-function wantsLegalContext(text) {
+function wantsFineInfo(text) {
   const t = safeLine(text).toLowerCase()
   if (!t) return false
   return (
     t.includes('fine') ||
     t.includes('fines') ||
     t.includes('penalt') ||
-    t.includes('consequence') ||
-    t.includes('what happens') ||
-    t.includes('enforcement') ||
-    t.includes('if i dont') ||
-    t.includes("if i don't") ||
-    t.includes('if it is not corrected') ||
-    t.includes('if it isnt corrected')
+    t.includes('cost') ||
+    t.includes('fee') ||
+    t.includes('what happens if')
   )
 }
 
-function wantsCriminalContext(text) {
-  const t = safeLine(text).toLowerCase()
-  if (!t) return false
-  return (
-    t.includes('criminal') ||
-    t.includes('misdemeanor') ||
-    t.includes('felony') ||
-    t.includes('jail') ||
-    t.includes('imprison') ||
-    t.includes('90 days') ||
-    t.includes('4 years')
-  )
-}
-
-function getSourceTier(source) {
-  const s = safeLine(source || '')
-  if (!s) return 5
-  for (const p of SOURCE_PRIORITY.washtenaw) if (p.test(s)) return 1
-  for (const p of SOURCE_PRIORITY.michigan) if (p.test(s)) return 2
-  for (const p of SOURCE_PRIORITY.fda) if (p.test(s)) return 3
-  for (const p of SOURCE_PRIORITY.guides) if (p.test(s)) return 4
-  return 5
-}
+// ============================================================================
+// DOCUMENT RETRIEVAL
+// ============================================================================
 
 function dedupeByText(items) {
   const seen = new Set()
@@ -212,52 +185,93 @@ function dedupeByText(items) {
   return out
 }
 
-function stableDocSort(a, b) {
-  const tierA = getSourceTier(a?.source)
-  const tierB = getSourceTier(b?.source)
-  if (tierA !== tierB) return tierA - tierB
+function stableSortByScore(a, b) {
+  const sa = Number(a?.score || 0)
+  const sb = Number(b?.score || 0)
+  if (sb !== sa) return sb - sa
 
-  const sa = safeLine(a?.source || '')
-  const sb = safeLine(b?.source || '')
-  if (sa !== sb) return sa.localeCompare(sb)
+  const srcA = safeLine(a?.source || '')
+  const srcB = safeLine(b?.source || '')
+  if (srcA !== srcB) return srcA.localeCompare(srcB)
 
   const pa = Number(a?.page || 0)
   const pb = Number(b?.page || 0)
-  if (pa !== pb) return pa - pb
+  return pa - pb
+}
 
-  const ta = safeText(a?.text || '').slice(0, 120)
-  const tb = safeText(b?.text || '').slice(0, 120)
-  return ta.localeCompare(tb)
+function diversifyBySource(docs, { maxTotal = 28, perSourceCap = 4 } = {}) {
+  const bySource = new Map()
+
+  for (const d of docs || []) {
+    const src = safeLine(d?.source || 'Unknown') || 'Unknown'
+    if (!bySource.has(src)) bySource.set(src, [])
+    bySource.get(src).push(d)
+  }
+
+  for (const [src, arr] of bySource.entries()) {
+    arr.sort(stableSortByScore)
+    bySource.set(src, arr)
+  }
+
+  const sources = Array.from(bySource.keys()).sort((a, b) => a.localeCompare(b))
+  const picked = []
+  const pickedCount = new Map(sources.map((s) => [s, 0]))
+
+  let progressed = true
+  while (picked.length < maxTotal && progressed) {
+    progressed = false
+    for (const src of sources) {
+      if (picked.length >= maxTotal) break
+      const used = pickedCount.get(src) || 0
+      if (used >= perSourceCap) continue
+
+      const arr = bySource.get(src) || []
+      if (arr.length === 0) continue
+
+      const next = arr.shift()
+      if (!next) continue
+
+      picked.push(next)
+      pickedCount.set(src, used + 1)
+      progressed = true
+    }
+  }
+
+  return picked
 }
 
 function buildExcerptContext(docs, opts = {}) {
-  const prefix = typeof opts.prefix === 'string' ? opts.prefix : 'EXCERPT'
-  const MAX_CHARS = typeof opts.maxChars === 'number' ? opts.maxChars : 36000
-  const startAt = typeof opts.startAt === 'number' ? opts.startAt : 1
+  const prefix = opts.prefix || 'DOC'
+  const MAX_CHARS = opts.maxChars || 34000
+  const startAt = opts.startAt || 1
 
   const excerpts = []
   let buf = ''
   let n = startAt
 
   for (const d of docs || []) {
-    const source = safeLine(d?.source || 'Unknown Source')
-    const page = d?.page ? ` (p. ${d.page})` : ''
+    const source = safeLine(d?.source || 'Unknown')
+    const page = d?.page ? ` (p.${d.page})` : ''
     const text = safeText(d?.text || '')
     if (!text) continue
 
     const id = `${prefix}_${n}`
-    const header = `[${id}] SOURCE: ${source}${page}\n`
+    const header = `[${id}] ${source}${page}\n`
     const chunk = `${header}${text}\n\n`
 
     if (buf.length + chunk.length > MAX_CHARS) break
 
-    excerpts.push({ id, source, page: d?.page || null, tier: getSourceTier(source) })
+    excerpts.push({ id, source, page: d?.page || null })
     buf += chunk
     n++
   }
 
   return { excerptIndex: excerpts, contextText: buf.trim() }
 }
+
+// ============================================================================
+// JSON EXTRACTION
+// ============================================================================
 
 function extractJsonObject(text) {
   const raw = safeText(text || '')
@@ -273,6 +287,10 @@ function extractJsonObject(text) {
     return null
   }
 }
+
+// ============================================================================
+// VIOLATION CLASSIFICATION
+// ============================================================================
 
 function normalizeLikelihood(x) {
   const v = safeLine(x)
@@ -293,17 +311,11 @@ function classLabel(cls) {
   return 'Unclear'
 }
 
-function classMeaning(cls) {
-  if (cls === 'P') return 'Directly reduces a foodborne illness hazard.'
-  if (cls === 'Pf') return 'Supports Priority compliance (supplies, equipment, facilities, programs).'
-  if (cls === 'C') return 'General sanitation and facility maintenance.'
-  return 'Category could not be confirmed.'
-}
-
-function computeDeadlineByClass(cls) {
-  if (cls === 'P' || cls === 'Pf') return 'Immediately or within 10 days'
+function deadlineByClass(cls) {
+  if (cls === 'P') return 'Immediately'
+  if (cls === 'Pf') return 'Within 10 days'
   if (cls === 'C') return 'Within 90 days'
-  return 'Unclear'
+  return 'Check with inspector'
 }
 
 function pickSourcesFromIds(sourceIds, excerptIndex) {
@@ -313,210 +325,112 @@ function pickSourcesFromIds(sourceIds, excerptIndex) {
     const id = safeLine(sid)
     if (!id) continue
     const ex = map.get(id)
-    if (!ex) continue
-    used.push(ex)
+    if (ex) used.push(ex)
   }
   return used
 }
 
-function clampShort(s, max = 160) {
-  const x = safeLine(s || '')
-  if (!x) return ''
-  return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
+// ============================================================================
+// OUTPUT RENDERING
+// ============================================================================
+
+function renderFineContext() {
+  return `If not corrected by deadline:
+- County may escalate: follow-up inspection → Office Conference → Informal Hearing → license action
+- Administrative fines under MCL 289.5101: up to $500 first offense, up to $1,000 subsequent, plus investigation costs
+- Minor issues often get a warning first`
 }
 
-function isSceneNarration(line) {
-  const t = safeLine(line || '').toLowerCase()
-  if (!t) return false
-  return (
-    t.startsWith('welcome') ||
-    t.startsWith('i can see') ||
-    t.startsWith('i see ') ||
-    t.startsWith('from the photo') ||
-    t.includes('in the photo') ||
-    t.includes('pictured') ||
-    t.includes('looks like you have') ||
-    t.includes('your kitchen') ||
-    t.includes('your sink')
-  )
-}
-
-function normalizeOpeningLine(line, { hasImage, hasFindings } = {}) {
-  const l = safeLine(line || '')
-  if (!l) {
-    if (hasImage && hasFindings) return 'Here are the inspection-relevant issues most likely to matter.'
-    if (hasImage && !hasFindings) return 'No obvious inspection issues are visible in this photo.'
-    return 'Here is the inspection-relevant guidance.'
-  }
-  if (isSceneNarration(l)) {
-    if (hasImage && hasFindings) return 'Here are the inspection-relevant issues most likely to matter.'
-    if (hasImage && !hasFindings) return 'No obvious inspection issues are visible in this photo.'
-    return 'Here is the inspection-relevant guidance.'
-  }
-  return l
-}
-
-function renderDoNowBlock(doNow, photoRequests) {
-  const dn = Array.isArray(doNow) ? doNow.map(safeLine).filter(Boolean) : []
-  const pr = Array.isArray(photoRequests) ? photoRequests.map(safeLine).filter(Boolean) : []
-
-  const out = []
-  if (dn.length) {
-    out.push('What to do now:')
-    for (const x of dn.slice(0, 6)) out.push(`- ${x}`)
-  }
-  if (pr.length) {
-    if (out.length) out.push('')
-    out.push('Best follow-up photo:')
-    for (const x of pr.slice(0, 4)) out.push(`- ${x}`)
-  }
-  return out.length ? out.join('\n') : ''
-}
-
-function renderLegalContextBlock({ includeLegal = false, includeCriminal = false } = {}) {
-  if (!includeLegal) return ''
-
-  const lines = [
-    'If it is not corrected by the deadline (optional context):',
-    '- The county can escalate if issues repeat: routine/follow-up → Office Conference → Informal Hearing → license action; you can request a Formal Hearing to appeal.',
-    '- State law allows administrative fines (not automatic): up to $500 first offense, up to $1,000 second/subsequent, plus investigation costs. For minor issues, a warning/notice may be used instead of a fine.',
-  ]
-
-  if (includeCriminal) {
-    lines.push('- Act 92 also contains criminal penalties for certain violations. If you want that breakdown, say: "show criminal penalties".')
-  }
-
-  return sanitizePlainText(lines.join('\n'))
-}
-
-function renderAuditPlainText(payload, { maxItems, includeLegal = false, includeCriminal = false, fullAudit = false } = {}) {
-  const auditStatus = safeLine(payload?.audit_status || 'unknown')
+function renderAuditOutput(payload, opts = {}) {
+  const { maxItems = 4, includeFines = false, fullAudit = false } = opts
+  const status = safeLine(payload?.status || 'unknown')
   const findings = Array.isArray(payload?.findings) ? payload.findings : []
-  const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
-  const doNow = Array.isArray(payload?.do_now) ? payload.do_now : []
-  const photoRequests = Array.isArray(payload?.photo_requests) ? payload.photo_requests : []
+  const questions = Array.isArray(payload?.questions) ? payload.questions : []
 
-  if (auditStatus === 'clear') {
-    const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: false })
-    return sanitizePlainText(opening || 'No obvious inspection issues are visible in this photo.')
-  }
-
-  if (auditStatus === 'needs_info' || findings.length === 0) {
-    const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: false })
-    const out = []
-    out.push(opening || 'No clear inspection issue can be confirmed from this photo alone.')
-
-    if (fullAudit) {
-      const block = renderDoNowBlock(doNow, photoRequests)
-      if (block) {
-        out.push('')
-        out.push(block)
-      }
-
-      if (questions.length > 0) {
-        out.push('')
-        out.push('To confirm:')
-        for (const q of questions.slice(0, 3)) {
-          const qq = clampShort(q, 180)
-          if (!qq) continue
-          out.push(`- ${qq}`)
-        }
-      }
-    } else {
-      out.push('')
-      out.push('Tip: say "full audit" if you want me to request the exact close-ups needed to verify hidden requirements.')
+  // CLEAR - everything looks good
+  if (status === 'clear' || findings.length === 0) {
+    const base = 'No violations detected.'
+    if (questions.length > 0 && fullAudit) {
+      const qs = questions.slice(0, 2).map((q) => `- ${clampShort(q, 120)}`).join('\n')
+      return sanitizeOutput(`${base}\n\nTo verify:\n${qs}`)
     }
-
-    return sanitizePlainText(out.join('\n'))
+    return sanitizeOutput(base)
   }
 
-  const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: true, hasFindings: true })
-  const out = []
-  out.push(opening || 'Here are the inspection-relevant issues most likely to matter.')
+  // FINDINGS
+  const lines = ['Potential issues found:\n']
 
-  out.push('')
-  out.push('Potential inspection issues:')
-
-  for (const f of findings.slice(0, maxItems || 4)) {
+  for (const f of findings.slice(0, maxItems)) {
     const cls = normalizeClass(f?.class)
-    const label = classLabel(cls)
-    const meaning = classMeaning(cls)
-    const title = clampShort(f?.title || 'Possible issue', 140)
-    const why = clampShort(f?.why || '', 170)
-    const fix = clampShort(f?.fix || '', 170)
+    const title = clampShort(f?.title || 'Issue', 100)
     const likelihood = normalizeLikelihood(f?.likelihood)
-    const deadlineRaw = safeLine(f?.deadline || '')
-    const deadline = deadlineRaw || computeDeadlineByClass(cls)
+    const why = clampShort(f?.why || '', 140)
+    const fix = clampShort(f?.fix || '', 140)
+    const deadline = safeLine(f?.deadline) || deadlineByClass(cls)
 
-    out.push('')
-    out.push(`${label} — ${title}`)
-    out.push(`- What it means: ${meaning}`)
-    out.push(`- Correction window: ${deadline}`)
-    if (likelihood !== 'Unclear') out.push(`- Confidence: ${likelihood}`)
-    if (why) out.push(`- Why it matters: ${why}`)
-    if (fix) out.push(`- What to do: ${fix}`)
+    lines.push(`${classLabel(cls)}: ${title}`)
+    lines.push(`Fix by: ${deadline}`)
+    if (likelihood !== 'Unclear') lines.push(`Confidence: ${likelihood}`)
+    if (why) lines.push(`Why it matters: ${why}`)
+    if (fix) lines.push(`Action: ${fix}`)
+    lines.push('')
   }
 
-  if (fullAudit) {
-    const doNowBlock = renderDoNowBlock(doNow, photoRequests)
-    if (doNowBlock) {
-      out.push('')
-      out.push(doNowBlock)
-    }
+  if (includeFines) {
+    lines.push(renderFineContext())
+    lines.push('')
+  }
 
-    if (questions.length > 0) {
-      out.push('')
-      out.push('To confirm:')
-      for (const q of questions.slice(0, 3)) {
-        const qq = clampShort(q, 180)
-        if (!qq) continue
-        out.push(`- ${qq}`)
-      }
+  if (questions.length > 0 && fullAudit) {
+    lines.push('To confirm:')
+    for (const q of questions.slice(0, 2)) {
+      lines.push(`- ${clampShort(q, 120)}`)
     }
   }
 
-  const legal = renderLegalContextBlock({ includeLegal, includeCriminal })
-  if (legal) {
-    out.push('')
-    out.push(legal)
-  }
-
-  return sanitizePlainText(out.join('\n'))
+  return sanitizeOutput(lines.join('\n'))
 }
 
-function renderGuidancePlainText(payload) {
-  const opening = normalizeOpeningLine(payload?.opening_line, { hasImage: false, hasFindings: false })
-  const steps = Array.isArray(payload?.guidance_steps) ? payload.guidance_steps : []
-  const questions = Array.isArray(payload?.clarifying_questions) ? payload.clarifying_questions : []
+function renderGuidanceOutput(payload) {
+  const answer = safeLine(payload?.answer || '')
+  const steps = Array.isArray(payload?.steps) ? payload.steps : []
+  const questions = Array.isArray(payload?.questions) ? payload.questions : []
 
-  const out = []
-  out.push(opening || 'Here is the safest inspection-relevant guidance:')
+  const lines = []
 
-  for (const s of steps.slice(0, 7)) {
-    const line = clampShort(s, 180)
-    if (!line) continue
-    out.push(`- ${line}`)
+  if (answer) {
+    lines.push(answer)
+    lines.push('')
+  }
+
+  if (steps.length > 0) {
+    for (const s of steps.slice(0, 6)) {
+      const step = clampShort(s, 160)
+      if (step) lines.push(`- ${step}`)
+    }
+    lines.push('')
   }
 
   if (questions.length > 0) {
-    out.push('')
-    out.push('To confirm:')
-    for (const q of questions.slice(0, 3)) {
-      const qq = clampShort(q, 180)
-      if (!qq) continue
-      out.push(`- ${qq}`)
+    lines.push('To clarify:')
+    for (const q of questions.slice(0, 2)) {
+      lines.push(`- ${clampShort(q, 120)}`)
     }
   }
 
-  return sanitizePlainText(out.join('\n'))
+  return sanitizeOutput(lines.join('\n'))
 }
+
+// ============================================================================
+// LOGGING
+// ============================================================================
 
 async function safeLogUsage(payload) {
   try {
     if (typeof logUsageForAnalytics !== 'function') return
     await logUsageForAnalytics(payload)
   } catch (e) {
-    logger.warn('Usage logging failed (non-blocking)', { error: e?.message })
+    logger.warn('Usage logging failed', { error: e?.message })
   }
 }
 
@@ -540,54 +454,19 @@ function buildCacheStats(usage) {
   }
 }
 
-async function runPinnedRetrieval(searchDocumentsFn, county, q, k) {
-  const primary = await withTimeout(searchDocumentsFn(q, county, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED').catch(() => [])
-  if (Array.isArray(primary) && primary.length) return primary
-
-  for (const key of GLOBAL_FALLBACK_KEYS) {
-    const alt = await withTimeout(searchDocumentsFn(q, key, k), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_PINNED_GLOBAL').catch(() => [])
-    if (Array.isArray(alt) && alt.length) return alt
-  }
-  return []
-}
-
-function filterClarifyingQuestions(questions) {
-  const qs = Array.isArray(questions) ? questions.map(safeLine).filter(Boolean) : []
-  if (!qs.length) return []
-
-  const banned = [
-    /residential/i,
-    /\bhome\b/i,
-    /\bhouse\b/i,
-    /\bapartment\b/i,
-    /personal kitchen/i,
-    /is this a restaurant/i,
-    /food service establishment/i,
-    /commercial kitchen/i,
-    /what county/i,
-    /what state/i,
-    /where is this/i,
-    /your location/i,
-  ]
-
-  return qs
-    .filter((q) => !banned.some((rx) => rx.test(q)))
-    .slice(0, 3)
-}
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
 
 export async function POST(request) {
   const startedAt = Date.now()
 
   try {
-    // ✅ FIX: Early validation and logging
-    logger.info('Chat request received', { 
-      url: request.url,
-      method: request.method 
-    })
+    logger.info('Chat request received')
 
     if (!process.env.ANTHROPIC_API_KEY) {
       logger.error('ANTHROPIC_API_KEY not configured')
-      return NextResponse.json({ error: 'AI service not configured. Please contact support.' }, { status: 500 })
+      return NextResponse.json({ error: 'AI service not configured.' }, { status: 500 })
     }
 
     if (!isServiceEnabled()) {
@@ -611,52 +490,50 @@ export async function POST(request) {
     const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
 
     const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for food safety compliance issues.' : '')
+    const effectivePrompt = lastUserText || (hasImage ? 'Check this photo for compliance issues.' : '')
 
-    if (!effectiveUserPrompt && !hasImage) {
+    if (!effectivePrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    const fullAudit = wantsFullAudit(effectiveUserPrompt) || Boolean(body?.fullAudit)
-    const maxFindings = fullAudit ? 10 : 4
+    const fullAudit = wantsFullAudit(effectivePrompt) || Boolean(body?.fullAudit)
+    const includeFines = wantsFineInfo(effectivePrompt) || Boolean(body?.includeFines)
+    const maxFindings = fullAudit ? 8 : 4
 
-    const includeLegal = Boolean(body?.includeLegal) || wantsLegalContext(effectiveUserPrompt)
-    const includeCriminal = Boolean(body?.includeCriminal) || wantsCriminalContext(effectiveUserPrompt)
+    // ========================================================================
+    // AUTH + MEMORY
+    // ========================================================================
 
-    // ✅ FIX: Auth with better error handling and memory
     let userId = null
     let userMemory = null
 
     try {
       const cookieStore = await cookies()
-      const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+          cookies: {
+            getAll() { return cookieStore.getAll() },
+            setAll(cookiesToSet) {
+              try {
+                cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+              } catch {}
+            },
           },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-            } catch {}
-          },
-        },
-      })
+        }
+      )
 
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
-      // Email verification check
       if (userId && data?.user && !data.user.email_confirmed_at) {
-        return NextResponse.json(
-          {
-            error: 'Please verify your email address before using protocolLM. Check your inbox for the verification link.',
-            code: 'EMAIL_NOT_VERIFIED',
-          },
-          { status: 403 }
-        )
+        return NextResponse.json({
+          error: 'Please verify your email before using protocolLM.',
+          code: 'EMAIL_NOT_VERIFIED',
+        }, { status: 403 })
       }
 
-      // Validate single location license
       if (userId) {
         const sessionInfo = {
           ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown',
@@ -669,11 +546,9 @@ export async function POST(request) {
           if (locationCheck.code === 'LOCATION_MISMATCH') {
             return NextResponse.json({ error: locationCheck.error, code: 'LOCATION_MISMATCH' }, { status: 403 })
           }
-
           if (locationCheck.code === 'MULTI_LOCATION_ACCESS') {
             return NextResponse.json({ error: locationCheck.error, code: 'MULTI_LOCATION_ACCESS' }, { status: 403 })
           }
-
           if (locationCheck.needsRegistration) {
             return NextResponse.json({ error: 'Location registration required', code: 'LOCATION_NOT_REGISTERED' }, { status: 403 })
           }
@@ -681,35 +556,28 @@ export async function POST(request) {
 
         await logSessionActivity(userId, sessionInfo)
 
-        // ✅ FIX: Load memory with better error handling
         try {
           userMemory = await getUserMemory(userId)
-          logger.info('Memory loaded', { 
-            userId, 
-            hasMemory: !!userMemory,
-            interactionCount: userMemory?.interaction_count || 0
-          })
         } catch (e) {
-          logger.warn('Memory load failed (non-blocking)', { error: e?.message, userId })
-          // Continue without memory - non-blocking error
+          logger.warn('Memory load failed', { error: e?.message })
         }
       }
     } catch (e) {
-      logger.warn('Auth check failed (continuing)', { error: e?.message })
+      logger.warn('Auth check failed', { error: e?.message })
     }
 
     const anthropic = await getAnthropicClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // Vision scan
+    // ========================================================================
+    // VISION SCAN (if image)
+    // ========================================================================
+
     let vision = {
       summary: '',
-      search_terms: '',
-      visible_facts: [],
-      possible_issues: [],
-      unclear: [],
-      do_now: [],
-      photo_requests: [],
+      searchTerms: '',
+      issues: [],
+      facts: [],
     }
 
     if (hasImage && imageBase64) {
@@ -718,7 +586,7 @@ export async function POST(request) {
           anthropic.messages.create({
             model: CLAUDE_MODEL,
             temperature: 0,
-            max_tokens: 650,
+            max_tokens: 600,
             messages: [
               {
                 role: 'user',
@@ -726,31 +594,28 @@ export async function POST(request) {
                   { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
                   {
                     type: 'text',
-                    text: `You are scanning a photo for food-service compliance risks in Washtenaw County, Michigan.
+                    text: `Scan this food service photo for compliance issues.
 
-Important:
-- Assume the user is trying to stay compliant as a food service establishment.
-- Do NOT ask "is this residential" or anything about location.
-- Do NOT output generic checklists in quick scans.
-- Only include possible_issues if the photo contains a specific visual signal that could indicate a compliance problem.
-- If there are no signals, keep possible_issues/do_now/photo_requests empty.
+Focus on:
+- Chemicals/cleaners near food prep areas, sinks, or clean equipment (Windex, bleach, unlabeled bottles, etc.)
+- Improper food storage (on floor, uncovered, raw above ready-to-eat)
+- Temperature abuse indicators (food sitting out, condensation on cold items)
+- Cross-contamination risks
+- Handwashing sink issues (blocked, no soap/towels, used for other purposes)
+- Pest evidence, visible dirt/debris, mold
+- Missing date labels on prepped food
 
-Mode:
-- quick_scan = ${fullAudit ? 'false' : 'true'}
-- full_audit = ${fullAudit ? 'true' : 'false'}
+Do NOT flag:
+- Single sink as "inadequate warewashing" unless there's clear misuse
+- Generic observations without compliance relevance
 
-Return ONLY valid JSON:
+Return JSON only:
 {
-  "summary": "one short sentence (internal use; do not narrate details)",
-  "search_terms": "short keywords for regulation lookup",
-  "visible_facts": ["short factual notes for retrieval only (no guesses)"],
-  "possible_issues": [
-    {"issue":"short possible issue","needs_check":"what specific close-up or verification would confirm"}
-  ],
-  "do_now": ["only if a specific risk signal exists (no generic reminders)"],
-  "photo_requests": ["only if a specific risk signal exists (close-ups to confirm)"],
-  "unclear": ["specific uncertainties tied to a visible signal only"]
-}`,
+  "summary": "one sentence describing what you see",
+  "search_terms": "keywords for document lookup",
+  "issues": [{"issue": "short description", "why": "why it matters"}],
+  "facts": ["observable facts relevant to compliance"]
+}`
                   },
                 ],
               },
@@ -768,191 +633,148 @@ Return ONLY valid JSON:
         const parsedVision = extractJsonObject(visionText)
         if (parsedVision) {
           vision.summary = safeLine(parsedVision.summary || '')
-          vision.search_terms = safeLine(parsedVision.search_terms || '')
+          vision.searchTerms = safeLine(parsedVision.search_terms || '')
 
-          if (Array.isArray(parsedVision.visible_facts)) {
-            vision.visible_facts = parsedVision.visible_facts.map((x) => safeLine(x)).filter(Boolean).slice(0, 10)
-          }
-
-          if (Array.isArray(parsedVision.possible_issues)) {
-            vision.possible_issues = parsedVision.possible_issues
-              .map((i) => ({ issue: safeLine(i?.issue || ''), needs_check: safeLine(i?.needs_check || '') }))
+          if (Array.isArray(parsedVision.issues)) {
+            vision.issues = parsedVision.issues
+              .map((i) => ({ issue: safeLine(i?.issue || ''), why: safeLine(i?.why || '') }))
               .filter((i) => i.issue)
-              .slice(0, 8)
+              .slice(0, 6)
           }
 
-          if (Array.isArray(parsedVision.do_now)) {
-            vision.do_now = parsedVision.do_now.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
+          if (Array.isArray(parsedVision.facts)) {
+            vision.facts = parsedVision.facts.map(safeLine).filter(Boolean).slice(0, 8)
           }
-
-          if (Array.isArray(parsedVision.photo_requests)) {
-            vision.photo_requests = parsedVision.photo_requests.map((x) => safeLine(x)).filter(Boolean).slice(0, 6)
-          }
-
-          if (Array.isArray(parsedVision.unclear)) {
-            vision.unclear = parsedVision.unclear.map((x) => safeLine(x)).filter(Boolean).slice(0, 8)
-          }
-        } else {
-          vision.summary = safeLine(visionText).slice(0, 220)
         }
       } catch (e) {
-        logger.warn('Vision failed (continuing)', { error: e?.message })
+        logger.warn('Vision scan failed', { error: e?.message })
       }
     }
 
-    // Retrieval
-    const visionHints = [
-      vision.search_terms,
-      ...(vision.visible_facts || []).slice(0, 6),
-      ...(vision.possible_issues || []).map((x) => x.issue),
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .slice(0, 600)
+    // ========================================================================
+    // DOCUMENT RETRIEVAL
+    // ========================================================================
 
-    const retrievalQuery = [effectiveUserPrompt, visionHints, 'Washtenaw County Michigan food service']
-      .filter(Boolean)
-      .join(' ')
-      .slice(0, 900)
+    const visionContext = [
+      vision.searchTerms,
+      ...vision.facts.slice(0, 4),
+      ...vision.issues.map((i) => i.issue),
+    ].filter(Boolean).join(' ').slice(0, 500)
 
-    let mainDocs = []
-    let pinnedDocs = []
+    const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code']
+      .filter(Boolean).join(' ').slice(0, 800)
+
+    const queryIssues = vision.issues.map((i) => i.issue).join(' ').slice(0, 300)
+
+    const queries = [queryMain]
+    if (queryIssues) queries.push(queryIssues)
+
+    let allDocs = []
     try {
-      const mainPromise = withTimeout(searchDocumentsFn(retrievalQuery, county, TOPK), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT_MAIN')
+      const results = await Promise.all(
+        queries.map((q) =>
+          withTimeout(searchDocumentsFn(q, county, TOPK_PER_QUERY), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT')
+            .catch(() => [])
+        )
+      )
 
-      const pinnedPromise = Promise.all(PINNED_QUERIES.map((q) => runPinnedRetrieval(searchDocumentsFn, county, q, PINNED_TOPK)))
-
-      const [m, pList] = await Promise.all([mainPromise.catch(() => []), pinnedPromise])
-      mainDocs = Array.isArray(m) ? m : []
-      pinnedDocs = Array.isArray(pList) ? pList.flat() : []
-      mainDocs = dedupeByText(mainDocs)
-      pinnedDocs = dedupeByText(pinnedDocs)
+      allDocs = dedupeByText(results.flat().filter(Boolean))
+      allDocs.sort(stableSortByScore)
+      allDocs = diversifyBySource(allDocs, { maxTotal: MAX_DOCS_FOR_CONTEXT, perSourceCap: PER_SOURCE_CAP })
     } catch (e) {
-      logger.warn('Retrieval failed (continuing)', { error: e?.message })
+      logger.warn('Retrieval failed', { error: e?.message })
     }
 
-    pinnedDocs.sort(stableDocSort)
-    const pinnedKeys = new Set(pinnedDocs.map((d) => (d?.text || '').slice(0, 1600)).filter(Boolean))
-    mainDocs = (mainDocs || []).filter((d) => {
-      const k = (d?.text || '').slice(0, 1600)
-      if (!k) return false
-      return !pinnedKeys.has(k)
-    })
-    mainDocs.sort((a, b) => {
-      const tierA = getSourceTier(a?.source)
-      const tierB = getSourceTier(b?.source)
-      if (tierA !== tierB) return tierA - tierB
-      return (b?.score || 0) - (a?.score || 0)
-    })
+    const ctx = buildExcerptContext(allDocs, { prefix: 'DOC', maxChars: 34000, startAt: 1 })
+    const excerptIndex = [...ctx.excerptIndex]
 
-    const pinnedCtx = buildExcerptContext(pinnedDocs, { prefix: 'EXCERPT_P', maxChars: 24000, startAt: 1 })
-    const mainCtx = buildExcerptContext(mainDocs, { prefix: 'EXCERPT_D', maxChars: 16000, startAt: 1 })
-    const excerptIndex = [...pinnedCtx.excerptIndex, ...mainCtx.excerptIndex]
+    const excerptBlock = `Reference documents (cite by ID):
+${ctx.contextText || 'No documents retrieved.'}`
 
-    const pinnedBlock = `Pinned reference excerpts (cite by excerpt id only):
-${pinnedCtx.contextText || 'No pinned excerpts retrieved.'}`
-
-    const dynamicBlock = `Relevant excerpts (dynamic; cite by excerpt id only):
-${mainCtx.contextText || 'No dynamic excerpts retrieved.'}`
-
-    // ✅ FIX: BUILD MEMORY CONTEXT with error handling
+    // Memory context
     let memoryContext = ''
     try {
       memoryContext = buildMemoryContext(userMemory) || ''
-      if (memoryContext) {
-        logger.info('Memory context built', { 
-          userId, 
-          contextLength: memoryContext.length 
-        })
-      }
-    } catch (e) {
-      logger.warn('Memory context build failed (non-blocking)', { 
-        error: e?.message, 
-        userId 
-      })
-      memoryContext = ''
-    }
+    } catch {}
 
-    // Model prompt
-    const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
+    // ========================================================================
+    // SYSTEM PROMPT
+    // ========================================================================
 
-${memoryContext ? `${memoryContext}\n\n` : ''}Tone:
-- Professional, plain language, concise.
-- No emojis. No markdown. No hashtags. No numbered lists.
-- Do not narrate what is in the image. Do not list obvious observations.
-- Do not ask where the photo was taken or whether it is residential/commercial.
+    const systemPrompt = `You are protocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-Goal:
-- Identify potential inspection issues (with uncertainty) and remediation steps.
-- Use probability language. Avoid absolute certainty.
+${memoryContext ? `${memoryContext}\n\n` : ''}Your knowledge base: 24 indexed documents including MI Modified Food Code, MCL Act 92 of 2000, Washtenaw County procedures, violation types, enforcement actions, temperature guides, date marking, cross contamination, cooling procedures, and more.
 
-Grounding rules (strict):
-- You may ONLY use rules from the provided excerpts.
-- Any item in audit.findings MUST include at least one valid excerpt id in source_ids.
-- If you cannot cite it, do NOT put it in findings. Put it in clarifying_questions instead.
+RULES:
+1. Be concise. Short sentences. No fluff.
+2. No markdown formatting (no **, no #, no bullets with *)
+3. No emojis
+4. Ground every finding in a document excerpt. Include source_ids.
+5. If you can't cite it from the excerpts, don't claim it as a violation.
+6. Use probability language: "likely", "possible", "appears to be"
+7. If the photo looks compliant, just say "No violations detected." and stop.
+8. Don't narrate what's in the photo. Get to the point.
+9. Don't ask if this is residential/commercial. Assume food service.
 
-Quick scan vs full audit:
-- quick_scan = ${fullAudit ? 'false' : 'true'}
-- In quick scan: only include findings that can be reasonably supported by the photo + excerpts. Avoid generic questions and avoid "verify you have X" unless the image suggests it is missing/incorrect.
-- In full audit: you may ask up to 3 targeted questions and request close-ups, but ONLY when needed to confirm a specific suspected issue.
+VIOLATION CLASSES:
+- P (Priority): Direct food safety hazard. Fix immediately.
+- Pf (Priority Foundation): Supports priority items. Fix within 10 days.
+- C (Core): General sanitation. Fix within 90 days.
 
-Output rules:
-- opening_line must be outcome-focused (risk/clear), not a description of the scene.
-- Use class only as P / Pf / C / Unclear (server will render full labels).
-- Keep each field short (single sentence where requested).
+COMMON ISSUES TO CATCH:
+- Chemicals stored near food/clean surfaces
+- Food at wrong temperature
+- Missing date labels
+- Cross contamination setup
+- Handwashing sink problems
+- Pest evidence
+- Dirty food contact surfaces
 
-Return ONLY valid JSON:
+OUTPUT FORMAT (JSON only):
 
-AUDIT MODE:
+For image analysis:
 {
   "mode": "audit",
-  "opening_line": "one short sentence",
-  "audit": {
-    "status": "clear" | "findings" | "needs_info",
-    "findings": [
-      {
-        "class": "P" | "Pf" | "C" | "Unclear",
-        "title": "short issue",
-        "likelihood": "Very likely" | "Likely" | "Possible" | "Unclear",
-        "why": "one short sentence",
-        "fix": "one short sentence",
-        "deadline": "Immediately or within 10 days" | "Within 90 days" | "Unclear",
-        "source_ids": ["EXCERPT_P_1"]
-      }
-    ]
-  },
-  "clarifying_questions": ["up to 3 short questions only if needed"]
+  "status": "clear" | "findings",
+  "findings": [
+    {
+      "class": "P|Pf|C|Unclear",
+      "title": "short title",
+      "likelihood": "Very likely|Likely|Possible|Unclear",
+      "why": "one sentence",
+      "fix": "one sentence action",
+      "deadline": "Immediately|Within 10 days|Within 90 days",
+      "source_ids": ["DOC_1"]
+    }
+  ],
+  "questions": ["only if genuinely needed for clarification"]
 }
 
-GUIDANCE MODE:
+For questions without images:
 {
   "mode": "guidance",
-  "opening_line": "one short sentence",
-  "guidance_steps": ["up to 7 short steps"],
-  "clarifying_questions": ["up to 3 short questions only if needed"]
+  "answer": "direct answer",
+  "steps": ["actionable steps if applicable"],
+  "questions": ["clarifying questions if needed"]
 }
 
-Hard caps:
-- max findings = ${maxFindings}
-`
+Max findings: ${maxFindings}`
 
-    const possibleIssuesBlock =
-      vision.possible_issues?.length > 0
-        ? `Possible risk signals to verify (do not narrate, use only as hints):
-${vision.possible_issues
-  .map((x) => `- ${x.issue}${x.needs_check ? ` (Verify: ${x.needs_check})` : ''}`)
-  .join('\n')}`
-        : 'Possible risk signals to verify: None detected.'
+    // ========================================================================
+    // QUESTION CONTEXT
+    // ========================================================================
 
-    const questionBlock = `User request:
-${effectiveUserPrompt || (hasImage ? 'Analyze photo.' : '')}
+    const issueHints = vision.issues.length > 0
+      ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}`
+      : ''
 
-${hasImage ? `Internal scan hint:
-${vision.search_terms || ''}
+    const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}
+${hasImage && issueHints ? `\n${issueHints}` : ''}`
 
-${possibleIssuesBlock}` : ''}`.trim()
+    // ========================================================================
+    // GENERATE RESPONSE
+    // ========================================================================
 
-    // Final answer
     let modelText = ''
     let parsed = null
     let cacheStats = null
@@ -964,8 +786,7 @@ ${possibleIssuesBlock}` : ''}`.trim()
         finalMessages.push({
           role: 'user',
           content: [
-            { type: 'text', text: pinnedBlock, cache_control: { type: 'ephemeral' } },
-            { type: 'text', text: dynamicBlock },
+            { type: 'text', text: excerptBlock, cache_control: { type: 'ephemeral' } },
             { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
             { type: 'text', text: questionBlock },
           ],
@@ -974,8 +795,7 @@ ${possibleIssuesBlock}` : ''}`.trim()
         finalMessages.push({
           role: 'user',
           content: [
-            { type: 'text', text: pinnedBlock, cache_control: { type: 'ephemeral' } },
-            { type: 'text', text: dynamicBlock },
+            { type: 'text', text: excerptBlock, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: questionBlock },
           ],
         })
@@ -984,8 +804,8 @@ ${possibleIssuesBlock}` : ''}`.trim()
       const answerResp = await withTimeout(
         anthropic.messages.create({
           model: CLAUDE_MODEL,
-          temperature: 0.2,
-          max_tokens: fullAudit ? 1400 : 1000,
+          temperature: 0.15,
+          max_tokens: fullAudit ? 1200 : 900,
           system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
           messages: finalMessages,
         }),
@@ -1000,29 +820,30 @@ ${possibleIssuesBlock}` : ''}`.trim()
 
       parsed = extractJsonObject(modelText)
       cacheStats = buildCacheStats(answerResp.usage)
-      if (cacheStats) logger.info('Prompt cache stats', cacheStats)
+      if (cacheStats) logger.info('Cache stats', cacheStats)
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
     }
 
-    // Render
+    // ========================================================================
+    // RENDER OUTPUT
+    // ========================================================================
+
     let message = ''
     let status = 'unknown'
 
     if (parsed && parsed.mode === 'audit') {
-      const auditPayload = parsed.audit || {}
-      const findingsRaw = Array.isArray(auditPayload.findings) ? auditPayload.findings : []
-      const questionsRaw = Array.isArray(parsed.clarifying_questions) ? parsed.clarifying_questions : []
-      const questions = fullAudit ? filterClarifyingQuestions(questionsRaw) : []
-      const modelOpening = safeLine(parsed.opening_line || '')
+      const findingsRaw = Array.isArray(parsed.findings) ? parsed.findings : []
+      const questionsRaw = Array.isArray(parsed.questions) ? parsed.questions : []
 
-      const supportedFindings = []
+      // Filter to only findings with valid source citations
+      const validFindings = []
       for (const f of findingsRaw.slice(0, maxFindings)) {
         const srcIds = Array.isArray(f?.source_ids) ? f.source_ids : []
         const usable = pickSourcesFromIds(srcIds, excerptIndex)
-        if (!usable.length) continue
+        if (usable.length === 0) continue
 
-        supportedFindings.push({
+        validFindings.push({
           class: normalizeClass(f?.class),
           title: safeLine(f?.title || 'Possible issue'),
           likelihood: normalizeLikelihood(f?.likelihood),
@@ -1033,97 +854,61 @@ ${possibleIssuesBlock}` : ''}`.trim()
         })
       }
 
-      const hasAnyChecks =
-        fullAudit &&
-        ((vision.possible_issues || []).length > 0 ||
-          (vision.unclear || []).length > 0 ||
-          (vision.photo_requests || []).length > 0 ||
-          questions.length > 0)
+      status = validFindings.length > 0 ? 'findings' : 'clear'
 
-      if (supportedFindings.length > 0) {
-        status = 'findings'
-        message = renderAuditPlainText(
-          {
-            audit_status: 'findings',
-            opening_line: modelOpening,
-            findings: supportedFindings,
-            clarifying_questions: questions,
-            do_now: fullAudit ? vision.do_now || [] : [],
-            photo_requests: fullAudit ? vision.photo_requests || [] : [],
-          },
-          { maxItems: maxFindings, includeLegal, includeCriminal, fullAudit }
-        )
-      } else {
-        if (!hasAnyChecks) {
-          status = 'clear'
-          message = renderAuditPlainText(
-            { audit_status: 'clear', opening_line: modelOpening },
-            { maxItems: maxFindings, includeLegal: false, includeCriminal: false, fullAudit }
-          )
-        } else {
-          status = 'needs_info'
-          message = renderAuditPlainText(
-            {
-              audit_status: 'needs_info',
-              opening_line: modelOpening || 'No clear inspection issue can be confirmed from this photo alone.',
-              findings: [],
-              clarifying_questions: questions,
-              do_now: vision.do_now || [],
-              photo_requests: vision.photo_requests || [],
-            },
-            { maxItems: maxFindings, includeLegal: false, includeCriminal: false, fullAudit }
-          )
-        }
-      }
+      message = renderAuditOutput(
+        {
+          status,
+          findings: validFindings,
+          questions: questionsRaw,
+        },
+        { maxItems: maxFindings, includeFines, fullAudit }
+      )
+
     } else if (parsed && parsed.mode === 'guidance') {
       status = 'guidance'
-      message = renderGuidancePlainText({
-        opening_line: parsed.opening_line || '',
-        guidance_steps: Array.isArray(parsed.guidance_steps) ? parsed.guidance_steps : [],
-        clarifying_questions: Array.isArray(parsed.clarifying_questions) ? parsed.clarifying_questions : [],
+      message = renderGuidanceOutput({
+        answer: parsed.answer || '',
+        steps: Array.isArray(parsed.steps) ? parsed.steps : [],
+        questions: Array.isArray(parsed.questions) ? parsed.questions : [],
       })
+
     } else {
-      status = hasImage ? 'needs_info' : 'guidance'
-      const fallback = modelText || (hasImage ? 'Analysis timed out. Please try again.' : 'Please try again.')
-      const doNowBlock = fullAudit ? renderDoNowBlock(vision.do_now, vision.photo_requests) : ''
-      message = sanitizePlainText(doNowBlock ? `${fallback}\n\n${doNowBlock}` : fallback)
+      // Fallback
+      status = hasImage ? 'unclear' : 'guidance'
+      message = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
     }
 
-    // ✅ FIX: UPDATE MEMORY AFTER SUCCESSFUL RESPONSE with better error handling
-    if (userId && effectiveUserPrompt) {
+    // ========================================================================
+    // UPDATE MEMORY
+    // ========================================================================
+
+    if (userId && effectivePrompt) {
       try {
         await updateMemory(userId, {
-          userMessage: effectiveUserPrompt,
+          userMessage: effectivePrompt,
           assistantResponse: message,
           mode: hasImage ? 'vision' : 'text',
           meta: { firstUseComplete: true },
           firstUseComplete: true,
         })
-        logger.info('Memory updated successfully', { userId })
       } catch (err) {
-        logger.warn('Memory update failed (non-blocking)', { 
-          error: err?.message, 
-          userId 
-        })
-        // Don't block response if memory update fails
+        logger.warn('Memory update failed', { error: err?.message })
       }
     }
+
+    // ========================================================================
+    // LOG + RETURN
+    // ========================================================================
 
     logger.info('Response complete', {
       hasImage,
       status,
       durationMs: Date.now() - startedAt,
-      model: CLAUDE_MODEL,
+      docsRetrieved: allDocs.length,
       fullAudit,
-      mainDocsRetrieved: mainDocs.length,
-      pinnedDocsRetrieved: pinnedDocs.length,
-      includeLegal,
-      includeCriminal,
-      cache_hit: cacheStats?.cache_hit || false,
-      cache_read_input_tokens: cacheStats?.cache_read_input_tokens || 0,
-      cache_savings_pct: cacheStats?.cache_savings_pct || 0,
-      userId: userId || 'anonymous',
-      memoryUsed: !!memoryContext
+      includeFines,
+      cacheHit: cacheStats?.cache_hit || false,
     })
 
     await safeLogUsage({
@@ -1141,16 +926,14 @@ ${possibleIssuesBlock}` : ''}`.trim()
           hasImage,
           status,
           fullAudit,
-          mainDocsRetrieved: mainDocs.length,
-          pinnedDocsRetrieved: pinnedDocs.length,
+          docsRetrieved: allDocs.length,
           durationMs: Date.now() - startedAt,
-          includeLegal,
-          includeCriminal,
           cache: cacheStats || null,
         },
       },
       { status: 200 }
     )
+
   } catch (e) {
     logger.error('Chat route failed', { error: e?.message, stack: e?.stack })
     return NextResponse.json({ error: 'Server error. Please try again.' }, { status: 500 })
