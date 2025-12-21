@@ -10,7 +10,7 @@ const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'
 // ✅ Simple per-location pricing
 const TIER_PRICES = {
   starter: { perLocation: 49, name: 'Starter', model: 'Haiku' },
-  pro: { perLocation: 99, name: 'Professional', model: 'Sonnet' },
+  pro: { perLocation: 99, name: 'Professional', model: 'Summit' },
   enterprise: { perLocation: 199, name: 'Enterprise', model: 'Opus' }
 }
 
