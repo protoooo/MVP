@@ -78,21 +78,25 @@ export function useRecaptcha() {
   }, [])
 
   const executeRecaptcha = async (action = 'submit') => {
+    const markUnavailable = (reason) => {
+      console.error('Turnstile unavailable', { reason, action })
+      return 'turnstile_unavailable'
+    }
+
     // ✅ SECURITY FIX: Explicitly handle production vs development
     if (process.env.NODE_ENV === 'production') {
-      if (!isLoaded || !window.turnstile || !TURNSTILE_SITE_KEY) {
-        console.error('CAPTCHA required in production but not available')
-        throw new Error('Security verification unavailable. Please refresh the page and try again.')
+      if (!isLoaded || typeof window === 'undefined' || !window.turnstile || !TURNSTILE_SITE_KEY) {
+        return markUnavailable('widget_not_loaded')
       }
     } else {
       // Development mode: allow bypass if Turnstile not configured
-      if (!isLoaded || !window.turnstile || !TURNSTILE_SITE_KEY) {
+      if (!isLoaded || typeof window === 'undefined' || !window.turnstile || !TURNSTILE_SITE_KEY) {
         console.warn('CAPTCHA bypassed in development mode')
         return 'dev_bypass_token'
       }
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const container = document.createElement('div')
       container.style.position = 'fixed'
       container.style.width = '1px'
@@ -119,7 +123,7 @@ export function useRecaptcha() {
 
       const timeout = setTimeout(() => {
         cleanup()
-        reject(new Error('Security verification timed out. Please try again.'))
+        resolve(markUnavailable('timeout'))
       }, 15000)
 
       try {
@@ -134,18 +138,18 @@ export function useRecaptcha() {
           'error-callback': () => {
             clearTimeout(timeout)
             cleanup()
-            reject(new Error('Security verification failed. Please try again.'))
+            resolve(markUnavailable('widget_error'))
           },
           'expired-callback': () => {
             clearTimeout(timeout)
             cleanup()
-            reject(new Error('Security verification expired. Please try again.'))
+            resolve(markUnavailable('widget_expired'))
           },
         })
       } catch (err) {
         clearTimeout(timeout)
         cleanup()
-        reject(err)
+        resolve(markUnavailable(err?.message || 'render_exception'))
       }
     })
   }
