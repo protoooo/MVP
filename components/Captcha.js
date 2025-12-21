@@ -1,4 +1,4 @@
-// components/Captcha.js - IMPROVED: Clearer error handling
+// components/Captcha.js - SECURITY FIX: Stricter CAPTCHA enforcement
 'use client'
 import { useEffect, useState, useRef } from 'react'
 
@@ -10,9 +10,16 @@ export function useRecaptcha() {
   const didAttachListenersRef = useRef(false)
 
   useEffect(() => {
+    // ✅ SECURITY: In production, CAPTCHA is mandatory
+    if (process.env.NODE_ENV === 'production' && !TURNSTILE_SITE_KEY) {
+      console.error('CRITICAL: Turnstile not configured in production')
+      setIsLoaded(false) // Never mark as loaded in prod without key
+      return
+    }
+
     if (!TURNSTILE_SITE_KEY) {
-      console.warn('Turnstile site key not configured')
-      setIsLoaded(true)
+      console.warn('Turnstile site key not configured (development mode)')
+      setIsLoaded(true) // Allow bypass in dev
       return
     }
 
@@ -31,7 +38,12 @@ export function useRecaptcha() {
     const handleLoad = () => setIsLoaded(true)
     const handleError = () => {
       console.error('Failed to load Turnstile')
-      setIsLoaded(true)
+      // ✅ SECURITY: In production, stay blocked if script fails
+      if (process.env.NODE_ENV === 'production') {
+        setIsLoaded(false)
+      } else {
+        setIsLoaded(true)
+      }
     }
 
     if (existingScript) {
@@ -66,10 +78,18 @@ export function useRecaptcha() {
   }, [])
 
   const executeRecaptcha = async (action = 'submit') => {
-    // ✅ SECURITY FIX: Return null instead of sentinel string
-    if (!isLoaded || !window.turnstile || !TURNSTILE_SITE_KEY) {
-      console.error('Turnstile not available - cannot proceed')
-      return null  // Changed from 'turnstile_unavailable'
+    // ✅ SECURITY FIX: Explicitly handle production vs development
+    if (process.env.NODE_ENV === 'production') {
+      if (!isLoaded || !window.turnstile || !TURNSTILE_SITE_KEY) {
+        console.error('CAPTCHA required in production but not available')
+        throw new Error('Security verification unavailable. Please refresh the page and try again.')
+      }
+    } else {
+      // Development mode: allow bypass if Turnstile not configured
+      if (!isLoaded || !window.turnstile || !TURNSTILE_SITE_KEY) {
+        console.warn('CAPTCHA bypassed in development mode')
+        return 'dev_bypass_token'
+      }
     }
 
     return new Promise((resolve, reject) => {
@@ -99,7 +119,7 @@ export function useRecaptcha() {
 
       const timeout = setTimeout(() => {
         cleanup()
-        reject(new Error('Turnstile timeout'))
+        reject(new Error('Security verification timed out. Please try again.'))
       }, 15000)
 
       try {
@@ -114,12 +134,12 @@ export function useRecaptcha() {
           'error-callback': () => {
             clearTimeout(timeout)
             cleanup()
-            reject(new Error('Turnstile challenge failed'))
+            reject(new Error('Security verification failed. Please try again.'))
           },
           'expired-callback': () => {
             clearTimeout(timeout)
             cleanup()
-            reject(new Error('Turnstile challenge expired'))
+            reject(new Error('Security verification expired. Please try again.'))
           },
         })
       } catch (err) {
