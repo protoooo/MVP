@@ -1,4 +1,4 @@
-// app/api/create-checkout-session/route.js - FIXED: Card-required trials
+// app/api/create-checkout-session/route.js - FIXED: Check subscription BEFORE rate limit
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -104,7 +104,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Email verification check
+    // ✅ SECURITY FIX: Email verification check
     if (!user.email_confirmed_at) {
       logger.security('Unverified email attempted checkout', { 
         userId: user.id, 
@@ -119,7 +119,8 @@ export async function POST(request) {
 
     logger.info('Email verification confirmed', { userId: user.id })
 
-    // Check if user already has active subscription
+    // ✅ CRITICAL FIX: Check for existing subscription BEFORE rate limiting
+    // This prevents someone from creating multiple checkout sessions
     const { data: existingSubscription } = await supabase
       .from('subscriptions')
       .select('id, status')
@@ -135,7 +136,7 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Rate limit check
+    // Rate limit check (AFTER subscription check)
     try {
       const { data: recent, error: rateLimitError } = await supabase
         .from('checkout_attempts')
