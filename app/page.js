@@ -557,51 +557,27 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
-  const tiers = [
-    {
-      name: 'Starter',
-      price: 49,
-      priceId: STARTER_MONTHLY,
-      // ✅ UPDATED: 3 bullets, no support-tier filler
-      features: [
-        'Unlimited usage (questions + photos)',
-        'Haiku — fast answers for daily checks',
-        'Best for quick scans and clear “what to fix” steps',
-      ],
-      loadingKey: 'starter',
-    },
-    {
-      name: 'Professional',
-      price: 99,
-      priceId: PRO_MONTHLY,
-      // ✅ UPDATED: Summit -> Sonnet + 3 bullets
-      features: [
-        'Unlimited usage (questions + photos)',
-        'Sonnet — balanced, thorough responses',
-        'Better explanations for tougher compliance situations',
-      ],
-      popular: true,
-      loadingKey: 'pro',
-    },
-    {
-      name: 'Enterprise',
-      price: 199,
-      priceId: ENTERPRISE_MONTHLY,
-      // ✅ UPDATED: remove multi-location/playbook wording + 3 bullets
-      features: [
-        'Unlimited usage (questions + photos)',
-        'Opus — deepest reasoning for best answers',
-        'Best for complex edge cases and nuanced policy calls',
-      ],
-      loadingKey: 'enterprise',
-    },
-  ]
+  // ✅ SINGLE PLAN (one-plan model)
+  // Uses PRO_MONTHLY if present, otherwise falls back to whatever is configured.
+  const priceId = PRO_MONTHLY || STARTER_MONTHLY || ENTERPRISE_MONTHLY
+
+  const plan = {
+    name: 'Unlimited',
+    price: 99,
+    priceId,
+    features: [
+      'Unlimited usage (questions + photos)',
+      'Sonnet 4.5 — best overall answers',
+      'Clear “what to fix” steps for inspections',
+    ],
+    loadingKey: 'unlimited',
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-container"
-        style={{ maxWidth: '920px', maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`modal-card pricing-modal ${ibmMono.className}`} style={{ padding: '32px' }}>
@@ -609,103 +585,100 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <Icons.X />
           </button>
 
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>Choose Your Plan</h2>
-            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>7-day free trial • Cancel anytime • Unlimited usage on all plans</p>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>
+              One plan. Unlimited usage.
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>7-day free trial • Cancel anytime</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-            {tiers.map((tier) => (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                border: '2px solid var(--accent)',
+                borderRadius: 'var(--radius-md)',
+                padding: '24px',
+                position: 'relative',
+                color: 'white',
+              }}
+            >
               <div
-                key={tier.name}
                 style={{
-                  background: tier.popular ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : 'var(--bg-2)',
-                  border: tier.popular ? '2px solid var(--accent)' : '1px solid var(--border-default)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '24px',
-                  position: 'relative',
-                  color: tier.popular ? 'white' : 'var(--ink-0)',
+                  position: 'absolute',
+                  top: '-10px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'var(--accent)',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
                 }}
               >
-                {tier.popular && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: 'var(--accent)',
-                      color: 'white',
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      letterSpacing: '0.05em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Recommended
-                  </div>
-                )}
+                Unlimited
+              </div>
 
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>{tier.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '36px', fontWeight: '700' }}>${tier.price}</span>
-                    <span style={{ fontSize: '14px', opacity: 0.7 }}>/month</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => onCheckout(tier.priceId, tier.loadingKey)}
-                  disabled={!!loading}
-                  style={{
-                    width: '100%',
-                    height: '44px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    background: tier.popular ? 'white' : 'var(--accent)',
-                    color: tier.popular ? 'var(--bg-1)' : 'white',
-                    border: 'none',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.5 : 1,
-                    marginBottom: '16px',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {loading === tier.loadingKey && <span className="spinner" />}
-                  <span>Start 7-Day Trial</span>
-                </button>
-
-                <div
-                  style={{
-                    borderTop: tier.popular ? '1px solid rgba(255,255,255,0.12)' : '1px solid var(--border-subtle)',
-                    paddingTop: '16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                  }}
-                >
-                  {tier.features.map((feature, idx) => (
-                    <div key={idx} className="pricing-feature">
-                      <span className="pricing-feature-check" aria-hidden="true">
-                        ✓
-                      </span>
-                      <span className="pricing-feature-text">{feature}</span>
-                    </div>
-                  ))}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>protocolLM</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '36px', fontWeight: '700' }}>${plan.price}</span>
+                  <span style={{ fontSize: '14px', opacity: 0.7 }}>/month</span>
                 </div>
               </div>
-            ))}
+
+              <button
+                onClick={() => onCheckout(plan.priceId, plan.loadingKey)}
+                disabled={!!loading}
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  background: 'white',
+                  color: 'var(--bg-1)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1,
+                  marginBottom: '16px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {loading === plan.loadingKey && <span className="spinner" />}
+                <span>Start 7-Day Trial</span>
+              </button>
+
+              <div
+                style={{
+                  borderTop: '1px solid rgba(255,255,255,0.12)',
+                  paddingTop: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                {plan.features.map((feature, idx) => (
+                  <div key={idx} className="pricing-feature">
+                    <span className="pricing-feature-check" aria-hidden="true">
+                      ✓
+                    </span>
+                    <span className="pricing-feature-text">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '24px', textAlign: 'center' }}>
-            All plans: Unlimited usage • Same Washtenaw County database • 7-day free trial • Cancel anytime
+          <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '18px', textAlign: 'center' }}>
+            Includes: Washtenaw County database • Photo scans + Q&A • Unlimited usage • 7-day free trial • Cancel anytime
           </p>
         </div>
       </div>
@@ -2638,7 +2611,12 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2666,7 +2644,8 @@ export default function Page() {
                         fontWeight: '600',
                         letterSpacing: '0.02em',
                         textTransform: 'uppercase',
-                        background: subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                        background:
+                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
                         color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
                         border: `1px solid ${
                           subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'
@@ -2725,15 +2704,24 @@ export default function Page() {
                 </nav>
               </header>
 
-              <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+              >
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
-                    <p className="chat-empty-text">Upload a photo or ask a question about Washtenaw County food safety regulations.</p>
+                    <p className="chat-empty-text">
+                      Upload a photo or ask a question about Washtenaw County food safety regulations.
+                    </p>
                   </div>
                 ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
+                      <div
+                        key={idx}
+                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                      >
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
@@ -2763,16 +2751,32 @@ export default function Page() {
                         <Icons.Camera />
                       </span>
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="chat-attachment-remove" aria-label="Remove" type="button">
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="chat-attachment-remove"
+                        aria-label="Remove"
+                        type="button"
+                      >
                         <Icons.X />
                       </button>
                     </div>
                   )}
 
                   <div className="chat-input-row">
-                    <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleImageChange}
+                    />
 
-                    <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="chat-camera-btn"
+                      aria-label="Upload photo"
+                      type="button"
+                    >
                       <Icons.Camera />
                     </button>
 
@@ -2810,7 +2814,9 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
+                  <p className="chat-disclaimer">
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
+                  </p>
                 </div>
               </div>
             </div>
