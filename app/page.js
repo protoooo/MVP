@@ -653,7 +653,7 @@ export default function Page() {
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
-  // ✅ NEW: remember the selected Stripe price when user isn’t logged in
+  // ✅ remember the selected Stripe price when user isn’t logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -723,11 +723,91 @@ export default function Page() {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
-  // Show pricing modal if URL param is set
+  // ✅ FIX (kept): show pricing when URL param is set (generic)
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
+
+  // ✅ REQUIRED FIX: Email Verification → Stripe Flow
+  // Auto-open pricing modal after email verification, then clean URL
+  useEffect(() => {
+    const showPricing = searchParams?.get('showPricing')
+    const emailVerified = searchParams?.get('emailVerified')
+
+    if (showPricing === 'true' && emailVerified === 'true') {
+      setShowPricingModal(true)
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/')
+      }
+    }
+  }, [searchParams])
+
+  // ✅ UPDATED: handleCheckout validates priceId and stores selected plan when not signed in
+  const handleCheckout = useCallback(
+    async (priceId, planName) => {
+      try {
+        if (!priceId) {
+          alert('Invalid price selected.')
+          return
+        }
+
+        // ✅ Verify priceId is valid (prevents wrong plan in Stripe)
+        const validPrices = [STARTER_MONTHLY, PRO_MONTHLY, ENTERPRISE_MONTHLY].filter(Boolean)
+        if (validPrices.length > 0 && !validPrices.includes(priceId)) {
+          console.error('Invalid price ID:', priceId)
+          alert('Invalid plan selected. Please try again.')
+          return
+        }
+
+        const { data } = await supabase.auth.getSession()
+
+        if (!data.session) {
+          // ✅ STORE selected plan before showing auth
+          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
+          setSelectedPriceId(priceId)
+          setShowPricingModal(false)
+          setAuthInitialMode('signup')
+          setShowAuthModal(true)
+          return
+        }
+
+        if (!captchaLoaded) {
+          alert('Security verification is still loading. Please try again in a moment.')
+          return
+        }
+
+        setCheckoutLoading(planName)
+
+        const captchaToken = await executeRecaptcha('checkout')
+        if (!captchaToken || captchaToken === 'turnstile_unavailable') {
+          throw new Error('Security verification failed. Please refresh and try again.')
+        }
+
+        const res = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({ priceId, captchaToken }),
+          credentials: 'include',
+        })
+
+        const payload = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(payload.error || 'Checkout failed')
+
+        if (payload.url) window.location.href = payload.url
+        else throw new Error('No checkout URL returned')
+      } catch (error) {
+        console.error('Checkout error:', error)
+        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+      } finally {
+        setCheckoutLoading(null)
+      }
+    },
+    [supabase, captchaLoaded, executeRecaptcha]
+  )
 
   // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
@@ -825,21 +905,31 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
-      // ✅ CRITICAL: If no subscription record at all, show pricing immediately
+      // ✅ IMPORTANT: don’t pop pricing if we’re about to auto-checkout
+      const checkoutParam = searchParams?.get('checkout')
+      const showPricingParam = searchParams?.get('showPricing')
+
+      // ✅ If no subscription record at all, show pricing immediately (unless we have checkout/showPricing flow)
       if (!subData) {
-        console.log('💳 No subscription found - showing pricing modal')
-        setShowPricingModal(true)
-        setHasActiveSubscription(false)
+        if (!checkoutParam && showPricingParam !== 'true') {
+          console.log('💳 No subscription found - showing pricing modal')
+          setShowPricingModal(true)
+          setHasActiveSubscription(false)
+        } else {
+          // keep pricing closed so checkout/pricing flows control the UI
+          setShowPricingModal(false)
+          setHasActiveSubscription(false)
+        }
       }
 
-      // ✅ Check if trial expired (force pricing)
+      // ✅ Check if trial expired (force pricing) - but still avoid interrupting checkout flow
       if (subData?.status === 'trialing' && subData?.trial_end) {
         const trialEnd = new Date(subData.trial_end)
         const now = new Date()
 
         if (trialEnd < now) {
           console.log('❌ Trial expired - showing pricing')
-          setShowPricingModal(true)
+          if (!checkoutParam) setShowPricingModal(true)
           setHasActiveSubscription(false)
         } else {
           const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
@@ -850,16 +940,6 @@ export default function Page() {
       }
 
       setIsLoading(false)
-
-      // ✅ If email just verified, show pricing modal (and clean URL)
-      if (typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search)
-        if (urlParams.get('emailVerified') === 'true' && !active) {
-          console.log('📧 Email verified - showing pricing modal')
-          setShowPricingModal(true)
-          window.history.replaceState({}, '', '/')
-        }
-      }
     }
 
     async function init() {
@@ -887,76 +967,23 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  // ✅ UPDATED: handleCheckout stores selected plan when not signed in (stable for useEffect deps)
-  const handleCheckout = useCallback(
-    async (priceId, planName) => {
-      try {
-        if (!priceId) {
-          alert('Invalid price selected.')
-          return
-        }
-
-        const { data } = await supabase.auth.getSession()
-
-        if (!data.session) {
-          // ✅ STORE selected plan before showing auth
-          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
-          setSelectedPriceId(priceId)
-          setShowPricingModal(false)
-          setAuthInitialMode('signup')
-          setShowAuthModal(true)
-          return
-        }
-
-        if (!captchaLoaded) {
-          alert('Security verification is still loading. Please try again in a moment.')
-          return
-        }
-
-        setCheckoutLoading(planName)
-
-        const captchaToken = await executeRecaptcha('checkout')
-        if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-          throw new Error('Security verification failed. Please refresh and try again.')
-        }
-
-        const res = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${data.session.access_token}`,
-          },
-          body: JSON.stringify({ priceId, captchaToken }),
-          credentials: 'include',
-        })
-
-        const payload = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(payload.error || 'Checkout failed')
-
-        if (payload.url) window.location.href = payload.url
-        else throw new Error('No checkout URL returned')
-      } catch (error) {
-        console.error('Checkout error:', error)
-        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
-      } finally {
-        setCheckoutLoading(null)
-      }
-    },
-    [supabase, captchaLoaded, executeRecaptcha]
-  )
-
-  // ✅ Auto-checkout from URL param: ?checkout=PRICE_ID
-  // ✅ FIX: include handleCheckout in deps (and guard on isLoading to avoid premature firing)
+  // ✅ FIXED: Auto-checkout after email verification / auth callback
   useEffect(() => {
     const checkoutPlan = searchParams?.get('checkout')
     if (!checkoutPlan) return
     if (isLoading) return
 
-    if (checkoutPlan && isAuthenticated && hasActiveSubscription === false) {
+    // ✅ FIXED: Check for NO subscription (not just false)
+    if (checkoutPlan && isAuthenticated && !hasActiveSubscription && !subscription) {
       console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
       handleCheckout(checkoutPlan, 'auto')
+
+      // Clean URL after triggering
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/')
+      }
     }
-  }, [searchParams, isAuthenticated, hasActiveSubscription, handleCheckout, isLoading])
+  }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
   const handleManageBilling = async () => {
     let loadingToast = null
@@ -2307,7 +2334,7 @@ export default function Page() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialMode={authInitialMode}
-        selectedPriceId={selectedPriceId} // ✅ PASS selected plan
+        selectedPriceId={selectedPriceId}
       />
 
       <PricingModal
@@ -2370,7 +2397,6 @@ export default function Page() {
 
                     {showSettingsMenu && (
                       <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                        {/* ✅ Billing for all authenticated users */}
                         <button
                           type="button"
                           className="chat-settings-item"
