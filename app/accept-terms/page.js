@@ -1,4 +1,4 @@
-// app/accept-terms/page.js - SECURITY FIX: Better error handling
+// app/accept-terms/page.js - COMPLETE FILE
 'use client'
 
 import { useState } from 'react'
@@ -29,7 +29,7 @@ export default function AcceptTermsPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        // ✅ SECURITY FIX: Handle subscription errors properly
+        // Handle subscription errors properly
         if (data.code === 'NO_SUBSCRIPTION') {
           setError('Please complete your subscription before accepting terms.')
           setTimeout(() => {
