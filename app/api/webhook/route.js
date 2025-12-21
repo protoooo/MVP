@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - COMPLETE FILE with quantity-based billing
+// app/api/webhook/route.js - COMPLETE FILE with quantity-based billing + multi-location upgrades
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -164,7 +164,7 @@ export async function POST(req) {
   try {
     switch (event.type) {
       // ======================================================================
-      // CHECKOUT COMPLETED
+      // CHECKOUT COMPLETED - Updated for multi-location support
       // ======================================================================
       case 'checkout.session.completed': {
         const session = event.data.object
@@ -185,26 +185,50 @@ export async function POST(req) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
 
+        // ✅ NEW: Check if this is a multi-location upgrade
+        const isMultiLocation = session.metadata?.isMultiLocation === 'true'
+        const locationCount = parseInt(session.metadata?.locationCount || '1')
+        const oldSubscriptionId = session.metadata?.oldSubscriptionId
+
         logger.info('New subscription created', { 
           userId, 
           subscriptionId,
-          status: subscription.status
+          status: subscription.status,
+          isMultiLocation,
+          locationCount
         })
+
+        // ✅ NEW: If multi-location upgrade, cancel old subscription
+        if (isMultiLocation && oldSubscriptionId) {
+          try {
+            await stripe.subscriptions.cancel(oldSubscriptionId)
+            logger.audit('Old subscription cancelled for multi-location upgrade', {
+              userId,
+              oldSubscriptionId,
+              newSubscriptionId: subscriptionId
+            })
+          } catch (err) {
+            logger.error('Failed to cancel old subscription', { 
+              error: err.message,
+              oldSubscriptionId 
+            })
+          }
+        }
 
         // Create subscription record
         const { error: subError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
           stripe_customer_id: customerId,
-          plan: 'business',
+          plan: isMultiLocation ? 'multi_location' : 'business',
           price_id: priceId,
           status: subscription.status,
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
           cancel_at_period_end: subscription.cancel_at_period_end,
-          location_count: 1,
-          is_multi_location: false,
+          location_count: locationCount,
+          is_multi_location: isMultiLocation,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }, { onConflict: 'stripe_subscription_id' })
@@ -214,29 +238,62 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        // Create first location automatically
-        try {
-          const { error: locError } = await supabase.rpc('create_location', {
-            p_owner_id: userId,
-            p_name: 'Main Location',
-            p_address: null
-          })
+        // ✅ NEW: If multi-location, whitelist the user
+        if (isMultiLocation && locationCount > 1) {
+          try {
+            const { error: whitelistError } = await supabase
+              .from('location_whitelist')
+              .upsert({
+                user_id: userId,
+                reason: `Multi-location subscription: ${locationCount} locations`,
+                whitelisted_at: new Date().toISOString()
+              }, { 
+                onConflict: 'user_id' 
+              })
 
-          if (locError) {
-            logger.error('Failed to create initial location', { error: locError.message })
-          } else {
-            logger.audit('Initial location created', { userId })
+            if (whitelistError) {
+              logger.error('Failed to whitelist multi-location user', { 
+                error: whitelistError.message,
+                userId 
+              })
+            } else {
+              logger.audit('User whitelisted for multi-location', { 
+                userId,
+                locationCount 
+              })
+            }
+          } catch (err) {
+            logger.error('Whitelist exception', { error: err.message })
           }
-        } catch (locException) {
-          logger.error('Create location exception', { error: locException.message })
         }
 
-        // Send welcome email
-        const userEmail = await getUserEmail(userId)
-        if (userEmail) {
-          const userName = userEmail.split('@')[0]
-          await emails.trialStarted(userEmail, userName)
-          logger.info('Welcome email sent', { email: userEmail.substring(0, 3) + '***' })
+        // Only create first location for NEW subscriptions (not upgrades)
+        if (!isMultiLocation) {
+          try {
+            const { error: locError } = await supabase.rpc('create_location', {
+              p_owner_id: userId,
+              p_name: 'Main Location',
+              p_address: null
+            })
+
+            if (locError) {
+              logger.error('Failed to create initial location', { error: locError.message })
+            } else {
+              logger.audit('Initial location created', { userId })
+            }
+          } catch (locException) {
+            logger.error('Create location exception', { error: locException.message })
+          }
+        }
+
+        // Send welcome email (only for new subscriptions, not upgrades)
+        if (!isMultiLocation) {
+          const userEmail = await getUserEmail(userId)
+          if (userEmail) {
+            const userName = userEmail.split('@')[0]
+            await emails.trialStarted(userEmail, userName)
+            logger.info('Welcome email sent', { email: userEmail.substring(0, 3) + '***' })
+          }
         }
 
         break
