@@ -1,3 +1,4 @@
+// app/accept-terms/page.js - SECURITY FIX: Better error handling
 'use client'
 
 import { useState } from 'react'
@@ -28,6 +29,31 @@ export default function AcceptTermsPage() {
       const data = await res.json()
 
       if (!res.ok) {
+        // ✅ SECURITY FIX: Handle subscription errors properly
+        if (data.code === 'NO_SUBSCRIPTION') {
+          setError('Please complete your subscription before accepting terms.')
+          setTimeout(() => {
+            router.replace('/?showPricing=true')
+          }, 2000)
+          return
+        }
+
+        if (data.code === 'TRIAL_EXPIRED') {
+          setError('Your trial has ended. Please subscribe to continue.')
+          setTimeout(() => {
+            router.replace('/?showPricing=true')
+          }, 2000)
+          return
+        }
+
+        if (data.code === 'SUBSCRIPTION_EXPIRED') {
+          setError('Your subscription has expired. Please update your payment method.')
+          setTimeout(() => {
+            router.replace('/')
+          }, 2000)
+          return
+        }
+
         setError(data?.error || 'Unable to save your acceptance. Please try again.')
         setIsSubmitting(false)
         return
