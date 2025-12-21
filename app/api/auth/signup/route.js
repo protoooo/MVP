@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - FIXED: Store selected plan during signup
+// app/api/auth/signup/route.js - COMPLETE with plan storage
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -21,6 +21,7 @@ export async function POST(request) {
     const body = await request.json()
     const { email, password, captchaToken, selectedPriceId } = body
 
+    // ✅ Validate input
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
     }
@@ -29,6 +30,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
     }
 
+    // ✅ Verify CAPTCHA
     const captchaResult = await verifyCaptcha(captchaToken, 'signup', ip)
     
     if (!captchaResult.success) {
@@ -65,7 +67,7 @@ export async function POST(request) {
       }
     )
 
-    // Store selected price ID in user metadata
+    // ✅ CRITICAL: Store selected price ID in user metadata
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
