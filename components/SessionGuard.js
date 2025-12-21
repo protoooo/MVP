@@ -1,4 +1,4 @@
-// components/SessionGuard.js - FIXED: Immediate refresh on mount + CSRF token injection
+// components/SessionGuard.js - FIXED: Immediate refresh on mount + CSRF token injection (race-condition safe)
 'use client'
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
@@ -10,6 +10,59 @@ export default function SessionGuard() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    // ✅ FIXED: Ensure CSRF token is loaded before allowing requests
+    const injectCSRFToken = () => {
+      const csrfToken = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('csrf-token='))
+        ?.split('=')[1]
+
+      if (!csrfToken) {
+        console.warn('[SessionGuard] No CSRF token found in cookies')
+        return false // ✅ Return false to indicate failure
+      }
+
+      if (!window.__csrfToken) {
+        window.__csrfToken = csrfToken
+        console.log('[SessionGuard] CSRF token loaded from cookie')
+      }
+
+      return true // ✅ Return true to indicate success
+    }
+
+    // ✅ UPDATED: Block requests until CSRF token is ready
+    const originalFetch = window.fetch
+    window.fetch = async function (...args) {
+      const [url, options = {}] = args
+
+      const isApiRequest = typeof url === 'string' && url.startsWith('/api/')
+      const isSameOrigin = typeof url === 'string' && !url.startsWith('http')
+      const isUnsafeMethod =
+        options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase())
+
+      if ((isApiRequest || isSameOrigin) && isUnsafeMethod) {
+        // ✅ NEW: Wait for CSRF token if not yet loaded
+        if (!window.__csrfToken) {
+          console.warn('[SessionGuard] CSRF token not ready - loading now')
+          const loaded = injectCSRFToken()
+
+          if (!loaded) {
+            console.error('[SessionGuard] Failed to load CSRF token - blocking request')
+            throw new Error('CSRF token unavailable - please refresh the page')
+          }
+        }
+
+        options.headers = {
+          ...options.headers,
+          'X-CSRF-Token': window.__csrfToken,
+        }
+
+        console.log('[SessionGuard] CSRF token added to request:', url)
+      }
+
+      return originalFetch.apply(this, [url, options])
+    }
 
     const refreshSession = async () => {
       try {
@@ -104,50 +157,6 @@ export default function SessionGuard() {
           window.location.href = '/auth?session_error=true'
         }
       }
-    }
-
-    // ✅ NEW: Inject CSRF token from cookie into all fetch requests
-    const injectCSRFToken = () => {
-      // Get CSRF token from cookie
-      const csrfToken = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('csrf-token='))
-        ?.split('=')[1]
-
-      if (!csrfToken) {
-        console.warn('[SessionGuard] No CSRF token found in cookies')
-        return
-      }
-
-      // Store token in memory for fetch interceptor
-      if (!window.__csrfToken) {
-        window.__csrfToken = csrfToken
-        console.log('[SessionGuard] CSRF token loaded from cookie')
-      }
-    }
-
-    // ✅ NEW: Intercept fetch to automatically add CSRF token
-    const originalFetch = window.fetch
-    window.fetch = async function (...args) {
-      const [url, options = {}] = args
-
-      // Only add CSRF token to same-origin API requests
-      const isApiRequest = typeof url === 'string' && url.startsWith('/api/')
-      const isSameOrigin = typeof url === 'string' && !url.startsWith('http')
-      const isUnsafeMethod =
-        options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase())
-
-      if ((isApiRequest || isSameOrigin) && isUnsafeMethod && window.__csrfToken) {
-        // Add CSRF token to headers
-        options.headers = {
-          ...options.headers,
-          'X-CSRF-Token': window.__csrfToken,
-        }
-
-        console.log('[SessionGuard] CSRF token added to request:', url)
-      }
-
-      return originalFetch.apply(this, [url, options])
     }
 
     // ✅ FIXED: Refresh immediately on mount, then every 5 minutes
