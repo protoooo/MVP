@@ -1,4 +1,4 @@
-// components/MultiLocationUpgradeModal.js - NO DISCOUNTS VERSION
+// components/MultiLocationUpgradeModal.js - SINGLE PLAN VERSION
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,18 +7,16 @@ import { IBM_Plex_Mono } from 'next/font/google'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-// ✅ Simple per-location pricing
+// ✅ Simple per-location pricing - single tier
 const TIER_PRICES = {
-  starter: { perLocation: 49, name: 'Starter', model: 'Haiku' },
-  pro: { perLocation: 99, name: 'Professional', model: 'Summit' },
-  enterprise: { perLocation: 199, name: 'Enterprise', model: 'Opus' }
+  unlimited: { perLocation: 149, name: 'Professional', model: 'Sonnet 4.5' }
 }
 
 export default function MultiLocationUpgradeModal({ 
   isOpen, 
   onClose, 
   currentLocations = 2,
-  currentTier = 'pro',
+  currentTier = 'unlimited',
   userId 
 }) {
   const [selectedLocations, setSelectedLocations] = useState(currentLocations)
@@ -34,7 +32,7 @@ export default function MultiLocationUpgradeModal({
 
   if (!isOpen) return null
 
-  const tierInfo = TIER_PRICES[currentTier] || TIER_PRICES.pro
+  const tierInfo = TIER_PRICES.unlimited
   const monthlyPrice = tierInfo.perLocation * selectedLocations
 
   const handleUpgrade = async () => {
