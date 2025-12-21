@@ -1,4 +1,4 @@
-// components/SessionGuard.js - FIXED: Proper session expiry redirect
+// components/SessionGuard.js - FIXED: Add accept-terms to public paths
 'use client'
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
@@ -15,10 +15,17 @@ export default function SessionGuard() {
       try {
         const { data: { user }, error } = await supabase.auth.getUser()
         
-        // ✅ FIXED: Redirect to auth if session expired
+        // ✅ FIXED: Complete public paths list
         if (error || !user) {
-          // Only redirect if we're not already on a public page
-          const publicPaths = ['/auth', '/terms', '/privacy', '/contact', '/verify-email', '/reset-password']
+          const publicPaths = [
+            '/auth', 
+            '/terms', 
+            '/privacy', 
+            '/contact', 
+            '/verify-email', 
+            '/reset-password',
+            '/accept-terms'  // ✅ ADDED
+          ]
           const isPublicPage = publicPaths.some(path => window.location.pathname.startsWith(path))
           
           if (!isPublicPage && window.location.pathname !== '/') {
@@ -36,8 +43,15 @@ export default function SessionGuard() {
       } catch (error) {
         console.error('[SessionGuard] Session refresh failed:', error)
         
-        // On error, redirect to auth unless we're already there
-        const publicPaths = ['/auth', '/terms', '/privacy', '/contact', '/verify-email', '/reset-password']
+        const publicPaths = [
+          '/auth', 
+          '/terms', 
+          '/privacy', 
+          '/contact', 
+          '/verify-email', 
+          '/reset-password',
+          '/accept-terms'
+        ]
         const isPublicPage = publicPaths.some(path => window.location.pathname.startsWith(path))
         
         if (!isPublicPage && window.location.pathname !== '/') {
@@ -56,7 +70,6 @@ export default function SessionGuard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         console.log('[SessionGuard] User signed out')
-        // Redirect to auth unless already there
         if (!window.location.pathname.startsWith('/auth')) {
           window.location.href = '/auth'
         }
