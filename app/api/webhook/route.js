@@ -1,4 +1,6 @@
-// app/api/webhook/route.js - COMPLETE FILE with quantity-based billing + multi-location upgrades
+// app/api/webhook/route.js - COMPLETE UPDATED VERSION
+// Multi-location subscriptions + Quantity-based billing + Security + Email notifications
+
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -14,7 +16,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Track processed events
+// ============================================================================
+// SECURITY: Idempotency tracking to prevent duplicate webhook processing
+// ============================================================================
 async function isEventProcessed(eventId) {
   const { data } = await supabase
     .from('processed_webhook_events')
@@ -36,6 +40,9 @@ async function markEventProcessed(eventId, eventType) {
     .onConflict('event_id')
 }
 
+// ============================================================================
+// HELPER: Get user email via Supabase Admin API
+// ============================================================================
 async function getUserEmail(userId) {
   try {
     const { data } = await supabase.auth.admin.getUserById(userId)
@@ -47,41 +54,31 @@ async function getUserEmail(userId) {
 }
 
 // ============================================================================
-// SYNC LOCATION COUNT TO STRIPE (Exported for use in location APIs)
+// MULTI-LOCATION: Sync location count to Stripe subscription quantity
 // ============================================================================
 export async function syncLocationQuantityToStripe(userId) {
   try {
-    // Count active locations
-    const { data: locations, error: locError } = await supabase
-      .from('locations')
-      .select('id')
-      .eq('owner_id', userId)
-      .eq('is_active', true)
-
-    if (locError) throw locError
-
-    const activeLocationCount = locations?.length || 0
-
-    // Get user's subscription
+    // Get active subscription
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
-      .select('stripe_subscription_id, stripe_customer_id')
+      .select('stripe_subscription_id, stripe_customer_id, location_count, is_multi_location')
       .eq('user_id', userId)
       .in('status', ['active', 'trialing'])
-      .single()
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
     if (subError || !subscription) {
       logger.warn('No active subscription to update', { userId })
       return { success: false, error: 'No active subscription' }
     }
 
-    // Get Stripe subscription
+    // Get current quantity from Stripe
     const stripeSubscription = await stripe.subscriptions.retrieve(
       subscription.stripe_subscription_id
     )
 
     const subscriptionItem = stripeSubscription.items.data[0]
-
     if (!subscriptionItem) {
       logger.error('No subscription item found', { 
         subscriptionId: subscription.stripe_subscription_id 
@@ -89,29 +86,31 @@ export async function syncLocationQuantityToStripe(userId) {
       return { success: false, error: 'No subscription item' }
     }
 
+    const newQuantity = subscription.location_count || 1
+
+    // Only update if quantity changed
+    if (subscriptionItem.quantity === newQuantity) {
+      logger.info('Quantity already matches', { 
+        userId, 
+        quantity: newQuantity 
+      })
+      return { success: true, quantity: newQuantity }
+    }
+
     // Update quantity in Stripe
     await stripe.subscriptionItems.update(subscriptionItem.id, {
-      quantity: Math.max(activeLocationCount, 1),
+      quantity: newQuantity,
       proration_behavior: 'always_invoice'
     })
 
-    // Update subscription record
-    await supabase
-      .from('subscriptions')
-      .update({
-        location_count: activeLocationCount,
-        is_multi_location: activeLocationCount > 1,
-        updated_at: new Date().toISOString()
-      })
-      .eq('stripe_subscription_id', subscription.stripe_subscription_id)
-
     logger.audit('Location quantity synced to Stripe', {
       userId,
-      activeLocations: activeLocationCount,
+      oldQuantity: subscriptionItem.quantity,
+      newQuantity,
       subscriptionId: subscription.stripe_subscription_id
     })
 
-    return { success: true, quantity: activeLocationCount }
+    return { success: true, quantity: newQuantity }
 
   } catch (error) {
     logger.error('Failed to sync location quantity', { 
@@ -127,7 +126,8 @@ export async function syncLocationQuantityToStripe(userId) {
 // ============================================================================
 export async function POST(req) {
   const body = await req.text()
-  const signature = headers().get('stripe-signature')
+  const headersList = await headers()
+  const signature = headersList.get('stripe-signature')
   
   if (!signature) {
     logger.security('Webhook missing Stripe signature')
@@ -138,7 +138,7 @@ export async function POST(req) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     
-    // Replay attack protection
+    // ✅ SECURITY: Replay attack protection (reject events older than 60 seconds)
     const eventAge = Date.now() - (event.created * 1000)
     if (eventAge > 60 * 1000) {
       logger.security('Webhook event too old', {
@@ -153,7 +153,7 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  // Check for duplicates
+  // ✅ SECURITY: Idempotency check (prevent duplicate processing)
   if (await isEventProcessed(event.id)) {
     logger.info('Duplicate webhook event ignored', { eventId: event.id })
     return NextResponse.json({ received: true, duplicate: true })
@@ -164,7 +164,7 @@ export async function POST(req) {
   try {
     switch (event.type) {
       // ======================================================================
-      // CHECKOUT COMPLETED - Updated for multi-location support
+      // CHECKOUT COMPLETED - New subscription created
       // ======================================================================
       case 'checkout.session.completed': {
         const session = event.data.object
@@ -184,25 +184,29 @@ export async function POST(req) {
         // Get subscription from Stripe
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
+        const quantity = subscription.items.data[0].quantity || 1
 
-        // ✅ NEW: Check if this is a multi-location upgrade
-        const isMultiLocation = session.metadata?.isMultiLocation === 'true'
-        const locationCount = parseInt(session.metadata?.locationCount || '1')
-        const oldSubscriptionId = session.metadata?.oldSubscriptionId
+        // Check if this is a multi-location subscription
+        const isMultiLocation = session.metadata?.isMultiLocation === 'true' || quantity > 1
+        const locationCount = parseInt(session.metadata?.locationCount || String(quantity))
+        const purchaseType = session.metadata?.purchaseType // 'separate' or 'single'
 
         logger.info('New subscription created', { 
           userId, 
           subscriptionId,
           status: subscription.status,
           isMultiLocation,
-          locationCount
+          locationCount,
+          purchaseType,
+          quantity
         })
 
-        // ✅ NEW: If multi-location upgrade, cancel old subscription
-        if (isMultiLocation && oldSubscriptionId) {
+        // ✅ MULTI-LOCATION: If upgrading, cancel old subscription
+        const oldSubscriptionId = session.metadata?.oldSubscriptionId
+        if (oldSubscriptionId) {
           try {
             await stripe.subscriptions.cancel(oldSubscriptionId)
-            logger.audit('Old subscription cancelled for multi-location upgrade', {
+            logger.audit('Old subscription cancelled for upgrade', {
               userId,
               oldSubscriptionId,
               newSubscriptionId: subscriptionId
@@ -220,7 +224,7 @@ export async function POST(req) {
           user_id: userId,
           stripe_subscription_id: subscriptionId,
           stripe_customer_id: customerId,
-          plan: isMultiLocation ? 'multi_location' : 'business',
+          plan: isMultiLocation ? 'multi_location' : 'unlimited',
           price_id: priceId,
           status: subscription.status,
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
@@ -229,6 +233,10 @@ export async function POST(req) {
           cancel_at_period_end: subscription.cancel_at_period_end,
           location_count: locationCount,
           is_multi_location: isMultiLocation,
+          metadata: {
+            purchase_type: purchaseType,
+            stripe_quantity: quantity
+          },
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }, { onConflict: 'stripe_subscription_id' })
@@ -238,18 +246,16 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        // ✅ NEW: If multi-location, whitelist the user
+        // ✅ MULTI-LOCATION: Whitelist user if multi-location
         if (isMultiLocation && locationCount > 1) {
           try {
             const { error: whitelistError } = await supabase
               .from('location_whitelist')
               .upsert({
                 user_id: userId,
-                reason: `Multi-location subscription: ${locationCount} locations`,
+                reason: `Multi-location subscription: ${locationCount} locations (${purchaseType})`,
                 whitelisted_at: new Date().toISOString()
-              }, { 
-                onConflict: 'user_id' 
-              })
+              }, { onConflict: 'user_id' })
 
             if (whitelistError) {
               logger.error('Failed to whitelist multi-location user', { 
@@ -259,7 +265,8 @@ export async function POST(req) {
             } else {
               logger.audit('User whitelisted for multi-location', { 
                 userId,
-                locationCount 
+                locationCount,
+                purchaseType 
               })
             }
           } catch (err) {
@@ -267,27 +274,8 @@ export async function POST(req) {
           }
         }
 
-        // Only create first location for NEW subscriptions (not upgrades)
-        if (!isMultiLocation) {
-          try {
-            const { error: locError } = await supabase.rpc('create_location', {
-              p_owner_id: userId,
-              p_name: 'Main Location',
-              p_address: null
-            })
-
-            if (locError) {
-              logger.error('Failed to create initial location', { error: locError.message })
-            } else {
-              logger.audit('Initial location created', { userId })
-            }
-          } catch (locException) {
-            logger.error('Create location exception', { error: locException.message })
-          }
-        }
-
-        // Send welcome email (only for new subscriptions, not upgrades)
-        if (!isMultiLocation) {
+        // ✅ EMAIL: Send welcome email (only for new subscriptions, not upgrades)
+        if (!oldSubscriptionId) {
           const userEmail = await getUserEmail(userId)
           if (userEmail) {
             const userName = userEmail.split('@')[0]
@@ -300,14 +288,14 @@ export async function POST(req) {
       }
 
       // ======================================================================
-      // SUBSCRIPTION UPDATED
+      // SUBSCRIPTION UPDATED - Handle status changes & quantity updates
       // ======================================================================
       case 'customer.subscription.updated': {
         const subscription = event.data.object
         const priceId = subscription.items.data[0].price.id
+        const quantity = subscription.items.data[0].quantity || 1
         const previousStatus = event.data.previous_attributes?.status
         const newStatus = subscription.status
-        const quantity = subscription.items.data[0].quantity || 1
 
         logger.info('Subscription updated', { 
           subscriptionId: subscription.id,
@@ -316,6 +304,16 @@ export async function POST(req) {
           quantity
         })
 
+        // Get user_id from subscription record
+        const { data: existingSub } = await supabase
+          .from('subscriptions')
+          .select('user_id, location_count')
+          .eq('stripe_subscription_id', subscription.id)
+          .maybeSingle()
+
+        const userId = existingSub?.user_id
+
+        // Update subscription record
         const { error: updateError } = await supabase.from('subscriptions').update({
           status: newStatus,
           price_id: priceId,
@@ -333,6 +331,17 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
+        // ✅ MULTI-LOCATION: Update whitelist if quantity changed
+        if (quantity > 1 && userId) {
+          await supabase
+            .from('location_whitelist')
+            .upsert({
+              user_id: userId,
+              reason: `Multi-location subscription: ${quantity} locations`,
+              whitelisted_at: new Date().toISOString()
+            }, { onConflict: 'user_id' })
+        }
+
         logger.audit('Subscription updated', { 
           subscriptionId: subscription.id, 
           oldStatus: previousStatus,
@@ -343,7 +352,7 @@ export async function POST(req) {
       }
 
       // ======================================================================
-      // SUBSCRIPTION DELETED
+      // SUBSCRIPTION DELETED - Handle cancellations
       // ======================================================================
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
@@ -352,6 +361,7 @@ export async function POST(req) {
           subscriptionId: subscription.id
         })
 
+        // Update subscription status
         const { error: cancelError } = await supabase.from('subscriptions').update({
           status: 'canceled',
           updated_at: new Date().toISOString()
@@ -361,24 +371,26 @@ export async function POST(req) {
           logger.error('Failed to cancel subscription', { error: cancelError.message })
         }
 
-        // Disable all locations
+        // Get user info for email
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
           .eq('stripe_subscription_id', subscription.id)
           .single()
         
-        if (sub) {
+        if (sub?.user_id) {
+          // Remove from whitelist
           await supabase
-            .from('locations')
-            .update({ is_active: false })
-            .eq('owner_id', sub.user_id)
+            .from('location_whitelist')
+            .delete()
+            .eq('user_id', sub.user_id)
 
-          logger.audit('All locations disabled - subscription canceled', { 
+          logger.audit('Subscription canceled', { 
             userId: sub.user_id,
             subscriptionId: subscription.id
           })
 
+          // Send cancellation email
           const userEmail = await getUserEmail(sub.user_id)
           if (userEmail) {
             const userName = userEmail.split('@')[0]
@@ -390,7 +402,7 @@ export async function POST(req) {
       }
 
       // ======================================================================
-      // PAYMENT FAILED
+      // PAYMENT FAILED - Handle failed payments
       // ======================================================================
       case 'invoice.payment_failed': {
         const invoice = event.data.object
@@ -407,24 +419,19 @@ export async function POST(req) {
             .eq('stripe_subscription_id', invoice.subscription)
             .single()
 
-          if (sub) {
-            // Disable all locations
-            await supabase
-              .from('locations')
-              .update({ is_active: false })
-              .eq('owner_id', sub.user_id)
-
+          if (sub?.user_id) {
             // Update subscription status
             await supabase
               .from('subscriptions')
               .update({ status: 'past_due' })
               .eq('stripe_subscription_id', invoice.subscription)
 
-            logger.audit('All locations disabled - payment failed', { 
+            logger.audit('Subscription marked past_due', { 
               userId: sub.user_id,
               attempts: invoice.attempt_count
             })
 
+            // Send payment failed email
             const userEmail = await getUserEmail(sub.user_id)
             if (userEmail) {
               const userName = userEmail.split('@')[0]
@@ -437,7 +444,7 @@ export async function POST(req) {
       }
 
       // ======================================================================
-      // PAYMENT SUCCEEDED
+      // PAYMENT SUCCEEDED - Handle successful payments
       // ======================================================================
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object
@@ -453,23 +460,18 @@ export async function POST(req) {
           .eq('stripe_subscription_id', invoice.subscription)
           .single()
         
+        // If subscription was past_due, restore it
         if (sub && sub.status === 'past_due') {
-          // Restore subscription
           await supabase.from('subscriptions').update({
             status: 'active',
             updated_at: new Date().toISOString()
           }).eq('stripe_subscription_id', invoice.subscription)
 
-          // Re-enable all locations
-          await supabase
-            .from('locations')
-            .update({ is_active: true })
-            .eq('owner_id', sub.user_id)
-
-          logger.audit('Locations restored - payment recovered', { 
+          logger.audit('Subscription restored from past_due', { 
             userId: sub.user_id
           })
 
+          // Send payment recovered email
           const userEmail = await getUserEmail(sub.user_id)
           if (userEmail) {
             const userName = userEmail.split('@')[0]
@@ -484,7 +486,7 @@ export async function POST(req) {
         logger.info('Unhandled webhook event', { type: event.type })
     }
 
-    // Mark event as processed
+    // ✅ SECURITY: Mark event as processed
     await markEventProcessed(event.id, event.type)
 
     return NextResponse.json({ received: true })
