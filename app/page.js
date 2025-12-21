@@ -13,6 +13,7 @@ import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
+import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
 import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
@@ -584,6 +585,7 @@ export default function Page() {
   // ✅ NEW: multi-location license state + modal
   const [locationCheck, setLocationCheck] = useState(null)
   const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
+  const [showMultiLocationPurchaseModal, setShowMultiLocationPurchaseModal] = useState(false)
 
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
@@ -623,6 +625,19 @@ export default function Page() {
 
     return () => {
       window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
+    }
+  }, [])
+
+  // ✅ NEW: Listen for multi-location purchase modal trigger
+  useEffect(() => {
+    const handleOpenMultiLocationPurchase = () => {
+      setShowMultiLocationPurchaseModal(true)
+    }
+
+    window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
+
+    return () => {
+      window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
     }
   }, [])
 
@@ -799,6 +814,7 @@ export default function Page() {
         // ✅ clear multi-location states on logout
         setLocationCheck(null)
         setShowMultiLocationModal(false)
+        setShowMultiLocationPurchaseModal(false)
 
         setIsLoading(false)
         return
@@ -814,6 +830,7 @@ export default function Page() {
           // ✅ clear multi-location states
           setLocationCheck(null)
           setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
 
           setIsLoading(false)
           router.replace('/verify-email')
@@ -833,6 +850,7 @@ export default function Page() {
 
           setLocationCheck(null)
           setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
 
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -845,6 +863,7 @@ export default function Page() {
 
           setLocationCheck(null)
           setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
 
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -858,6 +877,7 @@ export default function Page() {
 
           setLocationCheck(null)
           setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
 
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -870,6 +890,7 @@ export default function Page() {
 
         setLocationCheck(null)
         setShowMultiLocationModal(false)
+        setShowMultiLocationPurchaseModal(false)
 
         setIsLoading(false)
         router.replace('/accept-terms')
@@ -909,6 +930,7 @@ export default function Page() {
       if (!subData) {
         setLocationCheck(null)
         setShowMultiLocationModal(false)
+        setShowMultiLocationPurchaseModal(false)
       }
 
       const checkoutParam = searchParams?.get('checkout')
@@ -1109,6 +1131,7 @@ export default function Page() {
       // ✅ clear multi-location states immediately
       setLocationCheck(null)
       setShowMultiLocationModal(false)
+      setShowMultiLocationPurchaseModal(false)
 
       await supabase.auth.signOut()
     } catch (e) {
@@ -2700,6 +2723,12 @@ export default function Page() {
         isOpen={showMultiLocationModal}
         onClose={() => setShowMultiLocationModal(false)}
         currentLocations={locationCheck?.uniqueLocationsUsed || 2}
+        userId={session?.user?.id}
+      />
+
+      <MultiLocationPurchaseModal
+        isOpen={showMultiLocationPurchaseModal}
+        onClose={() => setShowMultiLocationPurchaseModal(false)}
         userId={session?.user?.id}
       />
     </>
