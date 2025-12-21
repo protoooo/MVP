@@ -400,7 +400,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       const captchaToken = await executeRecaptcha(mode)
       if (!captchaToken || captchaToken === 'turnstile_unavailable') {
         setMessageKind('err')
-        setMessage('Security verification failed. Please try again.')
+        setMessage('Security verification failed. Please ensure Cloudflare Turnstile is allowed, then try again.')
         return
       }
 
