@@ -285,9 +285,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-/**
- * ✅ UPDATED: AuthModal now accepts selectedPriceId and passes it through on signup
- */
+// ✅ UPDATED: accepts selectedPriceId and passes it on signup
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -329,10 +327,12 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         endpoint = '/api/auth/reset-password'
       } else {
         body.password = password
+
         // ✅ PASS selected plan to signup
         if (mode === 'signup' && selectedPriceId) {
           body.selectedPriceId = selectedPriceId
         }
+
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
@@ -653,7 +653,7 @@ export default function Page() {
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
-  // ✅ NEW: track selected plan for auth-first checkout flow
+  // ✅ NEW: remember the selected Stripe price when user isn’t logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -728,15 +728,6 @@ export default function Page() {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
-
-  // ✅ NEW: Auto-checkout if URL param is present (after auth completes)
-  useEffect(() => {
-    const checkoutPlan = searchParams?.get('checkout')
-    if (checkoutPlan && isAuthenticated && hasActiveSubscription === false) {
-      console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
-      handleCheckout(checkoutPlan, 'auto')
-    }
-  }, [searchParams, isAuthenticated, hasActiveSubscription])
 
   // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
@@ -896,62 +887,76 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  /**
-   * ✅ UPDATED: handleCheckout stores selected plan when user is not signed in
-   */
-  const handleCheckout = async (priceId, planName) => {
-    try {
-      const { data } = await supabase.auth.getSession()
+  // ✅ UPDATED: handleCheckout stores selected plan when not signed in (stable for useEffect deps)
+  const handleCheckout = useCallback(
+    async (priceId, planName) => {
+      try {
+        if (!priceId) {
+          alert('Invalid price selected.')
+          return
+        }
 
-      if (!data.session) {
-        // ✅ STORE selected plan before showing auth
-        console.log('💾 Storing selected plan:', priceId?.substring(0, 15) + '***')
-        setSelectedPriceId(priceId)
-        setShowPricingModal(false)
-        setAuthInitialMode('signup')
-        setShowAuthModal(true)
-        return
+        const { data } = await supabase.auth.getSession()
+
+        if (!data.session) {
+          // ✅ STORE selected plan before showing auth
+          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
+          setSelectedPriceId(priceId)
+          setShowPricingModal(false)
+          setAuthInitialMode('signup')
+          setShowAuthModal(true)
+          return
+        }
+
+        if (!captchaLoaded) {
+          alert('Security verification is still loading. Please try again in a moment.')
+          return
+        }
+
+        setCheckoutLoading(planName)
+
+        const captchaToken = await executeRecaptcha('checkout')
+        if (!captchaToken || captchaToken === 'turnstile_unavailable') {
+          throw new Error('Security verification failed. Please refresh and try again.')
+        }
+
+        const res = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({ priceId, captchaToken }),
+          credentials: 'include',
+        })
+
+        const payload = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(payload.error || 'Checkout failed')
+
+        if (payload.url) window.location.href = payload.url
+        else throw new Error('No checkout URL returned')
+      } catch (error) {
+        console.error('Checkout error:', error)
+        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+      } finally {
+        setCheckoutLoading(null)
       }
+    },
+    [supabase, captchaLoaded, executeRecaptcha]
+  )
 
-      if (!priceId) {
-        alert('Invalid price selected.')
-        return
-      }
+  // ✅ Auto-checkout from URL param: ?checkout=PRICE_ID
+  // ✅ FIX: include handleCheckout in deps (and guard on isLoading to avoid premature firing)
+  useEffect(() => {
+    const checkoutPlan = searchParams?.get('checkout')
+    if (!checkoutPlan) return
+    if (isLoading) return
 
-      if (!captchaLoaded) {
-        alert('Security verification is still loading. Please try again in a moment.')
-        return
-      }
-
-      setCheckoutLoading(planName)
-
-      const captchaToken = await executeRecaptcha('checkout')
-      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-        throw new Error('Security verification failed. Please refresh and try again.')
-      }
-
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${data.session.access_token}`,
-        },
-        body: JSON.stringify({ priceId, captchaToken }),
-        credentials: 'include',
-      })
-
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(payload.error || 'Checkout failed')
-
-      if (payload.url) window.location.href = payload.url
-      else throw new Error('No checkout URL returned')
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
-    } finally {
-      setCheckoutLoading(null)
+    if (checkoutPlan && isAuthenticated && hasActiveSubscription === false) {
+      console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
+      handleCheckout(checkoutPlan, 'auto')
     }
-  }
+  }, [searchParams, isAuthenticated, hasActiveSubscription, handleCheckout, isLoading])
 
   const handleManageBilling = async () => {
     let loadingToast = null
@@ -2298,12 +2303,11 @@ export default function Page() {
         }
       `}</style>
 
-      {/* ✅ UPDATED: pass selectedPriceId into AuthModal */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialMode={authInitialMode}
-        selectedPriceId={selectedPriceId}
+        selectedPriceId={selectedPriceId} // ✅ PASS selected plan
       />
 
       <PricingModal
@@ -2319,6 +2323,8 @@ export default function Page() {
             <LandingPage
               onShowPricing={() => setShowPricingModal(true)}
               onShowAuth={() => {
+                // ✅ If user just wants to sign in, clear any stored selected plan
+                setSelectedPriceId(null)
                 setAuthInitialMode('signin')
                 setShowAuthModal(true)
               }}
