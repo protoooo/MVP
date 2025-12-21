@@ -12,24 +12,22 @@ export async function middleware(request) {
   }
 
   const response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   })
 
   // ============================================================================
-  // ✅ CSRF Token: ALWAYS re-set cookie with correct flags (overwrites old httpOnly cookies)
+  // ✅ CSRF token cookie: ALWAYS set with correct flags (overwrites legacy cookie attrs)
   // ============================================================================
   const existing = request.cookies.get('csrf-token')?.value
   const token = existing || generateCSRFToken()
 
   response.cookies.set('csrf-token', token, {
-    // ✅ Must be readable by JS for double-submit CSRF (client echoes into X-CSRF-Token)
+    // Must be readable by JS for double-submit cookie CSRF (client echoes into X-CSRF-Token)
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/',
-    maxAge: 60 * 60 * 24, // 24 hours
+    maxAge: 60 * 60 * 24,
   })
 
   // ============================================================================
@@ -53,12 +51,8 @@ export async function middleware(request) {
     '/accept-terms',
     '/register-location',
   ]
-
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
-
-  if (isPublicRoute) {
-    return response
-  }
+  if (isPublicRoute) return response
 
   // ============================================================================
   // Authentication Check (for protected routes)
@@ -87,16 +81,12 @@ export async function middleware(request) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // ============================================================================
-  // Root Path Authentication Flow
-  // ============================================================================
+  // Root path auth flow
   if (pathname === '/' && user) {
-    // Step 1: Check email verification
     if (!user.email_confirmed_at) {
       return NextResponse.redirect(new URL('/verify-email', request.url))
     }
 
-    // Step 2: Check subscription status BEFORE checking terms
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('id, status, trial_end')
@@ -115,7 +105,6 @@ export async function middleware(request) {
       }
     }
 
-    // Step 3: Check terms acceptance (ONLY if subscription is valid)
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('accepted_terms, accepted_privacy')
