@@ -170,7 +170,7 @@ export async function POST(request) {
       client_reference_id: user.id,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: 7,
+        trial_period_days: 7, // Card required - charged after 7 days
         metadata: {
           userId: user.id,
           userEmail: user.email,
