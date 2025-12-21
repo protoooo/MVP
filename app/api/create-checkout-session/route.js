@@ -1,4 +1,4 @@
-// app/api/create-checkout-session/route.js - ENHANCED with session consistency validation
+// app/api/create-checkout-session/route.js - SINGLE PLAN VERSION
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -12,11 +12,9 @@ export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-const STARTER_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY
-const PRO_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
-const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
+const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
-const ALLOWED_PRICES = [STARTER_MONTHLY, PRO_MONTHLY, ENTERPRISE_MONTHLY].filter(Boolean)
+const ALLOWED_PRICES = [UNLIMITED_MONTHLY].filter(Boolean)
 
 function getClientIp(request) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -257,7 +255,7 @@ export async function POST(request) {
       },
     })
 
-    logger.audit('Checkout session created (card-required trial, session-verified)', {
+    logger.audit('Checkout session created (single plan)', {
       sessionId: checkoutSession.id,
       userId: user.id,
       email: user.email,
