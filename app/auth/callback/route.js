@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - FIXED: Proper redirect flow to Stripe checkout
+// app/auth/callback/route.js - FIXED: Use stored selected plan
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -73,13 +73,13 @@ export async function GET(request) {
 
     console.log('✅ Session established:', data.user.email)
 
-    // Password recovery flow - redirect to reset page
+    // Password recovery flow
     if (type === 'recovery') {
       console.log('🔐 Password recovery, redirecting to reset page')
       return NextResponse.redirect(`${baseUrl}/reset-password`)
     }
 
-    // Check if email is verified
+    // Check email verification
     if (!data.user.email_confirmed_at) {
       console.log('⚠️ Email not yet confirmed')
       return NextResponse.redirect(`${baseUrl}/verify-email`)
@@ -87,7 +87,7 @@ export async function GET(request) {
 
     console.log('✅ Email verified, checking terms acceptance...')
 
-    // Check if user accepted terms/privacy
+    // Check terms/privacy acceptance
     const supabaseAdmin = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -115,7 +115,7 @@ export async function GET(request) {
 
     console.log('✅ Terms accepted, checking subscription status...')
 
-    // Check if user has active subscription
+    // Check for active subscription
     const { data: subscription } = await supabaseAdmin
       .from('subscriptions')
       .select('id, status')
@@ -124,13 +124,20 @@ export async function GET(request) {
       .maybeSingle()
 
     if (!subscription) {
-      // ✅ CRITICAL: Email verified + terms accepted but NO subscription
-      // Redirect to home with flag to show pricing modal immediately
-      console.log('💳 Email verified but no subscription - showing pricing')
+      // ✅ NEW: Get their selected plan from signup metadata
+      const selectedPriceId = data.user.user_metadata?.selected_price_id
+
+      if (selectedPriceId) {
+        console.log('💳 Redirecting to checkout with selected plan:', selectedPriceId.substring(0, 15) + '***')
+        return NextResponse.redirect(`${baseUrl}/?checkout=${selectedPriceId}`)
+      }
+
+      // Fallback: Show pricing modal if no plan stored
+      console.log('💳 No plan selected, showing pricing')
       return NextResponse.redirect(`${baseUrl}/?showPricing=true&emailVerified=true`)
     }
 
-    // Already has subscription - go to chat
+    // Has subscription - go to chat
     console.log('✅ User has subscription, redirecting to chat')
     return NextResponse.redirect(baseUrl)
 
