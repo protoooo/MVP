@@ -18,21 +18,19 @@ export async function middleware(request) {
   })
 
   // ============================================================================
-  // ✅ CSRF Token Generation and Setting
+  // ✅ CSRF Token: ALWAYS re-set cookie with correct flags (overwrites old httpOnly cookies)
   // ============================================================================
-  const existingToken = request.cookies.get('csrf-token')
+  const existing = request.cookies.get('csrf-token')?.value
+  const token = existing || generateCSRFToken()
 
-  if (!existingToken) {
-    const token = generateCSRFToken()
-    response.cookies.set('csrf-token', token, {
-      // ✅ IMPORTANT: must be readable by JS for double-submit CSRF (SessionGuard adds header)
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 60 * 60 * 24, // 24 hours
-    })
-  }
+  response.cookies.set('csrf-token', token, {
+    // ✅ Must be readable by JS for double-submit CSRF (client echoes into X-CSRF-Token)
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 60 * 60 * 24, // 24 hours
+  })
 
   // ============================================================================
   // Security Headers
