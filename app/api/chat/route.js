@@ -751,37 +751,33 @@ export async function POST(request) {
                     type: 'text',
                     text: `Scan this food service photo for potential compliance issues.
 
-You are analyzing this for a Washtenaw County, Michigan restaurant that wants to catch violations BEFORE the health inspector does.
+CRITICAL: ONLY flag what you can CLEARLY see in the photo.
+- If you're not 100% certain about something, don't flag it
+- DO NOT assume items are missing just because you can't see them (soap, thermometers, towels, etc.)
+- Focus ONLY on what IS visible that MIGHT be wrong
+- Never say something is missing - only flag problems with what you CAN see
 
-Rules:
-- List EVERYTHING that might be a problem, even if you're not 100% certain
-- Focus on the Top 10 violation categories:
-  1. Temperature control (coolers, hot holding)
-  2. Cross contamination (raw/ready-to-eat separation)
-  3. Hand hygiene (sinks, soap, towels)
-  4. Food storage (floor clearance, labeling, date marking)
-  5. Cleaning/sanitizing (equipment, utensils, surfaces)
-  6. Pest evidence (droppings, nests, access points)
-  7. Employee health (bare hand contact, gloves misuse)
-  8. Chemical storage (toxics near food)
-  9. Equipment maintenance (broken seals, rust, damage)
-  10. Facility sanitation (floors, walls, ceilings, drains)
-
-- If something MIGHT be a violation, flag it. The user wants to know.
-- Don't narrate the scene. Only list actionable compliance observations.
-- Provide search_terms that will pull the most relevant regulation excerpts.
+Top violation categories to check (only if you see them):
+1. Temperature control equipment condition
+2. Cross contamination (raw/cooked separation)
+3. Visible hand hygiene issues (only if sink area is clearly visible)
+4. Food storage problems (floor clearance, uncovered food)
+5. Cleaning/sanitizing issues (visible dirt, grime)
+6. Pest evidence (droppings, insects)
+7. Equipment condition (rust, damage, broken seals)
 
 Return JSON only:
 {
-  "summary": "one sentence overview",
-  "search_terms": "keywords for document lookup (e.g., 'temperature control cooler storage 41F')",
+  "summary": "one sentence of what you see",
+  "search_terms": "keywords for regulation lookup",
   "issues": [
     {
-      "issue": "specific observation (e.g., 'uncovered food containers in walk-in cooler')",
-      "why": "potential violation (e.g., 'could allow contamination, might violate covered storage rules')"
+      "issue": "specific thing you SEE in the photo (not assumptions)",
+      "why": "why this visible thing MIGHT be a violation",
+      "confidence": "high|medium|low"
     }
   ],
-  "facts": ["observable compliance-relevant details (no fluff)"]
+  "facts": ["observable details only - no assumptions"]
 }`,
                   },
                 ],
