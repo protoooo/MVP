@@ -35,7 +35,7 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// ✅ FIXED: Model selection with proper enforcement - NO free upgrades
+// ✅ FIXED: Model selection with STRICT enforcement (NO free upgrades)
 // ============================================================================
 
 async function getModelForUser(userId, supabase) {
@@ -51,10 +51,12 @@ async function getModelForUser(userId, supabase) {
 
     if (error || !subscription) {
       logger.warn('No subscription found for model selection', { userId })
-      throw new Error('No active subscription')
+      const e = new Error('No active subscription')
+      e.code = 'NO_ACTIVE_SUBSCRIPTION'
+      throw e
     }
 
-    // ✅ FIXED: Proper price ID to model mapping - NO defaulting to expensive model
+    // ✅ FIXED: Proper price ID to model mapping
     const modelMap = {
       // Starter tier - Haiku ($49/mo)
       [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: 'claude-3-5-haiku-20241022',
@@ -69,28 +71,32 @@ async function getModelForUser(userId, supabase) {
 
     const selectedModel = modelMap[subscription.price_id]
 
-    // ✅ CRITICAL FIX: Throw error if plan not recognized instead of defaulting
+    // ✅ CRITICAL: Block request if plan not recognized (do NOT default to Sonnet/Opus)
     if (!selectedModel) {
       logger.error('Unknown price ID - cannot select model', {
         priceId: subscription.price_id?.substring(0, 20) + '***',
         userId,
       })
-      throw new Error('Your subscription plan is not recognized. Please contact support.')
+      const e = new Error('Your subscription plan is not recognized. Please contact support.')
+      e.code = 'INVALID_PLAN'
+      throw e
     }
 
     logger.info('Model selected for user', {
       userId,
       plan: subscription.plan,
       priceId: subscription.price_id?.substring(0, 15) + '***',
-      model: selectedModel.includes('haiku') ? 'Haiku (Starter)' : 
-             selectedModel.includes('opus') ? 'Opus (Enterprise)' : 
-             'Sonnet (Professional)',
+      model: selectedModel.includes('haiku')
+        ? 'Haiku (Starter)'
+        : selectedModel.includes('opus')
+          ? 'Opus (Enterprise)'
+          : 'Sonnet (Professional)',
     })
 
     return selectedModel
   } catch (error) {
-    logger.error('Model selection failed', { error: error.message, userId })
-    throw error // Re-throw to block access
+    logger.error('Model selection failed', { error: error?.message, userId, code: error?.code })
+    throw error // re-throw to block access
   }
 }
 
@@ -681,24 +687,26 @@ export async function POST(request) {
 
       try {
         const rateLimitMap = global.chatRateLimits || (global.chatRateLimits = new Map())
-        
         const count = rateLimitMap.get(rateLimitKey) || 0
-        
+
         if (count >= MAX_REQUESTS_PER_MINUTE) {
-          logger.security('Chat rate limit exceeded', { 
+          logger.security('Chat rate limit exceeded', {
             userId,
             count,
-            limit: MAX_REQUESTS_PER_MINUTE
+            limit: MAX_REQUESTS_PER_MINUTE,
           })
-          
-          return NextResponse.json({
-            error: 'Too many requests. Please wait a moment and try again.',
-            code: 'RATE_LIMIT_EXCEEDED'
-          }, { status: 429 })
+
+          return NextResponse.json(
+            {
+              error: 'Too many requests. Please wait a moment and try again.',
+              code: 'RATE_LIMIT_EXCEEDED',
+            },
+            { status: 429 }
+          )
         }
-        
+
         rateLimitMap.set(rateLimitKey, count + 1)
-        
+
         if (rateLimitMap.size > 1000) {
           const currentMinute = Math.floor(Date.now() / 60000)
           for (const [key] of rateLimitMap.entries()) {
@@ -708,12 +716,11 @@ export async function POST(request) {
             }
           }
         }
-        
       } catch (rateLimitError) {
-        logger.warn('Rate limit check failed', { error: rateLimitError.message })
+        logger.warn('Rate limit check failed', { error: rateLimitError?.message })
       }
 
-      // ✅ ENHANCED: Check access with trial conversion grace period
+      // ✅ ENHANCED: Access check (trial + subscription) — FAIL CLOSED
       try {
         const accessCheck = await checkAccess(userId)
 
@@ -728,7 +735,6 @@ export async function POST(request) {
           )
         }
 
-        // ✅ NEW: Check for trial conversion grace period
         if (accessCheck.gracePeriod) {
           logger.info('User in trial conversion grace period', { userId })
         }
@@ -737,31 +743,25 @@ export async function POST(request) {
           userId,
           status: accessCheck?.subscription?.status,
           plan: accessCheck?.subscription?.plan,
-          gracePeriod: accessCheck?.gracePeriod || false
+          gracePeriod: accessCheck?.gracePeriod || false,
         })
       } catch (error) {
         if (error?.code === 'TRIAL_EXPIRED') {
-          return NextResponse.json({ 
-            error: error.message, 
-            code: 'TRIAL_EXPIRED' 
-          }, { status: 402 })
+          return NextResponse.json({ error: error.message, code: 'TRIAL_EXPIRED' }, { status: 402 })
         }
-
         if (error?.code === 'NO_SUBSCRIPTION') {
-          return NextResponse.json({ 
-            error: 'An active subscription is required.', 
-            code: 'NO_SUBSCRIPTION' 
-          }, { status: 402 })
+          return NextResponse.json({ error: 'An active subscription is required.', code: 'NO_SUBSCRIPTION' }, { status: 402 })
         }
-
         if (error?.code === 'SUBSCRIPTION_EXPIRED') {
-          return NextResponse.json({ 
-            error: error.message, 
-            code: 'SUBSCRIPTION_EXPIRED' 
-          }, { status: 402 })
+          return NextResponse.json({ error: error.message, code: 'SUBSCRIPTION_EXPIRED' }, { status: 402 })
         }
 
-        logger.error('Access check failed', { error: error?.message, userId })
+        // ✅ Fail closed (prevents paywall bypass if checkAccess throws unexpectedly)
+        logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
+        return NextResponse.json(
+          { error: 'Unable to verify subscription. Please sign in again or contact support.', code: 'ACCESS_CHECK_FAILED' },
+          { status: 402 }
+        )
       }
 
       const sessionInfo = getSessionInfo(request)
@@ -818,10 +818,20 @@ export async function POST(request) {
         locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
 
-      // ✅ CRITICAL: Get model based on subscription tier (throws if invalid)
+      // ✅ CRITICAL FIX: Model based on subscription tier with explicit INVALID_PLAN handling
       try {
         CLAUDE_MODEL = await getModelForUser(userId, supabase)
       } catch (e) {
+        if (e?.code === 'INVALID_PLAN') {
+          return NextResponse.json(
+            {
+              error: 'Your subscription plan is not recognized. Please contact support@protocollm.org',
+              code: 'INVALID_PLAN',
+            },
+            { status: 403 }
+          )
+        }
+
         return NextResponse.json(
           {
             error: 'An active subscription is required to use protocolLM.',
@@ -950,7 +960,6 @@ Return JSON only:
     const visionKeywords = vision.issues.map((i) => i.issue).join(' ').slice(0, 200)
 
     const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code'].filter(Boolean).join(' ').slice(0, 900)
-
     const queryIssues = vision.issues.slice(0, 2).map((i) => i.issue).join(' ').slice(0, 400)
 
     const queries = [
@@ -1074,9 +1083,12 @@ For questions without images:
 
 Max findings: ${maxFindings}`
 
-    const issueHints = vision.issues.length > 0 ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}` : ''
+    const issueHints =
+      vision.issues.length > 0 ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}` : ''
 
-    const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}${hasImage && issueHints ? `\n\n${issueHints}` : ''}`
+    const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}${
+      hasImage && issueHints ? `\n\n${issueHints}` : ''
+    }`
 
     // ========================================================================
     // GENERATE RESPONSE
@@ -1220,7 +1232,7 @@ Max findings: ${maxFindings}`
       fullAudit,
       includeFines,
       cacheHit: cacheStats?.cache_hit || false,
-      model: CLAUDE_MODEL.includes('haiku') ? 'Haiku' : CLAUDE_MODEL.includes('opus') ? 'Opus' : 'Sonnet'
+      model: CLAUDE_MODEL.includes('haiku') ? 'Haiku' : CLAUDE_MODEL.includes('opus') ? 'Opus' : 'Sonnet',
     })
 
     await safeLogUsage({
