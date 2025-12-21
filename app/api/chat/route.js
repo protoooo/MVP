@@ -1,4 +1,4 @@
-// app/api/chat/route.js - FIXED: Strict model enforcement + trial conversion grace period
+// app/api/chat/route.js - SINGLE PLAN VERSION (Sonnet 4.5 for all users)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 
 import { NextResponse } from 'next/server'
@@ -35,79 +35,10 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// MODEL CONSTANTS (strict tier mapping)
+// MODEL CONFIGURATION - SINGLE MODEL FOR ALL USERS
 // ============================================================================
-const STARTER_MODEL = process.env.ANTHROPIC_HAIKU_MODEL || 'claude-3-5-haiku-20241022'
-const PRO_MODEL = process.env.ANTHROPIC_SUMMIT_MODEL || process.env.ANTHROPIC_SONNET_MODEL || 'claude-3-7-sonnet-20250219'
-const ENTERPRISE_MODEL = process.env.ANTHROPIC_OPUS_MODEL || 'claude-opus-4-20250514'
-
-const MODEL_LABELS = {
-  [STARTER_MODEL]: 'Haiku (Starter)',
-  [PRO_MODEL]: 'Summit (Professional)',
-  [ENTERPRISE_MODEL]: 'Opus (Enterprise)',
-}
-
-// ============================================================================
-// ✅ FIXED: Model selection with STRICT enforcement (NO free upgrades)
-// ============================================================================
-
-async function getModelForUser(userId, supabase) {
-  try {
-    const { data: subscription, error } = await supabase
-      .from('subscriptions')
-      .select('plan, price_id, status')
-      .eq('user_id', userId)
-      .in('status', ['active', 'trialing'])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (error || !subscription) {
-      logger.warn('No subscription found for model selection', { userId })
-      const e = new Error('No active subscription')
-      e.code = 'NO_ACTIVE_SUBSCRIPTION'
-      throw e
-    }
-
-    // ✅ FIXED: Proper price ID to model mapping
-    const modelMap = {
-      // Starter tier - Haiku ($49/mo)
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: STARTER_MODEL,
-
-      // Professional tier - Summit ($99/mo)
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY]: PRO_MODEL,
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: PRO_MODEL, // Legacy
-
-      // Enterprise tier - Opus ($199/mo)
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: ENTERPRISE_MODEL,
-    }
-
-    const selectedModel = modelMap[subscription.price_id]
-
-    // ✅ CRITICAL: Block request if plan not recognized (do NOT default)
-    if (!selectedModel) {
-      logger.error('Unknown price ID - cannot select model', {
-        priceId: subscription.price_id?.substring(0, 20) + '***',
-        userId,
-      })
-      const e = new Error('Your subscription plan is not recognized. Please contact support.')
-      e.code = 'INVALID_PLAN'
-      throw e
-    }
-
-    logger.info('Model selected for user', {
-      userId,
-      plan: subscription.plan,
-      priceId: subscription.price_id?.substring(0, 15) + '***',
-      model: MODEL_LABELS[selectedModel] || 'Unknown',
-    })
-
-    return selectedModel
-  } catch (error) {
-    logger.error('Model selection failed', { error: error?.message, userId, code: error?.code })
-    throw error
-  }
-}
+const CLAUDE_MODEL = process.env.ANTHROPIC_SONNET_MODEL || 'claude-sonnet-4-20250514'
+const MODEL_LABEL = 'Sonnet 4.5'
 
 // Time budgets
 const VISION_TIMEOUT_MS = 20000
@@ -659,7 +590,6 @@ export async function POST(request) {
 
     let userId = null
     let userMemory = null
-    let CLAUDE_MODEL = PRO_MODEL
 
     try {
       const cookieStore = await cookies()
@@ -729,7 +659,7 @@ export async function POST(request) {
         logger.warn('Rate limit check failed', { error: rateLimitError?.message })
       }
 
-      // ✅ ENHANCED: Access check (trial + subscription) — FAIL CLOSED
+      // Access check (trial + subscription)
       try {
         const accessCheck = await checkAccess(userId)
 
@@ -765,7 +695,6 @@ export async function POST(request) {
           return NextResponse.json({ error: error.message, code: 'SUBSCRIPTION_EXPIRED' }, { status: 402 })
         }
 
-        // ✅ Fail closed (prevents paywall bypass if checkAccess throws unexpectedly)
         logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
         return NextResponse.json(
           { error: 'Unable to verify subscription. Please sign in again or contact support.', code: 'ACCESS_CHECK_FAILED' },
@@ -826,30 +755,6 @@ export async function POST(request) {
         uniqueLocationsUsed: locationCheck.uniqueLocationsUsed,
         locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
-
-      // ✅ CRITICAL: Get model based on subscription tier (throws if invalid)
-      try {
-        CLAUDE_MODEL = await getModelForUser(userId, supabase)
-      } catch (e) {
-        // ✅ FIX: Handle invalid plan separately from missing subscription
-        if ((e?.code === 'INVALID_PLAN') || (e?.message && e.message.includes('not recognized'))) {
-          return NextResponse.json(
-            {
-              error: 'Your subscription plan is not recognized. Please contact support@protocollm.org',
-              code: 'INVALID_PLAN',
-            },
-            { status: 403 }
-          )
-        }
-
-        return NextResponse.json(
-          {
-            error: 'An active subscription is required to use protocolLM.',
-            code: 'NO_ACTIVE_SUBSCRIPTION',
-          },
-          { status: 402 }
-        )
-      }
 
       try {
         userMemory = await getUserMemory(userId)
@@ -1233,14 +1138,6 @@ Max findings: ${maxFindings}`
     // LOG + RETURN
     // ========================================================================
 
-    const modelLabel =
-      MODEL_LABELS[CLAUDE_MODEL] ||
-      (CLAUDE_MODEL.toLowerCase().includes('haiku')
-        ? 'Haiku (Starter)'
-        : CLAUDE_MODEL.toLowerCase().includes('opus')
-          ? 'Opus (Enterprise)'
-          : 'Summit (Professional)')
-
     logger.info('Response complete', {
       hasImage,
       status,
@@ -1250,7 +1147,7 @@ Max findings: ${maxFindings}`
       fullAudit,
       includeFines,
       cacheHit: cacheStats?.cache_hit || false,
-      model: modelLabel,
+      model: MODEL_LABEL,
     })
 
     await safeLogUsage({
@@ -1265,7 +1162,7 @@ Max findings: ${maxFindings}`
         message,
         _meta: {
           model: CLAUDE_MODEL,
-          modelLabel,
+          modelLabel: MODEL_LABEL,
           hasImage,
           status,
           fullAudit,
