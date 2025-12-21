@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - FIXED: Always require email verification
+// app/api/auth/signup/route.js - FIXED: Proper redirect after signup
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -65,12 +65,12 @@ export async function POST(request) {
       }
     )
 
-    // ✅ FIX: Force email confirmation by setting autoConfirm to false
+    // Set redirect to callback (will then redirect to pricing)
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback?next=pricing`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
         data: {
           source: 'signup',
           signup_ip: ip,
@@ -95,7 +95,7 @@ export async function POST(request) {
       emailConfirmed: !!data.user.email_confirmed_at
     })
 
-    // ✅ FIX: Always require verification
+    // Always require verification
     return NextResponse.json({
       success: true,
       needsVerification: true,
