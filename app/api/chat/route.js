@@ -35,7 +35,12 @@ async function getSearchDocuments() {
   return searchDocuments
 }
 
-// Model selection based on subscription tier
+// ============================================================================
+// ✅ UPDATED: Model selection based on subscription tier - proper enforcement
+// - Throws if no active subscription so access is blocked
+// - Correct price_id -> model mapping
+// ============================================================================
+
 async function getModelForUser(userId, supabase) {
   try {
     const { data: subscription, error } = await supabase
@@ -52,33 +57,40 @@ async function getModelForUser(userId, supabase) {
       throw new Error('No active subscription')
     }
 
-    // Map price IDs to Claude models
+    // ✅ FIXED: Proper price ID to model mapping
     const modelMap = {
-      // Starter tier - Haiku ($99/mo, 98% margin at heavy usage)
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: 'claude-haiku-4-20250514',
-      
-      // Professional tier - Sonnet ($149/mo, 85% margin at heavy usage)
+      // Starter tier - Haiku ($49/mo)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: 'claude-3-5-haiku-20241022',
+
+      // Professional tier - Sonnet ($99/mo)
       [process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY]: 'claude-sonnet-4-20250514',
       [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'claude-sonnet-4-20250514', // Legacy
-      
-      // Enterprise tier - Opus ($249/mo, designed for multi-location)
+
+      // Enterprise tier - Opus ($199/mo)
       [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'claude-opus-4-20250514',
     }
 
-    const selectedModel = modelMap[subscription.price_id] || 'claude-sonnet-4-20250514'
-    
-    logger.info('Model selected for user', { 
-      userId, 
+    const selectedModel = modelMap[subscription.price_id]
+
+    if (!selectedModel) {
+      logger.error('Unknown price ID - defaulting to Sonnet', {
+        priceId: subscription.price_id,
+        userId,
+      })
+      return 'claude-sonnet-4-20250514' // Safe default
+    }
+
+    logger.info('Model selected for user', {
+      userId,
       plan: subscription.plan,
       priceId: subscription.price_id?.substring(0, 15) + '***',
-      model: selectedModel.split('-')[1]
+      model: selectedModel.includes('haiku') ? 'Haiku' : selectedModel.includes('opus') ? 'Opus' : 'Sonnet',
     })
 
     return selectedModel
-
   } catch (error) {
     logger.error('Model selection failed', { error: error.message, userId })
-    return 'claude-sonnet-4-20250514'
+    throw error // Re-throw to block access without subscription
   }
 }
 
@@ -88,8 +100,8 @@ const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
 
 // Retrieval config - UPDATED per Claude's recommendations
-const TOPK_PER_QUERY = 25  // up from 18
-const MAX_DOCS_FOR_CONTEXT = 40  // up from 28
+const TOPK_PER_QUERY = 25 // up from 18
+const MAX_DOCS_FOR_CONTEXT = 40 // up from 28
 const PER_SOURCE_CAP = 4
 
 const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
@@ -129,10 +141,7 @@ function sanitizeOutput(text) {
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms)),
-  ])
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
 }
 
 function clampShort(s, max = 140) {
@@ -147,23 +156,51 @@ function clampShort(s, max = 140) {
 
 function extractSearchKeywords(text) {
   const keywords = []
-  
+
   // Common compliance topics
   const topics = [
-    'temperature', 'cooling', 'reheating', 'storage', 'cross contamination',
-    'hand washing', 'gloves', 'sanitizer', 'date marking', 'labels',
-    'pest', 'cleaning', 'surfaces', 'equipment', 'utensils',
-    'thermometer', 'food safety', 'violation', 'inspection', 'permit',
-    'refrigeration', 'hot holding', 'cold holding', 'thawing', 'cooking',
-    'raw meat', 'ready to eat', 'contamination', 'employee health',
-    'chemicals', 'toxic', 'allergen', 'sink', 'drainage', 'ventilation'
+    'temperature',
+    'cooling',
+    'reheating',
+    'storage',
+    'cross contamination',
+    'hand washing',
+    'gloves',
+    'sanitizer',
+    'date marking',
+    'labels',
+    'pest',
+    'cleaning',
+    'surfaces',
+    'equipment',
+    'utensils',
+    'thermometer',
+    'food safety',
+    'violation',
+    'inspection',
+    'permit',
+    'refrigeration',
+    'hot holding',
+    'cold holding',
+    'thawing',
+    'cooking',
+    'raw meat',
+    'ready to eat',
+    'contamination',
+    'employee health',
+    'chemicals',
+    'toxic',
+    'allergen',
+    'sink',
+    'drainage',
+    'ventilation',
   ]
-  
-  const lower = text.toLowerCase()
-  topics.forEach(topic => {
+
+  const lower = (text || '').toLowerCase()
+  topics.forEach((topic) => {
     if (lower.includes(topic)) keywords.push(topic)
   })
-  
+
   return keywords
 }
 
@@ -228,14 +265,7 @@ function wantsFullAudit(text) {
 function wantsFineInfo(text) {
   const t = safeLine(text).toLowerCase()
   if (!t) return false
-  return (
-    t.includes('fine') ||
-    t.includes('fines') ||
-    t.includes('penalt') ||
-    t.includes('cost') ||
-    t.includes('fee') ||
-    t.includes('what happens if')
-  )
+  return t.includes('fine') || t.includes('fines') || t.includes('penalt') || t.includes('cost') || t.includes('fee') || t.includes('what happens if')
 }
 
 // ============================================================================
@@ -620,22 +650,18 @@ export async function POST(request) {
 
     try {
       const cookieStore = await cookies()
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll()
-            },
-            setAll(cookiesToSet) {
-              try {
-                cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-              } catch {}
-            },
+      const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
           },
-        }
-      )
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+            } catch {}
+          },
+        },
+      })
 
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
@@ -645,10 +671,7 @@ export async function POST(request) {
       }
 
       if (!data.user.email_confirmed_at) {
-        return NextResponse.json(
-          { error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' }, { status: 403 })
       }
 
       const sessionInfo = getSessionInfo(request)
@@ -693,10 +716,7 @@ export async function POST(request) {
           )
         }
 
-        return NextResponse.json(
-          { error: locationCheck.error || 'Location validation failed', code: 'LOCATION_VALIDATION_FAILED' },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: locationCheck.error || 'Location validation failed', code: 'LOCATION_VALIDATION_FAILED' }, { status: 403 })
       }
 
       logger.info('License validated', {
@@ -705,8 +725,18 @@ export async function POST(request) {
         locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
 
-      // Select Claude model based on subscription tier
-      CLAUDE_MODEL = await getModelForUser(userId, supabase)
+      // ✅ Enforced: must have active subscription
+      try {
+        CLAUDE_MODEL = await getModelForUser(userId, supabase)
+      } catch (e) {
+        return NextResponse.json(
+          {
+            error: 'An active subscription is required to use protocolLM.',
+            code: 'NO_ACTIVE_SUBSCRIPTION',
+          },
+          { status: 402 }
+        )
+      }
 
       try {
         userMemory = await getUserMemory(userId)
@@ -715,10 +745,7 @@ export async function POST(request) {
       }
     } catch (e) {
       logger.error('Auth/license check failed', { error: e?.message })
-      return NextResponse.json(
-        { error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' }, { status: 401 })
     }
 
     const anthropic = await getAnthropicClient()
@@ -802,7 +829,7 @@ Return JSON only:
             vision.issues = parsedVision.issues
               .map((i) => ({ issue: safeLine(i?.issue || ''), why: safeLine(i?.why || '') }))
               .filter((i) => i.issue)
-              .slice(0, 8)  // Increased from 6 to catch more issues
+              .slice(0, 8) // Increased from 6 to catch more issues
           }
 
           if (Array.isArray(parsedVision.facts)) {
@@ -811,64 +838,46 @@ Return JSON only:
         }
       } catch (e) {
         logger.warn('Vision scan failed', { error: e?.message })
-        // Return user-friendly error for vision timeout
         if (e?.message === 'VISION_TIMEOUT') {
-          return NextResponse.json(
-            { error: getUserFriendlyErrorMessage('VISION_TIMEOUT') },
-            { status: 408 }
-          )
+          return NextResponse.json({ error: getUserFriendlyErrorMessage('VISION_TIMEOUT') }, { status: 408 })
         }
       }
     }
 
     // ========================================================================
     // DOCUMENT RETRIEVAL — UPDATED per Claude's recommendations
-    // Multi-angle retrieval for better coverage of 24 PDFs
     // ========================================================================
 
-    const visionContext = [
-      vision.searchTerms,
-      ...vision.facts.slice(0, 6),
-      ...vision.issues.map((i) => i.issue),
-    ]
+    const visionContext = [vision.searchTerms, ...vision.facts.slice(0, 6), ...vision.issues.map((i) => i.issue)]
       .filter(Boolean)
       .join(' ')
       .slice(0, 700)
 
-    // Extract keywords from user input for focused searches
     const userKeywords = extractSearchKeywords(effectivePrompt)
     const visionKeywords = vision.issues.map((i) => i.issue).join(' ').slice(0, 200)
 
-    // Build multiple search queries for better coverage
-    const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code']
-      .filter(Boolean)
-      .join(' ')
-      .slice(0, 900)
+    const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code'].filter(Boolean).join(' ').slice(0, 900)
 
     const queryIssues = vision.issues.slice(0, 2).map((i) => i.issue).join(' ').slice(0, 400)
 
-    // UPDATED: Multi-angle retrieval queries
     const queries = [
-      queryMain,  // User's question + vision scan summary
-      queryIssues,  // Specific issues detected in photo
-      // Add targeted searches for better coverage
+      queryMain,
+      queryIssues,
       `${effectivePrompt.slice(0, 300)} Washtenaw County Michigan regulations`,
       `${visionContext.slice(0, 300)} food safety violations`,
       userKeywords.slice(0, 5).join(' ') + ' Washtenaw County food code',
-      visionKeywords,  // Top issues as search terms
-      'Priority violations Michigan food code',  // Broad safety net
+      visionKeywords,
+      'Priority violations Michigan food code',
     ]
       .filter(Boolean)
-      .filter((q) => q.length > 10)  // Remove empty/short queries
-      .slice(0, 5)  // Max 5 queries
+      .filter((q) => q.length > 10)
+      .slice(0, 5)
 
     let allDocs = []
     try {
       const results = await Promise.all(
         queries.map((q) =>
-          withTimeout(searchDocumentsFn(q, county, TOPK_PER_QUERY), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT').catch(
-            () => []
-          )
+          withTimeout(searchDocumentsFn(q, county, TOPK_PER_QUERY), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT').catch(() => [])
         )
       )
 
@@ -878,10 +887,7 @@ Return JSON only:
     } catch (e) {
       logger.warn('Retrieval failed', { error: e?.message })
       if (e?.message === 'RETRIEVAL_TIMEOUT') {
-        return NextResponse.json(
-          { error: getUserFriendlyErrorMessage('RETRIEVAL_TIMEOUT') },
-          { status: 408 }
-        )
+        return NextResponse.json({ error: getUserFriendlyErrorMessage('RETRIEVAL_TIMEOUT') }, { status: 408 })
       }
     }
 
@@ -891,15 +897,13 @@ Return JSON only:
     const excerptBlock = `Reference documents (cite by ID):
 ${ctx.contextText || 'No documents retrieved.'}`
 
-    // Memory context
     let memoryContext = ''
     try {
       memoryContext = buildMemoryContext(userMemory) || ''
     } catch {}
 
     // ========================================================================
-    // SYSTEM PROMPT — UPDATED per Claude's recommendations
-    // Added Washtenaw-specific context
+    // SYSTEM PROMPT
     // ========================================================================
 
     const systemPrompt = `You are protocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
@@ -977,16 +981,9 @@ For questions without images:
 
 Max findings: ${maxFindings}`
 
-    // ========================================================================
-    // QUESTION CONTEXT
-    // ========================================================================
+    const issueHints = vision.issues.length > 0 ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}` : ''
 
-    const issueHints =
-      vision.issues.length > 0 ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}` : ''
-
-    const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}${
-      hasImage && issueHints ? `\n\n${issueHints}` : ''
-    }`
+    const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}${hasImage && issueHints ? `\n\n${issueHints}` : ''}`
 
     // ========================================================================
     // GENERATE RESPONSE
@@ -1040,7 +1037,6 @@ Max findings: ${maxFindings}`
       if (cacheStats) logger.info('Cache stats', cacheStats)
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
-      // Return user-friendly error message
       return NextResponse.json(
         { error: getUserFriendlyErrorMessage(e?.message) },
         { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
@@ -1085,12 +1081,7 @@ Max findings: ${maxFindings}`
       status = validFindings.length > 0 ? 'findings' : 'clear'
 
       message = renderAuditOutput(
-        {
-          status,
-          findings: validFindings,
-          questions: questionsRaw,
-          enforcement: enforcementRaw,
-        },
+        { status, findings: validFindings, questions: questionsRaw, enforcement: enforcementRaw },
         { maxItems: maxFindings, includeFines, fullAudit }
       )
     } else if (parsed && parsed.mode === 'guidance') {
