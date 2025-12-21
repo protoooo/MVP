@@ -13,14 +13,14 @@ import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
+import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-const STARTER_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY
-const PRO_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
-const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
+// ✅ SINGLE PLAN - Unlimited monthly only
+const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -554,138 +554,6 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   )
 }
 
-function PricingModal({ isOpen, onClose, onCheckout, loading }) {
-  if (!isOpen) return null
-
-  // ✅ SINGLE PLAN (one-plan model)
-  // Uses PRO_MONTHLY if present, otherwise falls back to whatever is configured.
-  const priceId = PRO_MONTHLY || STARTER_MONTHLY || ENTERPRISE_MONTHLY
-
-  const plan = {
-    name: 'Unlimited',
-    price: 99,
-    priceId,
-    features: [
-      'Unlimited usage (questions + photos)',
-      'Sonnet 4.5 — best overall answers',
-      'Clear “what to fix” steps for inspections',
-    ],
-    loadingKey: 'unlimited',
-  }
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-container"
-        style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={`modal-card pricing-modal ${ibmMono.className}`} style={{ padding: '32px' }}>
-          <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
-            <Icons.X />
-          </button>
-
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>
-              One plan. Unlimited usage.
-            </h2>
-            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>7-day free trial • Cancel anytime</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                border: '2px solid var(--accent)',
-                borderRadius: 'var(--radius-md)',
-                padding: '24px',
-                position: 'relative',
-                color: 'white',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-10px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: 'var(--accent)',
-                  color: 'white',
-                  padding: '4px 12px',
-                  borderRadius: '12px',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Unlimited
-              </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>protocolLM</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '36px', fontWeight: '700' }}>${plan.price}</span>
-                  <span style={{ fontSize: '14px', opacity: 0.7 }}>/month</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onCheckout(plan.priceId, plan.loadingKey)}
-                disabled={!!loading}
-                style={{
-                  width: '100%',
-                  height: '44px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  background: 'white',
-                  color: 'var(--bg-1)',
-                  border: 'none',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.5 : 1,
-                  marginBottom: '16px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {loading === plan.loadingKey && <span className="spinner" />}
-                <span>Start 7-Day Trial</span>
-              </button>
-
-              <div
-                style={{
-                  borderTop: '1px solid rgba(255,255,255,0.12)',
-                  paddingTop: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                }}
-              >
-                {plan.features.map((feature, idx) => (
-                  <div key={idx} className="pricing-feature">
-                    <span className="pricing-feature-check" aria-hidden="true">
-                      ✓
-                    </span>
-                    <span className="pricing-feature-text">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '18px', textAlign: 'center' }}>
-            Includes: Washtenaw County database • Photo scans + Q&A • Unlimited usage • 7-day free trial • Cancel anytime
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
@@ -831,8 +699,8 @@ export default function Page() {
           return
         }
 
-        // ✅ SECURITY: Verify priceId is one of the allowed values
-        const validPrices = [STARTER_MONTHLY, PRO_MONTHLY, ENTERPRISE_MONTHLY].filter(Boolean)
+        // ✅ SECURITY: Verify priceId is one of the allowed values (single plan)
+        const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
           console.error('Invalid price ID:', priceId)
           alert('Invalid plan selected. Please try again.')
