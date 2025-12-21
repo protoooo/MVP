@@ -285,7 +285,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
+/**
+ * ✅ UPDATED: AuthModal now accepts selectedPriceId and passes it through on signup
+ */
+function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -326,6 +329,10 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
         endpoint = '/api/auth/reset-password'
       } else {
         body.password = password
+        // ✅ PASS selected plan to signup
+        if (mode === 'signup' && selectedPriceId) {
+          body.selectedPriceId = selectedPriceId
+        }
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
@@ -646,6 +653,9 @@ export default function Page() {
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
+  // ✅ NEW: track selected plan for auth-first checkout flow
+  const [selectedPriceId, setSelectedPriceId] = useState(null)
+
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -718,6 +728,15 @@ export default function Page() {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
+
+  // ✅ NEW: Auto-checkout if URL param is present (after auth completes)
+  useEffect(() => {
+    const checkoutPlan = searchParams?.get('checkout')
+    if (checkoutPlan && isAuthenticated && hasActiveSubscription === false) {
+      console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
+      handleCheckout(checkoutPlan, 'auto')
+    }
+  }, [searchParams, isAuthenticated, hasActiveSubscription])
 
   // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
@@ -877,15 +896,23 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
+  /**
+   * ✅ UPDATED: handleCheckout stores selected plan when user is not signed in
+   */
   const handleCheckout = async (priceId, planName) => {
     try {
       const { data } = await supabase.auth.getSession()
+
       if (!data.session) {
+        // ✅ STORE selected plan before showing auth
+        console.log('💾 Storing selected plan:', priceId?.substring(0, 15) + '***')
+        setSelectedPriceId(priceId)
         setShowPricingModal(false)
         setAuthInitialMode('signup')
         setShowAuthModal(true)
         return
       }
+
       if (!priceId) {
         alert('Invalid price selected.')
         return
@@ -2271,7 +2298,14 @@ export default function Page() {
         }
       `}</style>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
+      {/* ✅ UPDATED: pass selectedPriceId into AuthModal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialMode={authInitialMode}
+        selectedPriceId={selectedPriceId}
+      />
+
       <PricingModal
         isOpen={showPricingModal}
         onClose={() => setShowPricingModal(false)}
