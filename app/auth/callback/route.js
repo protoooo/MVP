@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - COMPLETE FILE with proper redirect flow
+// app/auth/callback/route.js - FIXED: Proper redirect flow with card-required trials
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -9,7 +9,6 @@ export async function GET(request) {
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
   const type = requestUrl.searchParams.get('type')
-  const next = requestUrl.searchParams.get('next') // Get redirect destination
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
 
@@ -17,7 +16,6 @@ export async function GET(request) {
     hasCode: !!code,
     hasError: !!error,
     type,
-    next,
     baseUrl,
   })
 
@@ -81,14 +79,44 @@ export async function GET(request) {
       return NextResponse.redirect(`${baseUrl}/reset-password`)
     }
 
-    // Email verification complete - redirect to pricing to start trial
-    if (next === 'pricing') {
-      console.log('✅ Email verified, redirecting to pricing to start trial')
+    // Check if email is verified
+    if (!data.user.email_confirmed_at) {
+      console.log('⚠️ Email not yet confirmed')
+      return NextResponse.redirect(`${baseUrl}/verify-email`)
+    }
+
+    console.log('✅ Email verified, checking subscription status...')
+
+    // Check if user has active subscription
+    const supabaseAdmin = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value
+          },
+          set() {},
+          remove() {}
+        },
+      }
+    )
+
+    const { data: subscription } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id, status')
+      .eq('user_id', data.user.id)
+      .in('status', ['active', 'trialing'])
+      .maybeSingle()
+
+    if (!subscription) {
+      // No subscription yet - redirect to pricing
+      console.log('📧 Email verified, no subscription - showing pricing')
       return NextResponse.redirect(`${baseUrl}/?showPricing=true&emailVerified=true`)
     }
 
-    // Regular login - redirect to home (let page.js handle subscription checks)
-    console.log('✅ Regular auth flow, redirecting to home')
+    // Already has subscription - go to chat
+    console.log('✅ User has subscription, redirecting to chat')
     return NextResponse.redirect(baseUrl)
 
   } catch (error) {
