@@ -8,7 +8,7 @@ import { cookies } from 'next/headers'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
-import { logUsageForAnalytics } from '@/lib/usage'
+import { logUsageForAnalytics, checkAccess } from '@/lib/usage' // ✅ UPDATED: add checkAccess import
 import { validateSingleLocation } from '@/lib/licenseValidation'
 import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
 
@@ -671,7 +671,48 @@ export async function POST(request) {
       }
 
       if (!data.user.email_confirmed_at) {
-        return NextResponse.json({ error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' }, { status: 403 })
+        return NextResponse.json(
+          { error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' },
+          { status: 403 }
+        )
+      }
+
+      // ========================================================================
+      // ✅ CRITICAL: Server-side trial expiration check (prevent paywall bypass)
+      // - Runs AFTER auth and BEFORE model selection
+      // - Returns 402 if trial expired / no subscription
+      // - Fails open for unknown system errors (per your snippet)
+      // ========================================================================
+      try {
+        const accessCheck = await checkAccess(userId)
+
+        if (!accessCheck?.valid) {
+          logger.warn('Access denied - trial expired or no subscription', { userId })
+          return NextResponse.json(
+            {
+              error: 'Your trial has ended. Please subscribe to continue using protocolLM.',
+              code: 'TRIAL_EXPIRED',
+            },
+            { status: 402 } // Payment Required
+          )
+        }
+
+        logger.info('Access granted', {
+          userId,
+          status: accessCheck?.subscription?.status,
+          plan: accessCheck?.subscription?.plan,
+        })
+      } catch (error) {
+        if (error?.code === 'TRIAL_EXPIRED') {
+          return NextResponse.json({ error: error.message, code: 'TRIAL_EXPIRED' }, { status: 402 })
+        }
+
+        if (error?.code === 'NO_SUBSCRIPTION') {
+          return NextResponse.json({ error: 'An active subscription is required.', code: 'NO_SUBSCRIPTION' }, { status: 402 })
+        }
+
+        // Unknown error - log and continue (fail open for system errors)
+        logger.error('Access check failed', { error: error?.message, userId })
       }
 
       const sessionInfo = getSessionInfo(request)
@@ -716,7 +757,10 @@ export async function POST(request) {
           )
         }
 
-        return NextResponse.json({ error: locationCheck.error || 'Location validation failed', code: 'LOCATION_VALIDATION_FAILED' }, { status: 403 })
+        return NextResponse.json(
+          { error: locationCheck.error || 'Location validation failed', code: 'LOCATION_VALIDATION_FAILED' },
+          { status: 403 }
+        )
       }
 
       logger.info('License validated', {
