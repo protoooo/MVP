@@ -37,7 +37,7 @@ const Icons = {
   ),
   X: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y1="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
@@ -61,39 +61,6 @@ const Icons = {
     </svg>
   ),
 }
-
-/**
- * Landing page demo script (alternating assistant/user so the flow is:
- * assistant finishes -> user message types into box -> user presses Send/Enter -> assistant responds
- */
-const LANDING_DEMO_SCRIPT = [
-  { type: 'assistant', text: 'Hey — welcome to protocolLM.' },
-  { type: 'user', text: 'What does this do?' },
-  {
-    type: 'assistant',
-    text: 'Snap a kitchen photo and I’ll flag likely health-code violations — fast, plain language, plus what to fix.',
-  },
-  { type: 'user', text: 'Nice. What else?' },
-  {
-    type: 'assistant',
-    text: 'Ask questions too — cooling, reheating, date marking, sanitizer, hand sinks, allergens… all based on Washtenaw County rules.',
-  },
-  { type: 'user', text: 'What kinds of violations are most common?' },
-  {
-    type: 'assistant',
-    text: 'Temps, cross-contamination risks, dirty food-contact surfaces, sanitizer setup, missing date marks, and blocked/dirty hand sinks.',
-  },
-  { type: 'user', text: 'And what can violations cost me?' },
-  {
-    type: 'assistant',
-    text: 'It varies, but it can mean re-inspections, enforcement actions, product loss, and a rough inspection report. Goal is simple: catch it early, fix it fast.',
-  },
-  { type: 'user', text: 'Got it. How do I try it?' },
-  {
-    type: 'assistant',
-    text: 'Start a free 7-day trial — tap Start trial (top right) or use the button below on mobile.',
-  },
-]
 
 function BrandLink({ variant = 'landing' }) {
   return (
@@ -126,243 +93,227 @@ function FooterLinks() {
   )
 }
 
-function LandingDemoTerminal() {
-  const [step, setStep] = useState(0)
-  const [log, setLog] = useState([{ role: 'assistant', content: LANDING_DEMO_SCRIPT[0]?.text || '' }])
+/* ------------------------------------------
+   Landing demo (scripted, user presses Send)
+------------------------------------------- */
 
-  const [assistantDraft, setAssistantDraft] = useState('')
-  const [assistantTyping, setAssistantTyping] = useState(false)
+const LANDING_DEMO_STEPS = [
+  {
+    user: 'What does this do?',
+    assistant:
+      "Snap a kitchen photo and I’ll flag likely health-code violations — fast, plain language, plus what to fix.",
+  },
+  {
+    user: 'Nice. What else?',
+    assistant:
+      "Ask questions too — date marking, cooling, handwashing, sanitizer, temps, inspections. I answer from the Washtenaw County rules (not vibes).",
+  },
+  {
+    user: 'What kinds of violations do you catch?',
+    assistant:
+      "Common hits: cold food above 41°F, dirty or blocked hand sink, sanitizer too weak, unlabeled spray bottles, missing date marks, raw-over-ready, pest evidence, and cross-contamination risks.",
+  },
+  {
+    user: 'What can violations cost?',
+    assistant:
+      "Rough reality:\n• Small fixes (labels, minor cleaning, quick retrain): usually $0–$200\n• Moderate issues (discard food, deep clean, rework workflow): often $200–$2,000\n• Critical hits (unsafe temps, contaminated prep, repeat violations): $2,000–$10,000+ once you factor waste, labor, downtime, and emergency fixes.\n\nThe goal is catching them early — before they snowball.",
+  },
+  {
+    user: 'Got it. How do I try it?',
+    assistant: 'Whenever you’re ready, hit Start trial.',
+    isFinal: true,
+  },
+]
 
-  const [inputDraft, setInputDraft] = useState('')
-  const [typingInput, setTypingInput] = useState(false)
-  const [awaitingSend, setAwaitingSend] = useState(false)
+function LandingDemo({ onDemoDone }) {
+  const [msgs, setMsgs] = useState([{ role: 'assistant', content: 'Hey — welcome to protocolLM.' }])
+  const [stepIdx, setStepIdx] = useState(0)
+  const [draft, setDraft] = useState('')
+  const [phase, setPhase] = useState('typingDraft') // typingDraft | waitingSend | typingAssistant | done
+  const [isTyping, setIsTyping] = useState(false)
 
-  const logRef = useRef(null)
-  const inputRef = useRef(null)
-  const awaitingSendRef = useRef(false)
+  const timersRef = useRef([])
+  const scrollRef = useRef(null)
+  const reduceMotionRef = useRef(false)
 
-  const scrollToBottom = useCallback(() => {
-    const el = logRef.current
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach((t) => clearTimeout(t))
+    timersRef.current = []
+  }, [])
+
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    const el = scrollRef.current
     if (!el) return
-    el.scrollTop = el.scrollHeight
+    el.scrollTo({ top: el.scrollHeight, behavior })
   }, [])
 
-  useEffect(() => {
-    awaitingSendRef.current = awaitingSend
-  }, [awaitingSend])
+  const typeInto = useCallback(
+    async ({ text, setValue, speed = 22, jitter = 14, onDone }) => {
+      clearTimers()
+      setIsTyping(true)
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [log, assistantDraft, scrollToBottom])
-
-  const typeText = useCallback(async (text, setter, opts = {}) => {
-    const min = opts.min ?? 18
-    const max = opts.max ?? 38
-    const puncExtra = opts.puncExtra ?? [55, 130]
-    const longPuncExtra = opts.longPuncExtra ?? [90, 170]
-    const spaceExtraChance = opts.spaceExtraChance ?? 0.06
-    const spaceExtra = opts.spaceExtra ?? [20, 60]
-
-    const rand = (a, b) => Math.floor(a + Math.random() * (b - a + 1))
-    const isPunc = (ch) => ['.', ',', '!', '?', ':', ';'].includes(ch)
-    const isLong = (ch) => ['.', '!', '?'].includes(ch)
-
-    setter('')
-    let out = ''
-
-    for (let i = 0; i < text.length; i++) {
-      out += text[i]
-      setter(out)
-
-      let delay = rand(min, max)
-      const ch = text[i]
-
-      if (ch === '—') delay += rand(60, 120)
-      if (isPunc(ch)) delay += rand(puncExtra[0], puncExtra[1])
-      if (isLong(ch)) delay += rand(longPuncExtra[0], longPuncExtra[1])
-      if (ch === ' ' && Math.random() < spaceExtraChance) delay += rand(spaceExtra[0], spaceExtra[1])
-
-      await new Promise((r) => setTimeout(r, delay))
-    }
-  }, [])
-
-  // Drive the script (no auto-send — ONLY advances when user presses Send/Enter)
-  useEffect(() => {
-    let cancelled = false
-
-    const run = async () => {
-      // step 0 is already preloaded into log
-      if (step === 0) {
-        // after the first assistant line, tee up the first user input
-        await new Promise((r) => setTimeout(r, 700))
-        if (!cancelled) setStep(1)
+      // Reduced motion: instant
+      if (reduceMotionRef.current) {
+        setValue(text)
+        setIsTyping(false)
+        onDone?.()
         return
       }
 
-      const item = LANDING_DEMO_SCRIPT[step]
-      if (!item) return
+      let i = 0
+      const tick = () => {
+        i += 1
+        setValue(text.slice(0, i))
+        // Keep it from “cutting off” visually as it grows
+        requestAnimationFrame(() => scrollToBottom('auto'))
 
-      if (item.type === 'assistant') {
-        setAssistantTyping(true)
-        setAssistantDraft('')
+        if (i >= text.length) {
+          setIsTyping(false)
+          onDone?.()
+          return
+        }
 
-        await typeText(item.text, (v) => {
-          if (cancelled) return
-          setAssistantDraft(v)
-        })
-
-        if (cancelled) return
-
-        setLog((prev) => [...prev, { role: 'assistant', content: item.text }])
-        setAssistantDraft('')
-        setAssistantTyping(false)
-
-        const nextType = LANDING_DEMO_SCRIPT[step + 1]?.type
-        const advanceDelay = nextType === 'user' ? 1450 : 650
-
-        await new Promise((r) => setTimeout(r, advanceDelay))
-        if (cancelled) return
-        setStep((s) => s + 1)
-        return
+        const base = speed
+        const wait = base + Math.floor(Math.random() * jitter)
+        const t = setTimeout(tick, wait)
+        timersRef.current.push(t)
       }
 
-      if (item.type === 'user') {
-        setTypingInput(true)
-        setAwaitingSend(false)
-        setInputDraft('')
+      const t0 = setTimeout(tick, 220)
+      timersRef.current.push(t0)
+    },
+    [clearTimers, scrollToBottom]
+  )
 
-        await new Promise((r) => setTimeout(r, 520))
+  const startDraftForStep = useCallback(
+    (idx) => {
+      const step = LANDING_DEMO_STEPS[idx]
+      if (!step) return
+      setPhase('typingDraft')
+      setDraft('')
+      typeInto({
+        text: step.user,
+        setValue: setDraft,
+        speed: 18,
+        jitter: 18,
+        onDone: () => setPhase('waitingSend'),
+      })
+    },
+    [typeInto]
+  )
 
-        await typeText(
-          item.text,
-          (v) => {
-            if (cancelled) return
-            setInputDraft(v)
-          },
-          { min: 22, max: 44 }
-        )
+  const typeAssistantReply = useCallback(
+    (replyText, after) => {
+      setPhase('typingAssistant')
+      setMsgs((prev) => [...prev, { role: 'assistant', content: '' }])
 
-        if (cancelled) return
+      // Type into the last assistant bubble
+      typeInto({
+        text: replyText,
+        setValue: (val) => {
+          setMsgs((prev) => {
+            const next = [...prev]
+            // last item is the assistant placeholder we just appended
+            next[next.length - 1] = { ...next[next.length - 1], content: val }
+            return next
+          })
+        },
+        speed: 16,
+        jitter: 18,
+        onDone: after,
+      })
+    },
+    [typeInto]
+  )
 
-        setTypingInput(false)
-        setAwaitingSend(true)
-
-        // Focus the input so Enter works immediately (still read-only)
-        requestAnimationFrame(() => {
-          try {
-            inputRef.current?.focus()
-          } catch {}
-        })
-
-        return
-      }
-    }
-
-    run()
-
-    return () => {
-      cancelled = true
-    }
-  }, [step, typeText])
-
-  const sendUserStep = useCallback(() => {
-    const item = LANDING_DEMO_SCRIPT[step]
-    if (!item || item.type !== 'user') return
-    if (!awaitingSendRef.current) return
-
-    const msg = inputDraft
-    if (!msg) return
-
-    setAwaitingSend(false)
-    setTypingInput(false)
-    setInputDraft('')
-
-    setLog((prev) => [...prev, { role: 'user', content: msg }])
-
-    // Advance to next step (assistant response)
-    setStep((s) => s + 1)
-  }, [step, inputDraft])
-
-  // Allow Enter to send even if the field loses focus
   useEffect(() => {
-    if (!awaitingSend) return
+    reduceMotionRef.current =
+      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
 
-    const onKeyDown = (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        sendUserStep()
+    startDraftForStep(0)
+    return () => clearTimers()
+  }, [startDraftForStep, clearTimers])
+
+  useEffect(() => {
+    requestAnimationFrame(() => scrollToBottom('auto'))
+  }, [msgs, scrollToBottom])
+
+  const canSend = phase === 'waitingSend' && !isTyping && !!draft
+
+  const handleSendDemo = useCallback(() => {
+    if (!canSend) return
+
+    const step = LANDING_DEMO_STEPS[stepIdx]
+    if (!step) return
+
+    // Add user message
+    setMsgs((prev) => [...prev, { role: 'user', content: draft }])
+    setDraft('')
+
+    // Type assistant reply
+    typeAssistantReply(step.assistant, () => {
+      const nextIdx = stepIdx + 1
+      if (step.isFinal || !LANDING_DEMO_STEPS[nextIdx]) {
+        setPhase('done')
+        onDemoDone?.()
+        return
       }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [awaitingSend, sendUserStep])
-
-  const isDone = step >= LANDING_DEMO_SCRIPT.length
+      setStepIdx(nextIdx)
+      startDraftForStep(nextIdx)
+    })
+  }, [canSend, draft, stepIdx, startDraftForStep, typeAssistantReply, onDemoDone])
 
   return (
-    <div className="landing-demo">
-      <div ref={logRef} className="landing-demo-log" role="log" aria-label="protocolLM demo conversation">
-        {log.map((m, i) => (
-          <div key={i} className={`landing-demo-row ${m.role === 'user' ? 'user' : 'assistant'}`}>
-            <div className={`landing-demo-bubble ${m.role}`}>
-              <span className="landing-demo-text">{m.content}</span>
-            </div>
-          </div>
-        ))}
-
-        {assistantTyping && (
-          <div className="landing-demo-row assistant">
-            <div className="landing-demo-bubble assistant">
-              <span className="landing-demo-text">
-                {assistantDraft}
-                <span className="landing-demo-cursor">▌</span>
-              </span>
-            </div>
-          </div>
-        )}
+    <div className="landing-demo-window" aria-label="protocolLM demo">
+      <div className="landing-demo-header" aria-hidden="true">
+        <span className="terminal-dot red" />
+        <span className="terminal-dot yellow" />
+        <span className="terminal-dot green" />
       </div>
 
-      <div className="landing-demo-input">
-        <div className={`landing-demo-inputWrap ${awaitingSend ? 'ready' : ''}`}>
-          <textarea
-            ref={inputRef}
-            className="landing-demo-textarea"
-            value={inputDraft}
-            readOnly
-            rows={1}
-            placeholder={isDone ? 'Demo finished.' : typingInput ? '' : ' '}
-            onKeyDown={(e) => {
-              // (Still supports Enter when focused)
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                sendUserStep()
-              }
-            }}
-          />
-          <button
-            type="button"
-            className={`landing-demo-send ${awaitingSend ? 'active' : ''}`}
-            onClick={sendUserStep}
-            aria-label="Send"
-            disabled={!awaitingSend}
-          >
-            <Icons.ArrowUp />
-          </button>
+      <div className="landing-demo-body">
+        <div ref={scrollRef} className="landing-demo-messages" role="log" aria-live="polite">
+          {msgs.map((m, idx) => (
+            <div
+              key={idx}
+              className={`landing-demo-row ${m.role === 'user' ? 'is-user' : 'is-assistant'}`}
+              aria-label={m.role === 'user' ? 'User message' : 'Assistant message'}
+            >
+              <div className={`landing-demo-bubble ${m.role === 'user' ? 'user' : 'assistant'}`}>
+                <span className="landing-demo-text">{m.content}</span>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="landing-demo-hint" aria-live="polite">
-          {isDone ? (
-            <span className="landing-demo-hintText done">You’re all set — start a free 7-day trial anytime.</span>
-          ) : awaitingSend ? (
-            <span className="landing-demo-hintText">
-              Press <b>Send</b> (or <b>Enter</b>) to continue
-            </span>
-          ) : assistantTyping ? (
-            <span className="landing-demo-hintText subtle">…</span>
-          ) : (
-            <span className="landing-demo-hintText subtle"> </span>
-          )}
+        <div className="landing-demo-inputArea" aria-label="Demo input">
+          <div className="landing-demo-inputWrap">
+            <textarea
+              className="landing-demo-textarea"
+              value={draft}
+              readOnly
+              rows={1}
+              placeholder=""
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSendDemo()
+                }
+              }}
+            />
+            <button
+              type="button"
+              className={`landing-demo-send ${canSend ? 'active' : ''}`}
+              onClick={handleSendDemo}
+              aria-label="Send demo message"
+            >
+              <Icons.ArrowUp />
+            </button>
+          </div>
+
+          <div className="landing-demo-hint" aria-hidden="true">
+            {phase === 'done' ? ' ' : 'Press Send (or Enter) to continue'}
+          </div>
         </div>
       </div>
     </div>
@@ -370,6 +321,8 @@ function LandingDemoTerminal() {
 }
 
 function LandingPage({ onShowPricing, onShowAuth }) {
+  const [demoDone, setDemoDone] = useState(false)
+
   return (
     <div className={`${ibmMono.className} landing-root`}>
       <div className="landing-bg" />
@@ -379,13 +332,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <BrandLink variant="landing" />
         </div>
 
-        {/* (Removed rotating doc pill entirely) */}
-        <div className="landing-top-center" aria-hidden="true" />
-
         {/* ✅ Single actions area: Start trial + Sign in */}
         <nav className="landing-top-actions" aria-label="Top actions">
           <div className="landing-top-actions-desktop desktop-only">
-            <button onClick={onShowPricing} className="btn-primary" type="button">
+            <button onClick={onShowPricing} className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} type="button">
               Start trial
             </button>
           </div>
@@ -398,20 +348,14 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       <main className="landing-hero">
         <div className="hero-content">
-          <div className="hero-terminal">
-            <div className="terminal-header">
-              <span className="terminal-dot red" />
-              <span className="terminal-dot yellow" />
-              <span className="terminal-dot green" />
-            </div>
-
-            <div className="terminal-body terminal-body-demo">
-              <LandingDemoTerminal />
-            </div>
-          </div>
+          <LandingDemo
+            onDemoDone={() => {
+              setDemoDone(true)
+            }}
+          />
 
           <div className="mobile-start mobile-only">
-            <button className="btn-primary" onClick={onShowPricing} type="button">
+            <button className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} onClick={onShowPricing} type="button">
               Start trial
             </button>
           </div>
@@ -1505,20 +1449,15 @@ export default function Page() {
           top: 0;
           left: 0;
           right: 0;
-          display: grid;
-          grid-template-columns: auto 1fr auto;
+          display: flex;
           align-items: center;
+          justify-content: space-between;
           padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
             max(24px, env(safe-area-inset-left));
           z-index: 10;
         }
 
-        .landing-top-center {
-          justify-self: center;
-        }
-
         .landing-top-actions {
-          justify-self: end;
           display: flex;
           align-items: center;
           gap: 8px;
@@ -1565,8 +1504,22 @@ export default function Page() {
         .btn-primary:hover {
           background: var(--accent-hover);
         }
-        .btn-primary.block {
-          width: 100%;
+
+        .btn-primary.cta-pulse {
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
+          animation: cta-pulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes cta-pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+          }
         }
 
         /* Hero */
@@ -1583,25 +1536,8 @@ export default function Page() {
           flex-direction: column;
           align-items: center;
           gap: 32px;
-          max-width: 700px;
+          max-width: 720px;
           width: 100%;
-        }
-
-        .hero-terminal {
-          width: 100%;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-        }
-
-        .terminal-header {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 12px 14px;
-          background: var(--bg-2);
-          border-bottom: 1px solid var(--border-subtle);
         }
 
         .mobile-start {
@@ -1612,6 +1548,8 @@ export default function Page() {
         .mobile-start .btn-primary {
           width: 100%;
           justify-content: center;
+          height: 44px;
+          font-size: 14px;
         }
 
         .terminal-dot {
@@ -1630,172 +1568,160 @@ export default function Page() {
           background: #28c840;
         }
 
-        .terminal-body {
-          padding: 20px;
+        /* Landing demo window */
+        .landing-demo-window {
+          width: 100%;
+          background: var(--bg-1);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+          box-shadow: 0 24px 90px rgba(0, 0, 0, 0.55);
         }
 
-        .terminal-body-demo {
+        .landing-demo-header {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 12px 14px;
+          background: var(--bg-2);
+          border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .landing-demo-body {
           padding: 18px;
         }
 
-        /* Landing demo (prevents cut-off by using a scroll log with auto-scroll) */
-        .landing-demo {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .landing-demo-log {
-          background: var(--bg-1);
+        .landing-demo-messages {
+          height: 240px;
+          overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          padding: 8px 6px 12px;
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-md);
-          padding: 14px;
-          max-height: 300px;
-          overflow-y: auto;
-          overscroll-behavior: contain;
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        .landing-demo-messages::-webkit-scrollbar {
+          width: 0px;
+          height: 0px;
         }
 
         .landing-demo-row {
           display: flex;
           width: 100%;
-          margin: 8px 0;
+          margin: 10px 0;
         }
 
-        .landing-demo-row.assistant {
+        .landing-demo-row.is-assistant {
           justify-content: flex-start;
         }
-        .landing-demo-row.user {
+
+        .landing-demo-row.is-user {
           justify-content: flex-end;
         }
 
         .landing-demo-bubble {
-          max-width: 92%;
+          max-width: min(560px, 82%);
+          padding: 12px 14px;
           border-radius: 12px;
-          padding: 10px 12px;
-          border: 1px solid var(--border-subtle);
-          background: var(--bg-2);
-        }
-
-        .landing-demo-bubble.user {
-          background: rgba(59, 130, 246, 0.12);
-          border-color: rgba(59, 130, 246, 0.22);
-        }
-
-        .landing-demo-text {
-          font-size: 13px;
-          line-height: 1.6;
-          color: var(--ink-1);
+          line-height: 1.55;
+          font-size: 14px;
           white-space: pre-wrap;
           overflow-wrap: anywhere;
           word-break: break-word;
         }
 
-        .landing-demo-bubble.user .landing-demo-text {
+        .landing-demo-bubble.assistant {
+          background: var(--bg-2);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          color: var(--ink-1);
+        }
+
+        .landing-demo-bubble.user {
+          background: rgba(59, 130, 246, 0.12);
+          border: 1px solid rgba(59, 130, 246, 0.18);
           color: var(--ink-0);
         }
 
-        .landing-demo-cursor {
-          color: var(--accent);
-          margin-left: 1px;
-          animation: demo-blink 1s steps(2) infinite;
+        .landing-demo-inputArea {
+          margin-top: 14px;
         }
 
-        @keyframes demo-blink {
-          0%,
-          50% {
-            opacity: 1;
-          }
-          50.01%,
-          100% {
-            opacity: 0;
-          }
-        }
-
-        .landing-demo-input {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
+        /* ✅ NO blue rectangle border (ever) */
         .landing-demo-inputWrap {
           display: flex;
-          align-items: flex-end;
+          align-items: stretch;
           gap: 10px;
           background: var(--bg-2);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-md);
           padding: 10px 10px;
-          transition: border-color 0.15s ease;
         }
 
-        .landing-demo-inputWrap.ready {
-  border-color: var(--border-subtle);
-  box-shadow: none;
-}
-
+        /* ✅ Prevent any focus-within accent border on the demo */
+        .landing-demo-inputWrap:focus-within {
+          border-color: var(--border-subtle);
+          box-shadow: none;
+        }
 
         .landing-demo-textarea {
           flex: 1;
-          min-height: 38px;
-          max-height: 92px;
-          resize: none;
-          border: none;
+          min-height: 44px;
+          max-height: 120px;
+          padding: 10px 10px;
           background: transparent;
+          border: none;
           color: var(--ink-0);
-          font-size: 13px;
-          line-height: 1.35;
-          padding: 6px 6px;
+          font-size: 14px;
+          line-height: 1.4;
+          resize: none;
           font-family: inherit;
+          min-width: 0;
           outline: none;
         }
 
-        .landing-demo-textarea::placeholder {
-          color: var(--ink-3);
+        .landing-demo-textarea:focus {
+          outline: none;
         }
 
         .landing-demo-send {
-          width: 40px;
-          height: 40px;
-          border-radius: 12px;
-          border: 1px solid var(--border-subtle);
-          background: transparent;
-          color: var(--ink-2);
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: not-allowed;
-          transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 12px;
+          color: var(--ink-2);
+          cursor: pointer;
           flex-shrink: 0;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         }
 
         .landing-demo-send.active {
           background: var(--accent);
-          border-color: rgba(59, 130, 246, 0.85);
-          color: #fff;
-          cursor: pointer;
+          border-color: rgba(59, 130, 246, 0.6);
+          color: white;
         }
 
-        .landing-demo-send:disabled {
-          opacity: 1;
+        .landing-demo-send:hover {
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .landing-demo-send.active:hover {
+          background: var(--accent-hover);
         }
 
         .landing-demo-hint {
-          min-height: 18px;
-          padding: 0 2px;
-        }
-
-        .landing-demo-hintText {
+          margin-top: 8px;
+          padding-left: 4px;
           font-size: 11px;
-          color: var(--ink-2);
-          letter-spacing: 0.02em;
-        }
-
-        .landing-demo-hintText.subtle {
           color: var(--ink-3);
-        }
-
-        .landing-demo-hintText.done {
-          color: rgba(34, 197, 94, 0.85);
+          letter-spacing: 0.02em;
+          user-select: none;
         }
 
         /* Footer links */
@@ -2440,16 +2366,9 @@ export default function Page() {
         /* Responsive */
         @media (max-width: 768px) {
           .landing-topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
               max(16px, env(safe-area-inset-left));
             gap: 14px;
-          }
-
-          .landing-top-center {
-            display: none;
           }
 
           .desktop-only {
@@ -2484,12 +2403,17 @@ export default function Page() {
             line-height: 1 !important;
           }
 
-          .terminal-body-demo {
-            padding: 14px;
+          .landing-demo-messages {
+            height: 220px;
           }
 
-          .landing-demo-log {
-            max-height: 260px;
+          .landing-demo-bubble {
+            font-size: 13px;
+            max-width: 86%;
+          }
+
+          .mobile-start {
+            display: flex;
           }
 
           .chat-topbar {
@@ -2515,10 +2439,6 @@ export default function Page() {
           /* ✅ Tiny extra shrink on mobile empty prompt for cleaner wrap */
           .chat-empty-text {
             font-size: 13px;
-          }
-
-          .mobile-start {
-            display: flex;
           }
         }
 
