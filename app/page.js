@@ -569,7 +569,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
       name: 'Professional',
       price: 99,
       priceId: PRO_MONTHLY,
-      features: ['Unlimited usage (questions + photos)', 'Sonnet — balanced, thorough responses', 'Sharper guidance for tougher compliance calls', 'Priority support'],
+      features: ['Unlimited usage (questions + photos)', 'Summit — balanced, thorough responses', 'Sharper guidance for tougher compliance calls', 'Priority support'],
       popular: true,
       loadingKey: 'pro',
     },
@@ -812,13 +812,24 @@ export default function Page() {
     const emailVerified = searchParams?.get('emailVerified')
 
     if (showPricing === 'true' && isAuthenticated) {
-      setShowPricingModal(true)
+      if (hasActiveSubscription || subscription) {
+        setShowPricingModal(false)
 
-      if (emailVerified === 'true' && typeof window !== 'undefined') {
-        window.history.replaceState({}, '', '/')
+        if (emailVerified === 'true' && typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/')
+        }
+        return
+      }
+
+      if (!hasActiveSubscription && !subscription) {
+        setShowPricingModal(true)
+
+        if (emailVerified === 'true' && typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/')
+        }
       }
     }
-  }, [searchParams, isAuthenticated])
+  }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
   // ============================================================================
   // ✅ FIX 2: Keep ONLY this handleCheckout (full validation + CAPTCHA + verification)
@@ -854,7 +865,7 @@ export default function Page() {
 
         // ✅ SECURITY: Check email is verified before allowing checkout
         if (!data.session.user.email_confirmed_at) {
-          alert('Please verify your email before starting a trial.')
+          alert('Please verify your email before starting a trial. Check your inbox.')
           setShowPricingModal(false)
           router.push('/verify-email')
           return
