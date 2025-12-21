@@ -25,9 +25,14 @@ export async function GET(request) {
     return NextResponse.redirect(`${baseUrl}/?error=${error}`)
   }
 
+  const expectedRedirect = `${baseUrl}/auth/callback`
   if (!code) {
-    console.error('❌ No code provided')
-    return NextResponse.redirect(`${baseUrl}/?error=no_code`)
+    console.error('❌ No code provided in auth callback. Confirm Supabase redirect URLs include the magic-link code and point to /auth/callback', {
+      receivedQuery: requestUrl.search,
+      expectedRedirect,
+    })
+    const retryUrl = `${baseUrl}/auth?error=no_code&message=${encodeURIComponent('Missing code in callback, please try logging in again.')}`
+    return NextResponse.redirect(retryUrl)
   }
 
   const cookieStore = await cookies()
