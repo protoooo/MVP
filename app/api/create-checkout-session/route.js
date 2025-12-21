@@ -1,10 +1,10 @@
-// app/api/create-checkout-session/route.js - FIXED: Enhanced security + pending session limit
+// app/api/create-checkout-session/route.js - ENHANCED with session consistency validation
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { logger } from '@/lib/logger'
-import { validateCSRF } from '@/lib/csrfProtection'
+import { validateCSRF, validateCriticalOperation } from '@/lib/csrfProtection'
 import { verifyCaptcha } from '@/lib/captchaVerification'
 
 export const dynamic = 'force-dynamic'
@@ -15,9 +15,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const STARTER_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY
 const PRO_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
 const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
-const BUSINESS_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY // Legacy
 
-const ALLOWED_PRICES = [STARTER_MONTHLY, PRO_MONTHLY, ENTERPRISE_MONTHLY, BUSINESS_MONTHLY].filter(Boolean)
+const ALLOWED_PRICES = [STARTER_MONTHLY, PRO_MONTHLY, ENTERPRISE_MONTHLY].filter(Boolean)
 
 function getClientIp(request) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -108,7 +107,28 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // ✅ SECURITY FIX: Email verification check
+    // ✅ NEW: Session consistency validation (prevent session hijacking)
+    const storedSessionData = {
+      ip: user.user_metadata?.signup_ip,
+      userAgent: user.user_metadata?.signup_user_agent
+    }
+    
+    const sessionCheck = validateCriticalOperation(request, storedSessionData)
+    
+    if (!sessionCheck.valid) {
+      logger.security('Session consistency check failed in checkout', {
+        userId: user.id,
+        reason: sessionCheck.reason,
+        code: sessionCheck.code
+      })
+      
+      return NextResponse.json({
+        error: sessionCheck.reason || 'Security verification failed. Please sign in again.',
+        code: sessionCheck.code || 'SESSION_VALIDATION_FAILED'
+      }, { status: 403 })
+    }
+
+    // ✅ Email verification check
     if (!user.email_confirmed_at) {
       logger.security('Unverified email attempted checkout', { 
         userId: user.id, 
@@ -123,7 +143,7 @@ export async function POST(request) {
 
     logger.info('Email verification confirmed', { userId: user.id })
 
-    // ✅ CRITICAL FIX: Check for existing subscription BEFORE rate limiting
+    // ✅ Check for existing subscription BEFORE rate limiting
     const { data: existingSubscription } = await supabase
       .from('subscriptions')
       .select('id, status')
@@ -139,17 +159,16 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // ✅ NEW: Check for pending checkout sessions (prevent spam)
+    // ✅ Check for pending checkout sessions
     const { data: pendingSessions, error: pendingError } = await supabase
       .from('checkout_attempts')
       .select('id, created_at')
       .eq('user_id', user.id)
-      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
 
     if (pendingError) {
       logger.warn('Failed to check pending sessions', { error: pendingError.message, userId: user.id })
-      // Don't block checkout on this error - just log it
     } else if (pendingSessions && pendingSessions.length >= 3) {
       logger.security('Too many pending checkout sessions', { 
         userId: user.id, 
@@ -163,7 +182,7 @@ export async function POST(request) {
       }, { status: 429 })
     }
 
-    // Rate limit check (AFTER subscription and pending session checks)
+    // ✅ Rate limit check
     try {
       const { data: recent, error: rateLimitError } = await supabase
         .from('checkout_attempts')
@@ -208,22 +227,21 @@ export async function POST(request) {
       }, { status: 503 })
     }
 
-    // ✅ CRITICAL: Card-required trial (DO NOT use payment_method_collection: 'if_required')
+    // ✅ Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      payment_method_types: ['card'], // Require card
+      payment_method_types: ['card'],
       customer_email: user.email,
       client_reference_id: user.id,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: 7, // Card REQUIRED - charged after 7 days
+        trial_period_days: 7,
         metadata: {
           userId: user.id,
           userEmail: user.email,
           captchaScore: captchaResult.score?.toString() || 'unknown',
         },
       },
-      // ✅ DO NOT SET payment_method_collection - defaults to 'always' which is what we want
       allow_promotion_codes: true,
       billing_address_collection: 'required',
       automatic_tax: { enabled: true },
@@ -239,7 +257,7 @@ export async function POST(request) {
       },
     })
 
-    logger.audit('Checkout session created (card-required trial)', {
+    logger.audit('Checkout session created (card-required trial, session-verified)', {
       sessionId: checkoutSession.id,
       userId: user.id,
       email: user.email,
