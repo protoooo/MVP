@@ -1729,9 +1729,10 @@ export default function Page() {
         }
 
         .landing-demo-inputWrap.ready {
-          border-color: rgba(59, 130, 246, 0.55);
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
-        }
+  border-color: var(--border-subtle);
+  box-shadow: none;
+}
+
 
         .landing-demo-textarea {
           flex: 1;
