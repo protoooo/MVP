@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - COMPLETE with proper plan flow
+// app/auth/callback/route.js - COMPLETE with proper plan flow and duplicate prevention
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -128,12 +128,11 @@ export async function GET(request) {
       .in('status', ['active', 'trialing'])
       .maybeSingle()
 
+    // ✅ FIXED: Prevent duplicate pricing redirects
     if (!subscription) {
-      // No subscription - check if they selected a plan during signup
       const selectedPriceId = data.user.user_metadata?.selected_price_id
 
       if (selectedPriceId) {
-        // ✅ Validate the price ID
         const validPrices = [
           process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY,
           process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY,
@@ -142,6 +141,16 @@ export async function GET(request) {
 
         if (validPrices.includes(selectedPriceId)) {
           console.log('💳 Redirecting to checkout with selected plan:', selectedPriceId.substring(0, 15) + '***')
+          
+          // ✅ NEW: Clear the selected_price_id to prevent duplicate redirects
+          try {
+            await supabase.auth.updateUser({
+              data: { selected_price_id: null }
+            })
+          } catch (err) {
+            console.warn('Failed to clear selected_price_id:', err)
+          }
+          
           return NextResponse.redirect(`${baseUrl}/?checkout=${selectedPriceId}`)
         } else {
           console.error('❌ Invalid price ID in user metadata:', selectedPriceId)
