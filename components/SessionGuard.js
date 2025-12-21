@@ -11,6 +11,8 @@ export default function SessionGuard() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
     // ✅ FIXED: Ensure CSRF token is loaded before allowing requests
     const injectCSRFToken = () => {
       const csrfToken = document.cookie
@@ -20,7 +22,7 @@ export default function SessionGuard() {
 
       if (!csrfToken) {
         console.warn('[SessionGuard] No CSRF token found in cookies')
-        return false // ✅ Return false to indicate failure
+        return false
       }
 
       if (!window.__csrfToken) {
@@ -28,7 +30,23 @@ export default function SessionGuard() {
         console.log('[SessionGuard] CSRF token loaded from cookie')
       }
 
-      return true // ✅ Return true to indicate success
+      return true
+    }
+
+    // ✅ NEW: Retry a few times to avoid timing issues on initial load (Safari/iOS can be finicky)
+    const ensureCSRFToken = async () => {
+      if (window.__csrfToken) return true
+
+      // Try immediately first
+      if (injectCSRFToken()) return true
+
+      // Retry with short backoff
+      for (let i = 0; i < 6; i++) {
+        await sleep(50 * (i + 1))
+        if (injectCSRFToken()) return true
+      }
+
+      return false
     }
 
     // ✅ UPDATED: Block requests until CSRF token is ready
@@ -38,18 +56,17 @@ export default function SessionGuard() {
 
       const isApiRequest = typeof url === 'string' && url.startsWith('/api/')
       const isSameOrigin = typeof url === 'string' && !url.startsWith('http')
-      const isUnsafeMethod =
-        options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase())
+      const method = (options.method || 'GET').toUpperCase()
+      const isUnsafeMethod = !['GET', 'HEAD', 'OPTIONS'].includes(method)
 
       if ((isApiRequest || isSameOrigin) && isUnsafeMethod) {
-        // ✅ NEW: Wait for CSRF token if not yet loaded
         if (!window.__csrfToken) {
           console.warn('[SessionGuard] CSRF token not ready - loading now')
-          const loaded = injectCSRFToken()
+          const loaded = await ensureCSRFToken()
 
           if (!loaded) {
             console.error('[SessionGuard] Failed to load CSRF token - blocking request')
-            throw new Error('CSRF token unavailable - please refresh the page')
+            throw new Error('Security token unavailable. Please hard refresh the page and try again.')
           }
         }
 
@@ -103,19 +120,17 @@ export default function SessionGuard() {
           if (refreshError.message?.includes('refresh_token')) {
             console.log('[SessionGuard] Token rotation detected - re-authenticating')
 
-            // Try to get session again (Supabase will use new token if available)
             const {
               data: { session: newSession },
             } = await supabase.auth.getSession()
 
             if (newSession) {
               console.log('[SessionGuard] Session recovered after token rotation')
-              injectCSRFToken()
+              await ensureCSRFToken()
               return
             }
           }
 
-          // Only redirect if we're on a protected route
           const publicPaths = [
             '/auth',
             '/terms',
@@ -136,8 +151,8 @@ export default function SessionGuard() {
 
         console.log('[SessionGuard] Session refreshed successfully')
 
-        // ✅ NEW: Inject CSRF token into requests after session refresh
-        injectCSRFToken()
+        // ✅ NEW: Ensure CSRF token is available after session refresh
+        await ensureCSRFToken()
       } catch (error) {
         console.error('[SessionGuard] Session refresh exception:', error)
 
@@ -162,16 +177,14 @@ export default function SessionGuard() {
     // ✅ FIXED: Refresh immediately on mount, then every 5 minutes
     refreshSession()
 
-    // Refresh every 5 minutes
     const interval = setInterval(refreshSession, 5 * 60 * 1000)
 
     // ✅ Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         console.log('[SessionGuard] User signed out')
-        // Clear CSRF token
         delete window.__csrfToken
 
         if (!window.location.pathname.startsWith('/auth')) {
@@ -179,14 +192,12 @@ export default function SessionGuard() {
         }
       } else if (event === 'TOKEN_REFRESHED') {
         console.log('[SessionGuard] Token refreshed')
-        // Reload CSRF token
-        injectCSRFToken()
+        await ensureCSRFToken()
       } else if (event === 'USER_UPDATED') {
         console.log('[SessionGuard] User updated')
       } else if (event === 'SIGNED_IN') {
         console.log('[SessionGuard] User signed in')
-        // Inject CSRF token for new session
-        injectCSRFToken()
+        await ensureCSRFToken()
       }
     })
 
