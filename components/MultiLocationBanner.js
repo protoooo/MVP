@@ -61,24 +61,30 @@ export default function MultiLocationBanner({ locationCheck }) {
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
-            <a
-              href="mailto:support@protocollm.org?subject=Multi-Location%20Upgrade"
+            <button
+              onClick={() => {
+                // Trigger upgrade modal
+                window.dispatchEvent(new CustomEvent('openMultiLocationUpgrade', {
+                  detail: { currentLocations: uniqueLocationsUsed }
+                }))
+              }}
               style={{
                 display: 'inline-block',
                 padding: '8px 14px',
                 background: 'white',
                 color: isUrgent ? '#dc2626' : '#f59e0b',
+                border: 'none',
                 borderRadius: '6px',
                 fontSize: '13px',
                 fontWeight: '600',
-                textDecoration: 'none',
+                cursor: 'pointer',
                 transition: 'opacity 0.2s'
               }}
               onMouseEnter={(e) => e.target.style.opacity = '0.9'}
               onMouseLeave={(e) => e.target.style.opacity = '1'}
             >
               Upgrade Now
-            </a>
+            </button>
             
             {!isUrgent && (
               <button
