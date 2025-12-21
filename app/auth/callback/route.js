@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - FIXED: Use stored selected plan
+// app/auth/callback/route.js - COMPLETE with proper plan flow
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -19,7 +19,7 @@ export async function GET(request) {
     baseUrl,
   })
 
-  // Handle errors
+  // Handle OAuth errors
   if (error) {
     console.error('❌ OAuth error:', error, errorDescription)
     return NextResponse.redirect(`${baseUrl}/?error=${error}`)
@@ -87,7 +87,7 @@ export async function GET(request) {
 
     console.log('✅ Email verified, checking terms acceptance...')
 
-    // Check terms/privacy acceptance
+    // Check terms/privacy acceptance using service role
     const supabaseAdmin = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -124,15 +124,26 @@ export async function GET(request) {
       .maybeSingle()
 
     if (!subscription) {
-      // ✅ NEW: Get their selected plan from signup metadata
+      // No subscription - check if they selected a plan during signup
       const selectedPriceId = data.user.user_metadata?.selected_price_id
 
       if (selectedPriceId) {
-        console.log('💳 Redirecting to checkout with selected plan:', selectedPriceId.substring(0, 15) + '***')
-        return NextResponse.redirect(`${baseUrl}/?checkout=${selectedPriceId}`)
+        // ✅ Validate the price ID
+        const validPrices = [
+          process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY,
+          process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY,
+          process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY,
+        ].filter(Boolean)
+
+        if (validPrices.includes(selectedPriceId)) {
+          console.log('💳 Redirecting to checkout with selected plan:', selectedPriceId.substring(0, 15) + '***')
+          return NextResponse.redirect(`${baseUrl}/?checkout=${selectedPriceId}`)
+        } else {
+          console.error('❌ Invalid price ID in user metadata:', selectedPriceId)
+        }
       }
 
-      // Fallback: Show pricing modal if no plan stored
+      // No valid plan selected - show pricing modal
       console.log('💳 No plan selected, showing pricing')
       return NextResponse.redirect(`${baseUrl}/?showPricing=true&emailVerified=true`)
     }
