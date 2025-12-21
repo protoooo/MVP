@@ -11,6 +11,8 @@ import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
+import MultiLocationBanner from '@/components/MultiLocationBanner'
+import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
@@ -22,6 +24,13 @@ const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTH
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
+
+// lightweight logger (keeps your original “logger.info” style expectations)
+const logger = {
+  info: (...args) => console.log(...args),
+  warn: (...args) => console.warn(...args),
+  error: (...args) => console.error(...args),
+}
 
 const Icons = {
   Camera: () => (
@@ -716,6 +725,10 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
+  // ✅ NEW: multi-location license state + modal
+  const [locationCheck, setLocationCheck] = useState(null)
+  const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
+
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
 
@@ -741,6 +754,19 @@ export default function Page() {
     return () => {
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('touchstart', onDown)
+    }
+  }, [])
+
+  // ✅ NEW: Listen for multi-location upgrade events
+  useEffect(() => {
+    const handleUpgradeEvent = () => {
+      setShowMultiLocationModal(true)
+    }
+
+    window.addEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
+
+    return () => {
+      window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
     }
   }, [])
 
@@ -902,6 +928,11 @@ export default function Page() {
         setSubscription(null)
         setHasActiveSubscription(false)
         setShowPricingModal(false)
+
+        // ✅ clear multi-location states on logout
+        setLocationCheck(null)
+        setShowMultiLocationModal(false)
+
         setIsLoading(false)
         return
       }
@@ -912,6 +943,11 @@ export default function Page() {
           console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
           setHasActiveSubscription(false)
+
+          // ✅ clear multi-location states
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+
           setIsLoading(false)
           router.replace('/verify-email')
           return
@@ -927,6 +963,10 @@ export default function Page() {
           console.error('❌ Profile check error:', profileError)
           setSubscription(null)
           setHasActiveSubscription(false)
+
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -935,6 +975,10 @@ export default function Page() {
         if (!profile) {
           setSubscription(null)
           setHasActiveSubscription(false)
+
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -944,6 +988,10 @@ export default function Page() {
         if (!accepted) {
           setSubscription(null)
           setHasActiveSubscription(false)
+
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -952,6 +1000,10 @@ export default function Page() {
         console.error('❌ Policy check exception:', e)
         setSubscription(null)
         setHasActiveSubscription(false)
+
+        setLocationCheck(null)
+        setShowMultiLocationModal(false)
+
         setIsLoading(false)
         router.replace('/accept-terms')
         return
@@ -985,6 +1037,12 @@ export default function Page() {
       if (!isMounted) return
       setSubscription(subData)
       setHasActiveSubscription(active)
+
+      // ✅ if user lost subscription, clear location check so banner doesn't show incorrectly
+      if (!subData) {
+        setLocationCheck(null)
+        setShowMultiLocationModal(false)
+      }
 
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
@@ -1065,6 +1123,81 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
+  // ============================================================================
+  // ✅ NEW: Fetch multi-location “license/locationCheck” after auth + subscription exists
+  // - This is intentionally non-blocking: it won’t affect isLoading
+  // - It safely no-ops if your endpoint isn’t present yet
+  // ============================================================================
+  const fetchLocationCheckFromServer = useCallback(async (sess) => {
+    try {
+      const token = sess?.access_token
+      const userId = sess?.user?.id
+      if (!token || !userId) return null
+
+      const doPost = async () =>
+        fetch('/api/license/check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({}),
+          credentials: 'include',
+        })
+
+      const doGet = async () =>
+        fetch('/api/license/check', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        })
+
+      let res = await doPost()
+      if (res.status === 405) res = await doGet()
+
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data) return null
+
+      // support either { locationCheck: {...} } or direct object
+      return data.locationCheck || data
+    } catch (e) {
+      logger.warn('Location check fetch failed', e)
+      return null
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function run() {
+      // only for authenticated users with an active/trialing subscription record
+      if (!isAuthenticated || !session?.user?.id || !subscription) return
+
+      const lc = await fetchLocationCheckFromServer(session)
+      if (cancelled) return
+
+      if (!lc) return
+
+      // ✅ Step 3 behavior: log + store for banner
+      logger.info('License validated', {
+        userId: session.user.id,
+        uniqueLocationsUsed: lc.uniqueLocationsUsed,
+        locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
+      })
+
+      // Store location check for banner
+      setLocationCheck(lc)
+    }
+
+    run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, session, subscription, fetchLocationCheckFromServer])
+
   const handleManageBilling = async () => {
     let loadingToast = null
     try {
@@ -1105,6 +1238,11 @@ export default function Page() {
   const handleSignOut = async () => {
     try {
       setShowSettingsMenu(false)
+
+      // ✅ clear multi-location states immediately
+      setLocationCheck(null)
+      setShowMultiLocationModal(false)
+
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Sign out error', e)
@@ -2474,7 +2612,12 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2653,6 +2796,17 @@ export default function Page() {
           )}
         </main>
       </div>
+
+      {/* Multi-location warning banner */}
+      {isAuthenticated && locationCheck && <MultiLocationBanner locationCheck={locationCheck} />}
+
+      {/* Multi-location upgrade modal */}
+      <MultiLocationUpgradeModal
+        isOpen={showMultiLocationModal}
+        onClose={() => setShowMultiLocationModal(false)}
+        currentLocations={locationCheck?.uniqueLocationsUsed || 2}
+        userId={session?.user?.id}
+      />
     </>
   )
 }
