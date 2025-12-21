@@ -1,4 +1,4 @@
-// middleware.js - SECURITY FIX: Prevent redirect loops and enforce proper flow
+// middleware.js - SECURITY FIX: Complete public routes list
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
@@ -21,7 +21,7 @@ export async function middleware(request) {
   response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   
-  // ✅ FIX: Comprehensive public route list to prevent redirect loops
+  // ✅ FIX: Complete public route list
   const publicRoutes = [
     '/auth', 
     '/terms', 
@@ -99,7 +99,6 @@ export async function middleware(request) {
       .maybeSingle()
     
     if (!profile || !profile.accepted_terms || !profile.accepted_privacy) {
-      // Valid subscription exists - allow terms acceptance
       return NextResponse.redirect(new URL('/accept-terms', request.url))
     }
   }
