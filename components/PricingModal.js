@@ -1,4 +1,4 @@
-// components/PricingModal.js - SINGLE UNLIMITED PLAN
+// components/PricingModal.js - SINGLE UNLIMITED PLAN VERSION
 'use client'
 
 import { IBM_Plex_Mono } from 'next/font/google'
