@@ -1,3 +1,4 @@
+// app/page.js
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -99,8 +100,7 @@ function FooterLinks() {
 const LANDING_DEMO_STEPS = [
   {
     user: 'What does this do?',
-    assistant:
-      "Snap a kitchen photo and I'll flag likely health-code violations — fast, plain language, plus what to fix.",
+    assistant: "Snap a kitchen photo and I'll flag likely health-code violations — fast, plain language, plus what to fix.",
   },
   {
     user: 'Nice. What else?',
@@ -110,12 +110,12 @@ const LANDING_DEMO_STEPS = [
   {
     user: 'What kinds of violations do you catch?',
     assistant:
-      "Common hits: cold food above 41°F, dirty or blocked hand sink, sanitizer too weak, unlabeled spray bottles, missing date marks, raw-over-ready, pest evidence, and cross-contamination risks.",
+      'Common hits: cold food above 41°F, dirty or blocked hand sink, sanitizer too weak, unlabeled spray bottles, missing date marks, raw-over-ready, pest evidence, and cross-contamination risks.',
   },
   {
     user: 'What can violations cost?',
     assistant:
-      "Rough reality:\n• Small fixes (labels, minor cleaning, quick retrain): usually $0–$200\n• Moderate issues (discard food, deep clean, rework workflow): often $200–$2,000\n• Critical hits (unsafe temps, contaminated prep, repeat violations): $2,000–$10,000+ once you factor waste, labor, downtime, and emergency fixes.\n\nThe goal is catching them early — before they snowball.",
+      'Rough reality:\n• Small fixes (labels, minor cleaning, quick retrain): usually $0–$200\n• Moderate issues (discard food, deep clean, rework workflow): often $200–$2,000\n• Critical hits (unsafe temps, contaminated prep, repeat violations): $2,000–$10,000+ once you factor waste, labor, downtime, and emergency fixes.\n\nThe goal is catching them early — before they snowball.',
   },
   {
     user: 'Got it. How do I try it?',
@@ -163,7 +163,6 @@ function LandingDemo({ onDemoDone }) {
       const tick = () => {
         i += 1
         setValue(text.slice(0, i))
-        // Keep it from "cutting off" visually as it grows
         requestAnimationFrame(() => scrollToBottom('auto'))
 
         if (i >= text.length) {
@@ -206,13 +205,11 @@ function LandingDemo({ onDemoDone }) {
       setPhase('typingAssistant')
       setMsgs((prev) => [...prev, { role: 'assistant', content: '' }])
 
-      // Type into the last assistant bubble
       typeInto({
         text: replyText,
         setValue: (val) => {
           setMsgs((prev) => {
             const next = [...prev]
-            // last item is the assistant placeholder we just appended
             next[next.length - 1] = { ...next[next.length - 1], content: val }
             return next
           })
@@ -245,11 +242,9 @@ function LandingDemo({ onDemoDone }) {
     const step = LANDING_DEMO_STEPS[stepIdx]
     if (!step) return
 
-    // Add user message
     setMsgs((prev) => [...prev, { role: 'user', content: draft }])
     setDraft('')
 
-    // Type assistant reply
     typeAssistantReply(step.assistant, () => {
       const nextIdx = stepIdx + 1
       if (step.isFinal || !LANDING_DEMO_STEPS[nextIdx]) {
@@ -331,7 +326,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <BrandLink variant="landing" />
         </div>
 
-        {/* ✅ Single actions area: Start trial + Sign in */}
         <nav className="landing-top-actions" aria-label="Top actions">
           <div className="landing-top-actions-desktop desktop-only">
             <button onClick={onShowPricing} className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} type="button">
@@ -409,7 +403,6 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       } else {
         body.password = password
 
-        // ✅ PASS selected plan to signup
         if (mode === 'signup' && selectedPriceId) {
           body.selectedPriceId = selectedPriceId
         }
@@ -560,24 +553,14 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
       name: 'Starter',
       price: 49,
       priceId: STARTER_MONTHLY,
-      features: [
-        'Unlimited usage (questions + photos)',
-        'Haiku — fast answers for daily checks',
-        'Best for quick scans and on-the-line clarity',
-        'Email support',
-      ],
+      features: ['Unlimited usage (questions + photos)', 'Haiku — fast answers for daily checks', 'Best for quick scans and on-the-line clarity', 'Email support'],
       loadingKey: 'starter',
     },
     {
       name: 'Professional',
       price: 99,
       priceId: PRO_MONTHLY,
-      features: [
-        'Unlimited usage (questions + photos)',
-        'Sonnet — balanced, thorough responses',
-        'Sharper guidance for tougher compliance calls',
-        'Priority support',
-      ],
+      features: ['Unlimited usage (questions + photos)', 'Sonnet — balanced, thorough responses', 'Sharper guidance for tougher compliance calls', 'Priority support'],
       popular: true,
       loadingKey: 'pro',
     },
@@ -585,12 +568,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
       name: 'Enterprise',
       price: 199,
       priceId: ENTERPRISE_MONTHLY,
-      features: [
-        'Unlimited usage (questions + photos)',
-        'Opus — advanced reasoning for best answers',
-        'Ideal for multi-location playbooks and reviews',
-        'Dedicated multi-location support',
-      ],
+      features: ['Unlimited usage (questions + photos)', 'Opus — advanced reasoning for best answers', 'Ideal for multi-location playbooks and reviews', 'Dedicated multi-location support'],
       loadingKey: 'enterprise',
     },
   ]
@@ -608,12 +586,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </button>
 
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>
-              Choose Your Plan
-            </h2>
-            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>
-              7-day free trial • Cancel anytime • Unlimited usage on all plans
-            </p>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>Choose Your Plan</h2>
+            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>7-day free trial • Cancel anytime • Unlimited usage on all plans</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
@@ -693,7 +667,6 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                     gap: '10px',
                   }}
                 >
-                  {/* ✅ FIX: consistent checkmark/text spacing using grid + fixed check column */}
                   {tier.features.map((feature, idx) => (
                     <div key={idx} className="pricing-feature">
                       <span className="pricing-feature-check" aria-hidden="true">
@@ -812,11 +785,9 @@ export default function Page() {
     const showPricing = searchParams?.get('showPricing')
     const emailVerified = searchParams?.get('emailVerified')
 
-    // ✅ SECURITY FIX: Only show pricing if authenticated
     if (showPricing === 'true' && isAuthenticated) {
       setShowPricingModal(true)
 
-      // Clean URL if email was just verified
       if (emailVerified === 'true' && typeof window !== 'undefined') {
         window.history.replaceState({}, '', '/')
       }
@@ -824,7 +795,7 @@ export default function Page() {
   }, [searchParams, isAuthenticated])
 
   // ============================================================================
-  // ✅ FIX 2: Enhanced handleCheckout with better validation + error codes
+  // ✅ FIX 2: Keep ONLY this handleCheckout (full validation + CAPTCHA + verification)
   // ============================================================================
   const handleCheckout = useCallback(
     async (priceId, planName) => {
@@ -1018,7 +989,6 @@ export default function Page() {
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
 
-      // ✅ FIX 3: Enhanced logging (remove in production if needed)
       if (s?.user) {
         console.log('🔐 Auth state:', {
           userId: String(s.user.id || '').substring(0, 8) + '***',
@@ -1029,14 +999,12 @@ export default function Page() {
         })
       }
 
-      // ✅ If no subscription record at all, show pricing immediately (unless checkout/showPricing flow)
       if (!subData && !checkoutParam && showPricingParam !== 'true') {
         console.log('💳 No subscription found - showing pricing modal')
         setShowPricingModal(true)
         setHasActiveSubscription(false)
       }
 
-      // ✅ Check if trial expired (force pricing) - avoid interrupting checkout flow
       if (subData?.status === 'trialing' && subData?.trial_end) {
         const trialEnd = new Date(subData.trial_end)
         const now = new Date()
@@ -1087,12 +1055,10 @@ export default function Page() {
     if (!checkoutPlan) return
     if (isLoading) return
 
-    // ✅ FIXED: Check for NO subscription (not just false)
     if (checkoutPlan && isAuthenticated && !hasActiveSubscription && !subscription) {
       console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
       handleCheckout(checkoutPlan, 'auto')
 
-      // Clean URL after triggering
       if (typeof window !== 'undefined') {
         window.history.replaceState({}, '', '/')
       }
@@ -1227,9 +1193,6 @@ export default function Page() {
     } catch (error) {
       console.error('Chat error:', error)
 
-      // ============================================================================
-      // ✅ FIX 4: Handle payment-required style errors by showing pricing
-      // ============================================================================
       const msg = String(error?.message || '')
       if (msg.includes('trial has ended') || msg.toLowerCase().includes('subscription')) {
         setShowPricingModal(true)
@@ -2475,7 +2438,6 @@ export default function Page() {
             max-width: 85%;
           }
 
-          /* ✅ Tiny extra shrink on mobile empty prompt for cleaner wrap */
           .chat-empty-text {
             font-size: 13px;
           }
@@ -2512,12 +2474,7 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2525,7 +2482,6 @@ export default function Page() {
             <LandingPage
               onShowPricing={() => setShowPricingModal(true)}
               onShowAuth={() => {
-                // ✅ If user just wants to sign in, clear any stored selected plan
                 setSelectedPriceId(null)
                 setAuthInitialMode('signin')
                 setShowAuthModal(true)
@@ -2536,7 +2492,6 @@ export default function Page() {
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
-                  {/* ✅ Trial/Pro badge (before gear) */}
                   {session && subscription && (
                     <div
                       style={{
@@ -2547,8 +2502,7 @@ export default function Page() {
                         fontWeight: '600',
                         letterSpacing: '0.02em',
                         textTransform: 'uppercase',
-                        background:
-                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                        background: subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
                         color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
                         border: `1px solid ${
                           subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'
@@ -2607,29 +2561,16 @@ export default function Page() {
                 </nav>
               </header>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
+              <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
-                    <p className="chat-empty-text">
-                      Upload a photo or ask a question about Washtenaw County food safety regulations.
-                    </p>
+                    <p className="chat-empty-text">Upload a photo or ask a question about Washtenaw County food safety regulations.</p>
                   </div>
                 ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`chat-message ${
-                          msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'
-                        }`}
-                      >
-                        <div
-                          className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
-                        >
+                      <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
+                        <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
                               <img src={msg.image} alt="Uploaded" />
@@ -2658,32 +2599,16 @@ export default function Page() {
                         <Icons.Camera />
                       </span>
                       <span>Image attached</span>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="chat-attachment-remove"
-                        aria-label="Remove"
-                        type="button"
-                      >
+                      <button onClick={() => setSelectedImage(null)} className="chat-attachment-remove" aria-label="Remove" type="button">
                         <Icons.X />
                       </button>
                     </div>
                   )}
 
                   <div className="chat-input-row">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleImageChange}
-                    />
+                    <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="chat-camera-btn"
-                      aria-label="Upload photo"
-                      type="button"
-                    >
+                    <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
                       <Icons.Camera />
                     </button>
 
@@ -2721,9 +2646,7 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <p className="chat-disclaimer">
-                    protocolLM may make mistakes. Verify critical decisions with official regulations.
-                  </p>
+                  <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
                 </div>
               </div>
             </div>
