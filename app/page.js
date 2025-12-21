@@ -812,6 +812,24 @@ export default function Page() {
       if (!isMounted) return
       setSubscription(subData)
       setHasActiveSubscription(active)
+
+      // Check if trial expired
+      if (subData?.status === 'trialing' && subData?.trial_end) {
+        const trialEnd = new Date(subData.trial_end)
+        const now = new Date()
+        
+        if (trialEnd < now) {
+          console.log('❌ Trial expired - showing pricing')
+          setShowPricingModal(true)
+          setHasActiveSubscription(false)
+        } else {
+          // Show warning if trial ending soon (< 24 hours)
+          const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
+          if (hoursLeft < 24 && hoursLeft > 0) {
+            console.log(`⚠️ Trial ends in ${Math.round(hoursLeft)} hours`)
+          }
+        }
+      }
       setIsLoading(false)
 
       // ✅ FIX: If email just verified, show pricing modal
