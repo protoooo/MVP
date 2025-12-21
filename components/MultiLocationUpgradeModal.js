@@ -1,19 +1,24 @@
-// components/MultiLocationUpgradeModal.js
+// components/MultiLocationUpgradeModal.js - NO DISCOUNTS VERSION
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import { IBM_Plex_Mono } from 'next/font/google'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-const BASE_PRICE = 100
-const ADDITIONAL_LOCATION_PRICE = 80
+// ✅ Simple per-location pricing
+const TIER_PRICES = {
+  starter: { perLocation: 49, name: 'Starter', model: 'Haiku' },
+  pro: { perLocation: 99, name: 'Professional', model: 'Sonnet' },
+  enterprise: { perLocation: 199, name: 'Enterprise', model: 'Opus' }
+}
 
 export default function MultiLocationUpgradeModal({ 
   isOpen, 
   onClose, 
   currentLocations = 2,
+  currentTier = 'pro',
   userId 
 }) {
   const [selectedLocations, setSelectedLocations] = useState(currentLocations)
@@ -21,18 +26,16 @@ export default function MultiLocationUpgradeModal({
   const [error, setError] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedLocations(Math.max(2, currentLocations))
+    }
+  }, [isOpen, currentLocations])
+
   if (!isOpen) return null
 
-  const calculatePrice = (locations) => {
-    if (locations <= 1) return BASE_PRICE
-    return BASE_PRICE + (ADDITIONAL_LOCATION_PRICE * (locations - 1))
-  }
-
-  const monthlyPrice = calculatePrice(selectedLocations)
-  const perLocationPrice = Math.round(monthlyPrice / selectedLocations)
-  const savings = selectedLocations > 1 
-    ? (BASE_PRICE * selectedLocations) - monthlyPrice 
-    : 0
+  const tierInfo = TIER_PRICES[currentTier] || TIER_PRICES.pro
+  const monthlyPrice = tierInfo.perLocation * selectedLocations
 
   const handleUpgrade = async () => {
     if (loading || !isLoaded) return
@@ -41,7 +44,6 @@ export default function MultiLocationUpgradeModal({
     setError('')
 
     try {
-      // Execute CAPTCHA
       const captchaToken = await executeRecaptcha('multi_location_upgrade')
       
       if (!captchaToken) {
@@ -50,12 +52,12 @@ export default function MultiLocationUpgradeModal({
         return
       }
 
-      // Call upgrade API
       const res = await fetch('/api/upgrade-multi-location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locationCount: selectedLocations,
+          tier: currentTier,
           captchaToken
         })
       })
@@ -68,7 +70,6 @@ export default function MultiLocationUpgradeModal({
         return
       }
 
-      // Redirect to Stripe checkout
       if (data.url) {
         window.location.href = data.url
       } else {
@@ -91,7 +92,7 @@ export default function MultiLocationUpgradeModal({
     >
       <div 
         className="modal-container" 
-        style={{ maxWidth: '520px' }}
+        style={{ maxWidth: '500px' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`modal-card ${ibmMono.className}`}>
@@ -109,9 +110,27 @@ export default function MultiLocationUpgradeModal({
             <h2 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--ink-0)', margin: '0 0 8px' }}>
               Add More Locations
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--ink-2)', margin: 0 }}>
-              We detected <strong>{currentLocations} locations</strong>. Upgrade to multi-location pricing to continue using protocolLM across all your restaurants.
+            <p style={{ fontSize: '14px', color: 'var(--ink-2)', margin: 0, lineHeight: '1.5' }}>
+              We detected <strong>{currentLocations} locations</strong>. Each location needs its own license.
             </p>
+          </div>
+
+          {/* Current Plan Badge */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'var(--bg-3)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: '600',
+            color: 'var(--ink-1)',
+            marginBottom: '20px'
+          }}>
+            <span style={{ color: 'var(--accent)' }}>●</span>
+            {tierInfo.name} ({tierInfo.model})
           </div>
 
           {/* Location Selector */}
@@ -129,7 +148,7 @@ export default function MultiLocationUpgradeModal({
               color: 'var(--ink-1)', 
               marginBottom: '12px' 
             }}>
-              Number of Locations
+              How many locations?
             </label>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -155,7 +174,7 @@ export default function MultiLocationUpgradeModal({
               <div style={{
                 flex: 1,
                 textAlign: 'center',
-                fontSize: '32px',
+                fontSize: '36px',
                 fontWeight: '700',
                 color: 'var(--ink-0)'
               }}>
@@ -182,7 +201,7 @@ export default function MultiLocationUpgradeModal({
               </button>
             </div>
 
-            {/* Quick select buttons */}
+            {/* Quick select */}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {[2, 3, 4, 5].map(count => (
                 <button
@@ -200,7 +219,7 @@ export default function MultiLocationUpgradeModal({
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {count} locations
+                  {count}
                 </button>
               ))}
             </div>
@@ -216,7 +235,7 @@ export default function MultiLocationUpgradeModal({
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ fontSize: '14px', opacity: 0.8 }}>Monthly Total</div>
-              <div style={{ fontSize: '32px', fontWeight: '700' }}>
+              <div style={{ fontSize: '36px', fontWeight: '700' }}>
                 ${monthlyPrice}
               </div>
             </div>
@@ -224,29 +243,14 @@ export default function MultiLocationUpgradeModal({
             <div style={{ 
               paddingTop: '12px', 
               borderTop: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px'
+              fontSize: '13px',
+              opacity: 0.8
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', opacity: 0.7 }}>
-                <span>${perLocationPrice} per location</span>
-                <span>{selectedLocations} locations</span>
-              </div>
-
-              {savings > 0 && (
-                <div style={{ 
-                  fontSize: '13px', 
-                  fontWeight: '600',
-                  color: '#22c55e',
-                  textAlign: 'right'
-                }}>
-                  Save ${savings}/month vs separate licenses
-                </div>
-              )}
+              ${tierInfo.perLocation} × {selectedLocations} location{selectedLocations > 1 ? 's' : ''}
             </div>
           </div>
 
-          {/* Breakdown */}
+          {/* What's Included */}
           <div style={{ 
             background: 'var(--bg-3)', 
             border: '1px solid var(--border-subtle)', 
@@ -258,9 +262,9 @@ export default function MultiLocationUpgradeModal({
               What You Get
             </div>
             <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.8' }}>
-              <li>Unlimited usage at all {selectedLocations} locations</li>
-              <li>Same great AI models (Haiku/Sonnet/Opus)</li>
-              <li>Individual location tracking & analytics</li>
+              <li>Full {tierInfo.model} access at all {selectedLocations} locations</li>
+              <li>Unlimited usage per location</li>
+              <li>Individual location tracking</li>
               <li>Priority multi-location support</li>
             </ul>
           </div>
@@ -310,7 +314,7 @@ export default function MultiLocationUpgradeModal({
                 animation: 'spin 0.6s linear infinite'
               }} />
             )}
-            <span>Upgrade to {selectedLocations} Locations</span>
+            <span>Upgrade to {selectedLocations} Locations - ${monthlyPrice}/mo</span>
           </button>
 
           <p style={{ 
