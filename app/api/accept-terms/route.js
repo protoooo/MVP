@@ -31,9 +31,16 @@ export async function POST(request) {
     }
 
     // Use service role for database operations
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+      const message = 'SUPABASE_SERVICE_ROLE_KEY is missing; service role key is required for accept-terms'
+      logger.error(message)
+      throw new Error(message)
+    }
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceRoleKey,
       {
         cookies: {
           getAll() {
