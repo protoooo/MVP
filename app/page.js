@@ -1,4 +1,3 @@
-// app/page.js
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -101,7 +100,7 @@ const LANDING_DEMO_STEPS = [
   {
     user: 'What does this do?',
     assistant:
-      "Snap a kitchen photo and I’ll flag likely health-code violations — fast, plain language, plus what to fix.",
+      "Snap a kitchen photo and I'll flag likely health-code violations — fast, plain language, plus what to fix.",
   },
   {
     user: 'Nice. What else?',
@@ -120,7 +119,7 @@ const LANDING_DEMO_STEPS = [
   },
   {
     user: 'Got it. How do I try it?',
-    assistant: 'Whenever you’re ready, hit Start trial.',
+    assistant: 'Whenever you're ready, hit Start trial.',
     isFinal: true,
   },
 ]
@@ -164,7 +163,7 @@ function LandingDemo({ onDemoDone }) {
       const tick = () => {
         i += 1
         setValue(text.slice(0, i))
-        // Keep it from “cutting off” visually as it grows
+        // Keep it from "cutting off" visually as it grows
         requestAnimationFrame(() => scrollToBottom('auto'))
 
         if (i >= text.length) {
@@ -735,7 +734,7 @@ export default function Page() {
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
-  // ✅ remember the selected Stripe price when user isn’t logged in
+  // ✅ remember the selected Stripe price when user isn't logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
