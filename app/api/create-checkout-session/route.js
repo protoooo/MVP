@@ -12,8 +12,10 @@ export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
+// ✅ SINGLE PLAN - Only unlimited monthly
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
+// ✅ Only one allowed price
 const ALLOWED_PRICES = [UNLIMITED_MONTHLY].filter(Boolean)
 
 function getClientIp(request) {
@@ -46,7 +48,7 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const { priceId, captchaToken } = body
 
-    // ✅ Validate price ID
+    // ✅ Validate price ID - must be the unlimited plan
     if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
       logger.security('Invalid price ID attempted', { priceId, ip })
       return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 })
@@ -105,7 +107,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // ✅ NEW: Session consistency validation (prevent session hijacking)
+    // ✅ Session consistency validation (prevent session hijacking)
     const storedSessionData = {
       ip: user.user_metadata?.signup_ip,
       userAgent: user.user_metadata?.signup_user_agent
@@ -255,7 +257,7 @@ export async function POST(request) {
       },
     })
 
-    logger.audit('Checkout session created (single plan)', {
+    logger.audit('Checkout session created (single unlimited plan)', {
       sessionId: checkoutSession.id,
       userId: user.id,
       email: user.email,
