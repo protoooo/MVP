@@ -1,4 +1,4 @@
-// app/api/create-checkout-session/route.js - FIXED for Next.js 15
+// app/api/create-checkout-session/route.js - FIXED: Card-required trials
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -119,6 +119,22 @@ export async function POST(request) {
 
     logger.info('Email verification confirmed', { userId: user.id })
 
+    // Check if user already has active subscription
+    const { data: existingSubscription } = await supabase
+      .from('subscriptions')
+      .select('id, status')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .maybeSingle()
+
+    if (existingSubscription) {
+      logger.warn('User already has active subscription', { userId: user.id })
+      return NextResponse.json({ 
+        error: 'You already have an active subscription',
+        code: 'ALREADY_SUBSCRIBED' 
+      }, { status: 400 })
+    }
+
     // Rate limit check
     try {
       const { data: recent, error: rateLimitError } = await supabase
@@ -163,20 +179,22 @@ export async function POST(request) {
       }, { status: 503 })
     }
 
+    // ✅ CRITICAL: Card-required trial (DO NOT use payment_method_collection: 'if_required')
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      payment_method_types: ['card'],
+      payment_method_types: ['card'], // Require card
       customer_email: user.email,
       client_reference_id: user.id,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: 7, // Card required - charged after 7 days
+        trial_period_days: 7, // Card REQUIRED - charged after 7 days
         metadata: {
           userId: user.id,
           userEmail: user.email,
           captchaScore: captchaResult.score?.toString() || 'unknown',
         },
       },
+      // ✅ DO NOT SET payment_method_collection - defaults to 'always' which is what we want
       allow_promotion_codes: true,
       billing_address_collection: 'required',
       automatic_tax: { enabled: true },
@@ -192,7 +210,7 @@ export async function POST(request) {
       },
     })
 
-    logger.audit('Checkout session created', {
+    logger.audit('Checkout session created (card-required trial)', {
       sessionId: checkoutSession.id,
       userId: user.id,
       email: user.email,
