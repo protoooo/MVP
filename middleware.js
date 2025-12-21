@@ -1,3 +1,4 @@
+// middleware.js - SECURITY FIX: Prevent redirect loops and enforce proper flow
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
@@ -20,11 +21,18 @@ export async function middleware(request) {
   response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   
-  // Public routes that don't need auth
+  // ✅ FIX: Comprehensive public route list to prevent redirect loops
   const publicRoutes = [
-    '/auth', '/terms', '/privacy', '/contact', 
-    '/verify-email', '/reset-password', '/accept-terms'
+    '/auth', 
+    '/terms', 
+    '/privacy', 
+    '/contact', 
+    '/verify-email', 
+    '/reset-password', 
+    '/accept-terms',
+    '/register-location'
   ]
+  
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
   
   if (isPublicRoute) {
@@ -55,14 +63,35 @@ export async function middleware(request) {
   // Refresh session
   const { data: { user } } = await supabase.auth.getUser()
   
-  // If on root path, check if user needs to complete signup flow
+  // ✅ FIX: Only redirect on root path to prevent loops
   if (pathname === '/' && user) {
-    // Check email verification
+    // Step 1: Check email verification
     if (!user.email_confirmed_at) {
       return NextResponse.redirect(new URL('/verify-email', request.url))
     }
     
-    // Check terms acceptance
+    // Step 2: Check subscription status BEFORE checking terms
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('id, status, trial_end')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .maybeSingle()
+
+    // ✅ CRITICAL: No subscription - redirect to pricing
+    if (!subscription) {
+      return NextResponse.redirect(new URL('/?showPricing=true', request.url))
+    }
+
+    // ✅ CRITICAL: Check if trial expired
+    if (subscription.status === 'trialing' && subscription.trial_end) {
+      const trialEnd = new Date(subscription.trial_end)
+      if (trialEnd < new Date()) {
+        return NextResponse.redirect(new URL('/?showPricing=true', request.url))
+      }
+    }
+    
+    // Step 3: Check terms acceptance (ONLY if subscription is valid)
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('accepted_terms, accepted_privacy')
@@ -70,21 +99,8 @@ export async function middleware(request) {
       .maybeSingle()
     
     if (!profile || !profile.accepted_terms || !profile.accepted_privacy) {
+      // Valid subscription exists - allow terms acceptance
       return NextResponse.redirect(new URL('/accept-terms', request.url))
-    }
-    
-    // Check if user has active subscription
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('id, status')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
-      .maybeSingle()
-    
-    // If no subscription, redirect to pricing modal (handled by page.js)
-    if (!subscription) {
-      // Let the page handle showing pricing modal
-      return response
     }
   }
 
