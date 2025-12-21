@@ -1,11 +1,12 @@
-// middleware.js - SECURITY FIX: Complete public routes list
+// middleware.js - COMPLETE: CSRF token generation + authentication checks
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { generateCSRFToken } from '@/lib/csrfProtection'
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl
   
-  // Skip all API routes
+  // Skip all API routes (they handle their own CSRF validation)
   if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
@@ -16,12 +17,33 @@ export async function middleware(request) {
     },
   })
   
-  // Security headers
+  // ============================================================================
+  // ✅ NEW: CSRF Token Generation and Setting
+  // ============================================================================
+  const existingToken = request.cookies.get('csrf-token')
+  
+  if (!existingToken) {
+    const token = generateCSRFToken()
+    response.cookies.set('csrf-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24, // 24 hours
+    })
+  }
+  
+  // ============================================================================
+  // Security Headers
+  // ============================================================================
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   
-  // ✅ FIX: Complete public route list
+  // ============================================================================
+  // Public Routes (no authentication required)
+  // ============================================================================
   const publicRoutes = [
     '/auth', 
     '/terms', 
@@ -39,6 +61,10 @@ export async function middleware(request) {
     return response
   }
 
+  // ============================================================================
+  // Authentication Check (for protected routes)
+  // ============================================================================
+  
   // Create Supabase client
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -60,10 +86,14 @@ export async function middleware(request) {
     }
   )
 
-  // Refresh session
+  // Get current user
   const { data: { user } } = await supabase.auth.getUser()
   
-  // ✅ FIX: Only redirect on root path to prevent loops
+  // ============================================================================
+  // Root Path Authentication Flow
+  // ============================================================================
+  
+  // Only redirect on root path to prevent loops
   if (pathname === '/' && user) {
     // Step 1: Check email verification
     if (!user.email_confirmed_at) {
@@ -78,12 +108,12 @@ export async function middleware(request) {
       .in('status', ['active', 'trialing'])
       .maybeSingle()
 
-    // ✅ CRITICAL: No subscription - redirect to pricing
+    // No subscription - redirect to pricing
     if (!subscription) {
       return NextResponse.redirect(new URL('/?showPricing=true', request.url))
     }
 
-    // ✅ CRITICAL: Check if trial expired
+    // Check if trial expired
     if (subscription.status === 'trialing' && subscription.trial_end) {
       const trialEnd = new Date(subscription.trial_end)
       if (trialEnd < new Date()) {
