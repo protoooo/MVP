@@ -1,7 +1,7 @@
 // app/page.js
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -37,7 +37,7 @@ const Icons = {
   ),
   X: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y1="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
@@ -62,342 +62,49 @@ const Icons = {
   ),
 }
 
-const DEMO_DOCUMENTS = [
-  'Washtenaw County Enforcement Actions',
-  'Washtenaw County Violation Types',
-  'Washtenaw County Food Allergy Information',
-  'Washtenaw County Inspection Program',
-  'Food Labeling Guide',
-  'Food Temperatures',
-  'Internal Cooking Temperatures',
-  'MI Modified Food Code',
-  'MCL Act 92 of 2000',
-  'Inspection Report Types',
-  'Date Marking Guide',
-  'Cross Contamination',
-  'Cooling Foods',
-  'Sanitation Standards',
-  'Fat, Oil, and Grease Control',
-  'New Business Information Packet',
-  'Norovirus Environmental Cleaning',
-  'Procedures for the Michigan Food Code',
-  'Retail Food Establishments Emergency Action Plan',
-  'Summary Chart for Minimum Cooking Food Temperatures',
-  'USDA Safe Minimum Internal Temperature Chart',
+/**
+ * ✅ Landing demo script (fine-tuned)
+ * Edit these lines anytime — the demo will replay with the new substance.
+ */
+const LANDING_DEMO_SCRIPT = [
+  { type: 'assistant', text: 'Hey — welcome to protocolLM.' },
+  { type: 'assistant', text: 'I help food teams catch compliance issues fast — from a photo or a question.' },
+
+  { type: 'user', text: 'What can you do with a photo?' },
+  {
+    type: 'assistant',
+    text:
+      'Snap your prep area, walk-in, dish station, labels, sanitizer setup — anything.\n\n' +
+      'I’ll flag likely violations, explain what matters, and suggest the fastest fix. If something isn’t clear, I’ll ask one tight follow-up.',
+  },
+
+  { type: 'user', text: 'Nice. What else can you do?' },
+  {
+    type: 'assistant',
+    text:
+      'You can ask me anything about Washtenaw County food safety rules — date marking, cooling, allergens, handwashing, sanitizer, and more.\n\n' +
+      'I’ll keep it plain-English so any employee can use it.',
+  },
+
+  { type: 'user', text: 'What kinds of violations are common — and what can they cost me?' },
+  {
+    type: 'assistant',
+    text:
+      'Common pain points I see:\n' +
+      '• Time & temperature control (cooling, hot holding, reheating)\n' +
+      '• Date marking & ready-to-eat storage\n' +
+      '• Handwashing & cross-contamination\n' +
+      '• Sanitizer setup (strength + test strips)\n\n' +
+      'What it can cost: wasted product, re-work, retraining, re-inspections, and in serious cases escalating enforcement.\n' +
+      'Even “minor” issues add up when they repeat.',
+  },
+
+  { type: 'user', text: 'Got it. How do I try it?' },
+  {
+    type: 'assistant',
+    text: 'Start a free 7-day trial — hit “Start trial” up top (or the big button on mobile).',
+  },
 ]
-
-// ======================================================
-// ✅ Landing demo script (interactive “chat” walkthrough)
-// ======================================================
-const LANDING_DEMO_STEPS = [
-  { role: 'assistant', text: 'Hello — welcome to protocolLM.' },
-  { role: 'user', text: 'Hello, how can you help me?' },
-  {
-    role: 'assistant',
-    text: 'Upload a photo and I’ll point out potential health-code violations (and what to fix) — fast, in plain English.',
-  },
-  { role: 'user', text: 'That sounds pretty cool. What else?' },
-  {
-    role: 'assistant',
-    text: 'You can also ask questions: cooling, reheating, sanitizer, date marking, handwashing, allergies — anything in the Washtenaw County / Michigan guidance.',
-  },
-  { role: 'user', text: 'Okay. What type of violations are there and what can they cost me?' },
-  {
-    role: 'assistant',
-    text: 'Violations range from higher-risk issues (time/temperature, cross-contamination, hygiene) to lower-risk facility stuff (storage, maintenance). The “cost” adds up as re-inspections, thrown-out product, staff time, lost trust — and in severe cases, being required to stop operations until it’s fixed.',
-  },
-  { role: 'user', text: 'Sounds pretty cool. Thanks.' },
-  { role: 'assistant', text: 'No problem. Want to try it? Start your free 7-day trial.' },
-]
-
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onChange = () => setReduced(!!mq.matches)
-    setReduced(!!mq.matches)
-
-    if (mq.addEventListener) mq.addEventListener('change', onChange)
-    else mq.addListener(onChange)
-
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener('change', onChange)
-      else mq.removeListener(onChange)
-    }
-  }, [])
-
-  return reduced
-}
-
-function LandingDemoChat({ onStartTrial }) {
-  const prefersReducedMotion = usePrefersReducedMotion()
-
-  const [demoMessages, setDemoMessages] = useState([])
-  const [stepIndex, setStepIndex] = useState(0)
-
-  const [inputValue, setInputValue] = useState('')
-  const [pendingUserFull, setPendingUserFull] = useState('')
-  const [awaitSend, setAwaitSend] = useState(false)
-  const [done, setDone] = useState(false)
-
-  const logRef = useRef(null)
-  const timersRef = useRef([])
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-  }, [])
-
-  const addTimer = useCallback((id) => {
-    timersRef.current.push(id)
-  }, [])
-
-  const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1))
-
-  const scrollToBottom = useCallback((behavior = 'smooth') => {
-    const el = logRef.current
-    if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior })
-  }, [])
-
-  useEffect(() => {
-    scrollToBottom('smooth')
-  }, [demoMessages, scrollToBottom])
-
-  const reset = useCallback(() => {
-    clearTimers()
-    setDemoMessages([])
-    setStepIndex(0)
-    setInputValue('')
-    setPendingUserFull('')
-    setAwaitSend(false)
-    setDone(false)
-  }, [clearTimers])
-
-  // Reduced motion: show full convo instantly + CTA
-  useEffect(() => {
-    if (!prefersReducedMotion) return
-    setDemoMessages(LANDING_DEMO_STEPS.map((s) => ({ role: s.role, text: s.text })))
-    setDone(true)
-    setAwaitSend(false)
-    setInputValue('')
-    setPendingUserFull('')
-    setStepIndex(LANDING_DEMO_STEPS.length)
-    return () => {}
-  }, [prefersReducedMotion])
-
-  const typeAssistantBubble = useCallback(
-    (fullText) => {
-      setAwaitSend(false)
-      setPendingUserFull('')
-      setInputValue('')
-
-      let msgIndexLocal = -1
-      setDemoMessages((prev) => {
-        msgIndexLocal = prev.length
-        return [...prev, { role: 'assistant', text: '' }]
-      })
-
-      const baseDelay = rand(12, 22)
-      const longDelay = () => baseDelay + rand(35, 65)
-
-      let i = 0
-      const tick = () => {
-        i += 1
-        setDemoMessages((prev) => {
-          const next = [...prev]
-          const m = next[msgIndexLocal]
-          if (!m) return prev
-          next[msgIndexLocal] = { ...m, text: fullText.slice(0, i) }
-          return next
-        })
-
-        if (i < fullText.length) {
-          const ch = fullText[i - 1]
-          const isPunc = ['.', ',', '!', '?', ':', ';', '—'].includes(ch)
-          const delay = isPunc ? longDelay() : baseDelay + rand(0, 18)
-          addTimer(setTimeout(tick, delay))
-        } else {
-          addTimer(
-            setTimeout(() => {
-              setStepIndex((v) => v + 1)
-            }, rand(520, 780))
-          )
-        }
-      }
-
-      addTimer(setTimeout(tick, rand(180, 360)))
-    },
-    [addTimer]
-  )
-
-  const typeUserInput = useCallback(
-    (fullText) => {
-      setAwaitSend(false)
-      setPendingUserFull(fullText)
-      setInputValue('')
-
-      let i = 0
-      const baseDelay = rand(14, 26)
-      const longDelay = () => baseDelay + rand(40, 80)
-
-      const tick = () => {
-        i += 1
-        const partial = fullText.slice(0, i)
-        setInputValue(partial)
-
-        if (i < fullText.length) {
-          const ch = fullText[i - 1]
-          const isPunc = ['.', ',', '!', '?', ':', ';', '—'].includes(ch)
-          const delay = isPunc ? longDelay() : baseDelay + rand(0, 20)
-          addTimer(setTimeout(tick, delay))
-        } else {
-          addTimer(
-            setTimeout(() => {
-              setAwaitSend(true)
-              scrollToBottom('smooth')
-            }, rand(220, 420))
-          )
-        }
-      }
-
-      addTimer(setTimeout(tick, rand(160, 320)))
-    },
-    [addTimer, scrollToBottom]
-  )
-
-  // Drive the demo forward step-by-step
-  useEffect(() => {
-    if (prefersReducedMotion) return
-    if (done) return
-
-    if (stepIndex >= LANDING_DEMO_STEPS.length) {
-      setDone(true)
-      setAwaitSend(false)
-      setInputValue('')
-      setPendingUserFull('')
-      return
-    }
-
-    clearTimers()
-
-    const step = LANDING_DEMO_STEPS[stepIndex]
-    if (!step) return
-
-    if (step.role === 'assistant') {
-      typeAssistantBubble(step.text)
-      return
-    }
-
-    if (step.role === 'user') {
-      typeUserInput(step.text)
-      return
-    }
-  }, [stepIndex, done, prefersReducedMotion, clearTimers, typeAssistantBubble, typeUserInput])
-
-  useEffect(() => {
-    return () => {
-      clearTimers()
-    }
-  }, [clearTimers])
-
-  const handleSendDemo = useCallback(() => {
-    if (!awaitSend || !pendingUserFull) return
-
-    // Commit user message bubble
-    setDemoMessages((prev) => [...prev, { role: 'user', text: pendingUserFull }])
-
-    // Reset input + advance
-    setInputValue('')
-    setAwaitSend(false)
-    setPendingUserFull('')
-    setStepIndex((v) => v + 1)
-  }, [awaitSend, pendingUserFull])
-
-  return (
-    <div className="demo-wrap">
-      <div className="demo-log" ref={logRef} aria-label="protocolLM demo conversation">
-        {demoMessages.map((m, idx) => (
-          <div key={idx} className={`demo-line ${m.role === 'user' ? 'user' : 'assistant'}`}>
-            <div className={`demo-bubble ${m.role === 'user' ? 'user' : 'assistant'}`}>
-              <span className="demo-text">{m.text}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {!done && (
-        <div className="demo-input-row" aria-label="Demo input">
-          <div className="demo-input">
-            <span className={`demo-placeholder ${inputValue ? 'has' : ''}`}>
-              {inputValue ? inputValue : 'Message…'}
-            </span>
-          </div>
-
-          <div className="demo-send-wrap">
-            <button
-              type="button"
-              className={`demo-send-btn ${awaitSend ? 'ready' : ''}`}
-              onClick={handleSendDemo}
-              disabled={!awaitSend}
-              aria-label="Send demo message"
-            >
-              <Icons.ArrowUp />
-            </button>
-
-            {awaitSend && <div className="demo-send-tip">Tap send</div>}
-          </div>
-        </div>
-      )}
-
-      <div className="demo-footer">
-        <button type="button" className="demo-replay" onClick={reset}>
-          Replay demo
-        </button>
-
-        {done && (
-          <button type="button" className="demo-cta" onClick={onStartTrial}>
-            Start 7-Day Trial
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function RotatingDocPill({ items, intervalMs = 2200 }) {
-  const [idx, setIdx] = useState(0)
-
-  const maxLen = useMemo(() => {
-    if (!items?.length) return 0
-    return items.reduce((m, s) => Math.max(m, (s || '').length), 0)
-  }, [items])
-
-  useEffect(() => {
-    if (!items?.length) return
-    const t = setInterval(() => setIdx((v) => (v + 1) % items.length), intervalMs)
-    return () => clearInterval(t)
-  }, [items, intervalMs])
-
-  if (!items?.length) return null
-
-  return (
-    <div className="doc-pill-wrap" aria-hidden="true">
-      <div className="doc-pill" style={{ ['--doc-pill-item-width']: `${maxLen}ch` }}>
-        <span className="doc-pill-icon">
-          <Icons.Sparkle />
-        </span>
-        <span className="doc-pill-label">Indexed</span>
-        <span className="doc-pill-divider" />
-        <span key={idx} className="doc-pill-item" title={items[idx]}>
-          {items[idx]}
-        </span>
-      </div>
-    </div>
-  )
-}
 
 function BrandLink({ variant = 'landing' }) {
   return (
@@ -430,6 +137,214 @@ function FooterLinks() {
   )
 }
 
+/**
+ * ✅ Landing interactive demo (robust scrolling; no clipped lines)
+ * - Proper scroll container (flex + min-height:0)
+ * - Auto-scroll to bottom on every update
+ * - Safe “fade” animation without clipping overflow
+ * - Send button “arms” and pulses when ready
+ */
+function LandingDemoTerminal() {
+  const [demoMessages, setDemoMessages] = useState([])
+  const [inputText, setInputText] = useState('')
+  const [step, setStep] = useState(0)
+
+  const [assistantTyping, setAssistantTyping] = useState(false)
+  const [awaitingSend, setAwaitingSend] = useState(false)
+  const [inputTyping, setInputTyping] = useState(false)
+
+  const bottomRef = useRef(null)
+  const timersRef = useRef([])
+  const awaitingSendRef = useRef(false)
+  const inputTextRef = useRef('')
+  const mountedRef = useRef(false)
+
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach((t) => clearTimeout(t))
+    timersRef.current = []
+  }, [])
+
+  const schedule = useCallback(
+    (fn, ms) => {
+      const t = setTimeout(fn, ms)
+      timersRef.current.push(t)
+      return t
+    },
+    [timersRef]
+  )
+
+  useEffect(() => {
+    awaitingSendRef.current = awaitingSend
+  }, [awaitingSend])
+
+  useEffect(() => {
+    inputTextRef.current = inputText
+  }, [inputText])
+
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    requestAnimationFrame(() => {
+      try {
+        bottomRef.current?.scrollIntoView({ behavior, block: 'end' })
+      } catch {
+        // ignore
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom('smooth')
+  }, [demoMessages, assistantTyping, awaitingSend, inputText, scrollToBottom])
+
+  const handleSend = useCallback(() => {
+    if (!awaitingSendRef.current) return
+    const text = (inputTextRef.current || '').trim()
+    if (!text) return
+
+    setAwaitingSend(false)
+    setInputText('')
+    setDemoMessages((prev) => [...prev, { role: 'user', content: text }])
+    setStep((s) => s + 1)
+  }, [])
+
+  // Init / mount
+  useEffect(() => {
+    mountedRef.current = true
+    // start fresh
+    setDemoMessages([])
+    setInputText('')
+    setStep(0)
+    setAssistantTyping(false)
+    setAwaitingSend(false)
+    setInputTyping(false)
+
+    return () => {
+      mountedRef.current = false
+      clearTimers()
+    }
+  }, [clearTimers])
+
+  // Drive the script
+  useEffect(() => {
+    if (!mountedRef.current) return
+    if (step >= LANDING_DEMO_SCRIPT.length) return
+
+    clearTimers()
+
+    const item = LANDING_DEMO_SCRIPT[step]
+
+    // Small “breathing room” between steps
+    const baseDelay = item.type === 'assistant' ? 520 : 380
+
+    if (item.type === 'assistant') {
+      setAwaitingSend(false)
+      setInputTyping(false)
+      setAssistantTyping(true)
+
+      schedule(() => {
+        setAssistantTyping(false)
+        setDemoMessages((prev) => [...prev, { role: 'assistant', content: item.text }])
+
+        schedule(() => {
+          setStep((s) => s + 1)
+        }, baseDelay)
+      }, 650)
+
+      return
+    }
+
+    // user step
+    setAssistantTyping(false)
+    setAwaitingSend(false)
+    setInputTyping(true)
+    setInputText('')
+
+    const target = item.text
+    let i = 0
+
+    const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1))
+
+    const typeNext = () => {
+      if (!mountedRef.current) return
+
+      if (i >= target.length) {
+        setInputTyping(false)
+        setAwaitingSend(true)
+
+        // ✅ fallback: if user doesn’t click, auto-send so demo keeps moving
+        schedule(() => {
+          if (awaitingSendRef.current) handleSend()
+        }, 2200)
+
+        return
+      }
+
+      i += 1
+      setInputText(target.slice(0, i))
+
+      let delay = rand(18, 34)
+      const ch = target[i - 1]
+      if (ch === ',' || ch === ';') delay += rand(80, 130)
+      if (ch === '.' || ch === '!' || ch === '?') delay += rand(120, 220)
+      if (ch === '\n') delay += rand(120, 200)
+
+      schedule(typeNext, delay)
+    }
+
+    schedule(typeNext, baseDelay)
+  }, [step, clearTimers, schedule, handleSend])
+
+  return (
+    <div className="demo-terminal" aria-hidden="true">
+      <div className="demo-messages">
+        {demoMessages.map((m, idx) => (
+          <div key={idx} className={`demo-bubble ${m.role}`}>
+            {m.content}
+          </div>
+        ))}
+
+        {assistantTyping && (
+          <div className="demo-bubble assistant">
+            <span className="demo-dots" aria-hidden="true">
+              <span>•</span>
+              <span>•</span>
+              <span>•</span>
+            </span>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="demo-inputbar">
+        <div className="demo-input-row">
+          <textarea
+            className="demo-input"
+            value={inputText}
+            readOnly
+            rows={1}
+            aria-label="Demo input"
+            placeholder=""
+          />
+
+          <button
+            type="button"
+            className={`demo-send ${awaitingSend ? 'ready' : ''}`}
+            onClick={handleSend}
+            disabled={!awaitingSend || inputTyping}
+            aria-label="Send demo message"
+          >
+            <Icons.ArrowUp />
+          </button>
+        </div>
+
+        <div className="demo-hint">
+          {awaitingSend ? 'Press send' : assistantTyping ? '…' : step >= LANDING_DEMO_SCRIPT.length ? '' : ''}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
     <div className={`${ibmMono.className} landing-root`}>
@@ -438,10 +353,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       <header className="landing-topbar">
         <div className="plm-brand-wrap">
           <BrandLink variant="landing" />
-        </div>
-
-        <div className="landing-top-center">
-          <RotatingDocPill items={DEMO_DOCUMENTS} />
         </div>
 
         {/* ✅ Single actions area: Start trial + Sign in */}
@@ -462,19 +373,14 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <div className="hero-content">
           <div className="hero-terminal">
             <div className="terminal-header">
-              <div className="terminal-dots" aria-hidden="true">
-                <span className="terminal-dot red" />
-                <span className="terminal-dot yellow" />
-                <span className="terminal-dot green" />
-              </div>
-
-              <div className="terminal-title" aria-hidden="true">
-                welcome
-              </div>
+              <span className="terminal-dot red" />
+              <span className="terminal-dot yellow" />
+              <span className="terminal-dot green" />
             </div>
 
-            <div className="terminal-body">
-              <LandingDemoChat onStartTrial={onShowPricing} />
+            {/* ✅ Replaced typewriter with interactive demo */}
+            <div className="terminal-body demo">
+              <LandingDemoTerminal />
             </div>
           </div>
 
@@ -1568,25 +1474,22 @@ export default function Page() {
           pointer-events: none;
         }
 
+        /* ✅ Simplified topbar now that pill is removed */
         .landing-topbar {
           position: absolute;
           top: 0;
           left: 0;
           right: 0;
-          display: grid;
-          grid-template-columns: auto 1fr auto;
+          display: flex;
           align-items: center;
+          justify-content: space-between;
           padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
             max(24px, env(safe-area-inset-left));
           z-index: 10;
-        }
-
-        .landing-top-center {
-          justify-self: center;
+          gap: 14px;
         }
 
         .landing-top-actions {
-          justify-self: end;
           display: flex;
           align-items: center;
           gap: 8px;
@@ -1637,72 +1540,6 @@ export default function Page() {
           width: 100%;
         }
 
-        /* Doc pill */
-        .doc-pill-wrap {
-          display: flex;
-          justify-content: center;
-          width: 100%;
-        }
-
-        .doc-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px 14px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-full);
-          margin: 0 auto;
-        }
-
-        .doc-pill-icon {
-          color: var(--accent);
-          display: flex;
-        }
-
-        .doc-pill-label {
-          font-size: 10px;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-        }
-
-        .doc-pill-divider {
-          width: 1px;
-          height: 10px;
-          background: var(--border-subtle);
-        }
-
-        .doc-pill-item {
-          font-size: 11px;
-          color: var(--ink-1);
-          max-width: 180px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          animation: pill-fade 2200ms ease both;
-        }
-
-        @keyframes pill-fade {
-          0% {
-            opacity: 0;
-            transform: translateY(3px);
-          }
-          12% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          88% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-3px);
-          }
-        }
-
         /* Hero */
         .landing-hero {
           flex: 1;
@@ -1732,34 +1569,10 @@ export default function Page() {
         .terminal-header {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          gap: 10px;
+          gap: 6px;
           padding: 12px 14px;
           background: var(--bg-2);
           border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .terminal-dots {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .terminal-title {
-          font-size: 10px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-        }
-
-        .mobile-start {
-          width: 100%;
-          display: none;
-        }
-
-        .mobile-start .btn-primary {
-          width: 100%;
-          justify-content: center;
         }
 
         .terminal-dot {
@@ -1778,61 +1591,107 @@ export default function Page() {
           background: #28c840;
         }
 
-        .terminal-body {
-          padding: 18px;
-          min-height: 280px;
-        }
-
-        /* ✅ Landing interactive demo */
-        .demo-wrap {
+        .terminal-body.demo {
+          padding: 0;
+          height: clamp(320px, 44vh, 420px);
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          min-height: 0;
         }
 
-        .demo-log {
-          max-height: 220px;
+        /* ✅ Demo terminal */
+        .demo-terminal {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+
+        .demo-messages {
+          flex: 1;
+          min-height: 0;
           overflow-y: auto;
-          padding-right: 6px;
+          overflow-x: hidden;
+          padding: 18px 18px 14px;
           display: flex;
           flex-direction: column;
-          gap: 10px;
-        }
-
-        .demo-line {
-          display: flex;
-          width: 100%;
-        }
-        .demo-line.assistant {
-          justify-content: flex-start;
-        }
-        .demo-line.user {
-          justify-content: flex-end;
+          gap: 12px;
+          scroll-behavior: smooth;
         }
 
         .demo-bubble {
           max-width: 88%;
-          padding: 10px 12px;
+          padding: 11px 12px;
           border-radius: 12px;
           border: 1px solid var(--border-subtle);
           background: var(--bg-2);
-          line-height: 1.55;
+          color: var(--ink-1);
           font-size: 13px;
+          line-height: 1.55;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          animation: demo-pop 0.18s ease both;
         }
 
-        .demo-bubble.assistant {
-          color: var(--ink-1);
+        @keyframes demo-pop {
+          from {
+            opacity: 0;
+            transform: translateY(4px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .demo-bubble.user {
+          align-self: flex-end;
+          background: rgba(59, 130, 246, 0.1);
+          border-color: rgba(59, 130, 246, 0.24);
           color: var(--ink-0);
-          background: rgba(59, 130, 246, 0.12);
-          border-color: rgba(59, 130, 246, 0.28);
         }
 
-        .demo-text {
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
+        .demo-bubble.assistant {
+          align-self: flex-start;
+        }
+
+        .demo-dots {
+          display: inline-flex;
+          gap: 6px;
+          align-items: center;
+          color: var(--ink-2);
+        }
+
+        .demo-dots span {
+          display: inline-block;
+          transform: translateY(0);
+          animation: dot-bounce 1s ease-in-out infinite;
+        }
+        .demo-dots span:nth-child(2) {
+          animation-delay: 0.12s;
+        }
+        .demo-dots span:nth-child(3) {
+          animation-delay: 0.24s;
+        }
+
+        @keyframes dot-bounce {
+          0%,
+          80%,
+          100% {
+            opacity: 0.4;
+            transform: translateY(0);
+          }
+          40% {
+            opacity: 1;
+            transform: translateY(-2px);
+          }
+        }
+
+        .demo-inputbar {
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-1);
+          padding: 12px 14px;
         }
 
         .demo-input-row {
@@ -1843,126 +1702,76 @@ export default function Page() {
 
         .demo-input {
           flex: 1;
-          min-height: 44px;
-          display: flex;
-          align-items: center;
-          padding: 0 12px;
+          min-height: 40px;
+          max-height: 90px;
+          padding: 10px 12px;
           background: var(--bg-2);
           border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          min-width: 0;
-        }
-
-        .demo-placeholder {
-          color: var(--ink-3);
-          font-size: 13px;
-          line-height: 1.2;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .demo-placeholder.has {
+          border-radius: 12px;
           color: var(--ink-0);
+          font-size: 13px;
+          line-height: 1.4;
+          resize: none;
+          font-family: inherit;
+          overflow: hidden;
         }
 
-        .demo-send-wrap {
-          position: relative;
-          flex-shrink: 0;
-        }
-
-        .demo-send-btn {
-          width: 44px;
-          height: 44px;
+        .demo-send {
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: var(--radius-md);
+          border-radius: 12px;
           border: 1px solid var(--border-subtle);
           background: transparent;
           color: var(--ink-2);
           cursor: pointer;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+          flex-shrink: 0;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
         }
 
-        .demo-send-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .demo-send-btn.ready {
+        .demo-send.ready {
           background: var(--accent);
-          border-color: var(--accent);
+          border-color: rgba(59, 130, 246, 0.35);
           color: #fff;
-          box-shadow: 0 0 0 3px var(--accent-dim);
-          animation: demo-pulse 1.05s ease-in-out infinite;
+          animation: send-pulse 1.25s ease-in-out infinite;
         }
 
-        @keyframes demo-pulse {
+        @keyframes send-pulse {
           0%,
           100% {
             transform: translateY(0);
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0);
           }
           50% {
             transform: translateY(-1px);
+            box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.12);
           }
         }
 
-        .demo-send-tip {
-          position: absolute;
-          top: -26px;
-          right: 0;
-          padding: 5px 10px;
-          font-size: 10px;
-          border-radius: 9999px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          color: var(--ink-1);
-          white-space: nowrap;
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        .demo-send:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+          animation: none !important;
         }
 
-        .demo-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-        }
-
-        .demo-replay {
-          background: transparent;
-          border: none;
-          color: var(--ink-2);
+        .demo-hint {
+          margin-top: 8px;
           font-size: 11px;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          cursor: pointer;
-          font-family: inherit;
-          padding: 6px 8px;
-          border-radius: 8px;
+          color: var(--ink-3);
+          min-height: 14px;
+          user-select: none;
         }
 
-        .demo-replay:hover {
-          color: var(--ink-0);
-          background: rgba(255, 255, 255, 0.04);
+        .mobile-start {
+          width: 100%;
+          display: none;
         }
 
-        .demo-cta {
-          height: 34px;
-          padding: 0 12px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: 10px;
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          cursor: pointer;
-          transition: background 0.15s ease;
-          font-family: inherit;
-        }
-
-        .demo-cta:hover {
-          background: var(--accent-hover);
+        .mobile-start .btn-primary {
+          width: 100%;
+          justify-content: center;
         }
 
         /* Footer links */
@@ -2607,16 +2416,8 @@ export default function Page() {
         /* Responsive */
         @media (max-width: 768px) {
           .landing-topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
               max(16px, env(safe-area-inset-left));
-            gap: 14px;
-          }
-
-          .landing-top-center {
-            display: none;
           }
 
           .desktop-only {
@@ -2628,10 +2429,6 @@ export default function Page() {
 
           .landing-hero {
             padding: 120px 20px 120px;
-          }
-
-          .terminal-body {
-            min-height: 260px;
           }
 
           .plm-brand-mark {
@@ -2655,6 +2452,23 @@ export default function Page() {
             line-height: 1 !important;
           }
 
+          .mobile-start {
+            display: flex;
+          }
+
+          /* ✅ Demo tweaks on mobile to prevent any clipping */
+          .terminal-body.demo {
+            height: clamp(300px, 46vh, 400px);
+          }
+
+          .demo-messages {
+            padding: 16px 14px 12px;
+          }
+
+          .demo-bubble {
+            font-size: 12.5px;
+          }
+
           .chat-topbar {
             padding: 12px 16px;
             padding-left: max(16px, env(safe-area-inset-left));
@@ -2675,13 +2489,8 @@ export default function Page() {
             max-width: 85%;
           }
 
-          /* ✅ Tiny extra shrink on mobile empty prompt for cleaner wrap */
           .chat-empty-text {
             font-size: 13px;
-          }
-
-          .mobile-start {
-            display: flex;
           }
         }
 
