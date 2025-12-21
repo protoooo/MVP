@@ -8,7 +8,14 @@ import appleIcon from '@/app/apple-icon.png'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-export default function InfoPageLayout({ title, subtitle, eyebrow, children }) {
+export default function InfoPageLayout({ 
+  title, 
+  subtitle, 
+  eyebrow, 
+  children,
+  backHref = '/',
+  headerAction = null
+}) {
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = 'chat'
@@ -109,6 +116,34 @@ export default function InfoPageLayout({ title, subtitle, eyebrow, children }) {
 
         .info-back-link:hover {
           color: var(--ink-0);
+        }
+
+        .info-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .info-action-button {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--ink-0);
+          background: var(--bg-3);
+          border: 1px solid var(--border-subtle);
+          border-radius: 10px;
+          padding: 8px 12px;
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .info-action-button:hover:not(:disabled) {
+          background: var(--bg-2);
+          border-color: var(--border-default);
+        }
+
+        .info-action-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .info-content {
@@ -269,9 +304,12 @@ export default function InfoPageLayout({ title, subtitle, eyebrow, children }) {
               <span className="info-brand-text">protocolLM</span>
             </span>
           </Link>
-          <Link href="/" className="info-back-link">
-            ← Back
-          </Link>
+          <div className="info-actions">
+            <Link href={backHref} className="info-back-link">
+              ← Back
+            </Link>
+            {headerAction}
+          </div>
         </header>
 
         <main className="info-content">

@@ -12,6 +12,7 @@ export default function AcceptTermsPage() {
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [agreePrivacy, setAgreePrivacy] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
@@ -66,11 +67,39 @@ export default function AcceptTermsPage() {
     }
   }
 
+  const handleSignOut = async () => {
+    if (isSigningOut) return
+
+    setIsSigningOut(true)
+    setError('')
+
+    try {
+      await supabase.auth.signOut()
+      router.replace('/auth')
+    } catch (err) {
+      console.error('Sign out error:', err)
+      setError('Unable to sign out. Please try again.')
+    } finally {
+      setIsSigningOut(false)
+    }
+  }
+
   return (
     <InfoPageLayout
       title="Accept Updated Policies"
       subtitle="To continue using protocolLM, please confirm you have read and agree to our Terms of Service and Privacy Policy."
       eyebrow="Action Required"
+      backHref="/auth"
+      headerAction={
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="info-action-button"
+          disabled={isSigningOut || isSubmitting}
+        >
+          {isSigningOut ? 'Signing out…' : 'Sign out'}
+        </button>
+      }
     >
       <div className="info-section">
         <h2 className="info-section-title">What You're Agreeing To</h2>
