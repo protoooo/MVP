@@ -562,14 +562,24 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
       name: 'Starter',
       price: 49,
       priceId: STARTER_MONTHLY,
-      features: ['Unlimited usage (questions + photos)', 'Haiku — fast answers for daily checks', 'Best for quick scans and on-the-line clarity', 'Email support'],
+      // ✅ UPDATED: 3 bullets, no support-tier filler
+      features: [
+        'Unlimited usage (questions + photos)',
+        'Haiku — fast answers for daily checks',
+        'Best for quick scans and clear “what to fix” steps',
+      ],
       loadingKey: 'starter',
     },
     {
       name: 'Professional',
       price: 99,
       priceId: PRO_MONTHLY,
-      features: ['Unlimited usage (questions + photos)', 'Summit — balanced, thorough responses', 'Sharper guidance for tougher compliance calls', 'Priority support'],
+      // ✅ UPDATED: Summit -> Sonnet + 3 bullets
+      features: [
+        'Unlimited usage (questions + photos)',
+        'Sonnet — balanced, thorough responses',
+        'Better explanations for tougher compliance situations',
+      ],
       popular: true,
       loadingKey: 'pro',
     },
@@ -577,7 +587,12 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
       name: 'Enterprise',
       price: 199,
       priceId: ENTERPRISE_MONTHLY,
-      features: ['Unlimited usage (questions + photos)', 'Opus — advanced reasoning for best answers', 'Ideal for multi-location playbooks and reviews', 'Dedicated multi-location support'],
+      // ✅ UPDATED: remove multi-location/playbook wording + 3 bullets
+      features: [
+        'Unlimited usage (questions + photos)',
+        'Opus — deepest reasoning for best answers',
+        'Best for complex edge cases and nuanced policy calls',
+      ],
       loadingKey: 'enterprise',
     },
   ]
@@ -1775,25 +1790,30 @@ export default function Page() {
           justify-content: flex-end;
         }
 
+        /* ✅ UPDATED: no fill, no border — just font color difference */
         .landing-demo-bubble {
           max-width: min(560px, 82%);
-          padding: 12px 14px;
-          border-radius: 12px;
+          padding: 0;
+          border: none;
+          border-radius: 0;
           line-height: 1.55;
           font-size: 14px;
           white-space: pre-wrap;
           overflow-wrap: anywhere;
           word-break: break-word;
+          background: transparent;
         }
 
         .landing-demo-bubble.assistant {
-          background: var(--bg-2);
+          background: transparent;
           color: var(--ink-1);
+          border: none;
         }
 
         .landing-demo-bubble.user {
-          background: rgba(59, 130, 246, 0.12);
-          color: rgba(255, 255, 255, 0.9);
+          background: transparent;
+          color: var(--ink-0);
+          border: none;
         }
 
         .landing-demo-inputArea {
@@ -2289,11 +2309,6 @@ export default function Page() {
           justify-content: center;
         }
 
-        .chat-empty-state {
-          text-align: center;
-          max-width: 400px;
-        }
-
         /* ✅ Slightly smaller so "regulations." doesn't get stranded */
         .chat-empty-text {
           font-size: 14px;
@@ -2623,12 +2638,7 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
