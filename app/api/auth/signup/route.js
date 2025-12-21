@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - FIXED: NO auto-redirect, user must verify email first
+// app/api/auth/signup/route.js - FIXED: Store selected plan during signup
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -19,7 +19,7 @@ export async function POST(request) {
   
   try {
     const body = await request.json()
-    const { email, password, captchaToken } = body
+    const { email, password, captchaToken, selectedPriceId } = body
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
@@ -65,7 +65,7 @@ export async function POST(request) {
       }
     )
 
-    // Redirect to verify-email page after signup
+    // Store selected price ID in user metadata
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
@@ -74,7 +74,8 @@ export async function POST(request) {
         data: {
           source: 'signup',
           signup_ip: ip,
-          signup_timestamp: new Date().toISOString()
+          signup_timestamp: new Date().toISOString(),
+          selected_price_id: selectedPriceId || null // ✅ Store selected plan
         }
       },
     })
@@ -92,10 +93,10 @@ export async function POST(request) {
       email: email.substring(0, 3) + '***',
       userId: data.user.id,
       ip,
-      emailConfirmed: !!data.user.email_confirmed_at
+      emailConfirmed: !!data.user.email_confirmed_at,
+      selectedPlan: selectedPriceId ? selectedPriceId.substring(0, 15) + '***' : 'none'
     })
 
-    // ALWAYS require verification
     return NextResponse.json({
       success: true,
       needsVerification: true,
