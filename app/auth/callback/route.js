@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - FIXED: Proper redirect flow with card-required trials
+// app/auth/callback/route.js - FIXED: Proper redirect flow to Stripe checkout
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -85,9 +85,9 @@ export async function GET(request) {
       return NextResponse.redirect(`${baseUrl}/verify-email`)
     }
 
-    console.log('✅ Email verified, checking subscription status...')
+    console.log('✅ Email verified, checking terms acceptance...')
 
-    // Check if user has active subscription
+    // Check if user accepted terms/privacy
     const supabaseAdmin = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -102,6 +102,20 @@ export async function GET(request) {
       }
     )
 
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('accepted_terms, accepted_privacy')
+      .eq('id', data.user.id)
+      .maybeSingle()
+
+    if (!profile || !profile.accepted_terms || !profile.accepted_privacy) {
+      console.log('📋 User needs to accept terms')
+      return NextResponse.redirect(`${baseUrl}/accept-terms`)
+    }
+
+    console.log('✅ Terms accepted, checking subscription status...')
+
+    // Check if user has active subscription
     const { data: subscription } = await supabaseAdmin
       .from('subscriptions')
       .select('id, status')
@@ -110,8 +124,9 @@ export async function GET(request) {
       .maybeSingle()
 
     if (!subscription) {
-      // No subscription yet - redirect to pricing
-      console.log('📧 Email verified, no subscription - showing pricing')
+      // ✅ CRITICAL: Email verified + terms accepted but NO subscription
+      // Redirect to home with flag to show pricing modal immediately
+      console.log('💳 Email verified but no subscription - showing pricing')
       return NextResponse.redirect(`${baseUrl}/?showPricing=true&emailVerified=true`)
     }
 
