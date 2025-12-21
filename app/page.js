@@ -805,36 +805,38 @@ export default function Page() {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
-  // ✅ FIX (kept): show pricing when URL param is set (generic)
-  useEffect(() => {
-    const showPricing = searchParams?.get('showPricing')
-    if (showPricing === 'true') setShowPricingModal(true)
-  }, [searchParams])
-
-  // ✅ REQUIRED FIX: Email Verification → Stripe Flow
-  // Auto-open pricing modal after email verification, then clean URL
+  // ============================================================================
+  // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
+  // Only show pricing via URL param if authenticated
+  // ============================================================================
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     const emailVerified = searchParams?.get('emailVerified')
 
-    if (showPricing === 'true' && emailVerified === 'true') {
+    // ✅ SECURITY FIX: Only show pricing if authenticated
+    if (showPricing === 'true' && isAuthenticated) {
       setShowPricingModal(true)
-      if (typeof window !== 'undefined') {
+
+      // Clean URL if email was just verified
+      if (emailVerified === 'true' && typeof window !== 'undefined') {
         window.history.replaceState({}, '', '/')
       }
     }
-  }, [searchParams])
+  }, [searchParams, isAuthenticated])
 
-  // ✅ UPDATED: handleCheckout validates priceId and stores selected plan when not signed in
+  // ============================================================================
+  // ✅ FIX 2: Enhanced handleCheckout with better validation + error codes
+  // ============================================================================
   const handleCheckout = useCallback(
     async (priceId, planName) => {
       try {
+        // ✅ SECURITY: Validate price ID
         if (!priceId) {
           alert('Invalid price selected.')
           return
         }
 
-        // ✅ Verify priceId is valid (prevents wrong plan in Stripe)
+        // ✅ SECURITY: Verify priceId is one of the allowed values
         const validPrices = [STARTER_MONTHLY, PRO_MONTHLY, ENTERPRISE_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
           console.error('Invalid price ID:', priceId)
@@ -845,12 +847,20 @@ export default function Page() {
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
-          // ✅ STORE selected plan before showing auth
+          // ✅ Store selected plan before showing auth
           console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
           setSelectedPriceId(priceId)
           setShowPricingModal(false)
           setAuthInitialMode('signup')
           setShowAuthModal(true)
+          return
+        }
+
+        // ✅ SECURITY: Check email is verified before allowing checkout
+        if (!data.session.user.email_confirmed_at) {
+          alert('Please verify your email before starting a trial.')
+          setShowPricingModal(false)
+          router.push('/verify-email')
           return
         }
 
@@ -877,10 +887,29 @@ export default function Page() {
         })
 
         const payload = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(payload.error || 'Checkout failed')
 
-        if (payload.url) window.location.href = payload.url
-        else throw new Error('No checkout URL returned')
+        // ✅ SECURITY: Handle specific error codes
+        if (!res.ok) {
+          if (payload.code === 'EMAIL_NOT_VERIFIED') {
+            alert('Please verify your email before starting a trial.')
+            router.push('/verify-email')
+            return
+          }
+
+          if (payload.code === 'ALREADY_SUBSCRIBED') {
+            alert('You already have an active subscription.')
+            setShowPricingModal(false)
+            return
+          }
+
+          throw new Error(payload.error || 'Checkout failed')
+        }
+
+        if (payload.url) {
+          window.location.href = payload.url
+        } else {
+          throw new Error('No checkout URL returned')
+        }
       } catch (error) {
         console.error('Checkout error:', error)
         alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
@@ -888,7 +917,7 @@ export default function Page() {
         setCheckoutLoading(null)
       }
     },
-    [supabase, captchaLoaded, executeRecaptcha]
+    [supabase, captchaLoaded, executeRecaptcha, router]
   )
 
   // ✅ CRITICAL: Main authentication and subscription check
@@ -987,24 +1016,28 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
-      // ✅ IMPORTANT: don’t pop pricing if we’re about to auto-checkout
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
 
-      // ✅ If no subscription record at all, show pricing immediately (unless we have checkout/showPricing flow)
-      if (!subData) {
-        if (!checkoutParam && showPricingParam !== 'true') {
-          console.log('💳 No subscription found - showing pricing modal')
-          setShowPricingModal(true)
-          setHasActiveSubscription(false)
-        } else {
-          // keep pricing closed so checkout/pricing flows control the UI
-          setShowPricingModal(false)
-          setHasActiveSubscription(false)
-        }
+      // ✅ FIX 3: Enhanced logging (remove in production if needed)
+      if (s?.user) {
+        console.log('🔐 Auth state:', {
+          userId: String(s.user.id || '').substring(0, 8) + '***',
+          emailVerified: !!s.user.email_confirmed_at,
+          hasSubscription: !!subData,
+          subscriptionStatus: subData?.status,
+          trialEnd: subData?.trial_end ? new Date(subData.trial_end).toISOString() : null,
+        })
       }
 
-      // ✅ Check if trial expired (force pricing) - but still avoid interrupting checkout flow
+      // ✅ If no subscription record at all, show pricing immediately (unless checkout/showPricing flow)
+      if (!subData && !checkoutParam && showPricingParam !== 'true') {
+        console.log('💳 No subscription found - showing pricing modal')
+        setShowPricingModal(true)
+        setHasActiveSubscription(false)
+      }
+
+      // ✅ Check if trial expired (force pricing) - avoid interrupting checkout flow
       if (subData?.status === 'trialing' && subData?.trial_end) {
         const trialEnd = new Date(subData.trial_end)
         const now = new Date()
@@ -1194,6 +1227,15 @@ export default function Page() {
       })
     } catch (error) {
       console.error('Chat error:', error)
+
+      // ============================================================================
+      // ✅ FIX 4: Handle payment-required style errors by showing pricing
+      // ============================================================================
+      const msg = String(error?.message || '')
+      if (msg.includes('trial has ended') || msg.toLowerCase().includes('subscription')) {
+        setShowPricingModal(true)
+      }
+
       setMessages((prev) => {
         const updated = [...prev]
         updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
