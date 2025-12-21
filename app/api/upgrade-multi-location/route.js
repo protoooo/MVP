@@ -1,4 +1,4 @@
-// app/api/upgrade-multi-location/route.js
+// app/api/upgrade-multi-location/route.js - UPDATED: $149/location pricing
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -12,12 +12,12 @@ export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-const BASE_PRICE = 100
-const ADDITIONAL_LOCATION_PRICE = 80
+// ✅ UPDATED: Consistent $149 per location pricing
+const PRICE_PER_LOCATION = 149
 
 function calculatePrice(locations) {
-  if (locations <= 1) return BASE_PRICE
-  return BASE_PRICE + (ADDITIONAL_LOCATION_PRICE * (locations - 1))
+  if (locations < 1) return PRICE_PER_LOCATION
+  return PRICE_PER_LOCATION * locations
 }
 
 function getClientIp(request) {
@@ -50,7 +50,7 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const { locationCount, captchaToken } = body
 
-    // Validate location count
+    // ✅ SECURITY: Validate location count (2-10 allowed)
     if (!locationCount || locationCount < 2 || locationCount > 10) {
       logger.security('Invalid location count', { locationCount, ip })
       return NextResponse.json({ error: 'Invalid location count (2-10 allowed)' }, { status: 400 })
@@ -125,11 +125,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No active subscription found' }, { status: 404 })
     }
 
-    // Calculate new pricing
+    // ✅ Calculate new pricing ($149 per location)
     const monthlyPrice = calculatePrice(locationCount)
 
-    // Create new subscription with quantity-based pricing
-    // Cancel old subscription and create new one
+    // ✅ CRITICAL: Each location needs separate credentials
+    // This creates ONE subscription for N locations under ONE account
+    // Users CANNOT share login credentials across locations
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -144,7 +145,7 @@ export async function POST(request) {
             },
             product_data: {
               name: `protocolLM - ${locationCount} Locations`,
-              description: `Multi-location license for ${locationCount} restaurant locations`,
+              description: `Multi-location license for ${locationCount} restaurant locations. Each location requires separate login credentials for security and compliance tracking.`,
             },
             unit_amount: monthlyPrice * 100, // Convert to cents
           },
@@ -158,6 +159,9 @@ export async function POST(request) {
           locationCount: locationCount.toString(),
           isMultiLocation: 'true',
           oldSubscriptionId: currentSub.stripe_subscription_id,
+          pricePerLocation: PRICE_PER_LOCATION.toString(),
+          // ✅ SECURITY: Flag that this is multi-location (for webhook handling)
+          requiresSeparateLogins: 'true',
         },
       },
       allow_promotion_codes: true,
@@ -173,6 +177,7 @@ export async function POST(request) {
         oldSubscriptionId: currentSub.stripe_subscription_id,
         timestamp: Date.now().toString(),
         ipAddress: ip || 'unknown',
+        pricePerLocation: PRICE_PER_LOCATION.toString(),
       },
     })
 
@@ -182,6 +187,7 @@ export async function POST(request) {
       email: user.email,
       locationCount,
       monthlyPrice,
+      pricePerLocation: PRICE_PER_LOCATION,
       ip,
     })
 
