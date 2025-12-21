@@ -1635,14 +1635,12 @@ export default function Page() {
 
         .landing-demo-bubble.assistant {
           background: var(--bg-2);
-          border: 1px solid rgba(255, 255, 255, 0.06);
           color: var(--ink-1);
         }
 
         .landing-demo-bubble.user {
           background: rgba(59, 130, 246, 0.12);
-          border: 1px solid rgba(59, 130, 246, 0.18);
-          color: var(--ink-0);
+          color: rgba(255, 255, 255, 0.9);
         }
 
         .landing-demo-inputArea {
