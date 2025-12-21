@@ -639,8 +639,6 @@ export default function Page() {
   const [loadingStage, setLoadingStage] = useState('auth')
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
-
-  // ✅ ADD: subscription state
   const [subscription, setSubscription] = useState(null)
 
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -660,7 +658,6 @@ export default function Page() {
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
-
   const shouldAutoScrollRef = useRef(true)
 
   const isAuthenticated = !!session
@@ -669,6 +666,7 @@ export default function Page() {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
 
+  // Close settings menu on outside click
   useEffect(() => {
     const onDown = (e) => {
       if (!settingsRef.current) return
@@ -682,6 +680,7 @@ export default function Page() {
     }
   }, [])
 
+  // Set view attribute for CSS + optional spline container hiding
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
@@ -691,6 +690,7 @@ export default function Page() {
     }
   }, [isAuthenticated])
 
+  // Auto-scroll helpers
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
@@ -713,12 +713,13 @@ export default function Page() {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
+  // Show pricing modal if URL param is set
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
 
-  // ✅ UPDATED: check email verification + policy acceptance + subscription; store sub; show pricing after verify redirect param
+  // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
     let isMounted = true
 
@@ -734,8 +735,8 @@ export default function Page() {
         return
       }
 
+      // ✅ CRITICAL: Check if email is verified + terms accepted
       try {
-        // ✅ FIX: Check if email is verified
         if (!s.user.email_confirmed_at) {
           console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
@@ -745,12 +746,20 @@ export default function Page() {
           return
         }
 
-        // Check if user accepted terms
         const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('accepted_terms, accepted_privacy')
           .eq('id', s.user.id)
           .maybeSingle()
+
+        if (profileError) {
+          console.error('❌ Profile check error:', profileError)
+          setSubscription(null)
+          setHasActiveSubscription(false)
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
+        }
 
         if (!profile) {
           setSubscription(null)
@@ -760,17 +769,8 @@ export default function Page() {
           return
         }
 
-        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
+        const accepted = !!(profile.accepted_terms && profile.accepted_privacy)
         if (!accepted) {
-          setSubscription(null)
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        if (profileError) {
-          console.error('❌ Profile check error:', profileError)
           setSubscription(null)
           setHasActiveSubscription(false)
           setIsLoading(false)
@@ -786,25 +786,27 @@ export default function Page() {
         return
       }
 
-      // ✅ FIX: Check for active subscription
+      // ✅ CRITICAL: Check for active subscription
       let active = false
       let subData = null
+
       try {
         const { data: sub } = await supabase
           .from('subscriptions')
-          .select('status,current_period_end,trial_end')
+          .select('status,current_period_end,trial_end,price_id,plan')
           .eq('user_id', s.user.id)
           .in('status', ['active', 'trialing'])
           .order('current_period_end', { ascending: false })
           .limit(1)
           .maybeSingle()
 
-        subData = sub
+        subData = sub || null
 
-        if (sub && sub.current_period_end) {
-          const end = new Date(sub.current_period_end)
-          if (end > new Date()) active = true
-        }
+        const now = new Date()
+        const endDate =
+          sub?.current_period_end ? new Date(sub.current_period_end) : sub?.trial_end ? new Date(sub.trial_end) : null
+
+        if (endDate && endDate > now) active = true
       } catch (e) {
         console.error('Subscription check error', e)
       }
@@ -813,32 +815,38 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
-      // Check if trial expired
+      // ✅ CRITICAL: If no subscription record at all, show pricing immediately
+      if (!subData) {
+        console.log('💳 No subscription found - showing pricing modal')
+        setShowPricingModal(true)
+        setHasActiveSubscription(false)
+      }
+
+      // ✅ Check if trial expired (force pricing)
       if (subData?.status === 'trialing' && subData?.trial_end) {
         const trialEnd = new Date(subData.trial_end)
         const now = new Date()
-        
+
         if (trialEnd < now) {
           console.log('❌ Trial expired - showing pricing')
           setShowPricingModal(true)
           setHasActiveSubscription(false)
         } else {
-          // Show warning if trial ending soon (< 24 hours)
           const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
           if (hoursLeft < 24 && hoursLeft > 0) {
             console.log(`⚠️ Trial ends in ${Math.round(hoursLeft)} hours`)
           }
         }
       }
+
       setIsLoading(false)
 
-      // ✅ FIX: If email just verified, show pricing modal
+      // ✅ If email just verified, show pricing modal (and clean URL)
       if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search)
         if (urlParams.get('emailVerified') === 'true' && !active) {
           console.log('📧 Email verified - showing pricing modal')
           setShowPricingModal(true)
-          // Clean URL
           window.history.replaceState({}, '', '/')
         }
       }
@@ -1323,11 +1331,6 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 4px;
-        }
-
-        /* ✅ Mobile/desktop sign-in button (single node, styled per breakpoint) */
-        .landing-signin-btn {
-          /* inherits btn-nav styles on desktop */
         }
 
         .btn-nav {
@@ -1821,103 +1824,6 @@ export default function Page() {
           min-width: 0;
         }
 
-        /* Pricing modal */
-        .pricing-modal {
-          text-align: center;
-        }
-
-        .pricing-modal-price {
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 2px;
-          margin-bottom: 28px;
-        }
-
-        .price-currency {
-          font-size: 20px;
-          color: var(--ink-2);
-        }
-
-        .price-value {
-          font-size: 56px;
-          font-weight: 700;
-          color: var(--ink-0);
-          letter-spacing: -0.04em;
-          font-family: ${outfit.style.fontFamily};
-        }
-
-        .price-period {
-          font-size: 16px;
-          color: var(--ink-2);
-        }
-
-        .pricing-modal-buttons {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-
-        .btn-pricing-primary,
-        .btn-pricing-secondary {
-          width: 100%;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: inherit;
-          transition: background 0.15s ease, border-color 0.15s ease;
-        }
-
-        .btn-pricing-primary {
-          background: var(--accent);
-          color: #fff;
-          border: none;
-        }
-
-        .btn-pricing-primary:hover:not(:disabled) {
-          background: var(--accent-hover);
-        }
-
-        .btn-pricing-secondary {
-          background: transparent;
-          color: var(--ink-0);
-          border: 1px solid var(--border-default);
-        }
-
-        .btn-pricing-secondary:hover:not(:disabled) {
-          border-color: var(--ink-3);
-        }
-
-        .btn-pricing-primary:disabled,
-        .btn-pricing-secondary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .save-badge {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          color: #22c55e;
-          background: rgba(34, 197, 94, 0.1);
-          padding: 3px 6px;
-          border-radius: 4px;
-        }
-
-        .pricing-modal-terms {
-          font-size: 11px;
-          color: var(--ink-3);
-          margin: 0;
-        }
-
         /* Chat */
         .chat-root {
           flex: 1;
@@ -2345,9 +2251,6 @@ export default function Page() {
           .modal-card {
             padding: 24px 20px;
           }
-          .price-value {
-            font-size: 48px;
-          }
 
           .plm-brand-mark {
             width: 55px;
@@ -2427,7 +2330,7 @@ export default function Page() {
 
                     {showSettingsMenu && (
                       <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                        {/* ✅ FIX: Show billing for ALL authenticated users */}
+                        {/* ✅ Billing for all authenticated users */}
                         <button
                           type="button"
                           className="chat-settings-item"
