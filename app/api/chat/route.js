@@ -35,6 +35,19 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
+// MODEL CONSTANTS (strict tier mapping)
+// ============================================================================
+const STARTER_MODEL = process.env.ANTHROPIC_HAIKU_MODEL || 'claude-3-5-haiku-20241022'
+const PRO_MODEL = process.env.ANTHROPIC_SUMMIT_MODEL || process.env.ANTHROPIC_SONNET_MODEL || 'claude-3-7-sonnet-20250219'
+const ENTERPRISE_MODEL = process.env.ANTHROPIC_OPUS_MODEL || 'claude-opus-4-20250514'
+
+const MODEL_LABELS = {
+  [STARTER_MODEL]: 'Haiku (Starter)',
+  [PRO_MODEL]: 'Summit (Professional)',
+  [ENTERPRISE_MODEL]: 'Opus (Enterprise)',
+}
+
+// ============================================================================
 // ✅ FIXED: Model selection with STRICT enforcement (NO free upgrades)
 // ============================================================================
 
@@ -59,14 +72,14 @@ async function getModelForUser(userId, supabase) {
     // ✅ FIXED: Proper price ID to model mapping
     const modelMap = {
       // Starter tier - Haiku ($49/mo)
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: 'claude-3-5-haiku-20241022',
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: STARTER_MODEL,
 
-      // Professional tier - Sonnet ($99/mo)
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY]: 'claude-sonnet-4-20250514',
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'claude-sonnet-4-20250514', // Legacy
+      // Professional tier - Summit ($99/mo)
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY]: PRO_MODEL,
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: PRO_MODEL, // Legacy
 
       // Enterprise tier - Opus ($199/mo)
-      [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'claude-opus-4-20250514',
+      [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: ENTERPRISE_MODEL,
     }
 
     const selectedModel = modelMap[subscription.price_id]
@@ -86,11 +99,7 @@ async function getModelForUser(userId, supabase) {
       userId,
       plan: subscription.plan,
       priceId: subscription.price_id?.substring(0, 15) + '***',
-      model: selectedModel.includes('haiku')
-        ? 'Haiku (Starter)'
-        : selectedModel.includes('opus')
-          ? 'Opus (Enterprise)'
-          : 'Sonnet (Professional)',
+      model: MODEL_LABELS[selectedModel] || 'Unknown',
     })
 
     return selectedModel
@@ -650,7 +659,7 @@ export async function POST(request) {
 
     let userId = null
     let userMemory = null
-    let CLAUDE_MODEL = 'claude-sonnet-4-20250514'
+    let CLAUDE_MODEL = PRO_MODEL
 
     try {
       const cookieStore = await cookies()
@@ -1224,6 +1233,14 @@ Max findings: ${maxFindings}`
     // LOG + RETURN
     // ========================================================================
 
+    const modelLabel =
+      MODEL_LABELS[CLAUDE_MODEL] ||
+      (CLAUDE_MODEL.toLowerCase().includes('haiku')
+        ? 'Haiku (Starter)'
+        : CLAUDE_MODEL.toLowerCase().includes('opus')
+          ? 'Opus (Enterprise)'
+          : 'Summit (Professional)')
+
     logger.info('Response complete', {
       hasImage,
       status,
@@ -1233,7 +1250,7 @@ Max findings: ${maxFindings}`
       fullAudit,
       includeFines,
       cacheHit: cacheStats?.cache_hit || false,
-      model: CLAUDE_MODEL.includes('haiku') ? 'Haiku' : CLAUDE_MODEL.includes('opus') ? 'Opus' : 'Sonnet',
+      model: modelLabel,
     })
 
     await safeLogUsage({
@@ -1248,6 +1265,7 @@ Max findings: ${maxFindings}`
         message,
         _meta: {
           model: CLAUDE_MODEL,
+          modelLabel,
           hasImage,
           status,
           fullAudit,
