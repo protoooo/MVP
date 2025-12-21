@@ -21,8 +21,8 @@ export default function Auth() {
       // Execute reCAPTCHA
       const captchaToken = await executeRecaptcha('login')
       
-      if (!captchaToken) {
-        setMessage('Security verification failed. Please try again.')
+      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
+        setMessage('Security verification failed. Please allow Cloudflare Turnstile and try again.')
         setLoading(false)
         return
       }
