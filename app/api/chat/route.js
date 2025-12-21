@@ -1,6 +1,6 @@
 // app/api/chat/route.js
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
-// COMPLETE: Multi-user, single-location license enforcement
+// COMPLETE: Multi-user, single-location license enforcement + Security Enhancements
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -8,7 +8,7 @@ import { cookies } from 'next/headers'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
-import { logUsageForAnalytics, checkAccess } from '@/lib/usage' // ✅ UPDATED: add checkAccess import
+import { logUsageForAnalytics, checkAccess } from '@/lib/usage'
 import { validateSingleLocation } from '@/lib/licenseValidation'
 import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
 
@@ -678,10 +678,53 @@ export async function POST(request) {
       }
 
       // ========================================================================
-      // ✅ CRITICAL: Server-side trial expiration check (prevent paywall bypass)
+      // ✅ SECURITY ENHANCEMENT: Rate limiting (prevents abuse)
+      // ========================================================================
+      const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}` // Per minute
+      const MAX_REQUESTS_PER_MINUTE = 20
+
+      try {
+        // Simple in-memory rate limiting (consider Redis for production multi-instance)
+        const rateLimitMap = global.chatRateLimits || (global.chatRateLimits = new Map())
+        
+        const count = rateLimitMap.get(rateLimitKey) || 0
+        
+        if (count >= MAX_REQUESTS_PER_MINUTE) {
+          logger.security('Chat rate limit exceeded', { 
+            userId,
+            count,
+            limit: MAX_REQUESTS_PER_MINUTE
+          })
+          
+          return NextResponse.json({
+            error: 'Too many requests. Please wait a moment and try again.',
+            code: 'RATE_LIMIT_EXCEEDED'
+          }, { status: 429 })
+        }
+        
+        rateLimitMap.set(rateLimitKey, count + 1)
+        
+        // Clean up old entries periodically
+        if (rateLimitMap.size > 1000) {
+          const currentMinute = Math.floor(Date.now() / 60000)
+          for (const [key] of rateLimitMap.entries()) {
+            const keyMinute = parseInt(key.split('_').pop())
+            if (currentMinute - keyMinute > 5) {
+              rateLimitMap.delete(key)
+            }
+          }
+        }
+        
+      } catch (rateLimitError) {
+        // Don't block requests if rate limiting fails
+        logger.warn('Rate limit check failed', { error: rateLimitError.message })
+      }
+
+      // ========================================================================
+      // ✅ CRITICAL: Server-side trial expiration check (ENHANCED)
       // - Runs AFTER auth and BEFORE model selection
       // - Returns 402 if trial expired / no subscription
-      // - Fails open for unknown system errors (per your snippet)
+      // - Handles all subscription error codes properly
       // ========================================================================
       try {
         const accessCheck = await checkAccess(userId)
@@ -703,15 +746,29 @@ export async function POST(request) {
           plan: accessCheck?.subscription?.plan,
         })
       } catch (error) {
+        // ✅ ENHANCED: Handle all subscription/trial error codes
         if (error?.code === 'TRIAL_EXPIRED') {
-          return NextResponse.json({ error: error.message, code: 'TRIAL_EXPIRED' }, { status: 402 })
+          return NextResponse.json({ 
+            error: error.message, 
+            code: 'TRIAL_EXPIRED' 
+          }, { status: 402 })
         }
 
         if (error?.code === 'NO_SUBSCRIPTION') {
-          return NextResponse.json({ error: 'An active subscription is required.', code: 'NO_SUBSCRIPTION' }, { status: 402 })
+          return NextResponse.json({ 
+            error: 'An active subscription is required.', 
+            code: 'NO_SUBSCRIPTION' 
+          }, { status: 402 })
         }
 
-        // Unknown error - log and continue (fail open for system errors)
+        if (error?.code === 'SUBSCRIPTION_EXPIRED') {
+          return NextResponse.json({ 
+            error: error.message, 
+            code: 'SUBSCRIPTION_EXPIRED' 
+          }, { status: 402 })
+        }
+
+        // Unknown error - log and continue (fail open for system errors, not auth errors)
         logger.error('Access check failed', { error: error?.message, userId })
       }
 
