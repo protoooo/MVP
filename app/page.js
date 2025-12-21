@@ -37,7 +37,7 @@ const Icons = {
   ),
   X: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="18" y1="6" x2="6" y1="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
@@ -86,81 +86,285 @@ const DEMO_DOCUMENTS = [
   'USDA Safe Minimum Internal Temperature Chart',
 ]
 
-const TYPEWRITER_LINES = [
-  'Welcome to protocolLM.',
-  'Catch violations before they cost you.',
-  'Upload a photo — check compliance fast.',
-  'Ask about Washtenaw County regulations.',
+// ======================================================
+// ✅ Landing demo script (interactive “chat” walkthrough)
+// ======================================================
+const LANDING_DEMO_STEPS = [
+  { role: 'assistant', text: 'Hello — welcome to protocolLM.' },
+  { role: 'user', text: 'Hello, how can you help me?' },
+  {
+    role: 'assistant',
+    text: 'Upload a photo and I’ll point out potential health-code violations (and what to fix) — fast, in plain English.',
+  },
+  { role: 'user', text: 'That sounds pretty cool. What else?' },
+  {
+    role: 'assistant',
+    text: 'You can also ask questions: cooling, reheating, sanitizer, date marking, handwashing, allergies — anything in the Washtenaw County / Michigan guidance.',
+  },
+  { role: 'user', text: 'Okay. What type of violations are there and what can they cost me?' },
+  {
+    role: 'assistant',
+    text: 'Violations range from higher-risk issues (time/temperature, cross-contamination, hygiene) to lower-risk facility stuff (storage, maintenance). The “cost” adds up as re-inspections, thrown-out product, staff time, lost trust — and in severe cases, being required to stop operations until it’s fixed.',
+  },
+  { role: 'user', text: 'Sounds pretty cool. Thanks.' },
+  { role: 'assistant', text: 'No problem. Want to try it? Start your free 7-day trial.' },
 ]
 
-function useConsoleTypewriter(lines) {
-  const [output, setOutput] = useState('')
-  const [done, setDone] = useState(false)
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
 
   useEffect(() => {
-    let cancelled = false
-    let lineIndex = 0
-    let charIndex = 0
-    let buffer = ''
-    let printed = []
-    let timeoutId = null
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = () => setReduced(!!mq.matches)
+    setReduced(!!mq.matches)
 
-    const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1))
-    const isPunc = (ch) => ['.', ',', '!', '?', ':', ';'].includes(ch)
-    const isLongPunc = (ch) => ['.', '!', '?'].includes(ch)
-
-    const schedule = (ms) => {
-      timeoutId = setTimeout(step, ms)
-    }
-
-    const step = () => {
-      if (cancelled) return
-
-      const current = lines[lineIndex] || ''
-      const ch = current[charIndex]
-
-      if (lineIndex >= lines.length) {
-        setDone(true)
-        return
-      }
-
-      if (charIndex >= current.length) {
-        printed = [...printed, buffer]
-        buffer = ''
-        charIndex = 0
-        lineIndex += 1
-        setOutput(printed.join('\n'))
-
-        if (lineIndex >= lines.length) {
-          setDone(true)
-          return
-        }
-
-        return schedule(rand(650, 900))
-      }
-
-      buffer += ch
-      charIndex += 1
-      setOutput([...printed, buffer].join('\n'))
-
-      let delay = rand(55, 95)
-      if (ch === '—') delay += rand(120, 220)
-      if (isPunc(ch)) delay += rand(140, 260)
-      if (isLongPunc(ch)) delay += rand(180, 320)
-      if (ch === ' ' && Math.random() < 0.12) delay += rand(40, 90)
-
-      schedule(delay)
-    }
-
-    schedule(650)
+    if (mq.addEventListener) mq.addEventListener('change', onChange)
+    else mq.addListener(onChange)
 
     return () => {
-      cancelled = true
-      if (timeoutId) clearTimeout(timeoutId)
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange)
+      else mq.removeListener(onChange)
     }
-  }, [lines])
+  }, [])
 
-  return { output, done }
+  return reduced
+}
+
+function LandingDemoChat({ onStartTrial }) {
+  const prefersReducedMotion = usePrefersReducedMotion()
+
+  const [demoMessages, setDemoMessages] = useState([])
+  const [stepIndex, setStepIndex] = useState(0)
+
+  const [inputValue, setInputValue] = useState('')
+  const [pendingUserFull, setPendingUserFull] = useState('')
+  const [awaitSend, setAwaitSend] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const logRef = useRef(null)
+  const timersRef = useRef([])
+
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach((t) => clearTimeout(t))
+    timersRef.current = []
+  }, [])
+
+  const addTimer = useCallback((id) => {
+    timersRef.current.push(id)
+  }, [])
+
+  const rand = (min, max) => Math.floor(min + Math.random() * (max - min + 1))
+
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    const el = logRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior })
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom('smooth')
+  }, [demoMessages, scrollToBottom])
+
+  const reset = useCallback(() => {
+    clearTimers()
+    setDemoMessages([])
+    setStepIndex(0)
+    setInputValue('')
+    setPendingUserFull('')
+    setAwaitSend(false)
+    setDone(false)
+  }, [clearTimers])
+
+  // Reduced motion: show full convo instantly + CTA
+  useEffect(() => {
+    if (!prefersReducedMotion) return
+    setDemoMessages(LANDING_DEMO_STEPS.map((s) => ({ role: s.role, text: s.text })))
+    setDone(true)
+    setAwaitSend(false)
+    setInputValue('')
+    setPendingUserFull('')
+    setStepIndex(LANDING_DEMO_STEPS.length)
+    return () => {}
+  }, [prefersReducedMotion])
+
+  const typeAssistantBubble = useCallback(
+    (fullText) => {
+      setAwaitSend(false)
+      setPendingUserFull('')
+      setInputValue('')
+
+      let msgIndexLocal = -1
+      setDemoMessages((prev) => {
+        msgIndexLocal = prev.length
+        return [...prev, { role: 'assistant', text: '' }]
+      })
+
+      const baseDelay = rand(12, 22)
+      const longDelay = () => baseDelay + rand(35, 65)
+
+      let i = 0
+      const tick = () => {
+        i += 1
+        setDemoMessages((prev) => {
+          const next = [...prev]
+          const m = next[msgIndexLocal]
+          if (!m) return prev
+          next[msgIndexLocal] = { ...m, text: fullText.slice(0, i) }
+          return next
+        })
+
+        if (i < fullText.length) {
+          const ch = fullText[i - 1]
+          const isPunc = ['.', ',', '!', '?', ':', ';', '—'].includes(ch)
+          const delay = isPunc ? longDelay() : baseDelay + rand(0, 18)
+          addTimer(setTimeout(tick, delay))
+        } else {
+          addTimer(
+            setTimeout(() => {
+              setStepIndex((v) => v + 1)
+            }, rand(520, 780))
+          )
+        }
+      }
+
+      addTimer(setTimeout(tick, rand(180, 360)))
+    },
+    [addTimer]
+  )
+
+  const typeUserInput = useCallback(
+    (fullText) => {
+      setAwaitSend(false)
+      setPendingUserFull(fullText)
+      setInputValue('')
+
+      let i = 0
+      const baseDelay = rand(14, 26)
+      const longDelay = () => baseDelay + rand(40, 80)
+
+      const tick = () => {
+        i += 1
+        const partial = fullText.slice(0, i)
+        setInputValue(partial)
+
+        if (i < fullText.length) {
+          const ch = fullText[i - 1]
+          const isPunc = ['.', ',', '!', '?', ':', ';', '—'].includes(ch)
+          const delay = isPunc ? longDelay() : baseDelay + rand(0, 20)
+          addTimer(setTimeout(tick, delay))
+        } else {
+          addTimer(
+            setTimeout(() => {
+              setAwaitSend(true)
+              scrollToBottom('smooth')
+            }, rand(220, 420))
+          )
+        }
+      }
+
+      addTimer(setTimeout(tick, rand(160, 320)))
+    },
+    [addTimer, scrollToBottom]
+  )
+
+  // Drive the demo forward step-by-step
+  useEffect(() => {
+    if (prefersReducedMotion) return
+    if (done) return
+
+    if (stepIndex >= LANDING_DEMO_STEPS.length) {
+      setDone(true)
+      setAwaitSend(false)
+      setInputValue('')
+      setPendingUserFull('')
+      return
+    }
+
+    clearTimers()
+
+    const step = LANDING_DEMO_STEPS[stepIndex]
+    if (!step) return
+
+    if (step.role === 'assistant') {
+      typeAssistantBubble(step.text)
+      return
+    }
+
+    if (step.role === 'user') {
+      typeUserInput(step.text)
+      return
+    }
+  }, [stepIndex, done, prefersReducedMotion, clearTimers, typeAssistantBubble, typeUserInput])
+
+  useEffect(() => {
+    return () => {
+      clearTimers()
+    }
+  }, [clearTimers])
+
+  const handleSendDemo = useCallback(() => {
+    if (!awaitSend || !pendingUserFull) return
+
+    // Commit user message bubble
+    setDemoMessages((prev) => [...prev, { role: 'user', text: pendingUserFull }])
+
+    // Reset input + advance
+    setInputValue('')
+    setAwaitSend(false)
+    setPendingUserFull('')
+    setStepIndex((v) => v + 1)
+  }, [awaitSend, pendingUserFull])
+
+  return (
+    <div className="demo-wrap">
+      <div className="demo-log" ref={logRef} aria-label="protocolLM demo conversation">
+        {demoMessages.map((m, idx) => (
+          <div key={idx} className={`demo-line ${m.role === 'user' ? 'user' : 'assistant'}`}>
+            <div className={`demo-bubble ${m.role === 'user' ? 'user' : 'assistant'}`}>
+              <span className="demo-text">{m.text}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!done && (
+        <div className="demo-input-row" aria-label="Demo input">
+          <div className="demo-input">
+            <span className={`demo-placeholder ${inputValue ? 'has' : ''}`}>
+              {inputValue ? inputValue : 'Message…'}
+            </span>
+          </div>
+
+          <div className="demo-send-wrap">
+            <button
+              type="button"
+              className={`demo-send-btn ${awaitSend ? 'ready' : ''}`}
+              onClick={handleSendDemo}
+              disabled={!awaitSend}
+              aria-label="Send demo message"
+            >
+              <Icons.ArrowUp />
+            </button>
+
+            {awaitSend && <div className="demo-send-tip">Tap send</div>}
+          </div>
+        </div>
+      )}
+
+      <div className="demo-footer">
+        <button type="button" className="demo-replay" onClick={reset}>
+          Replay demo
+        </button>
+
+        {done && (
+          <button type="button" className="demo-cta" onClick={onStartTrial}>
+            Start 7-Day Trial
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function RotatingDocPill({ items, intervalMs = 2200 }) {
@@ -227,8 +431,6 @@ function FooterLinks() {
 }
 
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const { output: typewriter, done: typewriterDone } = useConsoleTypewriter(TYPEWRITER_LINES)
-
   return (
     <div className={`${ibmMono.className} landing-root`}>
       <div className="landing-bg" />
@@ -260,15 +462,19 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <div className="hero-content">
           <div className="hero-terminal">
             <div className="terminal-header">
-              <span className="terminal-dot red" />
-              <span className="terminal-dot yellow" />
-              <span className="terminal-dot green" />
+              <div className="terminal-dots" aria-hidden="true">
+                <span className="terminal-dot red" />
+                <span className="terminal-dot yellow" />
+                <span className="terminal-dot green" />
+              </div>
+
+              <div className="terminal-title" aria-hidden="true">
+                welcome
+              </div>
             </div>
+
             <div className="terminal-body">
-              <pre className="terminal-output">
-                {typewriter}
-                {typewriterDone && <span className="cursor-block">▌</span>}
-              </pre>
+              <LandingDemoChat onStartTrial={onShowPricing} />
             </div>
           </div>
 
@@ -1526,10 +1732,24 @@ export default function Page() {
         .terminal-header {
           display: flex;
           align-items: center;
-          gap: 6px;
+          justify-content: space-between;
+          gap: 10px;
           padding: 12px 14px;
           background: var(--bg-2);
           border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .terminal-dots {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .terminal-title {
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--ink-2);
         }
 
         .mobile-start {
@@ -1559,32 +1779,190 @@ export default function Page() {
         }
 
         .terminal-body {
-          padding: 24px;
-          min-height: 160px;
+          padding: 18px;
+          min-height: 280px;
         }
 
-        .terminal-output {
-          margin: 0;
-          font-size: 14px;
-          line-height: 1.75;
+        /* ✅ Landing interactive demo */
+        .demo-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .demo-log {
+          max-height: 220px;
+          overflow-y: auto;
+          padding-right: 6px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .demo-line {
+          display: flex;
+          width: 100%;
+        }
+        .demo-line.assistant {
+          justify-content: flex-start;
+        }
+        .demo-line.user {
+          justify-content: flex-end;
+        }
+
+        .demo-bubble {
+          max-width: 88%;
+          padding: 10px 12px;
+          border-radius: 12px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-2);
+          line-height: 1.55;
+          font-size: 13px;
+        }
+
+        .demo-bubble.assistant {
           color: var(--ink-1);
+        }
+
+        .demo-bubble.user {
+          color: var(--ink-0);
+          background: rgba(59, 130, 246, 0.12);
+          border-color: rgba(59, 130, 246, 0.28);
+        }
+
+        .demo-text {
           white-space: pre-wrap;
+          overflow-wrap: anywhere;
         }
 
-        .cursor-block {
-          color: var(--accent);
-          animation: blink 1s steps(2) infinite;
+        .demo-input-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 10px;
         }
 
-        @keyframes blink {
+        .demo-input {
+          flex: 1;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          padding: 0 12px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          min-width: 0;
+        }
+
+        .demo-placeholder {
+          color: var(--ink-3);
+          font-size: 13px;
+          line-height: 1.2;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .demo-placeholder.has {
+          color: var(--ink-0);
+        }
+
+        .demo-send-wrap {
+          position: relative;
+          flex-shrink: 0;
+        }
+
+        .demo-send-btn {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-subtle);
+          background: transparent;
+          color: var(--ink-2);
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .demo-send-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .demo-send-btn.ready {
+          background: var(--accent);
+          border-color: var(--accent);
+          color: #fff;
+          box-shadow: 0 0 0 3px var(--accent-dim);
+          animation: demo-pulse 1.05s ease-in-out infinite;
+        }
+
+        @keyframes demo-pulse {
           0%,
-          50% {
-            opacity: 1;
-          }
-          50.01%,
           100% {
-            opacity: 0;
+            transform: translateY(0);
           }
+          50% {
+            transform: translateY(-1px);
+          }
+        }
+
+        .demo-send-tip {
+          position: absolute;
+          top: -26px;
+          right: 0;
+          padding: 5px 10px;
+          font-size: 10px;
+          border-radius: 9999px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          color: var(--ink-1);
+          white-space: nowrap;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        }
+
+        .demo-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .demo-replay {
+          background: transparent;
+          border: none;
+          color: var(--ink-2);
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          cursor: pointer;
+          font-family: inherit;
+          padding: 6px 8px;
+          border-radius: 8px;
+        }
+
+        .demo-replay:hover {
+          color: var(--ink-0);
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .demo-cta {
+          height: 34px;
+          padding: 0 12px;
+          background: var(--accent);
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          transition: background 0.15s ease;
+          font-family: inherit;
+        }
+
+        .demo-cta:hover {
+          background: var(--accent-hover);
         }
 
         /* Footer links */
@@ -2251,8 +2629,9 @@ export default function Page() {
           .landing-hero {
             padding: 120px 20px 120px;
           }
-          .terminal-output {
-            font-size: 13px;
+
+          .terminal-body {
+            min-height: 260px;
           }
 
           .plm-brand-mark {
