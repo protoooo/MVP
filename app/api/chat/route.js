@@ -1,6 +1,5 @@
-// app/api/chat/route.js
+// app/api/chat/route.js - FIXED: Strict model enforcement + trial conversion grace period
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
-// COMPLETE: Multi-user, single-location license enforcement + Security Enhancements
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -36,9 +35,7 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// ✅ UPDATED: Model selection based on subscription tier - proper enforcement
-// - Throws if no active subscription so access is blocked
-// - Correct price_id -> model mapping
+// ✅ FIXED: Model selection with proper enforcement - NO free upgrades
 // ============================================================================
 
 async function getModelForUser(userId, supabase) {
@@ -57,7 +54,7 @@ async function getModelForUser(userId, supabase) {
       throw new Error('No active subscription')
     }
 
-    // ✅ FIXED: Proper price ID to model mapping
+    // ✅ FIXED: Proper price ID to model mapping - NO defaulting to expensive model
     const modelMap = {
       // Starter tier - Haiku ($49/mo)
       [process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_MONTHLY]: 'claude-3-5-haiku-20241022',
@@ -72,25 +69,28 @@ async function getModelForUser(userId, supabase) {
 
     const selectedModel = modelMap[subscription.price_id]
 
+    // ✅ CRITICAL FIX: Throw error if plan not recognized instead of defaulting
     if (!selectedModel) {
-      logger.error('Unknown price ID - defaulting to Sonnet', {
-        priceId: subscription.price_id,
+      logger.error('Unknown price ID - cannot select model', {
+        priceId: subscription.price_id?.substring(0, 20) + '***',
         userId,
       })
-      return 'claude-sonnet-4-20250514' // Safe default
+      throw new Error('Your subscription plan is not recognized. Please contact support.')
     }
 
     logger.info('Model selected for user', {
       userId,
       plan: subscription.plan,
       priceId: subscription.price_id?.substring(0, 15) + '***',
-      model: selectedModel.includes('haiku') ? 'Haiku' : selectedModel.includes('opus') ? 'Opus' : 'Sonnet',
+      model: selectedModel.includes('haiku') ? 'Haiku (Starter)' : 
+             selectedModel.includes('opus') ? 'Opus (Enterprise)' : 
+             'Sonnet (Professional)',
     })
 
     return selectedModel
   } catch (error) {
     logger.error('Model selection failed', { error: error.message, userId })
-    throw error // Re-throw to block access without subscription
+    throw error // Re-throw to block access
   }
 }
 
@@ -99,9 +99,9 @@ const VISION_TIMEOUT_MS = 20000
 const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
 
-// Retrieval config - UPDATED per Claude's recommendations
-const TOPK_PER_QUERY = 25 // up from 18
-const MAX_DOCS_FOR_CONTEXT = 40 // up from 28
+// Retrieval config
+const TOPK_PER_QUERY = 25
+const MAX_DOCS_FOR_CONTEXT = 40
 const PER_SOURCE_CAP = 4
 
 const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
@@ -123,7 +123,6 @@ function safeLine(x) {
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
-  // Strip markdown-ish characters; keep terminal-friendly formatting.
   out = out.replace(/[`#*]/g, '')
   out = out.replace(/\n{3,}/g, '\n\n')
 
@@ -151,13 +150,12 @@ function clampShort(s, max = 140) {
 }
 
 // ============================================================================
-// KEYWORD EXTRACTION - NEW per Claude's recommendations
+// KEYWORD EXTRACTION
 // ============================================================================
 
 function extractSearchKeywords(text) {
   const keywords = []
 
-  // Common compliance topics
   const topics = [
     'temperature',
     'cooling',
@@ -436,7 +434,7 @@ function normalizeSourceIds(x) {
 }
 
 // ============================================================================
-// OUTPUT RENDERING (USER-FACING: NO SOURCES/CITATIONS)
+// OUTPUT RENDERING
 // ============================================================================
 
 function renderAuditOutput(payload, opts = {}) {
@@ -538,7 +536,7 @@ function renderGuidanceOutput(payload) {
 }
 
 // ============================================================================
-// USER-FRIENDLY ERROR MESSAGES - NEW per Claude's recommendations
+// USER-FRIENDLY ERROR MESSAGES
 // ============================================================================
 
 function getUserFriendlyErrorMessage(errorMessage) {
@@ -641,7 +639,7 @@ export async function POST(request) {
     const maxFindings = fullAudit ? 8 : 4
 
     // ========================================================================
-    // AUTH + LICENSE VALIDATION (Multi-user, Single-location)
+    // AUTH + LICENSE VALIDATION
     // ========================================================================
 
     let userId = null
@@ -677,14 +675,11 @@ export async function POST(request) {
         )
       }
 
-      // ========================================================================
-      // ✅ SECURITY ENHANCEMENT: Rate limiting (prevents abuse)
-      // ========================================================================
-      const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}` // Per minute
+      // Rate limiting
+      const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}`
       const MAX_REQUESTS_PER_MINUTE = 20
 
       try {
-        // Simple in-memory rate limiting (consider Redis for production multi-instance)
         const rateLimitMap = global.chatRateLimits || (global.chatRateLimits = new Map())
         
         const count = rateLimitMap.get(rateLimitKey) || 0
@@ -704,7 +699,6 @@ export async function POST(request) {
         
         rateLimitMap.set(rateLimitKey, count + 1)
         
-        // Clean up old entries periodically
         if (rateLimitMap.size > 1000) {
           const currentMinute = Math.floor(Date.now() / 60000)
           for (const [key] of rateLimitMap.entries()) {
@@ -716,16 +710,10 @@ export async function POST(request) {
         }
         
       } catch (rateLimitError) {
-        // Don't block requests if rate limiting fails
         logger.warn('Rate limit check failed', { error: rateLimitError.message })
       }
 
-      // ========================================================================
-      // ✅ CRITICAL: Server-side trial expiration check (ENHANCED)
-      // - Runs AFTER auth and BEFORE model selection
-      // - Returns 402 if trial expired / no subscription
-      // - Handles all subscription error codes properly
-      // ========================================================================
+      // ✅ ENHANCED: Check access with trial conversion grace period
       try {
         const accessCheck = await checkAccess(userId)
 
@@ -736,17 +724,22 @@ export async function POST(request) {
               error: 'Your trial has ended. Please subscribe to continue using protocolLM.',
               code: 'TRIAL_EXPIRED',
             },
-            { status: 402 } // Payment Required
+            { status: 402 }
           )
+        }
+
+        // ✅ NEW: Check for trial conversion grace period
+        if (accessCheck.gracePeriod) {
+          logger.info('User in trial conversion grace period', { userId })
         }
 
         logger.info('Access granted', {
           userId,
           status: accessCheck?.subscription?.status,
           plan: accessCheck?.subscription?.plan,
+          gracePeriod: accessCheck?.gracePeriod || false
         })
       } catch (error) {
-        // ✅ ENHANCED: Handle all subscription/trial error codes
         if (error?.code === 'TRIAL_EXPIRED') {
           return NextResponse.json({ 
             error: error.message, 
@@ -768,7 +761,6 @@ export async function POST(request) {
           }, { status: 402 })
         }
 
-        // Unknown error - log and continue (fail open for system errors, not auth errors)
         logger.error('Access check failed', { error: error?.message, userId })
       }
 
@@ -796,7 +788,7 @@ export async function POST(request) {
               error: locationCheck.error,
               code: 'MULTI_LOCATION_ABUSE',
               message:
-                'This license appears to be shared across multiple physical locations. Each location requires its own license ($100/month per location). Contact support@protocollm.org for multi-location pricing.',
+                'This license appears to be shared across multiple physical locations. Each location requires its own license. Contact support@protocollm.org for multi-location pricing.',
             },
             { status: 403 }
           )
@@ -826,7 +818,7 @@ export async function POST(request) {
         locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
 
-      // ✅ Enforced: must have active subscription
+      // ✅ CRITICAL: Get model based on subscription tier (throws if invalid)
       try {
         CLAUDE_MODEL = await getModelForUser(userId, supabase)
       } catch (e) {
@@ -853,7 +845,7 @@ export async function POST(request) {
     const searchDocumentsFn = await getSearchDocuments()
 
     // ========================================================================
-    // VISION SCAN (if image) — UPDATED per Claude's recommendations
+    // VISION SCAN (if image)
     // ========================================================================
 
     let vision = {
@@ -930,7 +922,7 @@ Return JSON only:
             vision.issues = parsedVision.issues
               .map((i) => ({ issue: safeLine(i?.issue || ''), why: safeLine(i?.why || '') }))
               .filter((i) => i.issue)
-              .slice(0, 8) // Increased from 6 to catch more issues
+              .slice(0, 8)
           }
 
           if (Array.isArray(parsedVision.facts)) {
@@ -946,7 +938,7 @@ Return JSON only:
     }
 
     // ========================================================================
-    // DOCUMENT RETRIEVAL — UPDATED per Claude's recommendations
+    // DOCUMENT RETRIEVAL
     // ========================================================================
 
     const visionContext = [vision.searchTerms, ...vision.facts.slice(0, 6), ...vision.issues.map((i) => i.issue)]
@@ -1228,6 +1220,7 @@ Max findings: ${maxFindings}`
       fullAudit,
       includeFines,
       cacheHit: cacheStats?.cache_hit || false,
+      model: CLAUDE_MODEL.includes('haiku') ? 'Haiku' : CLAUDE_MODEL.includes('opus') ? 'Opus' : 'Sonnet'
     })
 
     await safeLogUsage({
