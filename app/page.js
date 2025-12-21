@@ -119,7 +119,7 @@ const LANDING_DEMO_STEPS = [
   },
   {
     user: 'Got it. How do I try it?',
-    assistant: 'Whenever you're ready, hit Start trial.',
+    assistant: 'Whenever you are ready, hit Start trial.',
     isFinal: true,
   },
 ]
