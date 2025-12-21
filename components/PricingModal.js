@@ -1,4 +1,4 @@
-// components/PricingModal.js - SINGLE UNLIMITED PLAN VERSION
+// components/PricingModal.js - UPDATED with multi-location purchase button
 'use client'
 
 import { IBM_Plex_Mono } from 'next/font/google'
@@ -17,6 +17,12 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <line x1="6" y1="6" x2="18" y2="18" />
       </svg>
     )
+  }
+
+  const handleMultiLocationClick = () => {
+    onClose()
+    // Trigger multi-location purchase modal
+    window.dispatchEvent(new CustomEvent('openMultiLocationPurchase'))
   }
 
   return (
@@ -165,21 +171,56 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             </p>
           </div>
 
-          {/* Multiple Locations Notice */}
+          {/* ✅ NEW: Multi-Location Section */}
           <div style={{
-            background: 'rgba(59, 130, 246, 0.05)',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '16px',
-            marginBottom: '20px'
+            padding: '24px',
+            borderTop: '1px solid var(--border-subtle)',
+            textAlign: 'center'
           }}>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent)', marginBottom: '6px' }}>
-              📍 Multiple Locations?
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '4px' }}>
+                📍 Have Multiple Locations?
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--ink-2)', lineHeight: '1.5', margin: '0 0 16px 0' }}>
+                Each restaurant location needs its own license. We make it easy to purchase and manage multiple locations.
+              </p>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--ink-1)', lineHeight: '1.5', margin: 0 }}>
-              This plan covers ONE physical restaurant location. Need more? 
-              Contact <a href="mailto:support@protocollm.org" style={{ color: 'var(--accent)' }}>support@protocollm.org</a> for 
-              multi-location pricing ($149 per location).
+
+            <button
+              onClick={handleMultiLocationClick}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                background: 'var(--bg-3)',
+                color: 'var(--ink-0)',
+                border: '1px solid var(--border-default)',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--bg-2)'
+                e.currentTarget.style.borderColor = 'var(--accent)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--bg-3)'
+                e.currentTarget.style.borderColor = 'var(--border-default)'
+              }}
+            >
+              <span>Purchase for 2+ Locations</span>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M5 12h14m-7-7l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '12px', lineHeight: '1.4' }}>
+              Corporate & franchise pricing available • Separate logins for each location
             </p>
           </div>
 
