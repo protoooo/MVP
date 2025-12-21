@@ -71,7 +71,7 @@ async function getModelForUser(userId, supabase) {
 
     const selectedModel = modelMap[subscription.price_id]
 
-    // ✅ CRITICAL: Block request if plan not recognized (do NOT default to Sonnet/Opus)
+    // ✅ CRITICAL: Block request if plan not recognized (do NOT default)
     if (!selectedModel) {
       logger.error('Unknown price ID - cannot select model', {
         priceId: subscription.price_id?.substring(0, 20) + '***',
@@ -96,7 +96,7 @@ async function getModelForUser(userId, supabase) {
     return selectedModel
   } catch (error) {
     logger.error('Model selection failed', { error: error?.message, userId, code: error?.code })
-    throw error // re-throw to block access
+    throw error
   }
 }
 
@@ -818,11 +818,12 @@ export async function POST(request) {
         locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
       })
 
-      // ✅ CRITICAL FIX: Model based on subscription tier with explicit INVALID_PLAN handling
+      // ✅ CRITICAL: Get model based on subscription tier (throws if invalid)
       try {
         CLAUDE_MODEL = await getModelForUser(userId, supabase)
       } catch (e) {
-        if (e?.code === 'INVALID_PLAN') {
+        // ✅ FIX: Handle invalid plan separately from missing subscription
+        if ((e?.code === 'INVALID_PLAN') || (e?.message && e.message.includes('not recognized'))) {
           return NextResponse.json(
             {
               error: 'Your subscription plan is not recognized. Please contact support@protocollm.org',
