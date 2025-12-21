@@ -1,4 +1,4 @@
-// app/api/create-checkout-session/route.js - FIXED: Check subscription BEFORE rate limit
+// app/api/create-checkout-session/route.js - FIXED: Enhanced security + pending session limit
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -40,6 +40,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
     }
 
+    // ✅ CSRF validation
     if (!validateCSRF(request)) {
       logger.security('CSRF validation failed in checkout', { ip })
       return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
@@ -48,11 +49,13 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const { priceId, captchaToken } = body
 
+    // ✅ Validate price ID
     if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
       logger.security('Invalid price ID attempted', { priceId, ip })
       return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 })
     }
 
+    // ✅ CAPTCHA verification
     if (!captchaToken) {
       logger.security('Missing captcha token in checkout', { ip, priceId })
       return NextResponse.json(
@@ -79,6 +82,7 @@ export async function POST(request) {
 
     logger.info('Checkout CAPTCHA verified', { ip, score: captchaResult.score, priceId })
 
+    // ✅ Authentication
     const cookieStore = await cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
       cookies: {
@@ -120,7 +124,6 @@ export async function POST(request) {
     logger.info('Email verification confirmed', { userId: user.id })
 
     // ✅ CRITICAL FIX: Check for existing subscription BEFORE rate limiting
-    // This prevents someone from creating multiple checkout sessions
     const { data: existingSubscription } = await supabase
       .from('subscriptions')
       .select('id, status')
@@ -136,7 +139,31 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Rate limit check (AFTER subscription check)
+    // ✅ NEW: Check for pending checkout sessions (prevent spam)
+    const { data: pendingSessions, error: pendingError } = await supabase
+      .from('checkout_attempts')
+      .select('id, created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+      .order('created_at', { ascending: false })
+
+    if (pendingError) {
+      logger.warn('Failed to check pending sessions', { error: pendingError.message, userId: user.id })
+      // Don't block checkout on this error - just log it
+    } else if (pendingSessions && pendingSessions.length >= 3) {
+      logger.security('Too many pending checkout sessions', { 
+        userId: user.id, 
+        email: user.email?.substring(0, 3) + '***',
+        count: pendingSessions.length,
+        ip 
+      })
+      return NextResponse.json({ 
+        error: 'You have too many pending checkout sessions. Please complete or wait for them to expire.',
+        code: 'TOO_MANY_PENDING_SESSIONS' 
+      }, { status: 429 })
+    }
+
+    // Rate limit check (AFTER subscription and pending session checks)
     try {
       const { data: recent, error: rateLimitError } = await supabase
         .from('checkout_attempts')
@@ -159,6 +186,7 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Too many checkout attempts. Please wait 1 minute.' }, { status: 429 })
       }
 
+      // ✅ Log checkout attempt
       const { error: insertError } = await supabase.from('checkout_attempts').insert({
         user_id: user.id,
         price_id: priceId,
