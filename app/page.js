@@ -8,7 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { Public_Sans, IBM_Plex_Mono } from 'next/font/google'
+import { Public_Sans, JetBrains_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
@@ -16,9 +16,8 @@ import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
 import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
 
-// ✅ “Gov + modern” typography (USWDS-adjacent)
-const publicSans = Public_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const uiSans = Public_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const uiMono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
@@ -35,7 +34,7 @@ const logger = {
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
@@ -51,11 +50,6 @@ const Icons = {
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Sparkle: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-    </svg>
-  ),
   Gear: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path
@@ -64,18 +58,17 @@ const Icons = {
         strokeLinejoin="round"
       />
       <path
-        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2 0.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
+        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2 1-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
   ),
-  Check: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
 }
+
+/* -------------------------------------------------------------------------- */
+/* Brand + footer                                                               */
+/* -------------------------------------------------------------------------- */
 
 function BrandLink({ variant = 'landing' }) {
   return (
@@ -92,7 +85,7 @@ function BrandLink({ variant = 'landing' }) {
 
 function FooterLinks() {
   return (
-    <div className={`plm-footer-links ${ibmMono.className}`}>
+    <div className={`plm-footer-links ${uiMono.className}`}>
       <Link className="plm-footer-link" href="/terms">
         Terms
       </Link>
@@ -108,13 +101,64 @@ function FooterLinks() {
   )
 }
 
-/* ------------------------------------------
-   Landing (NO demo chat) — “Clipboard extension”
-------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* Landing: “government defense / clipboard extension”                          */
+/* - No demo chat (removed)                                                     */
+/* - Short, direct: problem → solution                                          */
+/* - Monochrome + steel + controlled blue                                       */
+/* -------------------------------------------------------------------------- */
+
+function IsoClipboardMark() {
+  // Monochrome, isometric-ish, “case file / clipboard” line art.
+  // No gradients. Stroke only.
+  return (
+    <svg className="iso-mark" viewBox="0 0 420 300" fill="none" aria-hidden="true">
+      {/* base plate */}
+      <path d="M94 98 232 40l140 58-138 60L94 98Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M94 98v128l140 58V158L94 98Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M374 98v128l-140 58V158l140-60Z" stroke="currentColor" strokeWidth="2" />
+      {/* clipboard clip */}
+      <path d="M204 72l28-12 34 14-28 12-34-14Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M204 72v18l34 14V86l-34-14Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M266 74v18l-28 12V86l28-12Z" stroke="currentColor" strokeWidth="2" />
+
+      {/* “photo frame” on the board */}
+      <path d="M164 132l92-40 96 40-92 40-96-40Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M164 132v70l96 40v-70l-96-40Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M352 132v70l-92 40v-70l92-40Z" stroke="currentColor" strokeWidth="2" />
+      {/* tiny camera glyph inside */}
+      <path
+        d="M236 168l12-5 13 6-12 5-13-6Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M241 172v10l13 6v-10l-13-6Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M261 169v10l-7 3v-10l7-3Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M249.5 180.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" strokeWidth="2" />
+
+      {/* “checklist lines” */}
+      <path d="M128 174l10-4 10 4-10 4-10-4Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M152 184l44-18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M152 202l52-22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M152 220l38-16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className={`${publicSans.className} landing-root`}>
+    <div className={`${uiSans.className} landing-root`}>
       <header className="landing-topbar">
         <div className="plm-brand-wrap">
           <BrandLink variant="landing" />
@@ -131,153 +175,93 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       </header>
 
       <main className="landing-main" aria-label="protocolLM landing">
-        <section className="landing-hero">
-          <div className="landing-hero-left">
-            <div className={`landing-kicker ${ibmMono.className}`}>
-              Washtenaw County • Food safety compliance
-            </div>
+        <section className="gov-hero" aria-label="Summary">
+          <div className="gov-hero-left">
+            <div className={`gov-kicker ${uiMono.className}`}>WASHTENAW COUNTY · FOOD SAFETY COMPLIANCE</div>
 
-            <h1 className="landing-title">Compliance checks that feel like a clipboard.</h1>
+            <h1 className="gov-title">Catch violations early.</h1>
 
-            <p className="landing-subtitle">
-              Take a photo or ask a question. protocolLM cross-checks against your local rules and returns clear, actionable fixes—without
-              fluff.
+            <p className="gov-subtitle">
+              protocolLM turns photos and questions into clear, source-backed fixes — so operators can correct issues before the
+              inspection.
             </p>
 
-            <div className="landing-actions">
+            <div className="gov-brief">
+              <div className="gov-brief-row">
+                <div className={`gov-label ${uiMono.className}`}>Problem</div>
+                <div className="gov-text">Rules are long. Staff turnover is real. The inspector is not.</div>
+              </div>
+              <div className="gov-brief-row">
+                <div className={`gov-label ${uiMono.className}`}>Solution</div>
+                <div className="gov-text">One tool: take a photo or ask a question. Get the fix — in plain language.</div>
+              </div>
+            </div>
+
+            <div className="gov-actions">
               <button className="btn-primary btn-lg" onClick={onShowPricing} type="button">
-                Start 7-day trial
+                Start trial
               </button>
               <button className="btn-ghost btn-lg" onClick={onShowAuth} type="button">
                 Sign in
               </button>
             </div>
 
-            <div className="landing-meta">
-              <div className="meta-row">
-                <span className="meta-dot" />
-                <span>Built for daily station checks, manager walkthroughs, and training.</span>
+            <div className="gov-features" aria-label="Capabilities">
+              <div className="gov-feature">
+                <div className={`gov-feature-title ${uiMono.className}`}>PHOTO CHECK</div>
+                <div className="gov-feature-body">Snap a station, cooler, sink, sanitizer setup — get likely violations + what to do next.</div>
               </div>
-              <div className="meta-row">
-                <span className="meta-dot" />
-                <span>Designed to read like a report: problem → why it matters → what to do next.</span>
+              <div className="gov-feature">
+                <div className={`gov-feature-title ${uiMono.className}`}>QUESTION CHECK</div>
+                <div className="gov-feature-body">Date marking, cooling, reheating, handwashing, sanitizer, temps, storage — quick answers.</div>
               </div>
-              <div className="meta-row">
-                <span className="meta-dot" />
-                <span>Fastest path: use the camera button for a photo cross-check.</span>
+              <div className="gov-feature">
+                <div className={`gov-feature-title ${uiMono.className}`}>SOURCE DISCIPLINE</div>
+                <div className="gov-feature-body">Built to stay grounded in local rules and official references — not “vibes.”</div>
               </div>
+            </div>
+
+            <div className={`gov-footnote ${uiMono.className}`}>
+              Designed like compliance software: minimal, readable, operational.
             </div>
           </div>
 
-          <div className="landing-hero-right" aria-hidden="false">
-            <div className="sheet">
-              <div className="sheet-top">
-                <div className="sheet-title">Quick Check</div>
-                <div className={`sheet-tag ${ibmMono.className}`}>
-                  <span className="sheet-tag-icon">
-                    <Icons.Camera />
-                  </span>
-                  Photo-first workflow
+          <div className="gov-hero-right" aria-label="Visual identity">
+            <div className="gov-panel">
+              <div className={`gov-panel-head ${uiMono.className}`}>
+                FIELD CLIPBOARD · IMAGE ANALYSIS READY
+              </div>
+
+              <div className="gov-panel-body">
+                <div className="gov-iso">
+                  <IsoClipboardMark />
                 </div>
-              </div>
 
-              <div className="sheet-section">
-                <div className={`sheet-label ${ibmMono.className}`}>How it works</div>
-                <ol className="sheet-steps">
-                  <li>
-                    <span className="step-bullet">1</span>
-                    <span>Upload a photo of a station, sink, cooler, prep area, or chemical setup.</span>
-                  </li>
-                  <li>
-                    <span className="step-bullet">2</span>
-                    <span>Get likely issues in plain language with a fix list.</span>
-                  </li>
-                  <li>
-                    <span className="step-bullet">3</span>
-                    <span>Use the same screen for follow-ups and policy questions.</span>
-                  </li>
-                </ol>
-              </div>
-
-              <div className="sheet-divider" />
-
-              <div className="sheet-section">
-                <div className={`sheet-label ${ibmMono.className}`}>Typical photo checks</div>
-                <div className="pill-grid">
-                  <span className="pill">Hand sink access</span>
-                  <span className="pill">Sanitizer setup</span>
-                  <span className="pill">Date marking</span>
-                  <span className="pill">Cold holding</span>
-                  <span className="pill">Chemical labeling</span>
-                  <span className="pill">Raw / ready storage</span>
-                </div>
-              </div>
-
-              <div className="sheet-divider" />
-
-              <div className="sheet-section">
-                <div className={`sheet-label ${ibmMono.className}`}>Output style</div>
-                <div className="sheet-lines">
-                  <div className="sheet-line">
-                    <span className="line-key">Finding</span>
-                    <span className="line-val">What looks off</span>
+                <div className="gov-panel-lines">
+                  <div className="gov-line">
+                    <span className={`gov-chip ${uiMono.className}`}>CAPTURE</span>
+                    <span className="gov-line-text">Photo → structured findings</span>
                   </div>
-                  <div className="sheet-line">
-                    <span className="line-key">Why</span>
-                    <span className="line-val">The risk in one sentence</span>
+                  <div className="gov-line">
+                    <span className={`gov-chip ${uiMono.className}`}>CROSS-CHECK</span>
+                    <span className="gov-line-text">Local docs → practical fixes</span>
                   </div>
-                  <div className="sheet-line">
-                    <span className="line-key">Fix</span>
-                    <span className="line-val">Concrete steps to correct</span>
+                  <div className="gov-line">
+                    <span className={`gov-chip ${uiMono.className}`}>CORRECT</span>
+                    <span className="gov-line-text">Next steps → faster compliance</span>
                   </div>
                 </div>
-              </div>
 
-              <div className="sheet-foot">
-                <div className={`sheet-foot-note ${ibmMono.className}`}>
-                  Start with a photo → faster answers, fewer back-and-forths.
+                <div className={`gov-panel-note ${uiMono.className}`}>
+                  Tip: Photo checks are the fastest path to useful results.
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="landing-grid" aria-label="Key capabilities">
-          <div className="card">
-            <div className="card-head">
-              <span className="card-ico" aria-hidden="true">
-                <Icons.Camera />
-              </span>
-              <div className="card-title">Photo cross-check</div>
-            </div>
-            <div className="card-body">
-              Upload a real kitchen photo and get a focused list of what to fix next—written for operators, not engineers.
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <span className="card-ico" aria-hidden="true">
-                <Icons.Check />
-              </span>
-              <div className="card-title">Clear, repeatable checks</div>
-            </div>
-            <div className="card-body">Use it like a daily clipboard: same stations, same expectations, consistent output.</div>
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <span className="card-ico" aria-hidden="true">
-                <Icons.Gear />
-              </span>
-              <div className="card-title">Policy Q&amp;A</div>
-            </div>
-            <div className="card-body">Ask quick questions during service. Keep the answer short, specific, and practical.</div>
-          </div>
-        </section>
+        <FooterLinks />
       </main>
-
-      <FooterLinks />
     </div>
   )
 }
@@ -382,13 +366,13 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${publicSans.className}`}>
+        <div className={`${uiSans.className} modal-card`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
           <div className="modal-header">
-            <div className={`modal-kicker ${ibmMono.className}`}>Account access</div>
+            <div className={`modal-eyebrow ${uiMono.className}`}>SECURE ACCESS</div>
             <h2 className="modal-title">
               {mode === 'signin' && 'Sign in'}
               {mode === 'signup' && 'Create account'}
@@ -398,7 +382,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
-              <label className={`form-label ${ibmMono.className}`}>Email</label>
+              <label className={`form-label ${uiMono.className}`}>Email</label>
               <input
                 type="email"
                 value={email}
@@ -412,7 +396,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
             {mode !== 'reset' && (
               <div className="form-group">
-                <label className={`form-label ${ibmMono.className}`}>Password</label>
+                <label className={`form-label ${uiMono.className}`}>Password</label>
                 <div className="form-input-wrap">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -423,7 +407,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     className="form-input"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className={`form-toggle-vis ${ibmMono.className}`}>
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className={`form-toggle-vis ${uiMono.className}`}>
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
@@ -514,6 +498,9 @@ export default function Page() {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
 
+  // ✅ Subtle camera nudge (UI only)
+  const [cameraNudge, setCameraNudge] = useState(false)
+
   // Close settings menu on outside click
   useEffect(() => {
     const onDown = (e) => {
@@ -586,6 +573,22 @@ export default function Page() {
   useEffect(() => {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
+
+  // ✅ UI-only: nudge camera gently on first empty screen (not obnoxious)
+  useEffect(() => {
+    if (!isAuthenticated) return
+    if (messages.length !== 0) return
+
+    try {
+      const used = window.localStorage.getItem('plm_camera_used')
+      if (used) return
+      setCameraNudge(true)
+      const t = setTimeout(() => setCameraNudge(false), 5500)
+      return () => clearTimeout(t)
+    } catch {
+      // ignore
+    }
+  }, [isAuthenticated, messages.length])
 
   // ============================================================================
   // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
@@ -927,6 +930,8 @@ export default function Page() {
 
   // ============================================================================
   // ✅ NEW: Fetch multi-location “license/locationCheck” after auth + subscription exists
+  // - This is intentionally non-blocking: it won’t affect isLoading
+  // - It safely no-ops if your endpoint isn’t present yet
   // ============================================================================
   const fetchLocationCheckFromServer = useCallback(async (sess) => {
     try {
@@ -1156,16 +1161,24 @@ export default function Page() {
     }
   }
 
+  const handleCameraClick = useCallback(() => {
+    try {
+      window.localStorage.setItem('plm_camera_used', '1')
+    } catch {
+      // ignore
+    }
+    setCameraNudge(false)
+    fileInputRef.current?.click()
+  }, [])
+
   if (isLoading) {
     return (
-      <div className={`loading-screen ${publicSans.className}`}>
+      <div className={`${uiSans.className} loading-screen`}>
         <div className="loading-content">
           <div className="loading-logo">
             <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
           </div>
-          <div className={`loading-meta ${ibmMono.className}`}>
-            {loadingStage === 'auth' ? 'AUTH' : loadingStage === 'subscription' ? 'SUBSCRIPTION' : 'READY'}
-          </div>
+          <div className={`loading-label ${uiMono.className}`}>INITIALIZING</div>
           <div className="loading-bar">
             <div className="loading-bar-fill" />
           </div>
@@ -1174,37 +1187,36 @@ export default function Page() {
     )
   }
 
-  const shouldNudgeCamera = messages.length === 0 && !selectedImage && !input && !isSending
-
   return (
     <>
       <style jsx global>{`
         :root {
-          /* ✅ “Stainless steel” base */
-          --bg-0: #f6f8fb; /* app background */
-          --bg-1: #ffffff; /* paper */
-          --bg-2: #eef2f7; /* field */
-          --bg-3: #e3eaf3; /* dividers */
+          /* Stainless / paper */
+          --bg-0: #f3f5f7; /* app background */
+          --bg-1: #ffffff; /* panels */
+          --bg-2: #eef1f4; /* inputs */
+          --bg-3: #e5e9ef; /* rails */
 
-          --ink-0: #0b1220; /* primary text */
-          --ink-1: #1f2a3a; /* strong secondary */
-          --ink-2: #40536a; /* secondary */
-          --ink-3: #6f8196; /* muted */
+          /* Ink (monochrome, “defense”) */
+          --ink-0: #0b1220;
+          --ink-1: #1a2636;
+          --ink-2: #4a5566;
+          --ink-3: #6b778a;
 
-          /* ✅ Accent: set this to match your logo’s blue if needed */
-          --accent: #0b5cab;
-          --accent-hover: #094e92;
-          --accent-dim: rgba(11, 92, 171, 0.12);
+          /* Controlled blue (not “SaaS gradient blue”) */
+          --accent: #0b5bd3;
+          --accent-hover: #084aa9;
+          --accent-dim: rgba(11, 91, 211, 0.14);
 
-          --border-subtle: rgba(12, 22, 40, 0.12);
-          --border-default: rgba(12, 22, 40, 0.18);
+          --border-subtle: rgba(11, 18, 32, 0.12);
+          --border-default: rgba(11, 18, 32, 0.18);
 
-          --shadow-1: 0 1px 0 rgba(12, 22, 40, 0.04), 0 10px 24px rgba(12, 22, 40, 0.06);
-          --shadow-2: 0 1px 0 rgba(12, 22, 40, 0.05), 0 18px 44px rgba(12, 22, 40, 0.08);
+          --shadow-soft: 0 14px 40px rgba(11, 18, 32, 0.12);
+          --shadow-tight: 0 10px 24px rgba(11, 18, 32, 0.12);
 
-          --radius-sm: 10px;
-          --radius-md: 14px;
-          --radius-lg: 18px;
+          --radius-sm: 8px;
+          --radius-md: 12px;
+          --radius-lg: 16px;
           --radius-full: 9999px;
         }
 
@@ -1233,15 +1245,6 @@ export default function Page() {
           z-index: -1;
         }
 
-        @supports (-webkit-touch-callout: none) {
-          html {
-            height: -webkit-fill-available;
-          }
-          body {
-            min-height: -webkit-fill-available;
-          }
-        }
-
         a,
         button,
         input,
@@ -1258,17 +1261,23 @@ export default function Page() {
         }
 
         ::-webkit-scrollbar {
-          width: 10px;
+          width: 8px;
         }
         ::-webkit-scrollbar-track {
           background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(12, 22, 40, 0.14);
+          background: rgba(11, 18, 32, 0.18);
           border-radius: var(--radius-full);
         }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(12, 22, 40, 0.2);
+
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+          }
         }
 
         /* Loading */
@@ -1289,28 +1298,22 @@ export default function Page() {
           gap: 18px;
         }
 
-        .loading-meta {
-          font-size: 11px;
-          letter-spacing: 0.14em;
-          color: var(--ink-3);
-          user-select: none;
-        }
-
         .loading-logo {
           width: 64px;
           height: 64px;
+          filter: saturate(1);
         }
 
-        .loading-logo img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
+        .loading-label {
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          color: var(--ink-2);
         }
 
         .loading-bar {
-          width: 160px;
+          width: 140px;
           height: 2px;
-          background: rgba(12, 22, 40, 0.12);
+          background: var(--bg-3);
           border-radius: var(--radius-full);
           overflow: hidden;
         }
@@ -1319,19 +1322,19 @@ export default function Page() {
           height: 100%;
           width: 30%;
           background: var(--accent);
-          animation: loading-slide 1.05s ease-in-out infinite;
+          animation: loading-slide 1s ease-in-out infinite;
         }
 
         @keyframes loading-slide {
           0% {
-            transform: translateX(-120%);
+            transform: translateX(-110%);
           }
           100% {
             transform: translateX(420%);
           }
         }
 
-        /* App */
+        /* App wrapper */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
@@ -1350,18 +1353,18 @@ export default function Page() {
         }
 
         .plm-brand:hover {
-          opacity: 0.82;
+          opacity: 0.78;
         }
 
         .plm-brand-inner {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
         }
 
         .plm-brand-mark {
-          width: 64px;
-          height: 64px;
+          width: 56px;
+          height: 56px;
           flex-shrink: 0;
         }
 
@@ -1372,31 +1375,35 @@ export default function Page() {
         }
 
         .plm-brand-text {
-          font-size: 20px;
+          font-size: 18px;
           font-weight: 700;
           letter-spacing: -0.02em;
           white-space: nowrap;
         }
 
-        /* Buttons */
-        .btn-primary {
+        /* Buttons (defense / gov style) */
+        .btn-primary,
+        .btn-ghost {
           height: 36px;
           padding: 0 14px;
-          background: var(--accent);
-          color: #fff;
-          border: 1px solid rgba(0, 0, 0, 0);
           border-radius: var(--radius-sm);
           font-size: 13px;
-          font-weight: 700;
+          font-weight: 650;
           cursor: pointer;
-          transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
           font-family: inherit;
-          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary {
+          background: var(--accent);
+          color: #fff;
+          border: 1px solid rgba(11, 91, 211, 0.65);
+          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
         }
 
         .btn-primary:hover {
           background: var(--accent-hover);
-          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 10px 20px rgba(11, 92, 171, 0.14);
+          border-color: rgba(8, 74, 169, 0.9);
         }
 
         .btn-primary:active {
@@ -1404,59 +1411,21 @@ export default function Page() {
         }
 
         .btn-ghost {
-          height: 36px;
-          padding: 0 12px;
           background: transparent;
-          color: var(--ink-2);
-          border: 1px solid transparent;
-          border-radius: var(--radius-sm);
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-          font-family: inherit;
+          border: 1px solid var(--border-default);
+          color: var(--ink-1);
         }
 
         .btn-ghost:hover {
-          background: rgba(12, 22, 40, 0.04);
-          color: var(--ink-0);
-          border-color: rgba(12, 22, 40, 0.08);
+          border-color: rgba(11, 18, 32, 0.28);
+          background: rgba(255, 255, 255, 0.6);
         }
 
-        .btn-primary.btn-lg,
-        .btn-ghost.btn-lg {
+        .btn-lg {
           height: 44px;
           padding: 0 16px;
           font-size: 14px;
-        }
-
-        /* Footer */
-        .plm-footer-links {
-          position: absolute;
-          bottom: max(18px, env(safe-area-inset-bottom));
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          z-index: 10;
-        }
-
-        .plm-footer-link {
-          color: var(--ink-3);
-          text-decoration: none;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          transition: color 0.15s ease;
-        }
-
-        .plm-footer-link:hover {
-          color: var(--ink-1);
-        }
-        .plm-footer-sep {
-          color: rgba(12, 22, 40, 0.22);
+          border-radius: 10px;
         }
 
         /* Landing */
@@ -1467,7 +1436,6 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           background: var(--bg-0);
-          overflow: hidden;
         }
 
         .landing-topbar {
@@ -1477,312 +1445,267 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: max(16px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) 12px
+          padding: max(18px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) 14px
             max(22px, env(safe-area-inset-left));
-          background: rgba(246, 248, 251, 0.86);
+          background: rgba(243, 245, 247, 0.84);
           backdrop-filter: blur(8px);
-          border-bottom: 1px solid rgba(12, 22, 40, 0.08);
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
         }
 
         .landing-top-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
         }
 
         .landing-main {
           flex: 1;
           display: flex;
           flex-direction: column;
-          padding: 28px 22px 96px;
+          padding: 22px;
+          padding-bottom: max(24px, env(safe-area-inset-bottom));
         }
 
-        .landing-hero {
-          width: 100%;
+        .gov-hero {
+          flex: 1;
           max-width: 1080px;
           margin: 0 auto;
+          width: 100%;
           display: grid;
           grid-template-columns: 1.1fr 0.9fr;
-          gap: 28px;
+          gap: 18px;
           align-items: start;
-          padding-top: 10px;
+          padding: 18px 0 64px;
         }
 
-        .landing-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
+        .gov-hero-left,
+        .gov-hero-right {
+          min-width: 0;
+        }
+
+        .gov-kicker {
           font-size: 11px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--ink-3);
-          padding: 8px 10px;
-          border-radius: var(--radius-full);
-          border: 1px solid rgba(12, 22, 40, 0.12);
-          background: rgba(255, 255, 255, 0.62);
-          width: fit-content;
-        }
-
-        .landing-title {
-          margin: 16px 0 10px;
-          font-size: 46px;
-          line-height: 1.06;
-          letter-spacing: -0.04em;
-          color: var(--ink-0);
-          font-weight: 800;
-        }
-
-        .landing-subtitle {
-          margin: 0;
-          font-size: 16px;
-          line-height: 1.6;
+          letter-spacing: 0.16em;
           color: var(--ink-2);
-          max-width: 56ch;
-        }
-
-        .landing-actions {
-          margin-top: 18px;
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-
-        .landing-meta {
-          margin-top: 18px;
-          padding-top: 16px;
-          border-top: 1px solid rgba(12, 22, 40, 0.10);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          max-width: 70ch;
-        }
-
-        .meta-row {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          color: var(--ink-2);
-          font-size: 14px;
-          line-height: 1.55;
-        }
-
-        .meta-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 999px;
-          background: rgba(12, 22, 40, 0.22);
-          margin-top: 7px;
-          flex-shrink: 0;
-        }
-
-        .sheet {
-          background: var(--bg-1);
-          border: 1px solid rgba(12, 22, 40, 0.14);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-2);
-          overflow: hidden;
-        }
-
-        .sheet-top {
-          padding: 16px 16px 12px;
-          border-bottom: 1px solid rgba(12, 22, 40, 0.10);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          background: rgba(255, 255, 255, 0.92);
-        }
-
-        .sheet-title {
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          color: var(--ink-0);
-          font-size: 16px;
-        }
-
-        .sheet-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 11px;
-          letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--accent);
-          background: var(--accent-dim);
-          border: 1px solid rgba(11, 92, 171, 0.22);
-          padding: 8px 10px;
-          border-radius: var(--radius-full);
-          white-space: nowrap;
-        }
-
-        .sheet-tag-icon {
-          display: inline-flex;
-        }
-
-        .sheet-section {
-          padding: 14px 16px;
-        }
-
-        .sheet-label {
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--ink-3);
           margin-bottom: 10px;
         }
 
-        .sheet-steps {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          color: var(--ink-2);
-          font-size: 14px;
+        .gov-title {
+          margin: 0 0 10px;
+          font-size: 42px;
+          line-height: 1.05;
+          letter-spacing: -0.03em;
+          color: var(--ink-0);
+        }
+
+        .gov-subtitle {
+          margin: 0 0 16px;
+          font-size: 16px;
           line-height: 1.55;
-        }
-
-        .sheet-steps li {
-          display: grid;
-          grid-template-columns: 26px 1fr;
-          gap: 10px;
-          align-items: start;
-        }
-
-        .step-bullet {
-          width: 22px;
-          height: 22px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(12, 22, 40, 0.06);
-          border: 1px solid rgba(12, 22, 40, 0.12);
-          font-weight: 800;
           color: var(--ink-1);
-          font-size: 12px;
+          max-width: 56ch;
         }
 
-        .sheet-divider {
-          height: 1px;
-          background: rgba(12, 22, 40, 0.10);
+        .gov-brief {
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-1);
+          border-radius: var(--radius-lg);
+          padding: 14px 14px;
+          box-shadow: var(--shadow-soft);
         }
 
-        .pill-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          padding: 8px 10px;
-          border-radius: var(--radius-full);
-          background: rgba(12, 22, 40, 0.04);
-          border: 1px solid rgba(12, 22, 40, 0.10);
-          color: var(--ink-2);
-          font-size: 13px;
-          line-height: 1;
-          white-space: nowrap;
-        }
-
-        .sheet-lines {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .sheet-line {
+        .gov-brief-row {
           display: grid;
-          grid-template-columns: 76px 1fr;
-          gap: 10px;
+          grid-template-columns: 92px 1fr;
+          gap: 12px;
           padding: 10px 10px;
           border-radius: 12px;
-          border: 1px solid rgba(12, 22, 40, 0.10);
-          background: rgba(246, 248, 251, 0.7);
         }
 
-        .line-key {
+        .gov-brief-row + .gov-brief-row {
+          border-top: 1px solid rgba(11, 18, 32, 0.08);
+        }
+
+        .gov-label {
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          padding-top: 2px;
+        }
+
+        .gov-text {
+          font-size: 14px;
+          line-height: 1.55;
+          color: var(--ink-1);
+        }
+
+        .gov-actions {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          margin-top: 14px;
+          margin-bottom: 14px;
+        }
+
+        .gov-features {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-top: 10px;
+          max-width: 62ch;
+        }
+
+        .gov-feature {
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          background: rgba(255, 255, 255, 0.72);
+          border-radius: 14px;
+          padding: 12px 12px;
+        }
+
+        .gov-feature-title {
+          font-size: 11px;
+          letter-spacing: 0.16em;
+          color: var(--ink-2);
+          text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+
+        .gov-feature-body {
+          font-size: 14px;
+          line-height: 1.5;
+          color: var(--ink-1);
+        }
+
+        .gov-footnote {
+          margin-top: 12px;
           font-size: 11px;
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-3);
-          font-weight: 700;
         }
 
-        .line-val {
-          color: var(--ink-2);
-          font-size: 13px;
+        .gov-panel {
+          border: 1px solid var(--border-default);
+          background: var(--bg-1);
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+          box-shadow: var(--shadow-tight);
         }
 
-        .sheet-foot {
-          padding: 14px 16px 16px;
-          background: rgba(246, 248, 251, 0.62);
-          border-top: 1px solid rgba(12, 22, 40, 0.10);
-        }
-
-        .sheet-foot-note {
+        .gov-panel-head {
+          padding: 12px 14px;
           font-size: 11px;
-          letter-spacing: 0.10em;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          background: rgba(11, 18, 32, 0.03);
+          border-bottom: 1px solid rgba(11, 18, 32, 0.10);
+        }
+
+        .gov-panel-body {
+          padding: 14px 14px 14px;
+        }
+
+        .gov-iso {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6px 6px 2px;
+          color: rgba(11, 18, 32, 0.78);
+        }
+
+        .iso-mark {
+          width: 100%;
+          max-width: 420px;
+          height: auto;
+          transform-origin: center;
+          animation: iso-float 4.8s ease-in-out infinite;
+        }
+
+        @keyframes iso-float {
+          0% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
+          100% {
+            transform: translateY(0px);
+          }
+        }
+
+        .gov-panel-lines {
+          margin-top: 10px;
+          display: grid;
+          gap: 8px;
+        }
+
+        .gov-line {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 10px;
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.7);
+        }
+
+        .gov-chip {
+          font-size: 10px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          padding: 6px 8px;
+          border-radius: 999px;
+          border: 1px solid rgba(11, 18, 32, 0.16);
+          color: var(--ink-1);
+          background: rgba(243, 245, 247, 0.9);
+          white-space: nowrap;
+        }
+
+        .gov-line-text {
+          font-size: 13px;
+          color: var(--ink-1);
+        }
+
+        .gov-panel-note {
+          margin-top: 10px;
+          font-size: 11px;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-3);
         }
 
-        .landing-grid {
-          width: 100%;
-          max-width: 1080px;
-          margin: 22px auto 0;
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 12px;
-        }
-
-        .card {
-          background: rgba(255, 255, 255, 0.76);
-          border: 1px solid rgba(12, 22, 40, 0.12);
-          border-radius: var(--radius-lg);
-          padding: 16px;
-          box-shadow: var(--shadow-1);
-          transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
-        }
-
-        .card:hover {
-          transform: translateY(-1px);
-          border-color: rgba(12, 22, 40, 0.18);
-          background: rgba(255, 255, 255, 0.9);
-        }
-
-        .card-head {
+        /* Footer links */
+        .plm-footer-links {
+          position: fixed;
+          bottom: max(16px, env(safe-area-inset-bottom));
+          left: 50%;
+          transform: translateX(-50%);
           display: flex;
           align-items: center;
-          gap: 10px;
-          margin-bottom: 8px;
+          gap: 14px;
+          z-index: 10;
+          opacity: 0.9;
         }
 
-        .card-ico {
-          width: 34px;
-          height: 34px;
-          border-radius: 12px;
-          background: rgba(11, 92, 171, 0.10);
-          border: 1px solid rgba(11, 92, 171, 0.20);
-          color: var(--accent);
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        .plm-footer-link {
+          color: var(--ink-2);
+          text-decoration: none;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          transition: color 0.15s ease;
         }
 
-        .card-title {
-          font-weight: 800;
-          letter-spacing: -0.02em;
+        .plm-footer-link:hover {
           color: var(--ink-0);
         }
 
-        .card-body {
-          color: var(--ink-2);
-          font-size: 14px;
-          line-height: 1.55;
+        .plm-footer-sep {
+          color: rgba(11, 18, 32, 0.28);
         }
 
         /* Modals */
@@ -1790,7 +1713,7 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(8, 12, 18, 0.62);
+          background: rgba(11, 18, 32, 0.72);
           backdrop-filter: blur(6px);
           display: flex;
           align-items: center;
@@ -1811,7 +1734,7 @@ export default function Page() {
         .modal-container {
           width: 100%;
           max-width: 380px;
-          animation: modal-up 0.18s ease;
+          animation: modal-up 0.2s ease;
         }
 
         @keyframes modal-up {
@@ -1828,10 +1751,10 @@ export default function Page() {
         .modal-card {
           position: relative;
           background: var(--bg-1);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           border-radius: var(--radius-lg);
           padding: 26px;
-          box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 22px 70px rgba(11, 18, 32, 0.35);
         }
 
         .modal-close {
@@ -1844,34 +1767,33 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: 1px solid rgba(12, 22, 40, 0.12);
+          border: 1px solid rgba(11, 18, 32, 0.10);
           color: var(--ink-2);
           cursor: pointer;
-          border-radius: 12px;
-          transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+          border-radius: 10px;
+          transition: color 0.15s ease, background 0.15s ease;
         }
 
         .modal-close:hover {
           color: var(--ink-0);
-          background: rgba(12, 22, 40, 0.04);
-          border-color: rgba(12, 22, 40, 0.18);
+          background: rgba(11, 18, 32, 0.04);
         }
 
         .modal-header {
           margin-bottom: 18px;
         }
 
-        .modal-kicker {
+        .modal-eyebrow {
           font-size: 11px;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
-          color: var(--ink-3);
-          margin-bottom: 6px;
+          color: var(--ink-2);
+          margin-bottom: 8px;
         }
 
         .modal-title {
-          font-size: 18px;
-          font-weight: 800;
+          font-size: 20px;
+          font-weight: 750;
           margin: 0;
           color: var(--ink-0);
           letter-spacing: -0.02em;
@@ -1891,10 +1813,10 @@ export default function Page() {
 
         .form-label {
           font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--ink-3);
+          color: var(--ink-2);
+          font-weight: 700;
         }
 
         .form-input {
@@ -1902,8 +1824,8 @@ export default function Page() {
           height: 44px;
           padding: 0 12px;
           background: var(--bg-2);
-          border: 1px solid rgba(12, 22, 40, 0.14);
-          border-radius: var(--radius-sm);
+          border: 1px solid rgba(11, 18, 32, 0.14);
+          border-radius: 10px;
           color: var(--ink-0);
           font-size: 14px;
           font-family: inherit;
@@ -1911,12 +1833,12 @@ export default function Page() {
         }
 
         .form-input::placeholder {
-          color: rgba(64, 83, 106, 0.65);
+          color: rgba(11, 18, 32, 0.45);
         }
 
         .form-input:focus {
-          border-color: rgba(11, 92, 171, 0.45);
-          box-shadow: 0 0 0 4px rgba(11, 92, 171, 0.10);
+          border-color: rgba(11, 91, 211, 0.55);
+          box-shadow: 0 0 0 4px var(--accent-dim);
         }
 
         .form-input-wrap {
@@ -1933,7 +1855,7 @@ export default function Page() {
           color: var(--ink-2);
           font-size: 11px;
           font-weight: 800;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
           cursor: pointer;
           font-family: inherit;
@@ -1952,10 +1874,10 @@ export default function Page() {
           gap: 8px;
           background: var(--accent);
           color: #fff;
-          border: none;
-          border-radius: var(--radius-sm);
+          border: 1px solid rgba(11, 91, 211, 0.65);
+          border-radius: 10px;
           font-size: 14px;
-          font-weight: 800;
+          font-weight: 750;
           cursor: pointer;
           font-family: inherit;
           transition: background 0.15s ease;
@@ -1965,6 +1887,7 @@ export default function Page() {
         .btn-submit:hover:not(:disabled) {
           background: var(--accent-hover);
         }
+
         .btn-submit:disabled {
           opacity: 0.55;
           cursor: not-allowed;
@@ -1973,7 +1896,7 @@ export default function Page() {
         .spinner {
           width: 14px;
           height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.35);
+          border: 2px solid rgba(255, 255, 255, 0.3);
           border-top-color: #fff;
           border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
@@ -1987,24 +1910,25 @@ export default function Page() {
 
         .modal-message {
           padding: 10px 12px;
-          background: rgba(12, 22, 40, 0.04);
-          border: 1px solid rgba(12, 22, 40, 0.10);
-          border-radius: var(--radius-sm);
+          background: rgba(11, 18, 32, 0.04);
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          border-radius: 12px;
           font-size: 13px;
-          color: var(--ink-2);
+          color: var(--ink-1);
           text-align: center;
           margin-top: 14px;
         }
 
         .modal-message.ok {
-          color: #15803d;
-          border-color: rgba(21, 128, 61, 0.22);
-          background: rgba(21, 128, 61, 0.06);
+          color: #067647;
+          border-color: rgba(6, 118, 71, 0.25);
+          background: rgba(6, 118, 71, 0.06);
         }
+
         .modal-message.err {
-          color: #b91c1c;
-          border-color: rgba(185, 28, 28, 0.22);
-          background: rgba(185, 28, 28, 0.06);
+          color: #b42318;
+          border-color: rgba(180, 35, 24, 0.22);
+          background: rgba(180, 35, 24, 0.06);
         }
 
         .modal-footer {
@@ -2019,20 +1943,17 @@ export default function Page() {
           background: none;
           border: none;
           font-size: 13px;
-          color: var(--ink-1);
+          color: var(--ink-0);
           cursor: pointer;
           font-family: inherit;
-          opacity: 0.9;
-          font-weight: 700;
+          opacity: 0.86;
         }
 
         .modal-link:hover {
           opacity: 1;
-          text-decoration: underline;
-          text-underline-offset: 3px;
         }
 
-        /* Turnstile badge line */
+        /* ✅ Turnstile/Recaptcha line -> one line (shrink only enough) */
         .modal-card .recaptcha-badge,
         .modal-card .turnstile-badge,
         .modal-card .captcha-badge,
@@ -2044,34 +1965,7 @@ export default function Page() {
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 100%;
-          color: rgba(64, 83, 106, 0.75) !important;
-        }
-
-        /* Pricing feature rows (spacing between ✓ and text) */
-        .pricing-feature {
-          display: grid;
-          grid-template-columns: 16px 1fr;
-          column-gap: 10px;
-          align-items: start;
-          font-size: 13px;
-          line-height: 1.5;
-          opacity: 0.96;
-          color: var(--ink-2);
-        }
-
-        .pricing-feature-check {
-          width: 16px;
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          line-height: 1;
-          margin-top: 2px;
-          font-size: 14px;
-        }
-
-        .pricing-feature-text {
-          display: block;
-          min-width: 0;
+          color: rgba(11, 18, 32, 0.55) !important;
         }
 
         /* Chat */
@@ -2083,7 +1977,6 @@ export default function Page() {
           background: var(--bg-0);
           height: 100dvh;
           overflow: hidden;
-          font-family: inherit;
         }
 
         @supports (-webkit-touch-callout: none) {
@@ -2096,7 +1989,7 @@ export default function Page() {
           width: 100%;
           max-width: 980px;
           margin: 0 auto;
-          padding: 12px 22px;
+          padding: 16px 22px;
           padding-left: max(22px, env(safe-area-inset-left));
           padding-right: max(22px, env(safe-area-inset-right));
           display: flex;
@@ -2108,10 +2001,10 @@ export default function Page() {
         .chat-top-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
         }
 
-        /* Settings gear dropdown */
+        /* Settings menu */
         .chat-settings-wrap {
           position: relative;
           display: flex;
@@ -2124,19 +2017,17 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 255, 255, 0.64);
-          border: 1px solid rgba(12, 22, 40, 0.12);
-          border-radius: 14px;
-          color: var(--ink-2);
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          border-radius: 12px;
+          color: var(--ink-1);
           cursor: pointer;
-          transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+          transition: border-color 0.15s ease, background 0.15s ease;
         }
 
         .chat-settings-btn:hover {
-          color: var(--ink-0);
-          background: rgba(255, 255, 255, 0.9);
-          border-color: rgba(12, 22, 40, 0.16);
+          border-color: rgba(11, 18, 32, 0.22);
+          background: rgba(255, 255, 255, 0.95);
         }
 
         .chat-settings-menu {
@@ -2145,18 +2036,18 @@ export default function Page() {
           right: 0;
           min-width: 190px;
           background: var(--bg-1);
-          border: 1px solid rgba(12, 22, 40, 0.14);
+          border: 1px solid rgba(11, 18, 32, 0.14);
           border-radius: var(--radius-md);
           padding: 8px;
-          box-shadow: var(--shadow-2);
-          animation: dropdown-in 0.14s ease;
+          box-shadow: var(--shadow-tight);
+          animation: dropdown-in 0.15s ease;
           z-index: 50;
         }
 
         @keyframes dropdown-in {
           from {
             opacity: 0;
-            transform: translateY(6px);
+            transform: translateY(-6px);
           }
           to {
             opacity: 1;
@@ -2170,26 +2061,27 @@ export default function Page() {
           padding: 10px 10px;
           background: transparent;
           border: 1px solid transparent;
-          border-radius: 12px;
+          border-radius: 10px;
           color: var(--ink-0);
           font-size: 13px;
-          font-weight: 800;
+          font-weight: 700;
           cursor: pointer;
           font-family: inherit;
           transition: background 0.15s ease, border-color 0.15s ease;
         }
 
         .chat-settings-item:hover {
-          background: rgba(12, 22, 40, 0.04);
-          border-color: rgba(12, 22, 40, 0.10);
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.10);
         }
 
         .chat-settings-sep {
           height: 1px;
-          background: rgba(12, 22, 40, 0.10);
+          background: rgba(11, 18, 32, 0.10);
           margin: 6px 2px;
         }
 
+        /* Messages area as a “case file” */
         .chat-messages {
           flex: 1;
           min-height: 0;
@@ -2198,192 +2090,209 @@ export default function Page() {
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
           padding: 0 22px 18px;
-          background: var(--bg-0);
         }
 
-        .chat-sheet {
+        .chat-file {
           max-width: 980px;
           margin: 0 auto;
-          background: rgba(255, 255, 255, 0.72);
-          border: 1px solid rgba(12, 22, 40, 0.12);
+          background: var(--bg-1);
+          border: 1px solid rgba(11, 18, 32, 0.12);
           border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-1);
-          min-height: calc(100% - 4px);
-          padding: 16px 16px;
+          box-shadow: var(--shadow-soft);
+          overflow: hidden;
         }
 
-        .chat-messages.empty .chat-sheet {
+        .chat-file-head {
           display: flex;
           align-items: center;
-          justify-content: center;
+          justify-content: space-between;
+          padding: 12px 14px;
+          border-bottom: 1px solid rgba(11, 18, 32, 0.10);
+          background: rgba(11, 18, 32, 0.03);
         }
 
-        .chat-empty-state {
-          width: 100%;
-          max-width: 720px;
-          text-align: left;
-          padding: 6px 4px;
+        .chat-file-title {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 0;
         }
 
-        .chat-empty-eyebrow {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
+        .chat-file-kicker {
           font-size: 11px;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
-          color: var(--ink-3);
-          padding: 8px 10px;
-          border-radius: var(--radius-full);
-          border: 1px solid rgba(12, 22, 40, 0.12);
-          background: rgba(255, 255, 255, 0.7);
-          width: fit-content;
-          margin-bottom: 10px;
+          color: var(--ink-2);
+        }
+
+        .chat-file-sub {
+          font-size: 13px;
+          color: var(--ink-1);
+          line-height: 1.35;
+        }
+
+        .chat-file-body {
+          padding: 14px 14px 10px;
+        }
+
+        .chat-empty {
+          padding: 10px 0 2px;
+          display: grid;
+          gap: 10px;
+        }
+
+        .chat-empty-card {
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          background: rgba(255, 255, 255, 0.75);
+          border-radius: 14px;
+          padding: 12px 12px;
         }
 
         .chat-empty-title {
-          margin: 0 0 6px;
-          font-size: 18px;
-          font-weight: 900;
-          letter-spacing: -0.02em;
-          color: var(--ink-0);
+          font-size: 12px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          margin-bottom: 6px;
         }
 
         .chat-empty-text {
           font-size: 14px;
-          color: var(--ink-2);
-          line-height: 1.6;
-          margin: 0;
-          max-width: 66ch;
-        }
-
-        .chat-empty-hint {
-          margin-top: 12px;
-          padding-top: 12px;
-          border-top: 1px solid rgba(12, 22, 40, 0.10);
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-          color: var(--ink-2);
-          font-size: 13px;
+          color: var(--ink-1);
           line-height: 1.55;
-        }
-
-        .hint-row {
-          display: grid;
-          grid-template-columns: 20px 1fr;
-          gap: 10px;
-          align-items: start;
-        }
-
-        .hint-ico {
-          width: 20px;
-          height: 20px;
-          border-radius: 8px;
-          background: rgba(11, 92, 171, 0.10);
-          border: 1px solid rgba(11, 92, 171, 0.18);
-          color: var(--accent);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: 2px;
+          margin: 0;
+          max-width: 78ch;
         }
 
         .chat-history {
-          max-width: 860px;
-          margin: 0 auto;
-          width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 26px;
-          padding-top: 6px;
-          padding-bottom: 6px;
+          gap: 12px;
+          padding: 6px 0 4px;
         }
 
-        .chat-message {
-          display: flex;
-          width: 100%;
-          align-items: flex-start;
-        }
-        .chat-message-user {
-          justify-content: flex-end;
-        }
-        .chat-message-assistant {
-          justify-content: flex-start;
-        }
-
-        .chat-bubble {
-          max-width: 78%;
-          font-size: 15px;
-          line-height: 1.75;
-          display: block;
+        .chat-entry {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 12px;
+          align-items: start;
+          padding: 10px 10px;
+          border-radius: 14px;
+          border: 1px solid rgba(11, 18, 32, 0.08);
+          background: rgba(255, 255, 255, 0.72);
         }
 
-        /* Minimal “report text” bubbles: no fills, just alignment + tone */
-        .chat-bubble-user {
-          color: var(--ink-0);
-          font-weight: 650;
+        .chat-entry.role-user {
+          border-left: 3px solid rgba(11, 18, 32, 0.22);
         }
-        .chat-bubble-assistant {
+
+        .chat-entry.role-assistant {
+          border-left: 3px solid rgba(11, 91, 211, 0.45);
+        }
+
+        .chat-role {
+          font-size: 11px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
           color: var(--ink-2);
-          font-weight: 550;
+          padding-top: 2px;
+          white-space: nowrap;
         }
 
-        .chat-bubble-image {
-          border-radius: var(--radius-md);
-          overflow: hidden;
-          margin-bottom: 12px;
-          display: inline-block;
-          border: 1px solid rgba(12, 22, 40, 0.12);
-          background: rgba(255, 255, 255, 0.8);
-        }
-
-        .chat-bubble-image img {
-          display: block;
-          max-width: 100%;
-          max-height: 280px;
-          object-fit: contain;
-        }
-
-        .chat-content {
-          display: block;
+        .chat-body {
+          min-width: 0;
+          font-size: 14px;
+          line-height: 1.65;
+          color: var(--ink-0);
           white-space: pre-wrap;
           overflow-wrap: anywhere;
           word-break: break-word;
         }
 
+        .chat-body.assistant {
+          color: var(--ink-1);
+        }
+
         .chat-thinking {
-          display: block;
-          color: var(--ink-3);
+          color: var(--ink-2);
           font-style: italic;
         }
 
+        .chat-bubble-image {
+          border-radius: 12px;
+          overflow: hidden;
+          margin-bottom: 10px;
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          background: rgba(243, 245, 247, 0.9);
+        }
+
+        .chat-bubble-image img {
+          display: block;
+          max-width: 100%;
+          max-height: 320px;
+          object-fit: contain;
+        }
+
+        /* Input area as “clipboard footer” */
         .chat-input-area {
           flex-shrink: 0;
-          border-top: 1px solid rgba(12, 22, 40, 0.10);
-          background: rgba(246, 248, 251, 0.82);
-          backdrop-filter: blur(8px);
+          padding: 0 22px 18px;
         }
 
         .chat-input-inner {
           max-width: 980px;
           margin: 0 auto;
-          padding: 12px 22px 16px;
-          padding-bottom: max(16px, env(safe-area-inset-bottom));
+        }
+
+        .chat-input-shell {
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(11, 18, 32, 0.14);
+          border-radius: 16px;
+          box-shadow: var(--shadow-soft);
+          overflow: hidden;
+        }
+
+        .chat-input-topline {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 10px 12px;
+          border-bottom: 1px solid rgba(11, 18, 32, 0.10);
+          background: rgba(11, 18, 32, 0.03);
+        }
+
+        .chat-input-label {
+          font-size: 11px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .chat-input-hint {
+          font-size: 12px;
+          color: var(--ink-2);
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 8px 12px;
-          background: rgba(255, 255, 255, 0.72);
-          border: 1px solid rgba(12, 22, 40, 0.12);
-          border-radius: var(--radius-sm);
-          margin-bottom: 10px;
+          padding: 8px 10px;
+          background: rgba(11, 18, 32, 0.03);
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          border-radius: 12px;
+          margin: 12px 12px 0;
           font-size: 12px;
-          color: var(--ink-2);
-          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+          color: var(--ink-1);
+          width: calc(100% - 24px);
+          justify-content: space-between;
+        }
+
+        .chat-attachment-left {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
         }
 
         .chat-attachment-icon {
@@ -2392,92 +2301,125 @@ export default function Page() {
         }
 
         .chat-attachment-remove {
-          width: 26px;
-          height: 26px;
+          width: 28px;
+          height: 28px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: none;
-          color: var(--ink-3);
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          color: var(--ink-2);
           cursor: pointer;
           border-radius: 10px;
         }
 
         .chat-attachment-remove:hover {
           color: var(--ink-0);
-          background: rgba(12, 22, 40, 0.04);
+          border-color: rgba(11, 18, 32, 0.22);
         }
 
         .chat-input-row {
           display: flex;
           align-items: flex-end;
           gap: 10px;
+          padding: 12px;
         }
 
-        /* Camera button: subtle “invitation” when empty (no new buttons) */
+        /* Camera button (subtle emphasis, not obnoxious) */
         .chat-camera-btn {
-          width: 48px;
-          height: 48px;
+          width: 46px;
+          height: 46px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 255, 255, 0.78);
-          border: 1px solid rgba(11, 92, 171, 0.26);
-          border-radius: var(--radius-md);
+          background: rgba(243, 245, 247, 0.9);
+          border: 1px solid rgba(11, 91, 211, 0.35);
+          border-radius: 14px;
           color: var(--accent);
           cursor: pointer;
           flex-shrink: 0;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease;
-          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
           position: relative;
         }
 
         .chat-camera-btn:hover {
-          border-color: rgba(11, 92, 171, 0.42);
-          box-shadow: 0 0 0 4px rgba(11, 92, 171, 0.10), 0 1px 0 rgba(0, 0, 0, 0.03);
-          background: rgba(255, 255, 255, 0.92);
+          border-color: rgba(11, 91, 211, 0.55);
+          box-shadow: 0 0 0 4px var(--accent-dim);
+          background: #ffffff;
         }
 
-        .chat-camera-btn.nudge {
-          animation: camera-nudge 1.9s ease-in-out infinite;
+        .chat-camera-btn.nudge::after {
+          content: '';
+          position: absolute;
+          inset: -6px;
+          border-radius: 18px;
+          border: 1px solid rgba(11, 91, 211, 0.22);
+          animation: nudge-ring 1.6s ease-in-out infinite;
+          pointer-events: none;
         }
 
-        @keyframes camera-nudge {
-          0%,
+        @keyframes nudge-ring {
+          0% {
+            opacity: 0.0;
+            transform: scale(0.98);
+          }
+          30% {
+            opacity: 0.55;
+          }
+          70% {
+            opacity: 0.15;
+            transform: scale(1.06);
+          }
           100% {
-            transform: translateY(0);
-            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+            opacity: 0.0;
+            transform: scale(1.08);
           }
-          50% {
-            transform: translateY(-1px);
-            box-shadow: 0 0 0 6px rgba(11, 92, 171, 0.08), 0 1px 0 rgba(0, 0, 0, 0.03);
-          }
+        }
+
+        .chat-nudge-pill {
+          position: absolute;
+          left: 0;
+          top: -36px;
+          transform: translateX(-2px);
+          background: rgba(255, 255, 255, 0.95);
+          border: 1px solid rgba(11, 18, 32, 0.14);
+          color: var(--ink-1);
+          border-radius: 999px;
+          padding: 6px 10px;
+          font-size: 11px;
+          letter-spacing: 0.02em;
+          box-shadow: 0 10px 24px rgba(11, 18, 32, 0.10);
+          white-space: nowrap;
+        }
+
+        .chat-nudge-pill b {
+          color: var(--accent);
+          font-weight: 800;
         }
 
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: rgba(255, 255, 255, 0.78);
-          border: 1px solid rgba(12, 22, 40, 0.14);
-          border-radius: var(--radius-md);
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+          background: var(--bg-2);
+          border: 1px solid rgba(11, 18, 32, 0.14);
+          border-radius: 14px;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           min-width: 0;
-          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+          overflow: hidden;
         }
 
         .chat-input-wrapper:focus-within {
-          border-color: rgba(11, 92, 171, 0.40);
-          box-shadow: 0 0 0 4px rgba(11, 92, 171, 0.10), 0 1px 0 rgba(0, 0, 0, 0.03);
-          background: rgba(255, 255, 255, 0.92);
+          border-color: rgba(11, 91, 211, 0.55);
+          box-shadow: 0 0 0 4px var(--accent-dim);
+          background: rgba(255, 255, 255, 0.95);
         }
 
         .chat-textarea {
           flex: 1;
-          min-height: 48px;
+          min-height: 46px;
           max-height: 160px;
-          padding: 14px 14px;
+          padding: 12px 14px;
           background: transparent;
           border: none;
           color: var(--ink-0);
@@ -2489,32 +2431,31 @@ export default function Page() {
         }
 
         .chat-textarea::placeholder {
-          color: rgba(64, 83, 106, 0.62);
+          color: rgba(11, 18, 32, 0.45);
         }
+
         .chat-textarea:focus {
           outline: none;
         }
 
         .chat-send-btn {
-          width: 48px;
-          height: 48px;
+          width: 46px;
+          height: 46px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
           border: none;
-          color: rgba(64, 83, 106, 0.85);
+          color: rgba(11, 18, 32, 0.55);
           cursor: pointer;
           flex-shrink: 0;
-          transition: color 0.15s ease, transform 0.12s ease;
+          transition: color 0.15s ease;
         }
 
         .chat-send-btn:hover:not(:disabled) {
           color: var(--accent);
         }
-        .chat-send-btn:active:not(:disabled) {
-          transform: translateY(1px);
-        }
+
         .chat-send-btn:disabled {
           opacity: 0.35;
           cursor: not-allowed;
@@ -2523,7 +2464,7 @@ export default function Page() {
         .chat-send-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(12, 22, 40, 0.18);
+          border: 2px solid rgba(11, 18, 32, 0.18);
           border-top-color: var(--accent);
           border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
@@ -2532,88 +2473,82 @@ export default function Page() {
         .chat-disclaimer {
           text-align: center;
           font-size: 11px;
-          color: rgba(64, 83, 106, 0.72);
-          margin-top: 10px;
+          color: rgba(11, 18, 32, 0.55);
+          margin: 10px 12px 12px;
         }
 
         /* Responsive */
-        @media (max-width: 960px) {
-          .landing-hero {
+        @media (max-width: 980px) {
+          .gov-hero {
             grid-template-columns: 1fr;
+            padding-bottom: 110px;
           }
-          .landing-title {
-            font-size: 40px;
-          }
-          .landing-grid {
-            grid-template-columns: 1fr;
+          .plm-footer-links {
+            position: static;
+            transform: none;
+            left: auto;
+            bottom: auto;
+            margin: 10px auto 0;
+            padding: 0 10px 18px;
           }
         }
 
         @media (max-width: 768px) {
           .landing-main {
-            padding: 18px 16px 96px;
+            padding: 16px;
           }
 
-          .landing-title {
-            font-size: 34px;
+          .gov-title {
+            font-size: 36px;
           }
 
-          .plm-brand-mark {
-            width: 58px;
-            height: 58px;
+          .gov-actions {
+            flex-direction: column;
+            align-items: stretch;
           }
-          .plm-brand-text {
-            font-size: 18px;
+
+          .gov-actions .btn-lg {
+            width: 100%;
           }
 
           .chat-topbar {
-            padding: 10px 16px;
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
-            padding-top: max(10px, env(safe-area-inset-top));
+            padding: 12px 16px;
           }
 
           .chat-messages {
-            padding: 0 16px 14px;
+            padding: 0 16px 16px;
           }
 
-          .chat-sheet {
-            padding: 14px 12px;
+          .chat-input-area {
+            padding: 0 16px 16px;
           }
 
-          .chat-input-inner {
-            padding: 10px 16px 14px;
-            padding-bottom: max(14px, env(safe-area-inset-bottom));
+          .chat-entry {
+            grid-template-columns: 1fr;
+            gap: 8px;
           }
 
-          .chat-bubble {
-            max-width: 88%;
+          .chat-role {
+            order: 0;
+          }
+
+          .chat-body {
+            order: 1;
+          }
+
+          .plm-brand-mark {
+            width: 52px;
+            height: 52px;
           }
         }
 
         @media (max-width: 480px) {
+          .gov-title {
+            font-size: 32px;
+          }
+
           .modal-card {
             padding: 22px 18px;
-          }
-
-          .plm-brand-mark {
-            width: 54px;
-            height: 54px;
-          }
-          .plm-brand-text {
-            font-size: 17px;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          *,
-          *::before,
-          *::after {
-            animation-duration: 0.01ms !important;
-            transition-duration: 0.01ms !important;
-          }
-          .chat-camera-btn.nudge {
-            animation: none !important;
           }
         }
       `}</style>
@@ -2625,12 +2560,7 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2644,26 +2574,24 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${publicSans.className} chat-root`}>
+            <div className={`${uiSans.className} chat-root`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
                   {session && subscription && (
                     <div
-                      className={ibmMono.className}
+                      className={uiMono.className}
                       style={{
-                        marginRight: '2px',
-                        padding: '8px 10px',
+                        marginRight: '10px',
+                        padding: '6px 10px',
                         borderRadius: '999px',
                         fontSize: '11px',
                         fontWeight: '800',
                         letterSpacing: '0.12em',
                         textTransform: 'uppercase',
-                        background: subscription.status === 'trialing' ? 'rgba(11, 92, 171, 0.10)' : 'rgba(21, 128, 61, 0.10)',
-                        color: subscription.status === 'trialing' ? 'var(--accent)' : '#15803d',
-                        border: `1px solid ${
-                          subscription.status === 'trialing' ? 'rgba(11, 92, 171, 0.22)' : 'rgba(21, 128, 61, 0.22)'
-                        }`,
+                        background: subscription.status === 'trialing' ? 'rgba(11, 91, 211, 0.08)' : 'rgba(6, 118, 71, 0.07)',
+                        color: subscription.status === 'trialing' ? 'rgba(11, 91, 211, 0.95)' : 'rgba(6, 118, 71, 0.95)',
+                        border: `1px solid ${subscription.status === 'trialing' ? 'rgba(11, 91, 211, 0.18)' : 'rgba(6, 118, 71, 0.18)'}`,
                       }}
                     >
                       {subscription.status === 'trialing' ? 'Trial' : 'Active'}
@@ -2696,7 +2624,7 @@ export default function Page() {
                             }
                           }}
                         >
-                          {hasActiveSubscription ? 'Manage billing' : 'Start trial'}
+                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
                         </button>
 
                         <div className="chat-settings-sep" />
@@ -2718,69 +2646,58 @@ export default function Page() {
                 </nav>
               </header>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
-                <div className="chat-sheet">
-                  {messages.length === 0 ? (
-                    <div className="chat-empty-state">
-                      <div className={`chat-empty-eyebrow ${ibmMono.className}`}>
-                        <span style={{ display: 'inline-flex' }}>
-                          <Icons.Sparkle />
-                        </span>
-                        Ready for a check
-                      </div>
-                      <h2 className="chat-empty-title">Start with a photo, or ask a question.</h2>
-                      <p className="chat-empty-text">
-                        The camera button is the fastest way to use protocolLM. Upload a clear photo of the station and you’ll get a concise
-                        fix list.
-                      </p>
-
-                      <div className="chat-empty-hint">
-                        <div className="hint-row">
-                          <span className="hint-ico" aria-hidden="true">
-                            <Icons.Camera />
-                          </span>
-                          <span>
-                            <strong style={{ color: 'var(--ink-0)' }}>Photo cross-check:</strong> closer + well-lit beats wide shots.
-                          </span>
-                        </div>
-                        <div className="hint-row">
-                          <span className="hint-ico" aria-hidden="true">
-                            <Icons.Check />
-                          </span>
-                          <span>
-                            <strong style={{ color: 'var(--ink-0)' }}>Q&amp;A:</strong> ask one station question at a time for the cleanest output.
-                          </span>
-                        </div>
-                      </div>
+              <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
+                <div className="chat-file">
+                  <div className="chat-file-head">
+                    <div className="chat-file-title">
+                      <div className={`chat-file-kicker ${uiMono.className}`}>CASE FILE</div>
+                      <div className="chat-file-sub">Washtenaw County food safety · photo checks + Q&A</div>
                     </div>
-                  ) : (
-                    <div className="chat-history">
-                      {messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
-                        >
-                          <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
-                            {msg.image && (
-                              <div className="chat-bubble-image">
-                                <img src={msg.image} alt="Uploaded" />
-                              </div>
-                            )}
+                    <div className={`chat-file-kicker ${uiMono.className}`} style={{ color: 'rgba(11,18,32,0.45)' }}>
+                      OPERATIONAL VIEW
+                    </div>
+                  </div>
 
-                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                              <div className="chat-thinking">Analyzing…</div>
-                            ) : (
-                              <div className="chat-content">{msg.content}</div>
-                            )}
+                  <div className="chat-file-body">
+                    {messages.length === 0 ? (
+                      <div className="chat-empty">
+                        <div className="chat-empty-card">
+                          <div className={`chat-empty-title ${uiMono.className}`}>Photo check</div>
+                          <p className="chat-empty-text">
+                            Use the camera button to attach a photo. protocolLM will identify likely violations and the corrective steps.
+                          </p>
+                        </div>
+                        <div className="chat-empty-card">
+                          <div className={`chat-empty-title ${uiMono.className}`}>Question check</div>
+                          <p className="chat-empty-text">
+                            Ask about cooling, reheating, date marking, sanitizer strength, hand sinks, storage, temps — and get concise guidance.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="chat-history">
+                        {messages.map((msg, idx) => (
+                          <div key={idx} className={`chat-entry ${msg.role === 'user' ? 'role-user' : 'role-assistant'}`}>
+                            <div className={`chat-role ${uiMono.className}`}>{msg.role === 'user' ? 'Operator' : 'protocolLM'}</div>
+
+                            <div className={`chat-body ${msg.role === 'assistant' ? 'assistant' : ''}`}>
+                              {msg.image && (
+                                <div className="chat-bubble-image">
+                                  <img src={msg.image} alt="Uploaded" />
+                                </div>
+                              )}
+
+                              {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                                <div className="chat-thinking">Analyzing…</div>
+                              ) : (
+                                msg.content
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -2788,78 +2705,81 @@ export default function Page() {
                 <div className="chat-input-inner">
                   <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                  {selectedImage && (
-                    <div className="chat-attachment">
-                      <span className="chat-attachment-icon">
+                  <div className="chat-input-shell">
+                    <div className="chat-input-topline">
+                      <div className={`chat-input-label ${uiMono.className}`}>INPUT</div>
+                      <div className="chat-input-hint">Attach a photo for fastest results. Or ask a direct question.</div>
+                    </div>
+
+                    {selectedImage && (
+                      <div className="chat-attachment">
+                        <span className="chat-attachment-left">
+                          <span className="chat-attachment-icon">
+                            <Icons.Camera />
+                          </span>
+                          <span>Image attached</span>
+                        </span>
+
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="chat-attachment-remove"
+                          aria-label="Remove"
+                          type="button"
+                        >
+                          <Icons.X />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="chat-input-row">
+                      <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+
+                      <button
+                        onClick={handleCameraClick}
+                        className={`chat-camera-btn ${cameraNudge ? 'nudge' : ''}`}
+                        aria-label="Upload photo"
+                        type="button"
+                      >
+                        {cameraNudge && <div className={`chat-nudge-pill ${uiSans.className}`}>Try <b>Photo</b> check</div>}
                         <Icons.Camera />
-                      </span>
-                      <span>Image attached</span>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="chat-attachment-remove"
-                        aria-label="Remove"
-                        type="button"
-                      >
-                        <Icons.X />
                       </button>
+
+                      <div className="chat-input-wrapper">
+                        <textarea
+                          ref={textAreaRef}
+                          value={input}
+                          onChange={(e) => {
+                            setInput(e.target.value)
+                            if (textAreaRef.current) {
+                              textAreaRef.current.style.height = 'auto'
+                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
+                            }
+                          }}
+                          placeholder="Ask a question…"
+                          rows={1}
+                          className="chat-textarea"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault()
+                              handleSend(e)
+                            }
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={handleSend}
+                          disabled={(!input.trim() && !selectedImage) || isSending}
+                          className="chat-send-btn"
+                          aria-label="Send"
+                        >
+                          {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                        </button>
+                      </div>
                     </div>
-                  )}
 
-                  <div className="chat-input-row">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleImageChange}
-                    />
-
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`chat-camera-btn ${shouldNudgeCamera ? 'nudge' : ''}`}
-                      aria-label="Upload photo"
-                      type="button"
-                    >
-                      <Icons.Camera />
-                    </button>
-
-                    <div className="chat-input-wrapper">
-                      <textarea
-                        ref={textAreaRef}
-                        value={input}
-                        onChange={(e) => {
-                          setInput(e.target.value)
-                          if (textAreaRef.current) {
-                            textAreaRef.current.style.height = 'auto'
-                            textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                          }
-                        }}
-                        placeholder="Ask a question…"
-                        rows={1}
-                        className="chat-textarea"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSend(e)
-                          }
-                        }}
-                      />
-
-                      <button
-                        type="button"
-                        onClick={handleSend}
-                        disabled={(!input.trim() && !selectedImage) || isSending}
-                        className="chat-send-btn"
-                        aria-label="Send"
-                      >
-                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
-                      </button>
-                    </div>
+                    <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
                   </div>
-
-                  <p className="chat-disclaimer">
-                    protocolLM may make mistakes. Verify critical decisions with official regulations.
-                  </p>
                 </div>
               </div>
             </div>
