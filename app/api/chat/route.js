@@ -105,6 +105,79 @@ function messageContentToString(content) {
   return ''
 }
 
+function mapMessageContentToResponseParts(content) {
+  if (!content) return []
+
+  const parts = []
+
+  if (!Array.isArray(content)) {
+    const text = messageContentToString(content)
+    if (text) parts.push({ type: 'input_text', text: safeText(text) })
+    return parts
+  }
+
+  for (const part of content) {
+    if (!part) continue
+
+    if (typeof part === 'string') {
+      const text = safeText(part)
+      if (text) parts.push({ type: 'input_text', text })
+      continue
+    }
+
+    if (part.type === 'text' && part.text) {
+      const text = safeText(part.text)
+      if (text) parts.push({ type: 'input_text', text })
+      continue
+    }
+
+    if (part.type === 'image_url' && part.image_url) {
+      const imageUrl = typeof part.image_url === 'string' ? part.image_url : part.image_url.url
+      if (imageUrl) {
+        parts.push({
+          type: 'input_image',
+          image_url: imageUrl,
+          detail: 'auto',
+        })
+      }
+    }
+  }
+
+  return parts
+}
+
+function toResponseInput(messages) {
+  if (!Array.isArray(messages)) return []
+
+  const out = []
+  for (const msg of messages) {
+    const contentParts = mapMessageContentToResponseParts(msg?.content)
+    if (contentParts.length === 0) continue
+
+    out.push({
+      type: 'message',
+      role: msg?.role === 'assistant' || msg?.role === 'system' || msg?.role === 'developer' ? msg.role : 'user',
+      content: contentParts,
+    })
+  }
+  return out
+}
+
+function responseOutputToString(resp) {
+  if (!resp) return ''
+  if (typeof resp.output_text === 'string') return resp.output_text
+
+  const outputs = Array.isArray(resp.output) ? resp.output : []
+  for (const item of outputs) {
+    const content = Array.isArray(item?.content) ? item.content : []
+    for (const c of content) {
+      if (typeof c?.text === 'string') return c.text
+      if (typeof c?.output_text === 'string') return c.output_text
+    }
+  }
+  return ''
+}
+
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
   return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
 }
@@ -533,14 +606,16 @@ async function safeLogUsage(payload) {
 
 function buildCacheStats(usage) {
   if (!usage) return null
-  const promptTokens = usage.prompt_tokens || 0
-  const completionTokens = usage.completion_tokens || 0
-  const totalTokens = usage.total_tokens || promptTokens + completionTokens
+  const promptTokens = usage.prompt_tokens ?? usage.input_tokens ?? 0
+  const completionTokens = usage.completion_tokens ?? usage.output_tokens ?? 0
+  const totalTokens =
+    usage.total_tokens ??
+    (typeof promptTokens === 'number' && typeof completionTokens === 'number' ? promptTokens + completionTokens : null)
 
   return {
     prompt_tokens: promptTokens,
     completion_tokens: completionTokens,
-    total_tokens: totalTokens,
+    total_tokens: totalTokens ?? 0,
   }
 }
 
@@ -779,11 +854,11 @@ export async function POST(request) {
     if (hasImage && imageBase64) {
       try {
         const visionResp = await withTimeout(
-          openai.chat.completions.create({
+          openai.responses.create({
             model: OPENAI_MODEL,
             temperature: 0,
             max_output_tokens: 750,
-            messages: [
+            input: toResponseInput([
               {
                 role: 'user',
                 content: [
@@ -820,13 +895,13 @@ Return JSON only:
                   { type: 'image_url', image_url: { url: `data:${imageMediaType || 'image/jpeg'};base64,${imageBase64}` } },
                 ],
               },
-            ],
+            ]),
           }),
           VISION_TIMEOUT_MS,
           'VISION_TIMEOUT'
         )
 
-        const visionText = messageContentToString(visionResp.choices?.[0]?.message?.content || '')
+        const visionText = responseOutputToString(visionResp)
 
         const parsedVision = extractJsonObject(visionText)
         if (parsedVision) {
@@ -1026,20 +1101,17 @@ Max findings: ${maxFindings}`
       }
 
       const answerResp = await withTimeout(
-        openai.chat.completions.create({
+        openai.responses.create({
           model: OPENAI_MODEL,
           temperature: 0.15,
           max_output_tokens: fullAudit ? 1300 : 950,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...finalMessages,
-          ],
+          input: toResponseInput([{ role: 'system', content: systemPrompt }, ...finalMessages]),
         }),
         ANSWER_TIMEOUT_MS,
         'ANSWER_TIMEOUT'
       )
 
-      modelText = messageContentToString(answerResp.choices?.[0]?.message?.content || '')
+      modelText = responseOutputToString(answerResp)
 
       parsed = extractJsonObject(modelText)
       usageStats = buildCacheStats(answerResp.usage)
