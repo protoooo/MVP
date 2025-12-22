@@ -125,19 +125,15 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-kicker">Multi-location ready</div>
 
           <div className="hero-headings">
-            <h1 className="hero-title">Take photos to catch violations.</h1>
+            <h1 className="hero-title">Catch Violations, Not Fines.</h1>
             <p className="hero-support">
-              Helps your team stay on top of Washtenaw County regulations and policies.
+              Prepare for health inspections and stay compliant with Protocol LM. Using image analysis to cross-check for
+              violations and access to Washtenaw County regulations and policies.
             </p>
           </div>
 
           <div className="hero-cta-row">
             <div className="hero-arrow-text">Get started in minutes</div>
-            <div className="hero-arrow" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
             <button className="btn-primary hero-cta" onClick={onShowPricing} type="button">
               Start trial
             </button>
@@ -1454,7 +1450,7 @@ export default function Page() {
         .hero-cta-row {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
           justify-content: center;
           flex-wrap: nowrap;
           flex-direction: row;
@@ -1507,49 +1503,6 @@ export default function Page() {
           color: var(--ink-1);
           font-size: 14px;
           font-weight: 600;
-        }
-
-        .hero-arrow {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 48px;
-          height: 24px;
-          color: var(--accent);
-        }
-
-        .hero-arrow span {
-          display: block;
-          width: 12px;
-          height: 12px;
-          border-bottom: 3px solid currentColor;
-          border-right: 3px solid currentColor;
-          transform: rotate(45deg);
-          margin: -4px;
-          animation: hero-arrow-animate 1.8s infinite;
-        }
-
-        .hero-arrow span:nth-child(2) {
-          animation-delay: -0.2s;
-        }
-
-        .hero-arrow span:nth-child(3) {
-          animation-delay: -0.4s;
-        }
-
-        @keyframes hero-arrow-animate {
-          0% {
-            opacity: 0;
-            transform: rotate(45deg) translateX(-10px);
-          }
-          50% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0;
-            transform: rotate(45deg) translateX(10px);
-          }
         }
 
         .mobile-start {
@@ -2384,15 +2337,10 @@ export default function Page() {
           }
           .hero-arrow-text {
             font-size: 13px;
-          }
-          .hero-arrow {
-            order: 1;
+            order: 0;
           }
           .hero-cta {
-            order: 2;
-          }
-          .hero-arrow-text {
-            order: 0;
+            order: 1;
           }
 
           .hero-headings {
