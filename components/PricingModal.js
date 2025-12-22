@@ -1,42 +1,13 @@
-// components/PricingModal.js - FIXED: Auth check before multi-location
+// components/PricingModal.js - Single device-based plan
 'use client'
 
 import { IBM_Plex_Mono } from 'next/font/google'
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase-browser'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
 export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
-  const [hasExistingSubscription, setHasExistingSubscription] = useState(false)
-  const supabase = createClient()
-
-  // ✅ Check if user has existing subscription
-  useEffect(() => {
-    async function checkSubscription() {
-      if (!isOpen) return
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setHasExistingSubscription(false)
-        return
-      }
-
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('id')
-        .eq('user_id', user.id)
-        .in('status', ['active', 'trialing'])
-        .maybeSingle()
-
-      setHasExistingSubscription(!!subscription)
-    }
-
-    checkSubscription()
-  }, [isOpen, supabase])
-
   if (!isOpen) return null
 
   const Icons = {
@@ -46,41 +17,6 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <line x1="6" y1="6" x2="18" y2="18" />
       </svg>
     )
-  }
-
-  // ✅ FIXED: Check authentication before opening multi-location modal
-  const handleMultiLocationClick = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        // Not authenticated - close pricing modal and show auth modal
-        console.log('User not authenticated - showing auth modal')
-        onClose()
-        
-        // Store intent in sessionStorage so we can resume after auth
-        sessionStorage.setItem('pendingMultiLocationPurchase', 'true')
-        
-        // Trigger auth modal to open
-        window.dispatchEvent(new CustomEvent('openAuthModal', { 
-          detail: { mode: 'signup' } 
-        }))
-        return
-      }
-
-      // Authenticated - proceed with multi-location flow
-      onClose()
-      if (hasExistingSubscription) {
-        // Existing users -> upgrade modal
-        window.dispatchEvent(new CustomEvent('openMultiLocationUpgrade'))
-      } else {
-        // New users -> purchase modal
-        window.dispatchEvent(new CustomEvent('openMultiLocationPurchase'))
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error)
-      alert('Please sign in to purchase multi-location licenses')
-    }
   }
 
   return (
@@ -116,7 +52,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               Professional Plan
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>
-              Full access to Sonnet 4.5 • Unlimited questions & photo scans
+              Full access to GPT-5.2 • Unlimited questions & photo scans
             </p>
           </div>
 
@@ -153,7 +89,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '48px', fontWeight: '700' }}>$149</span>
+                <span style={{ fontSize: '48px', fontWeight: '700' }}>$79</span>
                 <span style={{ fontSize: '16px', opacity: 0.7 }}>/month</span>
               </div>
               <div style={{ fontSize: '13px', opacity: 0.8 }}>
@@ -198,10 +134,10 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             >
               {[
                 'Unlimited questions & photo scans',
-                'Sonnet 4.5 - Best reasoning & accuracy',
+                'GPT-5.2 - Best reasoning & accuracy',
                 'Full Washtenaw County database',
                 'Priority email support',
-                'One physical location included'
+                'One registered device per license'
               ].map((feature, idx) => (
                 <div key={idx} className="pricing-feature">
                   <span className="pricing-feature-check" aria-hidden="true">✓</span>
@@ -226,59 +162,6 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               Government compliance shouldn't have artificial limits. Use protocolLM as much as you need - 
               before inspections, during training, or whenever questions come up. One avoided violation 
               ($200-500) pays for 1-3 months.
-            </p>
-          </div>
-
-          {/* Multi-Location Section */}
-          <div style={{
-            padding: '24px',
-            borderTop: '1px solid var(--border-subtle)',
-            textAlign: 'center'
-          }}>
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '4px' }}>
-                📍 Have Multiple Locations?
-              </div>
-              <p style={{ fontSize: '13px', color: 'var(--ink-2)', lineHeight: '1.5', margin: '0 0 16px 0' }}>
-                Each restaurant location needs its own license. We make it easy to purchase and manage multiple locations.
-              </p>
-            </div>
-
-            <button
-              onClick={handleMultiLocationClick}
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                background: 'var(--bg-3)',
-                color: 'var(--ink-0)',
-                border: '1px solid var(--border-default)',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-2)'
-                e.currentTarget.style.borderColor = 'var(--accent)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--bg-3)'
-                e.currentTarget.style.borderColor = 'var(--border-default)'
-              }}
-            >
-              <span>Purchase for 2+ Locations</span>
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M5 12h14m-7-7l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-
-            <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '12px', lineHeight: '1.4' }}>
-              $149/location • Separate logins for each location
             </p>
           </div>
 
