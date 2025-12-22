@@ -77,7 +77,7 @@ function BrandLink({ variant = 'landing' }) {
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={64} height={64} priority />
+          <Image src={appleIcon} alt="" width={69} height={69} priority />
         </span>
         <span className="plm-brand-text">protocolLM</span>
       </span>
@@ -122,12 +122,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       <main className="landing-hero">
         <div className="hero-content">
-          <div className="hero-kicker">Multi-location ready</div>
-
           <div className="hero-headings">
             <h1 className="hero-title">Catch Violations, Not Fines.</h1>
             <p className="hero-support">
-              Snap a photo or ask a question. Get instant guidance based on Washtenaw County food safety regulations.
+              Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get instant answers and guidance from Washtenaw County Food Safety Regulations—Chapter 2, Michigan Modified Food Code 2009.
             </p>
           </div>
 
@@ -136,7 +134,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <div className="hero-arrow-icon">
               <Icons.ArrowRight />
             </div>
-            <button className="btn-primary hero-cta" onClick={onShowPricing} type="button">
+            <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
               Start trial
             </button>
           </div>
@@ -880,7 +878,7 @@ export default function Page() {
       <div className={`loading-screen ${ibmMono.className}`}>
         <div className="loading-content">
           <div className="loading-logo">
-            <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
+            <Image src={appleIcon} alt="protocolLM" width={69} height={69} priority />
           </div>
           <div className="loading-bar">
             <div className="loading-bar-fill" />
@@ -997,8 +995,8 @@ export default function Page() {
         }
 
         .loading-logo {
-          width: 64px;
-          height: 64px;
+          width: 69px;
+          height: 69px;
         }
 
         .loading-logo img {
@@ -1060,8 +1058,8 @@ export default function Page() {
         }
 
         .plm-brand-mark {
-          width: 64px;
-          height: 64px;
+          width: 69px;
+          height: 69px;
           flex-shrink: 0;
         }
 
@@ -1072,7 +1070,7 @@ export default function Page() {
         }
 
         .plm-brand-text {
-          font-size: 20px;
+          font-size: 21px;
           font-weight: 600;
           letter-spacing: -0.02em;
           white-space: nowrap;
@@ -1170,23 +1168,6 @@ export default function Page() {
           background: var(--accent-hover);
         }
 
-        .btn-primary.cta-pulse {
-          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
-          animation: cta-pulse 1.6s ease-in-out infinite;
-        }
-
-        @keyframes cta-pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-          }
-        }
-
         /* Hero - TRUE CENTER */
         .landing-hero {
           flex: 1;
@@ -1206,18 +1187,6 @@ export default function Page() {
           max-width: 720px;
           width: 100%;
           text-align: center;
-        }
-
-        .hero-kicker {
-          padding: 8px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.04);
-          color: var(--ink-1);
-          border-radius: var(--radius-full);
-          font-size: 12px;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          font-weight: 600;
         }
 
         .hero-headings {
@@ -1290,50 +1259,73 @@ export default function Page() {
           justify-content: center;
           font-size: 14px;
           border-radius: var(--radius-full);
-          overflow: hidden;
+          overflow: visible;
           box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18);
         }
 
-        /* Subtle base ring */
-        .hero-cta::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: var(--radius-full);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          pointer-events: none;
-          opacity: 0.85;
+        /* Subtle tracing animation for Start trial button */
+        .hero-cta-trace {
+          position: relative;
         }
 
-        /* Subtle tracing highlight ring */
-        .hero-cta::after {
+        .hero-cta-trace::before {
           content: '';
           position: absolute;
-          inset: -2px;
+          inset: -1px;
           border-radius: var(--radius-full);
           padding: 1px;
-          background: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.1),
-            rgba(255, 255, 255, 0.28),
-            rgba(255, 255, 255, 0.1)
+          background: conic-gradient(
+            from var(--trace-angle, 0deg),
+            transparent 0deg,
+            transparent 30deg,
+            rgba(255, 255, 255, 0.4) 60deg,
+            rgba(255, 255, 255, 0.15) 90deg,
+            transparent 120deg,
+            transparent 360deg
           );
-          background-size: 200% 200%;
-          animation: hero-trace 4s linear infinite;
           mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           mask-composite: exclude;
           -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           pointer-events: none;
-          opacity: 0.9;
+          animation: trace-rotate 3s linear infinite;
         }
 
-        @keyframes hero-trace {
+        @property --trace-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+
+        @keyframes trace-rotate {
           0% {
-            background-position: 0% 50%;
+            --trace-angle: 0deg;
           }
           100% {
-            background-position: 200% 50%;
+            --trace-angle: 360deg;
+          }
+        }
+
+        /* Fallback for browsers that don't support @property */
+        @supports not (background: conic-gradient(from var(--trace-angle, 0deg), red, blue)) {
+          .hero-cta-trace::before {
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.3),
+              transparent
+            );
+            background-size: 200% 100%;
+            animation: trace-slide 2s linear infinite;
+          }
+          
+          @keyframes trace-slide {
+            0% {
+              background-position: -100% 0;
+            }
+            100% {
+              background-position: 100% 0;
+            }
           }
         }
 
@@ -2056,6 +2048,7 @@ export default function Page() {
         }
 
         .chat-camera-btn {
+          position: relative;
           width: 44px;
           height: 44px;
           display: flex;
@@ -2068,11 +2061,74 @@ export default function Page() {
           cursor: pointer;
           flex-shrink: 0;
           transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          overflow: visible;
         }
 
         .chat-camera-btn:hover {
           border-color: var(--accent-hover);
           box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        /* Subtle tracing animation for camera button */
+        .chat-camera-btn::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          border-radius: var(--radius-md);
+          padding: 1px;
+          background: conic-gradient(
+            from var(--camera-trace-angle, 0deg),
+            transparent 0deg,
+            transparent 30deg,
+            rgba(59, 130, 246, 0.5) 60deg,
+            rgba(59, 130, 246, 0.2) 90deg,
+            transparent 120deg,
+            transparent 360deg
+          );
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          pointer-events: none;
+          animation: camera-trace-rotate 3s linear infinite;
+        }
+
+        @property --camera-trace-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+
+        @keyframes camera-trace-rotate {
+          0% {
+            --camera-trace-angle: 0deg;
+          }
+          100% {
+            --camera-trace-angle: 360deg;
+          }
+        }
+
+        /* Fallback for browsers that don't support @property */
+        @supports not (background: conic-gradient(from var(--camera-trace-angle, 0deg), red, blue)) {
+          .chat-camera-btn::before {
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(59, 130, 246, 0.4),
+              transparent
+            );
+            background-size: 200% 100%;
+            animation: camera-trace-slide 2s linear infinite;
+          }
+          
+          @keyframes camera-trace-slide {
+            0% {
+              background-position: -100% 0;
+            }
+            100% {
+              background-position: 100% 0;
+            }
+          }
         }
 
         .chat-input-wrapper {
@@ -2216,11 +2272,11 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
           }
           .plm-brand-text {
-            font-size: 18px;
+            font-size: 19px;
           }
 
           .landing-signin-btn {
@@ -2277,11 +2333,11 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 55px;
-            height: 55px;
+            width: 59px;
+            height: 59px;
           }
           .plm-brand-text {
-            font-size: 17px;
+            font-size: 18px;
           }
         }
 
