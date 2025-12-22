@@ -52,7 +52,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               Professional Plan
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>
-              Full access to GPT-5.2 • Unlimited questions & photo scans
+              GPT-5-mini • Unlimited questions & photo scans
             </p>
           </div>
 
@@ -89,7 +89,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '48px', fontWeight: '700' }}>$79</span>
+                <span style={{ fontSize: '48px', fontWeight: '700' }}>$50</span>
                 <span style={{ fontSize: '16px', opacity: 0.7 }}>/month</span>
               </div>
               <div style={{ fontSize: '13px', opacity: 0.8 }}>
@@ -134,7 +134,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             >
               {[
                 'Unlimited questions & photo scans',
-                'GPT-5.2 - Best reasoning & accuracy',
+                'GPT-5-mini - fast, lower-cost reasoning',
                 'Full Washtenaw County database',
                 'Priority email support',
                 'One registered device per license'

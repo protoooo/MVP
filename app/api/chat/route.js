@@ -37,8 +37,8 @@ async function getSearchDocuments() {
 // ============================================================================
 // MODEL CONFIGURATION - SINGLE MODEL FOR ALL USERS
 // ============================================================================
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-5.2'
-const MODEL_LABEL = 'GPT-5.2'
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-5-mini'
+const MODEL_LABEL = 'GPT-5-mini'
 
 // Time budgets
 const VISION_TIMEOUT_MS = 20000
