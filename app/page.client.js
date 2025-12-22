@@ -145,12 +145,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               Start trial
             </button>
           </div>
-
-          <div className="mobile-start mobile-only">
-            <button className="btn-primary hero-cta" onClick={onShowPricing} type="button">
-              Start trial
-            </button>
-          </div>
         </div>
       </main>
 
@@ -1472,6 +1466,7 @@ export default function Page() {
           align-items: center;
           gap: 14px;
           justify-content: center;
+          flex-wrap: nowrap;
         }
 
         .hero-cta {
@@ -1522,20 +1517,19 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 42px;
+          width: 48px;
           height: 24px;
           color: var(--accent);
-          transform: rotate(0deg);
         }
 
         .hero-arrow span {
           display: block;
-          width: 12px;
-          height: 12px;
+          width: 11px;
+          height: 11px;
           border-bottom: 3px solid currentColor;
           border-right: 3px solid currentColor;
           transform: rotate(-45deg);
-          margin: -8px;
+          margin: -6px;
           animation: hero-arrow-animate 2s infinite;
         }
 
@@ -2387,12 +2381,14 @@ export default function Page() {
         @media (max-width: 768px) {
           .hero-cta-row {
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
+            align-items: center;
+            text-align: center;
           }
 
           .hero-headings {
-            text-align: left;
-            align-items: flex-start;
+            text-align: center;
+            align-items: center;
           }
 
           .landing-topbar {
