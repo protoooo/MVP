@@ -1,3 +1,4 @@
+// app/dashboard/multi-location-setup/page.js - COMPLETE setup dashboard
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -20,8 +21,6 @@ export default function MultiLocationSetupPage() {
   const [success, setSuccess] = useState(false)
   const [purchaseData, setPurchaseData] = useState(null)
   const [locations, setLocations] = useState([])
-  const [setupLocked, setSetupLocked] = useState(false)
-  const [statusNotice, setStatusNotice] = useState('')
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -40,11 +39,12 @@ export default function MultiLocationSetupPage() {
           return
         }
 
+        // Get the most recent purchase
         const { data: purchase, error: purchaseError } = await supabase
           .from('pending_multi_location_purchases')
           .select('*')
           .eq('buyer_user_id', user.id)
-          .in('status', ['pending', 'completed', 'invites_sent'])
+          .in('status', ['completed', 'pending'])
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
@@ -55,30 +55,26 @@ export default function MultiLocationSetupPage() {
           return
         }
 
+        // Check if all invites already sent
         const inviteCodes = purchase.invite_codes || []
-        const allUsed = inviteCodes.every((code) => code.used)
+        const allSent = inviteCodes.every(code => code.email_sent)
 
-        if (allUsed) {
-          router.push('/')
+        if (allSent) {
+          setError('Setup already completed. Check your email for the invite links.')
+          setLoading(false)
           return
         }
 
         setPurchaseData(purchase)
 
-        if (purchase.status === 'pending') {
-          setSetupLocked(true)
-          setStatusNotice('Payment is still processing. If you just checked out, refresh in a few seconds.')
-        } else if (purchase.status === 'invites_sent') {
-          setSetupLocked(true)
-          setStatusNotice('All signup links have already been sent for this purchase.')
-        }
-
+        // Initialize location fields
         const locationFields = inviteCodes.map((code) => ({
           number: code.location_number,
           inviteCode: code.code,
-          managerEmail: '',
-          restaurantName: '',
-          used: code.used,
+          managerEmail: code.manager_email || '',
+          restaurantName: code.restaurant_name || '',
+          used: code.used || false,
+          emailSent: code.email_sent || false
         }))
 
         setLocations(locationFields)
@@ -95,13 +91,14 @@ export default function MultiLocationSetupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (submitting || setupLocked) return
+    if (submitting) return
 
     setSubmitting(true)
     setError('')
 
     try {
-      const pendingLocations = locations.filter((loc) => !loc.used)
+      // Validate all locations have email and name
+      const pendingLocations = locations.filter(loc => !loc.emailSent)
 
       for (const loc of pendingLocations) {
         if (!loc.managerEmail || !loc.managerEmail.includes('@')) {
@@ -117,6 +114,7 @@ export default function MultiLocationSetupPage() {
         }
       }
 
+      // Send invites
       const res = await fetch('/api/multi-location/send-invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -193,7 +191,7 @@ export default function MultiLocationSetupPage() {
                 Add Your Location Managers
               </h1>
               <p style={{ fontSize: '15px', color: 'var(--ink-1)', margin: 0, lineHeight: '1.6' }}>
-                We'll send each manager a signup link for their location. No account needed yet.
+                We'll send each manager a signup link. They just need to click it to get started.
               </p>
             </div>
 
@@ -206,13 +204,13 @@ export default function MultiLocationSetupPage() {
               </div>
               <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
                 <div style={{ fontSize: '24px', fontWeight: '700', color: '#22c55e', marginBottom: '4px' }}>
-                  {locations.filter((l) => l.used).length}
+                  {locations.filter((l) => l.emailSent).length}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--ink-2)' }}>Set Up</div>
+                <div style={{ fontSize: '12px', color: 'var(--ink-2)' }}>Invites Sent</div>
               </div>
               <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
                 <div style={{ fontSize: '24px', fontWeight: '700', color: '#f59e0b', marginBottom: '4px' }}>
-                  {locations.filter((l) => !l.used).length}
+                  {locations.filter((l) => !l.emailSent).length}
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--ink-2)' }}>Pending</div>
               </div>
@@ -224,15 +222,9 @@ export default function MultiLocationSetupPage() {
               </div>
             )}
 
-            {statusNotice && (
-              <div style={{ padding: '12px', background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', color: '#bfdbfe', fontSize: '14px', marginBottom: '24px' }}>
-                {statusNotice}
-              </div>
-            )}
-
             {success && (
               <div style={{ padding: '12px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: '#6ee7b7', fontSize: '14px', marginBottom: '24px' }}>
-                ✓ Invites sent! Redirecting to dashboard...
+                ✓ Invites sent! Redirecting...
               </div>
             )}
 
@@ -242,20 +234,20 @@ export default function MultiLocationSetupPage() {
                   <div
                     key={idx}
                     style={{
-                      background: loc.used ? 'rgba(34, 197, 94, 0.05)' : 'var(--bg-3)',
-                      border: `1px solid ${loc.used ? 'rgba(34, 197, 94, 0.3)' : 'var(--border-subtle)'}`,
+                      background: loc.emailSent ? 'rgba(34, 197, 94, 0.05)' : 'var(--bg-3)',
+                      border: `1px solid ${loc.emailSent ? 'rgba(34, 197, 94, 0.3)' : 'var(--border-subtle)'}`,
                       borderRadius: '8px',
                       padding: '20px',
-                      opacity: loc.used ? 0.6 : 1,
+                      opacity: loc.emailSent ? 0.6 : 1,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                       <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--accent)' }}>
                         Location {loc.number}
                       </div>
-                      {loc.used && (
+                      {loc.emailSent && (
                         <div style={{ fontSize: '12px', color: '#22c55e', fontWeight: '600' }}>
-                          ✓ Already Set Up
+                          ✓ Invite Sent
                         </div>
                       )}
                     </div>
@@ -274,13 +266,13 @@ export default function MultiLocationSetupPage() {
                             setLocations(updated)
                           }}
                           placeholder="manager@restaurant.com"
-                          disabled={loc.used}
-                          required={!loc.used}
+                          disabled={loc.emailSent}
+                          required={!loc.emailSent}
                           style={{
                             width: '100%',
                             height: '42px',
                             padding: '0 12px',
-                            background: loc.used ? 'var(--bg-2)' : 'var(--bg-1)',
+                            background: loc.emailSent ? 'var(--bg-2)' : 'var(--bg-1)',
                             border: '1px solid var(--border-subtle)',
                             borderRadius: '8px',
                             color: 'var(--ink-0)',
@@ -302,13 +294,13 @@ export default function MultiLocationSetupPage() {
                             setLocations(updated)
                           }}
                           placeholder="Downtown Location"
-                          disabled={loc.used}
-                          required={!loc.used}
+                          disabled={loc.emailSent}
+                          required={!loc.emailSent}
                           style={{
                             width: '100%',
                             height: '42px',
                             padding: '0 12px',
-                            background: loc.used ? 'var(--bg-2)' : 'var(--bg-1)',
+                            background: loc.emailSent ? 'var(--bg-2)' : 'var(--bg-1)',
                             border: '1px solid var(--border-subtle)',
                             borderRadius: '8px',
                             color: 'var(--ink-0)',
@@ -323,18 +315,16 @@ export default function MultiLocationSetupPage() {
 
               <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '24px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#3b82f6', marginBottom: '8px' }}>
-                  Important: Separate Accounts Required
+                  What Happens Next
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.6', margin: 0 }}>
-                  Each manager will receive a unique signup link. They must create their own account -
-                  <strong> do not share login credentials across locations</strong>. This ensures proper
-                  compliance tracking per location.
+                  Each manager will receive an email with a unique signup link. They click the link, create their account (no payment needed), and start using protocolLM immediately.
                 </p>
               </div>
 
               <button
                 type="submit"
-                disabled={submitting || setupLocked || locations.filter((l) => !l.used).length === 0}
+                disabled={submitting || locations.filter((l) => !l.emailSent).length === 0}
                 style={{
                   width: '100%',
                   height: '48px',
