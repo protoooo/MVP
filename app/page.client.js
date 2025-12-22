@@ -127,8 +127,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-headings">
             <h1 className="hero-title">Catch Violations, Not Fines.</h1>
             <p className="hero-support">
-              Prepare for health inspections and stay compliant with Protocol LM. Using image analysis to cross-check for
-              violations and access to Washtenaw County regulations and policies.
+              Get inspection-ready with quick answers grounded in Washtenaw County food safety rules. Snap a photo or ask
+              a question—protocolLM flags potential issues and points you to the relevant guidance.
             </p>
           </div>
 
@@ -1408,7 +1408,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 20px;
+          gap: 24px;
           max-width: 720px;
           width: 100%;
         }
@@ -1429,7 +1429,7 @@ export default function Page() {
           text-align: center;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 14px;
         }
 
         .hero-title {
@@ -1443,17 +1443,19 @@ export default function Page() {
         .hero-support {
           margin: 0;
           font-size: 16px;
-          line-height: 1.6;
+          line-height: 1.65;
           color: var(--ink-2);
+          max-width: 56ch;
         }
 
         .hero-cta-row {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 18px;
           justify-content: center;
           flex-wrap: nowrap;
           flex-direction: row;
+          margin-top: 4px;
         }
 
         .hero-cta {
@@ -1469,24 +1471,38 @@ export default function Page() {
           box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18);
         }
 
+        /* Subtle base ring */
+        .hero-cta::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: var(--radius-full);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          pointer-events: none;
+          opacity: 0.85;
+        }
+
+        /* Subtle tracing highlight ring */
         .hero-cta::after {
           content: '';
           position: absolute;
           inset: -2px;
           border-radius: var(--radius-full);
           padding: 1px;
-          background: linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.35), rgba(255,255,255,0.15));
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.1),
+            rgba(255, 255, 255, 0.28),
+            rgba(255, 255, 255, 0.1)
+          );
           background-size: 200% 200%;
-          animation: hero-trace 3s linear infinite;
-          mask: 
-            linear-gradient(#000 0 0) content-box, 
-            linear-gradient(#000 0 0);
+          animation: hero-trace 4s linear infinite;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           mask-composite: exclude;
-          -webkit-mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           pointer-events: none;
+          opacity: 0.9;
         }
 
         @keyframes hero-trace {
@@ -2331,7 +2347,7 @@ export default function Page() {
         @media (max-width: 768px) {
           .hero-cta-row {
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
             align-items: center;
             text-align: center;
           }
