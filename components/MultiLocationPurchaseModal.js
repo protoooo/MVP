@@ -10,7 +10,7 @@ const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'
 
 const PRICE_PER_LOCATION = 149
 
-export default function MultiLocationPurchaseModal({ isOpen, onClose }) {
+export default function MultiLocationPurchaseModal({ isOpen, onClose, initialLocationCount = 2 }) {
   const [selectedLocations, setSelectedLocations] = useState(2)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -45,6 +45,12 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose }) {
     
     checkAuth()
   }, [isOpen, supabase])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const normalized = Math.min(50, Math.max(2, Number(initialLocationCount) || 2))
+    setSelectedLocations(normalized)
+  }, [initialLocationCount, isOpen])
 
   if (!isOpen) return null
 
@@ -297,8 +303,25 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose }) {
                   lineHeight: '1.6',
                   margin: '0 0 20px 0'
                 }}>
-                  First, create your owner account. After signup, we'll start your {selectedLocations}-location purchase automatically.
+                  First, create your owner account. After signup, we reopen checkout with your {selectedLocations}-location selection so you can finish in one click.
                 </p>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 14px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
+                  borderRadius: '10px',
+                  color: 'var(--ink-0)',
+                  fontSize: '13px',
+                  marginBottom: '16px'
+                }}>
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M5 12l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>We save your location count and trigger checkout automatically after signup.</span>
+                </div>
                 <button
                   type="button"
                   onClick={handleCreateAccountAndContinue}
@@ -337,7 +360,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose }) {
                   The Next Steps
                 </div>
                 <ol style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.8', margin: 0, paddingLeft: '20px' }}>
-                  <li>Create your owner account (takes 30 seconds)</li>
+                  <li>Create your owner account (we reopen checkout instantly with your saved count)</li>
                   <li>Verify your email</li>
                   <li>Complete checkout for {selectedLocations} locations (${monthlyPrice}/month)</li>
                   <li>Add your location managers and we'll send them signup links</li>
