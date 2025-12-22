@@ -1,14 +1,14 @@
 // app/page.js
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { Inter } from 'next/font/google'
+import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
@@ -16,11 +16,10 @@ import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
 import PricingModal from '@/components/PricingModal'
 
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const ibmSans = IBM_Plex_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'] })
 
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
-
-const isAdmin = false
 
 const logger = {
   info: (...args) => console.log(...args),
@@ -30,7 +29,7 @@ const logger = {
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
@@ -46,62 +45,127 @@ const Icons = {
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Menu: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="3" y1="12" x2="21" y2="12" />
-      <line x1="3" y1="6" x2="21" y2="6" />
-      <line x1="3" y1="18" x2="21" y2="18" />
+  Gear: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  Shield: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  Check: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  Image: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
     </svg>
   ),
 }
 
 function BrandLink({ variant = 'landing' }) {
   return (
-    <Link href="/" className="plm-brand" aria-label="protocolLM home">
-      <Image src={appleIcon} alt="" width={48} height={48} priority />
-      <span className="plm-brand-text">protocolLM</span>
+    <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
+      <span className="plm-brand-inner">
+        <span className="plm-brand-mark" aria-hidden="true">
+          <Image src={appleIcon} alt="" width={40} height={40} priority />
+        </span>
+        <span className="plm-brand-text">protocolLM</span>
+      </span>
     </Link>
   )
 }
 
 function FooterLinks() {
   return (
-    <div className="plm-footer">
-      <Link href="/terms">Terms</Link>
-      <Link href="/privacy">Privacy</Link>
-      <Link href="/contact">Contact</Link>
+    <div className={`plm-footer-links ${ibmMono.className}`}>
+      <Link className="plm-footer-link" href="/terms">Terms</Link>
+      <span className="plm-footer-sep">·</span>
+      <Link className="plm-footer-link" href="/privacy">Privacy</Link>
+      <span className="plm-footer-sep">·</span>
+      <Link className="plm-footer-link" href="/contact">Contact</Link>
     </div>
   )
 }
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className={`${inter.className} landing-root`}>
-      <header className="landing-header">
+    <div className={`${ibmSans.className} landing-root`}>
+      <header className="landing-topbar">
         <BrandLink variant="landing" />
         <nav className="landing-nav">
-          <button onClick={onShowAuth} className="btn-ghost">
-            Sign in
-          </button>
-          <button onClick={onShowPricing} className="btn-primary">
-            Start trial
-          </button>
+          <button onClick={onShowAuth} className="nav-link" type="button">Sign in</button>
+          <button onClick={onShowPricing} className="btn-primary" type="button">Start free trial</button>
         </nav>
       </header>
 
       <main className="landing-main">
         <div className="landing-content">
-          <h1 className="landing-title">
-            Food safety compliance
-            <br />
-            made simple
+          <div className="landing-badge">
+            <Icons.Shield />
+            <span>Washtenaw County Health Code Compliance</span>
+          </div>
+          
+          <h1 className="landing-headline">
+            Catch violations<br />before inspectors do.
           </h1>
-          <p className="landing-subtitle">
-            Snap a photo. Get instant violation checks. Stay compliant with Washtenaw County health code.
+          
+          <p className="landing-subhead">
+            Upload a photo of your kitchen. Get instant feedback on health code issues with plain-language fixes.
           </p>
-          <button onClick={onShowPricing} className="btn-cta">
-            Start free trial
-          </button>
+
+          <div className="landing-actions">
+            <button onClick={onShowPricing} className="btn-primary btn-lg" type="button">
+              Start 7-day free trial
+            </button>
+          </div>
+
+          <div className="landing-features">
+            <div className="feature-item">
+              <span className="feature-check"><Icons.Check /></span>
+              <span>Photo analysis in seconds</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-check"><Icons.Check /></span>
+              <span>Michigan food code reference</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-check"><Icons.Check /></span>
+              <span>Plain-language explanations</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="landing-visual">
+          <div className="visual-card">
+            <div className="visual-header">
+              <div className="visual-status">
+                <span className="status-dot"></span>
+                <span>Analysis complete</span>
+              </div>
+            </div>
+            <div className="visual-body">
+              <div className="visual-finding">
+                <div className="finding-label">Issue detected</div>
+                <div className="finding-text">Raw chicken stored above ready-to-eat items</div>
+              </div>
+              <div className="visual-finding">
+                <div className="finding-label">Code reference</div>
+                <div className="finding-text">Michigan Food Code 3-302.11</div>
+              </div>
+              <div className="visual-finding">
+                <div className="finding-label">Fix</div>
+                <div className="finding-text">Move raw proteins to lowest shelf. Store ready-to-eat items above.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 
@@ -140,7 +204,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       const captchaToken = await executeRecaptcha(mode)
       if (!captchaToken || captchaToken === 'turnstile_unavailable') {
         setMessageKind('err')
-        setMessage('Security verification failed. Please ensure Cloudflare Turnstile is allowed, then try again.')
+        setMessage('Security verification failed. Please try again.')
         return
       }
 
@@ -187,7 +251,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         }, 2000)
       } else {
         setMessageKind('ok')
-        setMessage('Signed in. Redirecting…')
+        setMessage('Signed in successfully.')
         setTimeout(() => {
           onClose()
           window.location.reload()
@@ -196,7 +260,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
     } catch (error) {
       console.error('Auth error:', error)
       setMessageKind('err')
-      setMessage('Unexpected issue. Please try again.')
+      setMessage('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -207,16 +271,18 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${inter.className}`}>
+        <div className={`modal-card ${ibmSans.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
-          <h2 className="modal-title">
-            {mode === 'signin' && 'Sign in'}
-            {mode === 'signup' && 'Create account'}
-            {mode === 'reset' && 'Reset password'}
-          </h2>
+          <div className="modal-header">
+            <h2 className="modal-title">
+              {mode === 'signin' && 'Sign in'}
+              {mode === 'signup' && 'Create account'}
+              {mode === 'reset' && 'Reset password'}
+            </h2>
+          </div>
 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
@@ -225,7 +291,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
+                placeholder="you@restaurant.com"
                 required
                 className="form-input"
                 autoComplete="email"
@@ -245,7 +311,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     className="form-input"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle-vis">
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
@@ -263,23 +329,15 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
           <div className="modal-footer">
             {mode === 'signin' && (
               <>
-                <button type="button" onClick={() => setMode('reset')} className="modal-link">
-                  Forgot password?
-                </button>
-                <button type="button" onClick={() => setMode('signup')} className="modal-link">
-                  Create account
-                </button>
+                <button type="button" onClick={() => setMode('reset')} className="modal-link">Forgot password?</button>
+                <button type="button" onClick={() => setMode('signup')} className="modal-link">Create an account</button>
               </>
             )}
             {mode === 'signup' && (
-              <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                Already have an account?
-              </button>
+              <button type="button" onClick={() => setMode('signin')} className="modal-link">Already have an account?</button>
             )}
             {mode === 'reset' && (
-              <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                Back to sign in
-              </button>
+              <button type="button" onClick={() => setMode('signin')} className="modal-link">Back to sign in</button>
             )}
           </div>
 
@@ -294,6 +352,7 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
   const searchParams = useSearchParams()
+
   const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
 
   const [isLoading, setIsLoading] = useState(true)
@@ -320,20 +379,21 @@ export default function Page() {
 
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
-  const [showMenu, setShowMenu] = useState(false)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
   const shouldAutoScrollRef = useRef(true)
-  const menuRef = useRef(null)
 
   const isAuthenticated = !!session
 
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const settingsRef = useRef(null)
+
   useEffect(() => {
     const onDown = (e) => {
-      if (!menuRef.current) return
-      if (!menuRef.current.contains(e.target)) setShowMenu(false)
+      if (!settingsRef.current) return
+      if (!settingsRef.current.contains(e.target)) setShowSettingsMenu(false)
     }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('touchstart', onDown, { passive: true })
@@ -358,8 +418,6 @@ export default function Page() {
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
-    const splineContainer = document.getElementById('plm-spline-bg')
-    if (splineContainer) splineContainer.style.display = 'none'
   }, [isAuthenticated])
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
@@ -396,7 +454,6 @@ export default function Page() {
         }
         return
       }
-
       if (!hasActiveSubscription && !subscription) {
         setShowPricingModal(true)
         if (emailVerified === 'true' && typeof window !== 'undefined') {
@@ -417,14 +474,13 @@ export default function Page() {
         const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
           console.error('Invalid price ID:', priceId)
-          alert('Invalid plan selected. Please try again.')
+          alert('Invalid plan selected.')
           return
         }
 
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
-          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
           setSelectedPriceId(priceId)
           setShowPricingModal(false)
           setAuthInitialMode('signup')
@@ -433,14 +489,14 @@ export default function Page() {
         }
 
         if (!data.session.user.email_confirmed_at) {
-          alert('Please verify your email before starting a trial. Check your inbox.')
+          alert('Please verify your email first.')
           setShowPricingModal(false)
           router.push('/verify-email')
           return
         }
 
         if (!captchaLoaded) {
-          alert('Security verification is still loading. Please try again in a moment.')
+          alert('Security verification loading. Please try again.')
           return
         }
 
@@ -448,7 +504,7 @@ export default function Page() {
 
         const captchaToken = await executeRecaptcha('checkout')
         if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-          throw new Error('Security verification failed. Please refresh and try again.')
+          throw new Error('Security verification failed.')
         }
 
         const res = await fetch('/api/create-checkout-session', {
@@ -465,17 +521,15 @@ export default function Page() {
 
         if (!res.ok) {
           if (payload.code === 'EMAIL_NOT_VERIFIED') {
-            alert('Please verify your email before starting a trial.')
+            alert('Please verify your email first.')
             router.push('/verify-email')
             return
           }
-
           if (payload.code === 'ALREADY_SUBSCRIBED') {
             alert('You already have an active subscription.')
             setShowPricingModal(false)
             return
           }
-
           throw new Error(payload.error || 'Checkout failed')
         }
 
@@ -486,7 +540,7 @@ export default function Page() {
         }
       } catch (error) {
         console.error('Checkout error:', error)
-        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+        alert('Checkout failed: ' + (error.message || 'Unknown error'))
       } finally {
         setCheckoutLoading(null)
       }
@@ -514,7 +568,6 @@ export default function Page() {
 
       try {
         if (!s.user.email_confirmed_at) {
-          console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
           setHasActiveSubscription(false)
           setLocationCheck(null)
@@ -531,19 +584,7 @@ export default function Page() {
           .eq('id', s.user.id)
           .maybeSingle()
 
-        if (profileError) {
-          console.error('❌ Profile check error:', profileError)
-          setSubscription(null)
-          setHasActiveSubscription(false)
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        if (!profile) {
+        if (profileError || !profile) {
           setSubscription(null)
           setHasActiveSubscription(false)
           setLocationCheck(null)
@@ -566,7 +607,7 @@ export default function Page() {
           return
         }
       } catch (e) {
-        console.error('❌ Policy check exception:', e)
+        console.error('Policy check error:', e)
         setSubscription(null)
         setHasActiveSubscription(false)
         setLocationCheck(null)
@@ -614,18 +655,7 @@ export default function Page() {
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
 
-      if (s?.user) {
-        console.log('🔐 Auth state:', {
-          userId: String(s.user.id || '').substring(0, 8) + '***',
-          emailVerified: !!s.user.email_confirmed_at,
-          hasSubscription: !!subData,
-          subscriptionStatus: subData?.status,
-          trialEnd: subData?.trial_end ? new Date(subData.trial_end).toISOString() : null,
-        })
-      }
-
       if (!subData && !checkoutParam && showPricingParam !== 'true') {
-        console.log('💳 No subscription found - showing pricing modal')
         setShowPricingModal(true)
         setHasActiveSubscription(false)
       }
@@ -633,16 +663,9 @@ export default function Page() {
       if (subData?.status === 'trialing' && subData?.trial_end) {
         const trialEnd = new Date(subData.trial_end)
         const now = new Date()
-
         if (trialEnd < now) {
-          console.log('❌ Trial expired - showing pricing')
           if (!checkoutParam) setShowPricingModal(true)
           setHasActiveSubscription(false)
-        } else {
-          const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
-          if (hoursLeft < 24 && hoursLeft > 0) {
-            console.log(`⚠️ Trial ends in ${Math.round(hoursLeft)} hours`)
-          }
         }
       }
 
@@ -680,9 +703,7 @@ export default function Page() {
     if (isLoading) return
 
     if (checkoutPlan && isAuthenticated && !hasActiveSubscription && !subscription) {
-      console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
       handleCheckout(checkoutPlan, 'auto')
-
       if (typeof window !== 'undefined') {
         window.history.replaceState({}, '', '/')
       }
@@ -709,9 +730,7 @@ export default function Page() {
       const doGet = async () =>
         fetch('/api/license/check', {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
         })
 
@@ -736,31 +755,26 @@ export default function Page() {
 
       const lc = await fetchLocationCheckFromServer(session)
       if (cancelled) return
-
       if (!lc) return
 
       logger.info('License validated', {
         userId: session.user.id,
         uniqueLocationsUsed: lc.uniqueLocationsUsed,
-        locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
       })
 
       setLocationCheck(lc)
     }
 
     run()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [isAuthenticated, session, subscription, fetchLocationCheckFromServer])
 
   const handleManageBilling = async () => {
     let loadingToast = null
     try {
       loadingToast = document.createElement('div')
-      loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'toast'
+      loadingToast.textContent = 'Opening billing...'
+      loadingToast.className = 'toast-loading'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
@@ -794,7 +808,7 @@ export default function Page() {
 
   const handleSignOut = async () => {
     try {
-      setShowMenu(false)
+      setShowSettingsMenu(false)
       setLocationCheck(null)
       setShowMultiLocationModal(false)
       setShowMultiLocationPurchaseModal(false)
@@ -864,7 +878,7 @@ export default function Page() {
       if (!res.ok) {
         if (res.status === 402) {
           setShowPricingModal(true)
-          throw new Error('Subscription required for additional questions.')
+          throw new Error('Subscription required.')
         }
         if (res.status === 429) {
           const data = await res.json().catch(() => ({}))
@@ -915,10 +929,14 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className={`loading ${inter.className}`}>
-        <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
-        <div className="loading-bar">
-          <div className="loading-fill" />
+      <div className={`loading-screen ${ibmSans.className}`}>
+        <div className="loading-content">
+          <div className="loading-logo">
+            <Image src={appleIcon} alt="protocolLM" width={48} height={48} priority />
+          </div>
+          <div className="loading-bar">
+            <div className="loading-bar-fill" />
+          </div>
         </div>
       </div>
     )
@@ -928,117 +946,176 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          --steel: #e8eaed;
-          --steel-dark: #d1d5db;
-          --blue: #1e40af;
-          --blue-light: #3b82f6;
-          --blue-lighter: #60a5fa;
-          --ink: #111827;
-          --ink-light: #4b5563;
-          --ink-lighter: #9ca3af;
-          --border: #e5e7eb;
-          --shadow: rgba(0, 0, 0, 0.1);
+          --white: #ffffff;
+          --gray-50: #f8fafc;
+          --gray-100: #f1f5f9;
+          --gray-200: #e2e8f0;
+          --gray-300: #cbd5e1;
+          --gray-400: #94a3b8;
+          --gray-500: #64748b;
+          --gray-600: #475569;
+          --gray-700: #334155;
+          --gray-800: #1e293b;
+          --gray-900: #0f172a;
+          
+          --blue-50: #eff6ff;
+          --blue-100: #dbeafe;
+          --blue-200: #bfdbfe;
+          --blue-500: #3b82f6;
+          --blue-600: #2563eb;
+          --blue-700: #1d4ed8;
+          
+          --steel-50: #f0f4f8;
+          --steel-100: #d9e2ec;
+          --steel-200: #bcccdc;
+          --steel-500: #627d98;
+          --steel-600: #486581;
+          --steel-700: #334e68;
+          --steel-800: #243b53;
+          --steel-900: #102a43;
+          
+          --radius-sm: 6px;
+          --radius-md: 8px;
+          --radius-lg: 12px;
+          
+          --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+          --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+          --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
 
-        * {
+        *, *::before, *::after {
           box-sizing: border-box;
         }
 
-        html,
-        body {
+        html, body {
           height: 100%;
           margin: 0;
-          background: var(--steel);
-          color: var(--ink);
-          overflow-x: hidden;
+          background: var(--white);
+          color: var(--gray-900);
           -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         @supports (-webkit-touch-callout: none) {
-          html {
-            height: -webkit-fill-available;
-          }
-          body {
-            min-height: -webkit-fill-available;
-          }
+          html { height: -webkit-fill-available; }
+          body { min-height: -webkit-fill-available; }
         }
+
+        a, button, input, textarea {
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        :focus { outline: none; }
+        :focus-visible { outline: 2px solid var(--blue-500); outline-offset: 2px; }
 
         ::selection {
-          background: var(--blue-lighter);
-          color: white;
+          background: var(--blue-100);
+          color: var(--gray-900);
         }
 
-        ::-webkit-scrollbar {
-          width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: var(--steel-dark);
-          border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--gray-100); }
+        ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
-        .loading {
+        /* Loading */
+        .loading-screen {
           position: fixed;
           inset: 0;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 32px;
-          background: var(--steel);
+          background: var(--white);
+          z-index: 9999;
+        }
+
+        .loading-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .loading-logo {
+          width: 48px;
+          height: 48px;
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .loading-logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
 
         .loading-bar {
           width: 120px;
           height: 3px;
-          background: var(--border);
+          background: var(--gray-200);
           border-radius: 2px;
           overflow: hidden;
         }
 
-        .loading-fill {
+        .loading-bar-fill {
           height: 100%;
-          width: 30%;
-          background: var(--blue);
-          animation: loading 1s ease-in-out infinite;
+          width: 40%;
+          background: var(--blue-500);
+          animation: loading-slide 1.2s ease-in-out infinite;
         }
 
-        @keyframes loading {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(400%);
-          }
+        @keyframes loading-slide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(350%); }
         }
 
+        /* App container */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
+          background: var(--white);
         }
 
         /* Brand */
         .plm-brand {
-          display: flex;
-          align-items: center;
-          gap: 12px;
+          color: var(--gray-900);
           text-decoration: none;
-          color: var(--ink);
+          display: inline-flex;
+          align-items: center;
+          transition: opacity 0.2s ease;
         }
 
-        .plm-brand img {
-          width: 48px;
-          height: 48px;
+        .plm-brand:hover { opacity: 0.8; }
+
+        .plm-brand-inner {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .plm-brand-mark {
+          width: 40px;
+          height: 40px;
+          flex-shrink: 0;
+        }
+
+        .plm-brand-mark img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
 
         .plm-brand-text {
-          font-size: 20px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
+          font-size: 18px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: var(--steel-900);
         }
 
         /* Landing */
@@ -1047,16 +1124,22 @@ export default function Page() {
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          background: var(--steel);
+          background: var(--white);
         }
 
-        .landing-header {
+        .landing-topbar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 24px;
-          border-bottom: 1px solid var(--border);
-          background: white;
+          padding: 16px 24px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid var(--gray-200);
+          z-index: 100;
         }
 
         .landing-nav {
@@ -1065,131 +1148,266 @@ export default function Page() {
           gap: 8px;
         }
 
-        .btn-ghost {
+        .nav-link {
           height: 40px;
           padding: 0 16px;
+          display: flex;
+          align-items: center;
           background: transparent;
           border: none;
-          color: var(--ink-light);
+          color: var(--gray-600);
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
-          border-radius: 6px;
+          transition: color 0.15s ease;
           font-family: inherit;
-          transition: color 0.15s;
         }
 
-        .btn-ghost:hover {
-          color: var(--ink);
-        }
+        .nav-link:hover { color: var(--gray-900); }
 
         .btn-primary {
           height: 40px;
           padding: 0 20px;
-          background: var(--blue);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--blue-600);
+          color: var(--white);
           border: none;
-          color: white;
+          border-radius: var(--radius-md);
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          border-radius: 6px;
+          transition: background 0.15s ease, transform 0.1s ease;
           font-family: inherit;
-          transition: background 0.15s;
         }
 
-        .btn-primary:hover {
-          background: var(--blue-light);
+        .btn-primary:hover { background: var(--blue-700); }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-lg {
+          height: 48px;
+          padding: 0 28px;
+          font-size: 15px;
+          border-radius: var(--radius-lg);
         }
 
+        /* Landing main */
         .landing-main {
           flex: 1;
-          display: flex;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 64px;
           align-items: center;
-          justify-content: center;
-          padding: 80px 24px;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 120px 48px 80px;
         }
 
         .landing-content {
-          max-width: 640px;
-          text-align: center;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
         }
 
-        .landing-title {
-          font-size: 56px;
+        .landing-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          background: var(--blue-50);
+          border: 1px solid var(--blue-200);
+          border-radius: 100px;
+          color: var(--blue-700);
+          font-size: 13px;
+          font-weight: 500;
+          width: fit-content;
+        }
+
+        .landing-badge svg {
+          flex-shrink: 0;
+        }
+
+        .landing-headline {
+          font-size: 48px;
           font-weight: 700;
           line-height: 1.1;
-          margin: 0 0 24px;
-          color: var(--ink);
+          letter-spacing: -0.02em;
+          color: var(--steel-900);
+          margin: 0;
         }
 
-        .landing-subtitle {
-          font-size: 20px;
+        .landing-subhead {
+          font-size: 18px;
           line-height: 1.6;
-          color: var(--ink-light);
-          margin: 0 0 40px;
+          color: var(--gray-600);
+          margin: 0;
+          max-width: 480px;
         }
 
-        .btn-cta {
-          height: 56px;
-          padding: 0 32px;
-          background: var(--blue);
-          border: none;
-          color: white;
-          font-size: 16px;
+        .landing-actions {
+          display: flex;
+          gap: 12px;
+          margin-top: 8px;
+        }
+
+        .landing-features {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 16px;
+        }
+
+        .feature-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 14px;
+          color: var(--gray-700);
+        }
+
+        .feature-check {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          background: var(--blue-50);
+          border-radius: 50%;
+          color: var(--blue-600);
+        }
+
+        /* Visual card */
+        .landing-visual {
+          display: flex;
+          justify-content: center;
+        }
+
+        .visual-card {
+          width: 100%;
+          max-width: 420px;
+          background: var(--white);
+          border: 1px solid var(--gray-200);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-lg);
+          overflow: hidden;
+        }
+
+        .visual-header {
+          padding: 16px 20px;
+          background: var(--steel-50);
+          border-bottom: 1px solid var(--gray-200);
+        }
+
+        .visual-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--steel-700);
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          background: #22c55e;
+          border-radius: 50%;
+          animation: status-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes status-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .visual-body {
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .visual-finding {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .finding-label {
+          font-size: 11px;
           font-weight: 600;
-          cursor: pointer;
-          border-radius: 8px;
-          font-family: inherit;
-          transition: background 0.15s;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--gray-500);
         }
 
-        .btn-cta:hover {
-          background: var(--blue-light);
+        .finding-text {
+          font-size: 14px;
+          line-height: 1.5;
+          color: var(--gray-800);
         }
 
-        .plm-footer {
+        /* Footer */
+        .plm-footer-links {
           position: fixed;
           bottom: 24px;
           left: 50%;
           transform: translateX(-50%);
           display: flex;
-          gap: 24px;
+          align-items: center;
+          gap: 16px;
+          z-index: 10;
         }
 
-        .plm-footer a {
-          color: var(--ink-lighter);
+        .plm-footer-link {
+          color: var(--gray-500);
           text-decoration: none;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 500;
+          transition: color 0.15s ease;
         }
 
-        .plm-footer a:hover {
-          color: var(--ink);
-        }
+        .plm-footer-link:hover { color: var(--gray-700); }
+        .plm-footer-sep { color: var(--gray-300); }
 
         /* Modal */
         .modal-overlay {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(0, 0, 0, 0.4);
+          background: rgba(15, 23, 42, 0.6);
+          backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
+          animation: fade-in 0.15s ease;
+        }
+
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         .modal-container {
           width: 100%;
           max-width: 400px;
+          animation: modal-up 0.2s ease;
+        }
+
+        @keyframes modal-up {
+          from { opacity: 0; transform: translateY(8px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .modal-card {
           position: relative;
-          background: white;
-          border-radius: 12px;
+          background: var(--white);
+          border: 1px solid var(--gray-200);
+          border-radius: var(--radius-lg);
           padding: 32px;
-          box-shadow: 0 20px 60px var(--shadow);
+          box-shadow: var(--shadow-lg);
         }
 
         .modal-close {
@@ -1203,18 +1421,24 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--ink-lighter);
+          color: var(--gray-400);
           cursor: pointer;
+          border-radius: var(--radius-sm);
+          transition: color 0.15s ease, background 0.15s ease;
         }
 
         .modal-close:hover {
-          color: var(--ink);
+          color: var(--gray-600);
+          background: var(--gray-100);
         }
 
+        .modal-header { margin-bottom: 24px; }
+
         .modal-title {
-          font-size: 24px;
-          font-weight: 700;
-          margin: 0 0 24px;
+          font-size: 20px;
+          font-weight: 600;
+          margin: 0;
+          color: var(--gray-900);
         }
 
         .modal-form {
@@ -1226,53 +1450,51 @@ export default function Page() {
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 6px;
         }
 
         .form-label {
           font-size: 13px;
-          font-weight: 600;
-          color: var(--ink);
+          font-weight: 500;
+          color: var(--gray-700);
         }
 
         .form-input {
           width: 100%;
           height: 44px;
-          padding: 0 12px;
-          background: var(--steel);
-          border: 1px solid var(--border);
-          border-radius: 6px;
-          color: var(--ink);
+          padding: 0 14px;
+          background: var(--white);
+          border: 1px solid var(--gray-300);
+          border-radius: var(--radius-md);
+          color: var(--gray-900);
           font-size: 14px;
           font-family: inherit;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .form-input::placeholder {
-          color: var(--ink-lighter);
-        }
-
+        .form-input::placeholder { color: var(--gray-400); }
         .form-input:focus {
-          outline: none;
-          border-color: var(--blue);
+          border-color: var(--blue-500);
+          box-shadow: 0 0 0 3px var(--blue-100);
         }
 
-        .form-input-wrap {
-          position: relative;
-        }
+        .form-input-wrap { position: relative; }
 
-        .form-toggle {
+        .form-toggle-vis {
           position: absolute;
-          right: 12px;
+          right: 14px;
           top: 50%;
           transform: translateY(-50%);
           background: none;
           border: none;
-          color: var(--blue);
+          color: var(--gray-500);
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
           font-family: inherit;
         }
+
+        .form-toggle-vis:hover { color: var(--gray-700); }
 
         .btn-submit {
           width: 100%;
@@ -1281,57 +1503,44 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          background: var(--blue);
-          color: white;
+          background: var(--blue-600);
+          color: var(--white);
           border: none;
-          border-radius: 6px;
+          border-radius: var(--radius-md);
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
           font-family: inherit;
+          transition: background 0.15s ease;
           margin-top: 8px;
         }
 
-        .btn-submit:hover:not(:disabled) {
-          background: var(--blue-light);
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
+        .btn-submit:hover:not(:disabled) { background: var(--blue-700); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .spinner {
-          width: 14px;
-          height: 14px;
+          width: 16px;
+          height: 16px;
           border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
+          border-top-color: var(--white);
           border-radius: 50%;
           animation: spin 0.6s linear infinite;
         }
 
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .modal-message {
-          padding: 12px;
-          background: var(--steel);
-          border-radius: 6px;
+          padding: 12px 14px;
+          background: var(--gray-100);
+          border-radius: var(--radius-md);
           font-size: 13px;
+          color: var(--gray-600);
           text-align: center;
           margin-top: 16px;
         }
 
-        .modal-message.ok {
-          color: #059669;
-        }
-
-        .modal-message.err {
-          color: #dc2626;
-        }
+        .modal-message.ok { background: #dcfce7; color: #166534; }
+        .modal-message.err { background: #fee2e2; color: #991b1b; }
 
         .modal-footer {
           margin-top: 20px;
@@ -1345,14 +1554,13 @@ export default function Page() {
           background: none;
           border: none;
           font-size: 13px;
-          color: var(--blue);
+          color: var(--blue-600);
           cursor: pointer;
           font-family: inherit;
+          font-weight: 500;
         }
 
-        .modal-link:hover {
-          text-decoration: underline;
-        }
+        .modal-link:hover { color: var(--blue-700); text-decoration: underline; }
 
         /* Chat */
         .chat-root {
@@ -1360,75 +1568,105 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
+          background: var(--gray-50);
           height: 100dvh;
           overflow: hidden;
         }
 
-        .chat-header {
+        .chat-topbar {
+          width: 100%;
+          padding: 12px 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 16px 24px;
-          border-bottom: 1px solid var(--border);
-          background: white;
+          background: var(--white);
+          border-bottom: 1px solid var(--gray-200);
+          flex-shrink: 0;
         }
 
-        .chat-menu-wrap {
-          position: relative;
+        .chat-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
-        .chat-menu-btn {
+        .chat-status-badge {
+          padding: 6px 12px;
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+        }
+
+        .chat-status-badge.trial {
+          background: var(--blue-50);
+          color: var(--blue-700);
+          border: 1px solid var(--blue-200);
+        }
+
+        .chat-status-badge.pro {
+          background: #dcfce7;
+          color: #166534;
+          border: 1px solid #bbf7d0;
+        }
+
+        .chat-settings-wrap { position: relative; }
+
+        .chat-settings-btn {
           width: 40px;
           height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: none;
-          color: var(--ink-light);
+          border: 1px solid var(--gray-200);
+          border-radius: var(--radius-md);
+          color: var(--gray-500);
           cursor: pointer;
-          border-radius: 6px;
+          transition: all 0.15s ease;
         }
 
-        .chat-menu-btn:hover {
-          background: var(--steel);
+        .chat-settings-btn:hover {
+          color: var(--gray-700);
+          background: var(--gray-100);
+          border-color: var(--gray-300);
         }
 
-        .chat-menu {
+        .chat-settings-menu {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
           min-width: 180px;
-          background: white;
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          padding: 8px;
-          box-shadow: 0 12px 40px var(--shadow);
+          background: var(--white);
+          border: 1px solid var(--gray-200);
+          border-radius: var(--radius-md);
+          padding: 6px;
+          box-shadow: var(--shadow-lg);
           z-index: 50;
         }
 
-        .chat-menu-item {
+        .chat-settings-item {
           width: 100%;
           text-align: left;
           padding: 10px 12px;
           background: transparent;
           border: none;
-          color: var(--ink);
+          border-radius: var(--radius-sm);
+          color: var(--gray-700);
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
           font-family: inherit;
-          border-radius: 4px;
+          transition: background 0.15s ease;
         }
 
-        .chat-menu-item:hover {
-          background: var(--steel);
-        }
+        .chat-settings-item:hover { background: var(--gray-100); }
 
-        .chat-menu-sep {
+        .chat-settings-sep {
           height: 1px;
-          background: var(--border);
-          margin: 8px 0;
+          background: var(--gray-200);
+          margin: 6px 0;
         }
 
         .chat-messages {
@@ -1437,24 +1675,70 @@ export default function Page() {
           overflow-y: auto;
           overflow-x: hidden;
           padding: 24px;
-          background: var(--steel);
+          background: var(--gray-50);
         }
 
         .chat-messages.empty {
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          gap: 24px;
         }
 
-        .chat-empty {
-          font-size: 15px;
-          color: var(--ink-light);
+        .chat-empty-state {
           text-align: center;
+          max-width: 400px;
+        }
+
+        .chat-empty-icon {
+          width: 64px;
+          height: 64px;
+          margin: 0 auto 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--blue-50);
+          border-radius: 50%;
+          color: var(--blue-500);
+        }
+
+        .chat-empty-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--gray-900);
+          margin: 0 0 8px;
+        }
+
+        .chat-empty-text {
+          font-size: 14px;
+          color: var(--gray-600);
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .chat-empty-hint {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 16px;
+          background: var(--white);
+          border: 1px solid var(--gray-200);
+          border-radius: var(--radius-md);
+          font-size: 13px;
+          color: var(--gray-600);
+          margin-top: 8px;
+        }
+
+        .chat-empty-hint svg {
+          color: var(--blue-500);
+          flex-shrink: 0;
         }
 
         .chat-history {
-          max-width: 800px;
+          max-width: 760px;
           margin: 0 auto;
+          width: 100%;
           display: flex;
           flex-direction: column;
           gap: 24px;
@@ -1462,45 +1746,44 @@ export default function Page() {
 
         .chat-message {
           display: flex;
+          width: 100%;
         }
 
-        .chat-message-user {
-          justify-content: flex-end;
-        }
-
-        .chat-message-assistant {
-          justify-content: flex-start;
-        }
+        .chat-message-user { justify-content: flex-end; }
+        .chat-message-assistant { justify-content: flex-start; }
 
         .chat-bubble {
-          max-width: 70%;
-          padding: 14px 16px;
-          border-radius: 12px;
-          font-size: 15px;
+          max-width: 75%;
+          font-size: 14px;
           line-height: 1.6;
+          padding: 14px 18px;
+          border-radius: var(--radius-lg);
         }
 
         .chat-bubble-user {
-          background: var(--blue);
-          color: white;
+          background: var(--blue-600);
+          color: var(--white);
+          border-bottom-right-radius: 4px;
         }
 
         .chat-bubble-assistant {
-          background: white;
-          color: var(--ink);
-          border: 1px solid var(--border);
+          background: var(--white);
+          color: var(--gray-800);
+          border: 1px solid var(--gray-200);
+          border-bottom-left-radius: 4px;
         }
 
         .chat-bubble-image {
-          margin-bottom: 12px;
-          border-radius: 8px;
+          border-radius: var(--radius-md);
           overflow: hidden;
+          margin-bottom: 12px;
         }
 
         .chat-bubble-image img {
           display: block;
           max-width: 100%;
           max-height: 280px;
+          object-fit: contain;
         }
 
         .chat-content {
@@ -1509,35 +1792,38 @@ export default function Page() {
         }
 
         .chat-thinking {
-          color: var(--ink-lighter);
+          color: var(--gray-500);
           font-style: italic;
         }
 
         .chat-input-area {
-          border-top: 1px solid var(--border);
-          background: white;
-          padding: 16px 24px;
+          flex-shrink: 0;
+          background: var(--white);
+          border-top: 1px solid var(--gray-200);
         }
 
         .chat-input-inner {
-          max-width: 800px;
+          max-width: 760px;
           margin: 0 auto;
+          padding: 16px 24px 24px;
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: var(--steel);
-          border-radius: 6px;
+          gap: 10px;
+          padding: 10px 14px;
+          background: var(--blue-50);
+          border: 1px solid var(--blue-200);
+          border-radius: var(--radius-md);
           margin-bottom: 12px;
           font-size: 13px;
-          color: var(--ink-light);
+          color: var(--blue-700);
         }
 
         .chat-attachment-icon {
-          color: var(--blue);
+          display: flex;
+          color: var(--blue-500);
         }
 
         .chat-attachment-remove {
@@ -1548,99 +1834,111 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--ink-lighter);
+          color: var(--blue-500);
           cursor: pointer;
+          border-radius: var(--radius-sm);
+          transition: background 0.15s ease;
         }
 
         .chat-attachment-remove:hover {
-          color: var(--ink);
+          background: var(--blue-100);
         }
 
         .chat-input-row {
           display: flex;
           align-items: flex-end;
-          gap: 8px;
+          gap: 10px;
         }
 
         .chat-camera-btn {
-          width: 44px;
-          height: 44px;
+          width: 48px;
+          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--steel);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          color: var(--blue);
+          background: var(--white);
+          border: 2px solid var(--blue-500);
+          border-radius: var(--radius-md);
+          color: var(--blue-500);
           cursor: pointer;
           flex-shrink: 0;
+          transition: all 0.15s ease;
+          position: relative;
         }
 
         .chat-camera-btn:hover {
-          background: var(--steel-dark);
+          background: var(--blue-50);
+          border-color: var(--blue-600);
+          color: var(--blue-600);
+        }
+
+        .chat-camera-btn::after {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          border-radius: calc(var(--radius-md) + 4px);
+          border: 2px solid transparent;
+          transition: border-color 0.15s ease;
+        }
+
+        .chat-camera-btn:focus-visible::after {
+          border-color: var(--blue-300);
         }
 
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: var(--steel);
-          border: 1px solid var(--border);
-          border-radius: 8px;
+          background: var(--white);
+          border: 1px solid var(--gray-300);
+          border-radius: var(--radius-md);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         .chat-input-wrapper:focus-within {
-          border-color: var(--blue);
+          border-color: var(--blue-500);
+          box-shadow: 0 0 0 3px var(--blue-100);
         }
 
         .chat-textarea {
           flex: 1;
-          min-height: 44px;
+          min-height: 48px;
           max-height: 160px;
-          padding: 12px;
+          padding: 14px 16px;
           background: transparent;
           border: none;
-          color: var(--ink);
+          color: var(--gray-900);
           font-size: 14px;
           line-height: 1.4;
           resize: none;
           font-family: inherit;
         }
 
-        .chat-textarea::placeholder {
-          color: var(--ink-lighter);
-        }
-
-        .chat-textarea:focus {
-          outline: none;
-        }
+        .chat-textarea::placeholder { color: var(--gray-400); }
+        .chat-textarea:focus { outline: none; }
 
         .chat-send-btn {
-          width: 44px;
-          height: 44px;
+          width: 48px;
+          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--blue);
+          color: var(--gray-400);
           cursor: pointer;
+          flex-shrink: 0;
+          transition: color 0.15s ease;
         }
 
-        .chat-send-btn:hover:not(:disabled) {
-          color: var(--blue-light);
-        }
-
-        .chat-send-btn:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
+        .chat-send-btn:hover:not(:disabled) { color: var(--blue-500); }
+        .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .chat-send-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid var(--border);
-          border-top-color: var(--blue);
+          width: 18px;
+          height: 18px;
+          border: 2px solid var(--gray-300);
+          border-top-color: var(--blue-500);
           border-radius: 50%;
           animation: spin 0.6s linear infinite;
         }
@@ -1648,33 +1946,105 @@ export default function Page() {
         .chat-disclaimer {
           text-align: center;
           font-size: 12px;
-          color: var(--ink-lighter);
+          color: var(--gray-500);
           margin-top: 12px;
         }
 
-        .toast {
+        .toast-loading {
           position: fixed;
-          top: 24px;
-          right: 24px;
-          background: var(--ink);
-          color: white;
-          padding: 12px 16px;
-          border-radius: 8px;
+          top: 20px;
+          right: 20px;
+          padding: 12px 20px;
+          background: var(--gray-900);
+          color: var(--white);
+          border-radius: var(--radius-md);
           font-size: 14px;
+          font-weight: 500;
           z-index: 9999;
+          box-shadow: var(--shadow-lg);
         }
 
-        @media (max-width: 768px) {
-          .landing-title {
-            font-size: 40px;
+        /* Responsive */
+        @media (max-width: 968px) {
+          .landing-main {
+            grid-template-columns: 1fr;
+            gap: 48px;
+            padding: 100px 24px 60px;
           }
 
-          .landing-subtitle {
-            font-size: 18px;
+          .landing-visual {
+            order: -1;
+          }
+
+          .visual-card {
+            max-width: 100%;
+          }
+
+          .landing-headline {
+            font-size: 36px;
+          }
+
+          .landing-content {
+            text-align: center;
+            align-items: center;
+          }
+
+          .landing-features {
+            align-items: center;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .landing-topbar {
+            padding: 12px 16px;
+          }
+
+          .landing-headline {
+            font-size: 28px;
+          }
+
+          .landing-subhead {
+            font-size: 16px;
+          }
+
+          .landing-main {
+            padding: 88px 16px 48px;
+          }
+
+          .chat-topbar {
+            padding: 12px 16px;
+          }
+
+          .chat-messages {
+            padding: 16px;
+          }
+
+          .chat-input-inner {
+            padding: 12px 16px 20px;
           }
 
           .chat-bubble {
             max-width: 85%;
+          }
+
+          .plm-footer-links {
+            bottom: 16px;
+          }
+
+          .plm-brand-mark {
+            width: 32px;
+            height: 32px;
+          }
+
+          .plm-brand-text {
+            font-size: 16px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
           }
         }
       `}</style>
@@ -1705,51 +2075,58 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${inter.className} chat-root`}>
-              <header className="chat-header">
+            <div className={`${ibmSans.className} chat-root`}>
+              <header className="chat-topbar">
                 <BrandLink variant="chat" />
-                <div className="chat-menu-wrap" ref={menuRef}>
-                  <button
-                    type="button"
-                    className="chat-menu-btn"
-                    onClick={() => setShowMenu((v) => !v)}
-                    aria-label="Menu"
-                  >
-                    <Icons.Menu />
-                  </button>
-
-                  {showMenu && (
-                    <div className="chat-menu">
-                      <button
-                        type="button"
-                        className="chat-menu-item"
-                        onClick={() => {
-                          setShowMenu(false)
-                          if (hasActiveSubscription) {
-                            handleManageBilling()
-                          } else {
-                            setShowPricingModal(true)
-                          }
-                        }}
-                      >
-                        {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                      </button>
-
-                      <div className="chat-menu-sep" />
-
-                      <button
-                        type="button"
-                        className="chat-menu-item"
-                        onClick={() => {
-                          setShowMenu(false)
-                          handleSignOut()
-                        }}
-                      >
-                        Log out
-                      </button>
+                <nav className="chat-top-actions">
+                  {session && subscription && (
+                    <div className={`chat-status-badge ${subscription.status === 'trialing' ? 'trial' : 'pro'}`}>
+                      {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
                     </div>
                   )}
-                </div>
+
+                  <div className="chat-settings-wrap" ref={settingsRef}>
+                    <button
+                      type="button"
+                      className="chat-settings-btn"
+                      onClick={() => setShowSettingsMenu((v) => !v)}
+                      aria-expanded={showSettingsMenu}
+                      aria-label="Settings"
+                    >
+                      <Icons.Gear />
+                    </button>
+
+                    {showSettingsMenu && (
+                      <div className="chat-settings-menu">
+                        <button
+                          type="button"
+                          className="chat-settings-item"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            if (hasActiveSubscription) {
+                              handleManageBilling()
+                            } else {
+                              setShowPricingModal(true)
+                            }
+                          }}
+                        >
+                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                        </button>
+                        <div className="chat-settings-sep" />
+                        <button
+                          type="button"
+                          className="chat-settings-item"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            handleSignOut()
+                          }}
+                        >
+                          Sign out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </nav>
               </header>
 
               <div
@@ -1758,8 +2135,18 @@ export default function Page() {
                 className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
               >
                 {messages.length === 0 ? (
-                  <div className="chat-empty">
-                    Upload a photo or ask a question about Washtenaw County food safety regulations.
+                  <div className="chat-empty-state">
+                    <div className="chat-empty-icon">
+                      <Icons.Shield />
+                    </div>
+                    <h2 className="chat-empty-title">Ready for analysis</h2>
+                    <p className="chat-empty-text">
+                      Ask a question about Washtenaw County food safety regulations, or upload a photo for instant feedback.
+                    </p>
+                    <div className="chat-empty-hint">
+                      <Icons.Camera />
+                      <span>Tap the camera button to analyze your kitchen</span>
+                    </div>
                   </div>
                 ) : (
                   <div className="chat-history">
@@ -1774,7 +2161,6 @@ export default function Page() {
                               <img src={msg.image} alt="Uploaded" />
                             </div>
                           )}
-
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="chat-thinking">Analyzing…</div>
                           ) : (
@@ -1820,7 +2206,7 @@ export default function Page() {
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       className="chat-camera-btn"
-                      aria-label="Upload photo"
+                      aria-label="Upload photo for analysis"
                       type="button"
                     >
                       <Icons.Camera />
@@ -1837,7 +2223,7 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Ask a question…"
+                        placeholder="Ask about food safety regulations…"
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
