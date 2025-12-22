@@ -16,11 +16,10 @@
     "test-search": "node scripts/test-search.js",
     "send-reminders": "node scripts/send-trial-reminders.js",
     "test-emails": "node scripts/test-emails.js",
-    "verify-stack": "node scripts/verify-no-openai.js",
     "cleanup-webhooks": "node scripts/cleanup-webhook-events.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
+    "openai": "^4.76.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "~2.87.0",
     "autoprefixer": "^10.4.19",
