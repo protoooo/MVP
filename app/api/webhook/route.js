@@ -122,35 +122,33 @@ export async function POST(req) {
           quantity
         })
 
-        // ✅ MULTI-LOCATION: Handle invite code distribution
+        // ✅ UPDATED: Multi-location setup flow
         if (isMultiLocation && pendingPurchaseId) {
           try {
             logger.info('Processing multi-location purchase', { pendingPurchaseId })
 
-            // Get pending purchase with invite codes
-            const { data: pendingPurchase, error: fetchError } = await supabase
+            // Mark purchase as completed (ready for setup)
+            const { error: updateError } = await supabase
               .from('pending_multi_location_purchases')
-              .select('*')
+              .update({
+                status: 'completed',
+                stripe_subscription_id: subscriptionId,
+                completed_at: new Date().toISOString()
+              })
+              .eq('id', pendingPurchaseId)
+
+            if (updateError) {
+              logger.error('Failed to update purchase status', { error: updateError.message })
+            }
+
+            // Store invite codes in active table (but don't send emails yet)
+            const { data: pendingPurchase } = await supabase
+              .from('pending_multi_location_purchases')
+              .select('invite_codes')
               .eq('id', pendingPurchaseId)
               .single()
 
-            if (fetchError || !pendingPurchase) {
-              logger.error('Failed to fetch pending purchase', { 
-                error: fetchError?.message,
-                pendingPurchaseId 
-              })
-            } else {
-              // Mark purchase as completed
-              await supabase
-                .from('pending_multi_location_purchases')
-                .update({
-                  status: 'completed',
-                  stripe_subscription_id: subscriptionId,
-                  completed_at: new Date().toISOString()
-                })
-                .eq('id', pendingPurchaseId)
-
-              // Store invite codes in active table
+            if (pendingPurchase?.invite_codes) {
               const inviteCodes = pendingPurchase.invite_codes
               for (const inviteCode of inviteCodes) {
                 const { error: insertError } = await supabase
@@ -172,28 +170,19 @@ export async function POST(req) {
                   })
                 }
               }
-
-              // ✅ Send email with signup links
-              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
-              const signupLinks = inviteCodes.map((invite) => ({
-                number: invite.location_number,
-                url: `${baseUrl}/signup?invite=${invite.code}`
-              }))
-
-              await emails.multiLocationPurchaseComplete(
-                pendingPurchase.buyer_email,
-                pendingPurchase.buyer_email.split('@')[0],
-                locationCount,
-                signupLinks
-              )
-
-              logger.audit('Multi-location invite codes distributed', {
-                userId,
-                locationCount,
-                subscriptionId,
-                codesGenerated: inviteCodes.length
-              })
             }
+
+            // ✅ NEW: Send buyer to setup page instead of emailing links
+            logger.audit('Multi-location purchase ready for setup', {
+              userId,
+              locationCount,
+              subscriptionId,
+              pendingPurchaseId
+            })
+
+            // Note: Buyer will be redirected to /dashboard/multi-location-setup
+            // from the success_url in create-checkout-session
+
           } catch (multiLocationError) {
             logger.error('Multi-location setup failed', { 
               error: multiLocationError.message,
