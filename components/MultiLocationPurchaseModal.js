@@ -1,4 +1,4 @@
-// components/MultiLocationPurchaseModal.js - FIXED: Auth validation
+// components/MultiLocationPurchaseModal.js - COMPLETE with auth check
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -10,7 +10,7 @@ const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'
 
 const PRICE_PER_LOCATION = 149
 
-export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) {
+export default function MultiLocationPurchaseModal({ isOpen, onClose }) {
   const [selectedLocations, setSelectedLocations] = useState(2)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -20,7 +20,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
   const { isLoaded, executeRecaptcha } = useRecaptcha()
   const supabase = createClient()
 
-  // ✅ Check authentication when modal opens
+  // Check authentication when modal opens
   useEffect(() => {
     async function checkAuth() {
       if (!isOpen) {
@@ -33,7 +33,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
         setIsAuthenticated(!!user)
         
         if (!user) {
-          console.log('User not authenticated in purchase modal')
+          console.log('User not authenticated - will redirect to signup')
         }
       } catch (err) {
         console.error('Auth check failed:', err)
@@ -53,12 +53,13 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
   const handlePurchase = async () => {
     if (loading || !isLoaded) return
 
-    // ✅ Double-check auth before purchase
     if (!isAuthenticated) {
-      setError('Please sign in first')
+      // Store intent and redirect to signup
       onClose()
-      
       sessionStorage.setItem('pendingMultiLocationPurchase', 'true')
+      sessionStorage.setItem('pendingLocationCount', selectedLocations.toString())
+      
+      // Trigger auth modal
       window.dispatchEvent(new CustomEvent('openAuthModal', { 
         detail: { mode: 'signup' } 
       }))
@@ -82,7 +83,6 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locationCount: selectedLocations,
-          purchaseType: 'separate',
           captchaToken
         })
       })
@@ -90,18 +90,6 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
       const data = await res.json()
 
       if (!res.ok) {
-        // ✅ Handle auth errors
-        if (data.code === 'AUTH_REQUIRED') {
-          setError('Please sign in first')
-          onClose()
-          
-          sessionStorage.setItem('pendingMultiLocationPurchase', 'true')
-          window.dispatchEvent(new CustomEvent('openAuthModal', { 
-            detail: { mode: 'signup' } 
-          }))
-          return
-        }
-        
         setError(data.error || 'Failed to start purchase')
         setLoading(false)
         return
@@ -138,33 +126,33 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
 
           <div style={{ marginBottom: '24px' }}>
             <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
-              Multi-Location Licensing
+              Multi-Location Setup
             </div>
             <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--ink-0)', margin: '0 0 8px' }}>
               Purchase for Multiple Locations
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--ink-2)', margin: 0, lineHeight: '1.5' }}>
-              Each location requires its own account with individual login credentials
+              Buy once, distribute access to all your locations
             </p>
           </div>
 
-          {/* ✅ Show auth requirement if not authenticated */}
           {!checkingAuth && !isAuthenticated && (
             <div style={{
               padding: '20px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
               borderRadius: '8px',
               marginBottom: '20px',
               textAlign: 'center'
             }}>
-              <p style={{ fontSize: '14px', color: '#ef4444', marginBottom: '16px', fontWeight: '600' }}>
-                ⚠️ Please sign in or create an account first
+              <p style={{ fontSize: '14px', color: '#3b82f6', marginBottom: '16px', fontWeight: '600' }}>
+                ℹ️ Create an account to purchase
               </p>
               <button
                 onClick={() => {
                   onClose()
                   sessionStorage.setItem('pendingMultiLocationPurchase', 'true')
+                  sessionStorage.setItem('pendingLocationCount', selectedLocations.toString())
                   window.dispatchEvent(new CustomEvent('openAuthModal', { 
                     detail: { mode: 'signup' } 
                   }))
@@ -180,26 +168,24 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                   cursor: 'pointer'
                 }}
               >
-                Sign Up / Sign In
+                Create Account & Continue
               </button>
             </div>
           )}
 
-          {/* Show loading while checking auth */}
           {checkingAuth && (
             <div style={{
               padding: '20px',
               textAlign: 'center',
               color: 'var(--ink-2)'
             }}>
-              Checking authentication...
+              Checking account status...
             </div>
           )}
 
-          {/* Only show form if authenticated */}
           {!checkingAuth && isAuthenticated && (
             <>
-              {/* Location Count Selector */}
+              {/* Location Selector */}
               <div style={{ 
                 background: 'var(--bg-3)', 
                 border: '1px solid var(--border-subtle)', 
@@ -266,7 +252,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {[2, 3, 5, 10, 25].map(count => (
+                  {[2, 3, 5, 10].map(count => (
                     <button
                       key={count}
                       onClick={() => setSelectedLocations(count)}
@@ -287,7 +273,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                 </div>
               </div>
 
-              {/* Pricing Summary */}
+              {/* Pricing */}
               <div style={{
                 background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
                 borderRadius: '12px',
@@ -301,7 +287,6 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                     ${monthlyPrice}
                   </div>
                 </div>
-
                 <div style={{ 
                   paddingTop: '12px', 
                   borderTop: '1px solid rgba(255,255,255,0.1)',
@@ -312,7 +297,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                 </div>
               </div>
 
-              {/* What Happens Next */}
+              {/* Next Steps */}
               <div style={{ 
                 background: 'rgba(34, 197, 94, 0.1)', 
                 border: '1px solid rgba(34, 197, 94, 0.3)', 
@@ -324,10 +309,10 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                   What happens next
                 </div>
                 <ol style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.8', margin: 0, paddingLeft: '20px' }}>
-                  <li>You'll complete checkout for all {selectedLocations} locations</li>
-                  <li>We'll email you {selectedLocations} unique signup links</li>
-                  <li>Distribute links to each location manager</li>
-                  <li>Each location creates their own account (no payment needed)</li>
+                  <li>Complete checkout for {selectedLocations} locations</li>
+                  <li>Add your location managers' info</li>
+                  <li>We email each manager a unique signup link</li>
+                  <li>They create their account (no payment needed)</li>
                 </ol>
               </div>
 
@@ -340,10 +325,10 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                 marginBottom: '20px'
               }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#3b82f6', marginBottom: '8px' }}>
-                  Important: Security & Compliance
+                  Security & Compliance
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.6', margin: 0 }}>
-                  Each location must have its own account with unique login credentials. Sharing credentials across locations violates our Terms of Service and prevents accurate compliance tracking per location.
+                  Each location gets its own secure account. No shared credentials = better security and accurate compliance tracking.
                 </p>
               </div>
 
@@ -391,7 +376,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                     animation: 'spin 0.6s linear infinite'
                   }} />
                 )}
-                <span>Purchase {selectedLocations} Location{selectedLocations > 1 ? 's' : ''} - ${monthlyPrice}/mo</span>
+                <span>Purchase {selectedLocations} Licenses - ${monthlyPrice}/mo</span>
               </button>
 
               <p style={{ 
@@ -401,8 +386,8 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
                 textAlign: 'center',
                 lineHeight: '1.5'
               }}>
-                Questions about corporate or franchise pricing?<br />
-                Email <a href="mailto:support@protocollm.org" style={{ color: 'var(--accent)' }}>support@protocollm.org</a>
+                Questions?{' '}
+                <a href="mailto:support@protocollm.org" style={{ color: 'var(--accent)' }}>support@protocollm.org</a>
               </p>
 
               <RecaptchaBadge />
