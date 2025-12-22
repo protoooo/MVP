@@ -208,7 +208,7 @@ export async function POST(request) {
       allow_promotion_codes: true,
       billing_address_collection: 'required',
       automatic_tax: { enabled: true },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?purchase=success&locations=${locationCount}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/multi-location-setup`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?purchase=cancelled`,
       metadata: {
         userId: user.id,
