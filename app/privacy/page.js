@@ -50,7 +50,11 @@ export default function PrivacyPolicy() {
             compliance-related responses. Data is transmitted using industry-standard encryption (TLS 1.2+).
           </li>
           <li>
-            <strong>Cohere API:</strong> Creates embeddings from your queries to search our Washtenaw County food code 
+            <strong>OpenAI API:</strong> Generates answers and vision analysis with GPT-5.2. Data is used only to process your
+            requests and is handled under OpenAI&apos;s privacy policy.
+          </li>
+          <li>
+            <strong>Cohere API:</strong> Creates embeddings from your queries to search our Washtenaw County food code
             database. Enables fast, relevant document retrieval.
           </li>
           <li>Processing occurs on secure servers operated by these providers in accordance with their respective privacy policies.</li>
@@ -61,8 +65,8 @@ export default function PrivacyPolicy() {
           </li>
           <li>
             <strong>Vendor Policies:</strong> For details on how these providers handle data, see{' '}
-            <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">
-              Anthropic Privacy Policy
+            <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener noreferrer">
+              OpenAI Privacy Policy
             </a>{' '}
             and{' '}
             <a href="https://cohere.com/privacy" target="_blank" rel="noopener noreferrer">

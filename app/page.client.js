@@ -11,9 +11,6 @@ import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
-import MultiLocationBanner from '@/components/MultiLocationBanner'
-import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
-import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
 import PricingModal from '@/components/PricingModal'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
@@ -361,11 +358,6 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
-  const [locationCheck, setLocationCheck] = useState(null)
-  const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
-  const [showMultiLocationPurchaseModal, setShowMultiLocationPurchaseModal] = useState(false)
-  const [preferredLocationCount, setPreferredLocationCount] = useState(2)
-
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
 
@@ -404,72 +396,6 @@ export default function Page() {
 
     return () => {
       window.removeEventListener('openAuthModal', handleOpenAuthModal)
-    }
-  }, [])
-
-  useEffect(() => {
-    async function checkPendingPurchase() {
-      if (!isAuthenticated) return
-
-      const pending = sessionStorage.getItem('pendingMultiLocationPurchase')
-      if (!pending) return
-
-      const storedCount = Number(sessionStorage.getItem('pendingLocationCount')) || 2
-      const resolvedCount = Math.min(50, Math.max(2, storedCount))
-      setPreferredLocationCount(resolvedCount)
-
-      console.log('Found pending multi-location purchase, authenticated:', isAuthenticated)
-
-      sessionStorage.removeItem('pendingMultiLocationPurchase')
-      sessionStorage.removeItem('pendingLocationCount')
-
-      setTimeout(() => {
-        console.log('Opening multi-location modal, hasSubscription:', hasActiveSubscription)
-
-        if (hasActiveSubscription) {
-          window.dispatchEvent(
-            new CustomEvent('openMultiLocationUpgrade', {
-              detail: { currentLocations: 2 },
-            })
-          )
-        } else {
-          window.dispatchEvent(
-            new CustomEvent('openMultiLocationPurchase', {
-              detail: { preferredCount: resolvedCount },
-            })
-          )
-        }
-      }, 500)
-    }
-
-    checkPendingPurchase()
-  }, [isAuthenticated, hasActiveSubscription])
-
-  useEffect(() => {
-    const handleUpgradeEvent = () => {
-      setShowMultiLocationModal(true)
-    }
-
-    window.addEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-
-    return () => {
-      window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-    }
-  }, [])
-
-  useEffect(() => {
-    const handleOpenMultiLocationPurchase = (event) => {
-      const count = event?.detail?.preferredCount
-      if (count) {
-        setPreferredLocationCount(Math.min(50, Math.max(2, Number(count))))
-      }
-      setShowMultiLocationPurchaseModal(true)
-    }
-
-    window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
-
-    return () => {
-      window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
     }
   }, [])
 
@@ -628,10 +554,6 @@ export default function Page() {
         setHasActiveSubscription(false)
         setShowPricingModal(false)
 
-        setLocationCheck(null)
-        setShowMultiLocationModal(false)
-        setShowMultiLocationPurchaseModal(false)
-
         setIsLoading(false)
         return
       }
@@ -642,14 +564,10 @@ export default function Page() {
           setSubscription(null)
           setHasActiveSubscription(false)
 
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-
-          setIsLoading(false)
-          router.replace('/verify-email')
-          return
-        }
+        setIsLoading(false)
+        router.replace('/verify-email')
+        return
+      }
 
         const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
@@ -662,10 +580,6 @@ export default function Page() {
           setSubscription(null)
           setHasActiveSubscription(false)
 
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -674,10 +588,6 @@ export default function Page() {
         if (!profile) {
           setSubscription(null)
           setHasActiveSubscription(false)
-
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
 
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -689,10 +599,6 @@ export default function Page() {
           setSubscription(null)
           setHasActiveSubscription(false)
 
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -701,10 +607,6 @@ export default function Page() {
         console.error('❌ Policy check exception:', e)
         setSubscription(null)
         setHasActiveSubscription(false)
-
-        setLocationCheck(null)
-        setShowMultiLocationModal(false)
-        setShowMultiLocationPurchaseModal(false)
 
         setIsLoading(false)
         router.replace('/accept-terms')
@@ -738,12 +640,6 @@ export default function Page() {
       if (!isMounted) return
       setSubscription(subData)
       setHasActiveSubscription(active)
-
-      if (!subData) {
-        setLocationCheck(null)
-        setShowMultiLocationModal(false)
-        setShowMultiLocationPurchaseModal(false)
-      }
 
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
@@ -823,72 +719,6 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
-  const fetchLocationCheckFromServer = useCallback(async (sess) => {
-    try {
-      const token = sess?.access_token
-      const userId = sess?.user?.id
-      if (!token || !userId) return null
-
-      const doPost = async () =>
-        fetch('/api/license/check', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({}),
-          credentials: 'include',
-        })
-
-      const doGet = async () =>
-        fetch('/api/license/check', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        })
-
-      let res = await doPost()
-      if (res.status === 405) res = await doGet()
-
-      const data = await res.json().catch(() => null)
-      if (!res.ok || !data) return null
-
-      return data.locationCheck || data
-    } catch (e) {
-      logger.warn('Location check fetch failed', e)
-      return null
-    }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function run() {
-      if (!isAuthenticated || !session?.user?.id || !subscription) return
-
-      const lc = await fetchLocationCheckFromServer(session)
-      if (cancelled) return
-
-      if (!lc) return
-
-      logger.info('License validated', {
-        userId: session.user.id,
-        uniqueLocationsUsed: lc.uniqueLocationsUsed,
-        locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
-      })
-
-      setLocationCheck(lc)
-    }
-
-    run()
-
-    return () => {
-      cancelled = true
-    }
-  }, [isAuthenticated, session, subscription, fetchLocationCheckFromServer])
-
   const handleManageBilling = async () => {
     let loadingToast = null
     try {
@@ -929,10 +759,6 @@ export default function Page() {
   const handleSignOut = async () => {
     try {
       setShowSettingsMenu(false)
-
-      setLocationCheck(null)
-      setShowMultiLocationModal(false)
-      setShowMultiLocationPurchaseModal(false)
 
       await supabase.auth.signOut()
     } catch (e) {
@@ -2689,21 +2515,7 @@ export default function Page() {
         </main>
       </div>
 
-      {isAuthenticated && locationCheck && <MultiLocationBanner locationCheck={locationCheck} />}
-
-      <MultiLocationUpgradeModal
-        isOpen={showMultiLocationModal}
-        onClose={() => setShowMultiLocationModal(false)}
-        currentLocations={locationCheck?.uniqueLocationsUsed || 2}
-        userId={session?.user?.id}
-      />
-
-      <MultiLocationPurchaseModal
-        isOpen={showMultiLocationPurchaseModal}
-        onClose={() => setShowMultiLocationPurchaseModal(false)}
-        userId={session?.user?.id}
-        initialLocationCount={preferredLocationCount}
-      />
+      
     </>
   )
 }

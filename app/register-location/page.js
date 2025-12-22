@@ -42,7 +42,7 @@ export default function RegisterLocationPage() {
           .in('status', ['active', 'trialing'])
           .maybeSingle()
 
-        if (subscription?.metadata?.location_hash) {
+        if (subscription?.metadata?.device_fingerprint || subscription?.metadata?.location_hash) {
           // Already registered - go to chat
           router.push('/')
           return
@@ -81,7 +81,7 @@ export default function RegisterLocationPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Failed to register location')
+        setError(data.error || 'Failed to register device')
         return
       }
 
@@ -141,11 +141,11 @@ export default function RegisterLocationPage() {
                 One More Step
               </div>
               <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 12px', color: 'var(--ink-0)' }}>
-                Register Your Location
+                Register Your Device
               </h1>
               <p style={{ fontSize: '15px', color: 'var(--ink-1)', margin: 0, lineHeight: '1.6' }}>
-                Each protocolLM license is valid for <strong>one physical restaurant location</strong>. 
-                We'll register your current location to activate your account.
+                Each protocolLM license is valid for <strong>one device</strong>. 
+                We'll register the device you are using right now to activate your account.
               </p>
             </div>
 
@@ -154,9 +154,9 @@ export default function RegisterLocationPage() {
                 What We Track
               </h3>
               <ul style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.7', margin: 0, paddingLeft: '20px' }}>
-                <li>Your network location (not GPS coordinates)</li>
-                <li>Used to prevent license sharing across locations</li>
-                <li>One license = One restaurant location</li>
+                <li>Your network prefix and browser fingerprint</li>
+                <li>Used to prevent license sharing across multiple devices</li>
+                <li>One license = One device</li>
               </ul>
             </div>
 
@@ -168,7 +168,7 @@ export default function RegisterLocationPage() {
 
             {success && (
               <div style={{ padding: '12px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: '#6ee7b7', fontSize: '14px', marginBottom: '20px' }}>
-                ✓ Location registered! Redirecting to chat...
+                ✓ Device registered! Redirecting to chat...
               </div>
             )}
 
@@ -189,7 +189,7 @@ export default function RegisterLocationPage() {
                 transition: 'all 0.15s ease'
               }}
             >
-              {registering ? 'Registering...' : success ? 'Redirecting...' : 'Register This Location'}
+              {registering ? 'Registering...' : success ? 'Redirecting...' : 'Register This Device'}
             </button>
 
             <p style={{ marginTop: '20px', fontSize: '12px', color: 'var(--ink-2)', textAlign: 'center' }}>

@@ -73,7 +73,7 @@ export default function AcceptTermsPage() {
               .in('status', ['active', 'trialing'])
               .maybeSingle()
 
-            if (sub && !sub.metadata?.location_hash) {
+            if (sub && !(sub.metadata?.device_fingerprint || sub.metadata?.location_hash)) {
               router.replace('/register-location')
               return
             }

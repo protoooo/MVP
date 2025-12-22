@@ -1,4 +1,4 @@
-// app/api/chat/route.js - SINGLE PLAN VERSION (Sonnet 4.5 for all users)
+// app/api/chat/route.js - SINGLE PLAN VERSION (OpenAI GPT-5.2 for all users)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 
 import { NextResponse } from 'next/server'
@@ -8,22 +8,22 @@ import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics, checkAccess } from '@/lib/usage'
-import { validateSingleLocation } from '@/lib/licenseValidation'
+import { validateDeviceLicense } from '@/lib/licenseValidation'
 import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-let anthropicClient = null
+let openaiClient = null
 let searchDocuments = null
 
-async function getAnthropicClient() {
-  if (!anthropicClient) {
-    const { default: Anthropic } = await import('@anthropic-ai/sdk')
-    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+async function getOpenAIClient() {
+  if (!openaiClient) {
+    const { OpenAI } = await import('openai')
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   }
-  return anthropicClient
+  return openaiClient
 }
 
 async function getSearchDocuments() {
@@ -37,8 +37,8 @@ async function getSearchDocuments() {
 // ============================================================================
 // MODEL CONFIGURATION - SINGLE MODEL FOR ALL USERS
 // ============================================================================
-const CLAUDE_MODEL = process.env.ANTHROPIC_SONNET_MODEL || 'claude-sonnet-4-20250514'
-const MODEL_LABEL = 'Sonnet 4.5'
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-5.2'
+const MODEL_LABEL = 'GPT-5.2'
 
 // Time budgets
 const VISION_TIMEOUT_MS = 20000
@@ -83,6 +83,26 @@ function sanitizeOutput(text) {
     out += '\n\n[Response trimmed. Ask a follow-up for more detail.]'
   }
   return out.trim()
+}
+
+function messageContentToString(content) {
+  if (typeof content === 'string') return content
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (!part) return ''
+        if (typeof part === 'string') return part
+        if (typeof part.text === 'string') return part.text
+        if (typeof part.content === 'string') return part.content
+        return ''
+      })
+      .filter(Boolean)
+      .join('')
+  }
+  if (content && typeof content === 'object' && typeof content.text === 'string') {
+    return content.text
+  }
+  return ''
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
@@ -513,21 +533,14 @@ async function safeLogUsage(payload) {
 
 function buildCacheStats(usage) {
   if (!usage) return null
-  const inputTokens = usage.input_tokens || 0
-  const cacheCreate = usage.cache_creation_input_tokens || 0
-  const cacheRead = usage.cache_read_input_tokens || 0
-  const outputTokens = usage.output_tokens || 0
-  const cacheHit = cacheRead > 0
-  const denom = inputTokens + cacheRead
-  const savingsPct = denom > 0 ? Math.round((cacheRead / denom) * 100) : 0
+  const promptTokens = usage.prompt_tokens || 0
+  const completionTokens = usage.completion_tokens || 0
+  const totalTokens = usage.total_tokens || promptTokens + completionTokens
 
   return {
-    input_tokens: inputTokens,
-    cache_creation_input_tokens: cacheCreate,
-    cache_read_input_tokens: cacheRead,
-    output_tokens: outputTokens,
-    cache_hit: cacheHit,
-    cache_savings_pct: savingsPct,
+    prompt_tokens: promptTokens,
+    completion_tokens: completionTokens,
+    total_tokens: totalTokens,
   }
 }
 
@@ -548,8 +561,8 @@ export async function POST(request) {
   try {
     logger.info('Chat request received')
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      logger.error('ANTHROPIC_API_KEY not configured')
+    if (!process.env.OPENAI_API_KEY) {
+      logger.error('OPENAI_API_KEY not configured')
       return NextResponse.json({ error: 'AI service not configured.' }, { status: 500 })
     }
 
@@ -710,50 +723,33 @@ export async function POST(request) {
         userAgent: sessionInfo.userAgent.substring(0, 50),
       })
 
-      const locationCheck = await validateSingleLocation(userId, sessionInfo)
+      const deviceCheck = await validateDeviceLicense(userId, sessionInfo)
 
-      if (!locationCheck.valid) {
+      if (!deviceCheck.valid) {
         logger.security('License validation failed', {
           userId,
-          code: locationCheck.code,
-          error: locationCheck.error,
+          code: deviceCheck.code,
+          error: deviceCheck.error,
           ip: sessionInfo.ip.substring(0, 12) + '***',
         })
 
-        if (locationCheck.code === 'MULTI_LOCATION_ABUSE') {
-          return NextResponse.json(
-            {
-              error: locationCheck.error,
-              code: 'MULTI_LOCATION_ABUSE',
-              message:
-                'This license appears to be shared across multiple physical locations. Each location requires its own license. Contact support@protocollm.org for multi-location pricing.',
-            },
-            { status: 403 }
-          )
-        }
-
-        if (locationCheck.code === 'LOCATION_LIMIT_EXCEEDED') {
-          return NextResponse.json(
-            {
-              error: locationCheck.error,
-              code: 'LOCATION_LIMIT_EXCEEDED',
-              message:
-                'This license is being used from too many different locations. Each restaurant location requires its own license. Contact support@protocollm.org if you need help.',
-            },
-            { status: 403 }
-          )
-        }
-
         return NextResponse.json(
-          { error: locationCheck.error || 'Location validation failed', code: 'LOCATION_VALIDATION_FAILED' },
+          {
+            error: deviceCheck.error || 'Device validation failed',
+            code: deviceCheck.code || 'DEVICE_VALIDATION_FAILED',
+            message:
+              deviceCheck.error ||
+              'This license is already active on another device. Please purchase an additional device license.',
+            suggestedPrice: deviceCheck.suggestedPrice || 79,
+          },
           { status: 403 }
         )
       }
 
       logger.info('License validated', {
         userId,
-        uniqueLocationsUsed: locationCheck.uniqueLocationsUsed,
-        locationFingerprint: locationCheck.locationFingerprint?.substring(0, 8) + '***',
+        uniqueDevicesUsed: deviceCheck.uniqueDevicesUsed,
+        deviceFingerprint: deviceCheck.deviceFingerprint?.substring(0, 8) + '***',
       })
 
       try {
@@ -766,7 +762,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' }, { status: 401 })
     }
 
-    const anthropic = await getAnthropicClient()
+    const openai = await getOpenAIClient()
     const searchDocumentsFn = await getSearchDocuments()
 
     // ========================================================================
@@ -783,18 +779,15 @@ export async function POST(request) {
     if (hasImage && imageBase64) {
       try {
         const visionResp = await withTimeout(
-          anthropic.messages.create({
-            model: CLAUDE_MODEL,
+          openai.chat.completions.create({
+            model: OPENAI_MODEL,
             temperature: 0,
             max_tokens: 750,
             messages: [
               {
                 role: 'user',
                 content: [
-                  { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
-                  {
-                    type: 'text',
-                    text: `Scan this food service photo for potential compliance issues.
+                  { type: 'text', text: `Scan this food service photo for potential compliance issues.
 
 CRITICAL: ONLY flag what you can CLEARLY see in the photo.
 - If you're not 100% certain about something, don't flag it
@@ -823,8 +816,8 @@ Return JSON only:
     }
   ],
   "facts": ["observable details only - no assumptions"]
-}`,
-                  },
+}` },
+                  { type: 'image_url', image_url: { url: `data:${imageMediaType || 'image/jpeg'};base64,${imageBase64}` } },
                 ],
               },
             ],
@@ -833,10 +826,7 @@ Return JSON only:
           'VISION_TIMEOUT'
         )
 
-        const visionText = visionResp.content
-          .filter((b) => b.type === 'text')
-          .map((b) => b.text)
-          .join('')
+        const visionText = messageContentToString(visionResp.choices?.[0]?.message?.content || '')
 
         const parsedVision = extractJsonObject(visionText)
         if (parsedVision) {
@@ -1011,7 +1001,7 @@ Max findings: ${maxFindings}`
 
     let modelText = ''
     let parsed = null
-    let cacheStats = null
+    let usageStats = null
 
     try {
       const finalMessages = []
@@ -1020,8 +1010,8 @@ Max findings: ${maxFindings}`
         finalMessages.push({
           role: 'user',
           content: [
-            { type: 'text', text: excerptBlock, cache_control: { type: 'ephemeral' } },
-            { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: imageBase64 } },
+            { type: 'text', text: excerptBlock },
+            { type: 'image_url', image_url: { url: `data:${imageMediaType || 'image/jpeg'};base64,${imageBase64}` } },
             { type: 'text', text: questionBlock },
           ],
         })
@@ -1029,32 +1019,31 @@ Max findings: ${maxFindings}`
         finalMessages.push({
           role: 'user',
           content: [
-            { type: 'text', text: excerptBlock, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: excerptBlock },
             { type: 'text', text: questionBlock },
           ],
         })
       }
 
       const answerResp = await withTimeout(
-        anthropic.messages.create({
-          model: CLAUDE_MODEL,
+        openai.chat.completions.create({
+          model: OPENAI_MODEL,
           temperature: 0.15,
           max_tokens: fullAudit ? 1300 : 950,
-          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
-          messages: finalMessages,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...finalMessages,
+          ],
         }),
         ANSWER_TIMEOUT_MS,
         'ANSWER_TIMEOUT'
       )
 
-      modelText = answerResp.content
-        .filter((b) => b.type === 'text')
-        .map((b) => b.text)
-        .join('')
+      modelText = messageContentToString(answerResp.choices?.[0]?.message?.content || '')
 
       parsed = extractJsonObject(modelText)
-      cacheStats = buildCacheStats(answerResp.usage)
-      if (cacheStats) logger.info('Cache stats', cacheStats)
+      usageStats = buildCacheStats(answerResp.usage)
+      if (usageStats) logger.info('Token stats', usageStats)
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
       return NextResponse.json(
@@ -1146,7 +1135,7 @@ Max findings: ${maxFindings}`
       queriesUsed: queries.length,
       fullAudit,
       includeFines,
-      cacheHit: cacheStats?.cache_hit || false,
+      tokenStats: usageStats,
       model: MODEL_LABEL,
     })
 
@@ -1161,7 +1150,7 @@ Max findings: ${maxFindings}`
       {
         message,
         _meta: {
-          model: CLAUDE_MODEL,
+          model: OPENAI_MODEL,
           modelLabel: MODEL_LABEL,
           hasImage,
           status,
@@ -1169,7 +1158,7 @@ Max findings: ${maxFindings}`
           docsRetrieved: allDocs.length,
           queriesUsed: queries.length,
           durationMs: Date.now() - startedAt,
-          cache: cacheStats || null,
+          usage: usageStats || null,
         },
       },
       { status: 200 }
