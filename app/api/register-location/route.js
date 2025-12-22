@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
-import { registerLocation } from '@/lib/licenseValidation'
+import { registerDevice } from '@/lib/licenseValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +45,7 @@ export async function POST(request) {
 
     if (subscription?.metadata?.location_hash) {
       return NextResponse.json({ 
-        error: 'Location already registered',
+        error: 'Device already registered',
         code: 'ALREADY_REGISTERED' 
       }, { status: 400 })
     }
@@ -56,12 +56,12 @@ export async function POST(request) {
       userAgent: request.headers.get('user-agent') || 'unknown'
     }
 
-    // Register location
-    const result = await registerLocation(user.id, sessionInfo)
+    // Register device
+    const result = await registerDevice(user.id, sessionInfo)
 
     if (!result.success) {
       return NextResponse.json({ 
-        error: result.error || 'Failed to register location' 
+        error: result.error || 'Failed to register device' 
       }, { status: 500 })
     }
 
@@ -90,13 +90,14 @@ export async function POST(request) {
         metadata: {
           ...subscription?.metadata,
           location_hash: result.locationFingerprint,
+          device_fingerprint: result.locationFingerprint,
           registered_at: new Date().toISOString()
         }
       })
       .eq('user_id', user.id)
       .in('status', ['active', 'trialing'])
 
-    logger.audit('Location registered successfully', {
+    logger.audit('Device registered successfully', {
       userId: user.id,
       locationHash: result.locationFingerprint?.substring(0, 8) + '***'
     })
