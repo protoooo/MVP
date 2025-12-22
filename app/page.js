@@ -1,32 +1,28 @@
 // app/page.js
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
+import { Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
-import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
+import PricingModal from '@/components/PricingModal'
 
-const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 // ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
-// eslint-disable-next-line no-unused-vars
-const isAdmin = false
-
-// lightweight logger (keeps your original “logger.info” style expectations)
+// lightweight logger
 const logger = {
   info: (...args) => console.log(...args),
   warn: (...args) => console.warn(...args),
@@ -35,29 +31,24 @@ const logger = {
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   X: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Sparkle: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-    </svg>
-  ),
   Gear: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path
         d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
         strokeLinecap="round"
@@ -91,11 +82,11 @@ function FooterLinks() {
       <Link className="plm-footer-link" href="/terms">
         Terms
       </Link>
-      <span className="plm-footer-sep">·</span>
+      <span className="plm-footer-sep">/</span>
       <Link className="plm-footer-link" href="/privacy">
         Privacy
       </Link>
-      <span className="plm-footer-sep">·</span>
+      <span className="plm-footer-sep">/</span>
       <Link className="plm-footer-link" href="/contact">
         Contact
       </Link>
@@ -103,264 +94,40 @@ function FooterLinks() {
   )
 }
 
-/* ------------------------------------------
-   Landing demo (scripted, user presses Send)
-------------------------------------------- */
-
-const LANDING_DEMO_STEPS = [
-  {
-    user: 'What does this do?',
-    assistant: "Snap a kitchen photo and I'll flag likely health-code violations — fast, plain language, plus what to fix.",
-  },
-  {
-    user: 'Nice. What else?',
-    assistant:
-      "Ask questions too — date marking, cooling, handwashing, sanitizer, temps, inspections. I answer from the Washtenaw County rules (not vibes).",
-  },
-  {
-    user: 'What kinds of violations do you catch?',
-    assistant:
-      'Common hits: cold food above 41°F, dirty or blocked hand sink, sanitizer too weak, unlabeled spray bottles, missing date marks, raw-over-ready, pest evidence, and cross-contamination risks.',
-  },
-  {
-    user: 'What can violations cost?',
-    assistant:
-      'Rough reality:\n• Small fixes (labels, minor cleaning, quick retrain): usually $0–$200\n• Moderate issues (discard food, deep clean, rework workflow): often $200–$2,000\n• Critical hits (unsafe temps, contaminated prep, repeat violations): $2,000–$10,000+ once you factor waste, labor, downtime, and emergency fixes.\n\nThe goal is catching them early — before they snowball.',
-  },
-  {
-    user: 'Got it. How do I try it?',
-    assistant: 'Whenever you are ready, hit Start trial.',
-    isFinal: true,
-  },
-]
-
-function LandingDemo({ onDemoDone }) {
-  const [msgs, setMsgs] = useState([{ role: 'assistant', content: 'Hey — welcome to protocolLM.' }])
-  const [stepIdx, setStepIdx] = useState(0)
-  const [draft, setDraft] = useState('')
-  const [phase, setPhase] = useState('typingDraft') // typingDraft | waitingSend | typingAssistant | done
-  const [isTyping, setIsTyping] = useState(false)
-
-  const timersRef = useRef([])
-  const scrollRef = useRef(null)
-  const reduceMotionRef = useRef(false)
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-  }, [])
-
-  const scrollToBottom = useCallback((behavior = 'smooth') => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior })
-  }, [])
-
-  const typeInto = useCallback(
-    async ({ text, setValue, speed = 22, jitter = 14, onDone }) => {
-      clearTimers()
-      setIsTyping(true)
-
-      // Reduced motion: instant
-      if (reduceMotionRef.current) {
-        setValue(text)
-        setIsTyping(false)
-        onDone?.()
-        return
-      }
-
-      let i = 0
-      const tick = () => {
-        i += 1
-        setValue(text.slice(0, i))
-        requestAnimationFrame(() => scrollToBottom('auto'))
-
-        if (i >= text.length) {
-          setIsTyping(false)
-          onDone?.()
-          return
-        }
-
-        const base = speed
-        const wait = base + Math.floor(Math.random() * jitter)
-        const t = setTimeout(tick, wait)
-        timersRef.current.push(t)
-      }
-
-      const t0 = setTimeout(tick, 220)
-      timersRef.current.push(t0)
-    },
-    [clearTimers, scrollToBottom]
-  )
-
-  const startDraftForStep = useCallback(
-    (idx) => {
-      const step = LANDING_DEMO_STEPS[idx]
-      if (!step) return
-      setPhase('typingDraft')
-      setDraft('')
-      typeInto({
-        text: step.user,
-        setValue: setDraft,
-        speed: 18,
-        jitter: 18,
-        onDone: () => setPhase('waitingSend'),
-      })
-    },
-    [typeInto]
-  )
-
-  const typeAssistantReply = useCallback(
-    (replyText, after) => {
-      setPhase('typingAssistant')
-      setMsgs((prev) => [...prev, { role: 'assistant', content: '' }])
-
-      typeInto({
-        text: replyText,
-        setValue: (val) => {
-          setMsgs((prev) => {
-            const next = [...prev]
-            next[next.length - 1] = { ...next[next.length - 1], content: val }
-            return next
-          })
-        },
-        speed: 16,
-        jitter: 18,
-        onDone: after,
-      })
-    },
-    [typeInto]
-  )
-
-  useEffect(() => {
-    reduceMotionRef.current =
-      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-
-    startDraftForStep(0)
-    return () => clearTimers()
-  }, [startDraftForStep, clearTimers])
-
-  useEffect(() => {
-    requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [msgs, scrollToBottom])
-
-  const canSend = phase === 'waitingSend' && !isTyping && !!draft
-
-  const handleSendDemo = useCallback(() => {
-    if (!canSend) return
-
-    const step = LANDING_DEMO_STEPS[stepIdx]
-    if (!step) return
-
-    setMsgs((prev) => [...prev, { role: 'user', content: draft }])
-    setDraft('')
-
-    typeAssistantReply(step.assistant, () => {
-      const nextIdx = stepIdx + 1
-      if (step.isFinal || !LANDING_DEMO_STEPS[nextIdx]) {
-        setPhase('done')
-        onDemoDone?.()
-        return
-      }
-      setStepIdx(nextIdx)
-      startDraftForStep(nextIdx)
-    })
-  }, [canSend, draft, stepIdx, startDraftForStep, typeAssistantReply, onDemoDone])
-
-  return (
-    <div className="landing-demo-window" aria-label="protocolLM demo">
-      <div className="landing-demo-header" aria-hidden="true">
-        <span className="terminal-dot red" />
-        <span className="terminal-dot yellow" />
-        <span className="terminal-dot green" />
-      </div>
-
-      <div className="landing-demo-body">
-        <div ref={scrollRef} className="landing-demo-messages" role="log" aria-live="polite">
-          {msgs.map((m, idx) => (
-            <div
-              key={idx}
-              className={`landing-demo-row ${m.role === 'user' ? 'is-user' : 'is-assistant'}`}
-              aria-label={m.role === 'user' ? 'User message' : 'Assistant message'}
-            >
-              <div className={`landing-demo-bubble ${m.role === 'user' ? 'user' : 'assistant'}`}>
-                <span className="landing-demo-text">{m.content}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="landing-demo-inputArea" aria-label="Demo input">
-          <div className="landing-demo-inputWrap">
-            <textarea
-              className="landing-demo-textarea"
-              value={draft}
-              readOnly
-              rows={1}
-              placeholder=""
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendDemo()
-                }
-              }}
-            />
-            <button
-              type="button"
-              className={`landing-demo-send ${canSend ? 'active' : ''}`}
-              onClick={handleSendDemo}
-              aria-label="Send demo message"
-            >
-              <Icons.ArrowUp />
-            </button>
-          </div>
-
-          <div className="landing-demo-hint" aria-hidden="true">
-            {phase === 'done' ? ' ' : 'Press Send (or Enter) to continue'}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const [demoDone, setDemoDone] = useState(false)
-
   return (
-    <div className={`${ibmMono.className} landing-root`}>
-      <div className="landing-bg" />
-
+    <div className={`${inter.className} landing-root`}>
       <header className="landing-topbar">
-        <div className="plm-brand-wrap">
-          <BrandLink variant="landing" />
-        </div>
-
-        <nav className="landing-top-actions" aria-label="Top actions">
-          <div className="landing-top-actions-desktop desktop-only">
-            <button onClick={onShowPricing} className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} type="button">
-              Start trial
-            </button>
-          </div>
-
-          <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
-            Sign in
+        <BrandLink variant="landing" />
+        <nav className="landing-nav">
+          <button onClick={onShowAuth} className="btn-ghost" type="button">
+            Log in
+          </button>
+          <button onClick={onShowPricing} className="btn-solid" type="button">
+            Start Trial
           </button>
         </nav>
       </header>
 
       <main className="landing-hero">
-        <div className="hero-content">
-          <LandingDemo
-            onDemoDone={() => {
-              setDemoDone(true)
-            }}
-          />
+        <div className="hero-container">
+          <div className="hero-badge">Washtenaw County Standard</div>
+          <h1 className="hero-title">
+            Health compliance.<br />
+            Extensions of your clipboard.
+          </h1>
+          <p className="hero-sub">
+            This is the problem: Violations happen when you aren't looking.<br />
+            This is the fix: Snap a photo. Identify the issue. Solve it before the inspection.
+          </p>
 
-          <div className="mobile-start mobile-only">
-            <button className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} onClick={onShowPricing} type="button">
-              Start trial
+          <div className="hero-actions">
+            <button className="btn-solid large" onClick={onShowPricing}>
+              Start Free Trial
             </button>
+            <p className="hero-caption">
+              Trusted methodology. No scare tactics. Just results.
+            </p>
           </div>
         </div>
       </main>
@@ -370,7 +137,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-// ✅ UPDATED: accepts selectedPriceId and passes it on signup
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -401,7 +167,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       const captchaToken = await executeRecaptcha(mode)
       if (!captchaToken || captchaToken === 'turnstile_unavailable') {
         setMessageKind('err')
-        setMessage('Security verification failed. Please ensure Cloudflare Turnstile is allowed, then try again.')
+        setMessage('Security check failed.')
         return
       }
 
@@ -412,11 +178,9 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         endpoint = '/api/auth/reset-password'
       } else {
         body.password = password
-
         if (mode === 'signup' && selectedPriceId) {
           body.selectedPriceId = selectedPriceId
         }
-
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
@@ -436,30 +200,29 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
       if (mode === 'reset') {
         setMessageKind('ok')
-        setMessage('Check your email for reset instructions.')
+        setMessage('Reset instructions sent to email.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2000)
       } else if (mode === 'signup') {
         setMessageKind('ok')
-        setMessage('Account created. Check your email to verify.')
+        setMessage('Account created. Please verify your email.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2000)
       } else {
         setMessageKind('ok')
-        setMessage('Signed in. Redirecting…')
+        setMessage('Authenticating...')
         setTimeout(() => {
           onClose()
           window.location.reload()
         }, 450)
       }
     } catch (error) {
-      console.error('Auth error:', error)
       setMessageKind('err')
-      setMessage('Unexpected issue. Please try again.')
+      setMessage('System error. Please retry.')
     } finally {
       setLoading(false)
     }
@@ -470,30 +233,27 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${ibmMono.className}`}>
-          <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
-            <Icons.X />
-          </button>
-
-          <div className="modal-header">
-            <h2 className="modal-title">
-              {mode === 'signin' && 'Sign in'}
-              {mode === 'signup' && 'Create account'}
-              {mode === 'reset' && 'Reset password'}
+        <div className={`modal-card ${inter.className}`}>
+          <div className="modal-top">
+             <h2 className="modal-title">
+              {mode === 'signin' && 'Sign In'}
+              {mode === 'signup' && 'New Account'}
+              {mode === 'reset' && 'Reset Password'}
             </h2>
+            <button onClick={onClose} className="modal-close" aria-label="Close">
+              <Icons.X />
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
-              <label className="form-label">Email</label>
+              <label className="form-label">Email Address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
                 required
                 className="form-input"
-                autoComplete="email"
               />
             </div>
 
@@ -505,21 +265,18 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
                     required
                     className="form-input"
-                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle-vis">
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? 'HIDE' : 'SHOW'}
                   </button>
                 </div>
               </div>
             )}
 
-            <button type="submit" disabled={loading || !isLoaded} className="btn-submit">
-              {loading && <span className="spinner" />}
-              <span>{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send link'}</span>
+            <button type="submit" disabled={loading || !isLoaded} className="btn-full">
+              {loading ? 'Processing...' : (mode === 'signin' ? 'Access Account' : mode === 'signup' ? 'Create Account' : 'Send Link')}
             </button>
           </form>
 
@@ -532,22 +289,21 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                   Forgot password?
                 </button>
                 <button type="button" onClick={() => setMode('signup')} className="modal-link">
-                  Create an account
+                  No account? Create one
                 </button>
               </>
             )}
             {mode === 'signup' && (
               <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                Already have an account? Sign in
+                Have an account? Sign in
               </button>
             )}
             {mode === 'reset' && (
               <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                ← Back to sign in
+                Return to sign in
               </button>
             )}
           </div>
-
           <RecaptchaBadge />
         </div>
       </div>
@@ -559,11 +315,9 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
   const searchParams = useSearchParams()
-
   const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
 
   const [isLoading, setIsLoading] = useState(true)
-  const [loadingStage, setLoadingStage] = useState('auth')
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [subscription, setSubscription] = useState(null)
@@ -572,8 +326,6 @@ export default function Page() {
   const [authInitialMode, setAuthInitialMode] = useState('signin')
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
-
-  // ✅ remember the selected Stripe price when user isn't logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -582,24 +334,21 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
-  // ✅ NEW: multi-location license state + modal
   const [locationCheck, setLocationCheck] = useState(null)
   const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
   const [showMultiLocationPurchaseModal, setShowMultiLocationPurchaseModal] = useState(false)
 
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
   const shouldAutoScrollRef = useRef(true)
+  const settingsRef = useRef(null)
 
   const isAuthenticated = !!session
-
-  // ✅ Chat settings menu (gear dropdown)
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
-  const settingsRef = useRef(null)
 
   // Close settings menu on outside click
   useEffect(() => {
@@ -615,43 +364,17 @@ export default function Page() {
     }
   }, [])
 
-  // ✅ NEW: Listen for multi-location upgrade events
   useEffect(() => {
-    const handleUpgradeEvent = () => {
-      setShowMultiLocationModal(true)
-    }
-
+    const handleUpgradeEvent = () => setShowMultiLocationModal(true)
+    const handleOpenMultiLocationPurchase = () => setShowMultiLocationPurchaseModal(true)
     window.addEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-
+    window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
     return () => {
       window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-    }
-  }, [])
-
-  // ✅ NEW: Listen for multi-location purchase modal trigger
-  useEffect(() => {
-    const handleOpenMultiLocationPurchase = () => {
-      setShowMultiLocationPurchaseModal(true)
-    }
-
-    window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
-
-    return () => {
       window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
     }
   }, [])
 
-  // Set view attribute for CSS + optional spline container hiding
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
-    const splineContainer = document.getElementById('plm-spline-bg')
-    if (splineContainer) {
-      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
-    }
-  }, [isAuthenticated])
-
-  // Auto-scroll helpers
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
@@ -668,16 +391,8 @@ export default function Page() {
 
   useEffect(() => {
     requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [scrollToBottom])
-
-  useEffect(() => {
-    if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
-  // ============================================================================
-  // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
-  // Only show pricing via URL param if authenticated
-  // ============================================================================
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     const emailVerified = searchParams?.get('emailVerified')
@@ -685,16 +400,13 @@ export default function Page() {
     if (showPricing === 'true' && isAuthenticated) {
       if (hasActiveSubscription || subscription) {
         setShowPricingModal(false)
-
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
         return
       }
-
       if (!hasActiveSubscription && !subscription) {
         setShowPricingModal(true)
-
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
@@ -702,31 +414,22 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
-  // ============================================================================
-  // ✅ FIX 2: Keep ONLY this handleCheckout (full validation + CAPTCHA + verification)
-  // ============================================================================
   const handleCheckout = useCallback(
     async (priceId, planName) => {
       try {
-        // ✅ SECURITY: Validate price ID
         if (!priceId) {
           alert('Invalid price selected.')
           return
         }
-
-        // ✅ SECURITY: Verify priceId is one of the allowed values (single plan)
         const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
-          console.error('Invalid price ID:', priceId)
-          alert('Invalid plan selected. Please try again.')
+          alert('Invalid plan selected.')
           return
         }
 
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
-          // ✅ Store selected plan before showing auth
-          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
           setSelectedPriceId(priceId)
           setShowPricingModal(false)
           setAuthInitialMode('signup')
@@ -734,16 +437,15 @@ export default function Page() {
           return
         }
 
-        // ✅ SECURITY: Check email is verified before allowing checkout
         if (!data.session.user.email_confirmed_at) {
-          alert('Please verify your email before starting a trial. Check your inbox.')
+          alert('Please verify your email before starting a trial.')
           setShowPricingModal(false)
           router.push('/verify-email')
           return
         }
 
         if (!captchaLoaded) {
-          alert('Security verification is still loading. Please try again in a moment.')
+          alert('Security verification loading. Try again.')
           return
         }
 
@@ -751,7 +453,7 @@ export default function Page() {
 
         const captchaToken = await executeRecaptcha('checkout')
         if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-          throw new Error('Security verification failed. Please refresh and try again.')
+          throw new Error('Security verification failed.')
         }
 
         const res = await fetch('/api/create-checkout-session', {
@@ -766,31 +468,24 @@ export default function Page() {
 
         const payload = await res.json().catch(() => ({}))
 
-        // ✅ SECURITY: Handle specific error codes
         if (!res.ok) {
           if (payload.code === 'EMAIL_NOT_VERIFIED') {
-            alert('Please verify your email before starting a trial.')
             router.push('/verify-email')
             return
           }
-
           if (payload.code === 'ALREADY_SUBSCRIBED') {
-            alert('You already have an active subscription.')
             setShowPricingModal(false)
             return
           }
-
           throw new Error(payload.error || 'Checkout failed')
         }
 
         if (payload.url) {
           window.location.href = payload.url
-        } else {
-          throw new Error('No checkout URL returned')
         }
       } catch (error) {
         console.error('Checkout error:', error)
-        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+        alert('Failed: ' + (error.message || 'Unknown error'))
       } finally {
         setCheckoutLoading(null)
       }
@@ -798,7 +493,6 @@ export default function Page() {
     [supabase, captchaLoaded, executeRecaptcha, router]
   )
 
-  // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
     let isMounted = true
 
@@ -810,28 +504,15 @@ export default function Page() {
         setSubscription(null)
         setHasActiveSubscription(false)
         setShowPricingModal(false)
-
-        // ✅ clear multi-location states on logout
         setLocationCheck(null)
-        setShowMultiLocationModal(false)
-        setShowMultiLocationPurchaseModal(false)
-
         setIsLoading(false)
         return
       }
 
-      // ✅ CRITICAL: Check if email is verified + terms accepted
       try {
         if (!s.user.email_confirmed_at) {
-          console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
           setHasActiveSubscription(false)
-
-          // ✅ clear multi-location states
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/verify-email')
           return
@@ -843,61 +524,19 @@ export default function Page() {
           .eq('id', s.user.id)
           .maybeSingle()
 
-        if (profileError) {
-          console.error('❌ Profile check error:', profileError)
+        if (profileError || !profile || !profile.accepted_terms) {
           setSubscription(null)
           setHasActiveSubscription(false)
-
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        if (!profile) {
-          setSubscription(null)
-          setHasActiveSubscription(false)
-
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        const accepted = !!(profile.accepted_terms && profile.accepted_privacy)
-        if (!accepted) {
-          setSubscription(null)
-          setHasActiveSubscription(false)
-
-          setLocationCheck(null)
-          setShowMultiLocationModal(false)
-          setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/accept-terms')
           return
         }
       } catch (e) {
-        console.error('❌ Policy check exception:', e)
-        setSubscription(null)
-        setHasActiveSubscription(false)
-
-        setLocationCheck(null)
-        setShowMultiLocationModal(false)
-        setShowMultiLocationPurchaseModal(false)
-
         setIsLoading(false)
         router.replace('/accept-terms')
         return
       }
 
-      // ✅ CRITICAL: Check for active subscription
       let active = false
       let subData = null
 
@@ -912,11 +551,8 @@ export default function Page() {
           .maybeSingle()
 
         subData = sub || null
-
         const now = new Date()
-        const endDate =
-          sub?.current_period_end ? new Date(sub.current_period_end) : sub?.trial_end ? new Date(sub.trial_end) : null
-
+        const endDate = sub?.current_period_end ? new Date(sub.current_period_end) : sub?.trial_end ? new Date(sub.trial_end) : null
         if (endDate && endDate > now) active = true
       } catch (e) {
         console.error('Subscription check error', e)
@@ -926,46 +562,16 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
-      // ✅ if user lost subscription, clear location check so banner doesn't show incorrectly
       if (!subData) {
         setLocationCheck(null)
-        setShowMultiLocationModal(false)
-        setShowMultiLocationPurchaseModal(false)
       }
 
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
 
-      if (s?.user) {
-        console.log('🔐 Auth state:', {
-          userId: String(s.user.id || '').substring(0, 8) + '***',
-          emailVerified: !!s.user.email_confirmed_at,
-          hasSubscription: !!subData,
-          subscriptionStatus: subData?.status,
-          trialEnd: subData?.trial_end ? new Date(subData.trial_end).toISOString() : null,
-        })
-      }
-
       if (!subData && !checkoutParam && showPricingParam !== 'true') {
-        console.log('💳 No subscription found - showing pricing modal')
         setShowPricingModal(true)
         setHasActiveSubscription(false)
-      }
-
-      if (subData?.status === 'trialing' && subData?.trial_end) {
-        const trialEnd = new Date(subData.trial_end)
-        const now = new Date()
-
-        if (trialEnd < now) {
-          console.log('❌ Trial expired - showing pricing')
-          if (!checkoutParam) setShowPricingModal(true)
-          setHasActiveSubscription(false)
-        } else {
-          const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
-          if (hoursLeft < 24 && hoursLeft > 0) {
-            console.log(`⚠️ Trial ends in ${Math.round(hoursLeft)} hours`)
-          }
-        }
       }
 
       setIsLoading(false)
@@ -973,13 +579,9 @@ export default function Page() {
 
     async function init() {
       try {
-        setLoadingStage('auth')
         const { data } = await supabase.auth.getSession()
-        setLoadingStage('subscription')
         await loadSessionAndSub(data.session || null)
-        setLoadingStage('ready')
       } catch (e) {
-        console.error('Auth init error', e)
         if (isMounted) setIsLoading(false)
       }
     }
@@ -996,146 +598,72 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  // ✅ FIXED: Auto-checkout after email verification / auth callback
   useEffect(() => {
     const checkoutPlan = searchParams?.get('checkout')
-    if (!checkoutPlan) return
-    if (isLoading) return
-
+    if (!checkoutPlan || isLoading) return
     if (checkoutPlan && isAuthenticated && !hasActiveSubscription && !subscription) {
-      console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
       handleCheckout(checkoutPlan, 'auto')
-
-      if (typeof window !== 'undefined') {
-        window.history.replaceState({}, '', '/')
-      }
+      if (typeof window !== 'undefined') window.history.replaceState({}, '', '/')
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
-  // ============================================================================
-  // ✅ NEW: Fetch multi-location “license/locationCheck” after auth + subscription exists
-  // - This is intentionally non-blocking: it won’t affect isLoading
-  // - It safely no-ops if your endpoint isn’t present yet
-  // ============================================================================
   const fetchLocationCheckFromServer = useCallback(async (sess) => {
     try {
       const token = sess?.access_token
-      const userId = sess?.user?.id
-      if (!token || !userId) return null
-
-      const doPost = async () =>
-        fetch('/api/license/check', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({}),
-          credentials: 'include',
-        })
-
-      const doGet = async () =>
-        fetch('/api/license/check', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        })
-
-      let res = await doPost()
-      if (res.status === 405) res = await doGet()
-
+      if (!token) return null
+      const res = await fetch('/api/license/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      })
       const data = await res.json().catch(() => null)
       if (!res.ok || !data) return null
-
-      // support either { locationCheck: {...} } or direct object
       return data.locationCheck || data
     } catch (e) {
-      logger.warn('Location check fetch failed', e)
       return null
     }
   }, [])
 
   useEffect(() => {
     let cancelled = false
-
     async function run() {
-      // only for authenticated users with an active/trialing subscription record
       if (!isAuthenticated || !session?.user?.id || !subscription) return
-
       const lc = await fetchLocationCheckFromServer(session)
-      if (cancelled) return
-
-      if (!lc) return
-
-      // ✅ Step 3 behavior: log + store for banner
-      logger.info('License validated', {
-        userId: session.user.id,
-        uniqueLocationsUsed: lc.uniqueLocationsUsed,
-        locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
-      })
-
-      // Store location check for banner
+      if (cancelled || !lc) return
       setLocationCheck(lc)
     }
-
     run()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [isAuthenticated, session, subscription, fetchLocationCheckFromServer])
 
   const handleManageBilling = async () => {
     let loadingToast = null
     try {
       loadingToast = document.createElement('div')
-      loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
+      loadingToast.textContent = 'Redirecting to billing...'
+      loadingToast.style.cssText = 'position:fixed;top:16px;right:16px;background:#0f172a;color:white;padding:8px 16px;border-radius:6px;z-index:9999;font-family:sans-serif;font-size:14px;'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
       const accessToken = data?.session?.access_token
-
       const res = await fetch('/api/create-portal-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
       })
-
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        alert(payload.error || 'Failed to open billing portal')
-        return
-      }
+      const payload = await res.json()
       if (payload.url) window.location.href = payload.url
-      else alert('No billing portal URL returned')
     } catch (error) {
-      console.error('Billing portal error:', error)
       alert('Failed to open billing portal')
     } finally {
-      try {
-        if (loadingToast) document.body.removeChild(loadingToast)
-      } catch {}
+      if (loadingToast) document.body.removeChild(loadingToast)
     }
   }
 
   const handleSignOut = async () => {
     try {
       setShowSettingsMenu(false)
-
-      // ✅ clear multi-location states immediately
       setLocationCheck(null)
-      setShowMultiLocationModal(false)
-      setShowMultiLocationPurchaseModal(false)
-
       await supabase.auth.signOut()
-    } catch (e) {
-      console.error('Sign out error', e)
     } finally {
       setMessages([])
       setCurrentChatId(null)
@@ -1158,13 +686,9 @@ export default function Page() {
     setInput('')
     setSelectedImage(null)
 
-    if (textAreaRef.current) {
-      textAreaRef.current.style.height = 'auto'
-    }
-
+    if (textAreaRef.current) textAreaRef.current.style.height = 'auto'
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
-
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
@@ -1173,13 +697,8 @@ export default function Page() {
       if (session && !activeChatId) {
         const { data: created } = await supabase
           .from('chats')
-          .insert({
-            user_id: session.user.id,
-            title: (question || 'New chat').slice(0, 40),
-          })
-          .select()
-          .single()
-
+          .insert({ user_id: session.user.id, title: (question || 'New chat').slice(0, 40) })
+          .select().single()
         if (created) {
           activeChatId = created.id
           setCurrentChatId(created.id)
@@ -1189,27 +708,12 @@ export default function Page() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, newUserMessage],
-          image,
-          chatId: activeChatId,
-        }),
+        body: JSON.stringify({ messages: [...messages, newUserMessage], image, chatId: activeChatId }),
       })
 
       if (!res.ok) {
-        if (res.status === 402) {
-          setShowPricingModal(true)
-          throw new Error('Subscription required for additional questions.')
-        }
-        if (res.status === 429) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Rate limit exceeded.')
-        }
-        if (res.status === 503) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Service temporarily unavailable.')
-        }
-        throw new Error(`Server error (${res.status})`)
+        if (res.status === 402) setShowPricingModal(true)
+        throw new Error('Processing failed.')
       }
 
       const data = await res.json()
@@ -1219,13 +723,6 @@ export default function Page() {
         return updated
       })
     } catch (error) {
-      console.error('Chat error:', error)
-
-      const msg = String(error?.message || '')
-      if (msg.includes('trial has ended') || msg.toLowerCase().includes('subscription')) {
-        setShowPricingModal(true)
-      }
-
       setMessages((prev) => {
         const updated = [...prev]
         updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
@@ -1242,23 +739,15 @@ export default function Page() {
     try {
       const compressed = await compressImage(file)
       setSelectedImage(compressed)
-    } catch (error) {
-      console.error('Image compression error', error)
-      alert('Failed to process image.')
+    } catch {
+      alert('Image processing error.')
     }
   }
 
   if (isLoading) {
     return (
-      <div className={`loading-screen ${ibmMono.className}`}>
-        <div className="loading-content">
-          <div className="loading-logo">
-            <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
-          </div>
-          <div className="loading-bar">
-            <div className="loading-bar-fill" />
-          </div>
-        </div>
+      <div className={`loading-screen ${inter.className}`}>
+        <Image src={appleIcon} alt="" width={48} height={48} />
       </div>
     )
   }
@@ -1267,1231 +756,306 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          --bg-0: #09090b;
-          --bg-1: #0c0c0e;
-          --bg-2: #131316;
-          --bg-3: #1a1a1f;
-
-          --ink-0: #fafafa;
-          --ink-1: #a0a0a8;
-          --ink-2: #636369;
-          --ink-3: #3f3f46;
-
-          --accent: #3b82f6;
-          --accent-hover: #2563eb;
-          --accent-dim: rgba(59, 130, 246, 0.1);
-
-          --border-subtle: rgba(255, 255, 255, 0.05);
-          --border-default: rgba(255, 255, 255, 0.08);
-
-          --radius-sm: 8px;
-          --radius-md: 12px;
-          --radius-lg: 16px;
-          --radius-full: 9999px;
+          /* Clean Blue & Stainless Theme */
+          --bg-page: #ffffff;
+          --bg-sidebar: #f8fafc;
+          --bg-input: #ffffff;
+          --bg-panel: #f1f5f9;
+          
+          --ink-primary: #0f172a;   /* Slate 900 */
+          --ink-secondary: #475569; /* Slate 600 */
+          --ink-muted: #94a3b8;     /* Slate 400 */
+          
+          --border-main: #e2e8f0;    /* Slate 200 */
+          --border-strong: #cbd5e1;  /* Slate 300 - Stainless look */
+          
+          --accent: #2563eb;         /* Royal Blue */
+          --accent-hover: #1d4ed8;
+          --accent-light: #eff6ff;
+          
+          --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+          --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+          --radius-sm: 6px;
+          --radius-md: 10px;
+          --radius-lg: 14px;
         }
 
-        *,
-        *::before,
-        *::after {
-          box-sizing: border-box;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
 
-        html,
-        body {
+        html, body {
           height: 100%;
           margin: 0;
-          background: var(--bg-0);
-          background-color: var(--bg-0);
-          color: var(--ink-0);
-          overflow-x: hidden;
+          background: var(--bg-page);
+          color: var(--ink-primary);
+          font-family: ${inter.style.fontFamily}, sans-serif;
           -webkit-font-smoothing: antialiased;
-          overscroll-behavior-y: none;
         }
 
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background: var(--bg-0);
-          z-index: -1;
-        }
+        a, button { -webkit-tap-highlight-color: transparent; }
+        button { font-family: inherit; cursor: pointer; }
+        :focus { outline: none; }
 
-        @supports (-webkit-touch-callout: none) {
-          html {
-            height: -webkit-fill-available;
-          }
-          body {
-            min-height: -webkit-fill-available;
-          }
-        }
-
-        a,
-        button,
-        input,
-        textarea {
-          -webkit-tap-highlight-color: transparent;
-        }
-        :focus {
-          outline: none;
-        }
-
-        ::selection {
-          background: var(--accent-dim);
-          color: var(--ink-0);
-        }
-
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.06);
-          border-radius: var(--radius-full);
-        }
-
-        /* Loading */
+        /* LOADING */
         .loading-screen {
-          position: fixed;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--bg-0);
-          z-index: 9999;
+          position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+          background: var(--bg-page); z-index: 9999;
         }
 
-        .loading-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 32px;
-        }
-
-        .loading-logo {
-          width: 64px;
-          height: 64px;
-        }
-
-        .loading-logo img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
-        .loading-bar {
-          width: 100px;
-          height: 2px;
-          background: var(--bg-3);
-          border-radius: var(--radius-full);
-          overflow: hidden;
-        }
-
-        .loading-bar-fill {
-          height: 100%;
-          width: 30%;
-          background: var(--accent);
-          animation: loading-slide 1s ease-in-out infinite;
-        }
-
-        @keyframes loading-slide {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(400%);
-          }
-        }
-
-        /* App */
-        .app-container {
-          min-height: 100vh;
-          min-height: 100dvh;
-          display: flex;
-          flex-direction: column;
-          background: var(--bg-0);
-        }
-
-        /* Brand */
-        .plm-brand {
-          color: var(--ink-0);
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          transition: opacity 0.15s ease;
-        }
-
-        .plm-brand:hover {
-          opacity: 0.7;
-        }
-
-        .plm-brand-inner {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .plm-brand-mark {
-          width: 64px;
-          height: 64px;
-          flex-shrink: 0;
-        }
-
-        .plm-brand-mark img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
-        .plm-brand-text {
-          font-size: 20px;
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          white-space: nowrap;
-        }
-
-        .desktop-only {
-          display: flex;
-        }
-        .mobile-only {
-          display: none;
-        }
-
-        /* Landing */
+        /* LANDING */
         .landing-root {
-          position: relative;
-          min-height: 100vh;
-          min-height: 100dvh;
-          display: flex;
-          flex-direction: column;
-          background: var(--bg-0);
-          overflow: hidden;
-        }
-
-        .landing-bg {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 130, 246, 0.06), transparent 70%);
-          pointer-events: none;
+          min-height: 100vh; display: flex; flex-direction: column;
+          background: var(--bg-page);
         }
 
         .landing-topbar {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
-            max(24px, env(safe-area-inset-left));
-          z-index: 10;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 24px; max-width: 1200px; margin: 0 auto; width: 100%;
         }
 
-        .landing-top-actions {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        .plm-brand {
+          display: flex; align-items: center; gap: 12px; text-decoration: none;
+          color: var(--ink-primary); transition: opacity 0.2s;
         }
+        .plm-brand:hover { opacity: 0.8; }
+        .plm-brand-mark { width: 42px; height: 42px; }
+        .plm-brand-mark img { width: 100%; height: 100%; object-fit: contain; }
+        .plm-brand-text { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
 
-        .landing-top-actions-desktop {
-          display: flex;
-          align-items: center;
-          gap: 4px;
+        .landing-nav { display: flex; gap: 12px; }
+        
+        .btn-ghost {
+          background: transparent; border: none; color: var(--ink-secondary);
+          font-weight: 500; font-size: 14px; padding: 8px 16px;
         }
+        .btn-ghost:hover { color: var(--ink-primary); }
 
-        .btn-nav {
-          height: 36px;
-          padding: 0 14px;
-          background: transparent;
-          color: var(--ink-1);
-          border: none;
-          border-radius: var(--radius-sm);
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: color 0.15s ease;
-          font-family: inherit;
+        .btn-solid {
+          background: var(--ink-primary); color: white; border: none;
+          padding: 0 20px; height: 40px; border-radius: var(--radius-sm);
+          font-weight: 600; font-size: 14px; transition: background 0.2s;
         }
+        .btn-solid:hover { background: #000; }
+        .btn-solid.large { height: 48px; padding: 0 32px; font-size: 16px; background: var(--accent); }
+        .btn-solid.large:hover { background: var(--accent-hover); }
 
-        .btn-nav:hover {
-          color: var(--ink-0);
-        }
-
-        .btn-primary {
-          height: 36px;
-          padding: 0 16px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: var(--radius-sm);
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s ease;
-          font-family: inherit;
-        }
-
-        .btn-primary:hover {
-          background: var(--accent-hover);
-        }
-
-        .btn-primary.cta-pulse {
-          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
-          animation: cta-pulse 1.6s ease-in-out infinite;
-        }
-
-        @keyframes cta-pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-          }
-        }
-
-        /* Hero */
         .landing-hero {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 140px 24px 100px;
+          flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+          padding: 80px 24px; text-align: center;
         }
 
-        .hero-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 32px;
-          max-width: 720px;
-          width: 100%;
+        .hero-container { max-width: 800px; width: 100%; }
+        
+        .hero-badge {
+          display: inline-block; padding: 6px 12px; border-radius: 99px;
+          background: var(--accent-light); color: var(--accent);
+          font-size: 12px; font-weight: 700; text-transform: uppercase;
+          margin-bottom: 24px; letter-spacing: 0.05em;
         }
 
-        .mobile-start {
-          width: 100%;
-          display: none;
+        .hero-title {
+          font-size: 48px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em;
+          color: var(--ink-primary); margin: 0 0 24px 0;
         }
 
-        .mobile-start .btn-primary {
-          width: 100%;
-          justify-content: center;
-          height: 44px;
-          font-size: 14px;
+        .hero-sub {
+          font-size: 18px; line-height: 1.6; color: var(--ink-secondary);
+          max-width: 600px; margin: 0 auto 48px;
         }
 
-        .terminal-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: var(--radius-full);
-        }
+        .hero-actions { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .hero-caption { font-size: 13px; color: var(--ink-muted); margin: 0; }
 
-        .terminal-dot.red {
-          background: #ff5f57;
-        }
-        .terminal-dot.yellow {
-          background: #febc2e;
-        }
-        .terminal-dot.green {
-          background: #28c840;
-        }
-
-        /* Landing demo window */
-        .landing-demo-window {
-          width: 100%;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          box-shadow: 0 24px 90px rgba(0, 0, 0, 0.55);
-        }
-
-        .landing-demo-header {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 12px 14px;
-          background: var(--bg-2);
-          border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .landing-demo-body {
-          padding: 18px;
-        }
-
-        .landing-demo-messages {
-          height: 240px;
-          overflow-y: auto;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-          padding: 8px 6px 12px;
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          background: rgba(255, 255, 255, 0.02);
-        }
-
-        .landing-demo-messages::-webkit-scrollbar {
-          width: 0px;
-          height: 0px;
-        }
-
-        .landing-demo-row {
-          display: flex;
-          width: 100%;
-          margin: 10px 0;
-        }
-
-        .landing-demo-row.is-assistant {
-          justify-content: flex-start;
-        }
-
-        .landing-demo-row.is-user {
-          justify-content: flex-end;
-        }
-
-        /* ✅ UPDATED: no fill, no border — just font color difference */
-        .landing-demo-bubble {
-          max-width: min(560px, 82%);
-          padding: 0;
-          border: none;
-          border-radius: 0;
-          line-height: 1.55;
-          font-size: 14px;
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
-          word-break: break-word;
-          background: transparent;
-        }
-
-        .landing-demo-bubble.assistant {
-          background: transparent;
-          color: var(--ink-1);
-          border: none;
-        }
-
-        .landing-demo-bubble.user {
-          background: transparent;
-          color: var(--ink-0);
-          border: none;
-        }
-
-        .landing-demo-inputArea {
-          margin-top: 14px;
-        }
-
-        /* ✅ NO blue rectangle border (ever) */
-        .landing-demo-inputWrap {
-          display: flex;
-          align-items: stretch;
-          gap: 10px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          padding: 10px 10px;
-        }
-
-        /* ✅ Prevent any focus-within accent border on the demo */
-        .landing-demo-inputWrap:focus-within {
-          border-color: var(--border-subtle);
-          box-shadow: none;
-        }
-
-        .landing-demo-textarea {
-          flex: 1;
-          min-height: 44px;
-          max-height: 120px;
-          padding: 10px 10px;
-          background: transparent;
-          border: none;
-          color: var(--ink-0);
-          font-size: 14px;
-          line-height: 1.4;
-          resize: none;
-          font-family: inherit;
-          min-width: 0;
-          outline: none;
-        }
-
-        .landing-demo-textarea:focus {
-          outline: none;
-        }
-
-        .landing-demo-send {
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 12px;
-          color: var(--ink-2);
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-        }
-
-        .landing-demo-send.active {
-          background: var(--accent);
-          border-color: rgba(59, 130, 246, 0.6);
-          color: white;
-        }
-
-        .landing-demo-send:hover {
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .landing-demo-send.active:hover {
-          background: var(--accent-hover);
-        }
-
-        .landing-demo-hint {
-          margin-top: 8px;
-          padding-left: 4px;
-          font-size: 11px;
-          color: var(--ink-3);
-          letter-spacing: 0.02em;
-          user-select: none;
-        }
-
-        /* Footer links */
+        /* FOOTER */
         .plm-footer-links {
-          position: absolute;
-          bottom: max(20px, env(safe-area-inset-bottom));
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          z-index: 10;
+          display: flex; justify-content: center; gap: 16px; padding: 40px;
+          color: var(--ink-muted); font-size: 12px; text-transform: uppercase;
         }
+        .plm-footer-link { color: var(--ink-secondary); text-decoration: none; }
+        .plm-footer-link:hover { text-decoration: underline; }
 
-        .plm-footer-link {
-          color: var(--ink-2);
-          text-decoration: none;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          transition: color 0.15s ease;
-        }
-
-        .plm-footer-link:hover {
-          color: var(--ink-0);
-        }
-        .plm-footer-sep {
-          color: var(--ink-3);
-        }
-
-        /* Modals */
+        /* AUTH MODAL */
         .modal-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 1000;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(4px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-          animation: fade-in 0.15s ease;
+          position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px);
+          z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;
+          animation: fadein 0.2s ease;
         }
-
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        .modal-container {
-          width: 100%;
-          max-width: 360px;
-          animation: modal-up 0.2s ease;
-        }
-
-        @keyframes modal-up {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
+        .modal-container { width: 100%; max-width: 400px; }
         .modal-card {
-          position: relative;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          padding: 28px;
+          background: white; border: 1px solid var(--border-strong);
+          border-radius: var(--radius-lg); padding: 32px;
+          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
         }
+        .modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .modal-title { margin: 0; font-size: 20px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--ink-muted); }
+        .modal-close:hover { color: var(--ink-primary); }
 
-        .modal-close {
-          position: absolute;
-          top: 16px;
-          right: 16px;
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: none;
-          color: var(--ink-2);
-          cursor: pointer;
-          border-radius: var(--radius-sm);
-          transition: color 0.15s ease;
-        }
-
-        .modal-close:hover {
-          color: var(--ink-0);
-        }
-
-        .modal-header {
-          margin-bottom: 24px;
-        }
-
-        .modal-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-          color: var(--ink-0);
-        }
-
-        .modal-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        /* ✅ Email/Password label text to white */
-        .form-label {
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          color: var(--ink-0);
-        }
-
+        .modal-form { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--ink-secondary); letter-spacing: 0.05em; }
         .form-input {
-          width: 100%;
-          height: 42px;
-          padding: 0 12px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
-          color: var(--ink-0);
-          font-size: 14px;
-          font-family: inherit;
-          transition: border-color 0.15s ease;
+          height: 42px; padding: 0 12px; border: 1px solid var(--border-strong);
+          border-radius: var(--radius-sm); font-size: 15px; color: var(--ink-primary);
+          background: var(--bg-input); transition: border-color 0.15s;
         }
-
-        .form-input::placeholder {
-          color: var(--ink-3);
-        }
-        .form-input:focus {
-          border-color: var(--accent);
-        }
-
-        .form-input-wrap {
-          position: relative;
-        }
-
+        .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .form-input-wrap { position: relative; }
         .form-toggle-vis {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          color: var(--ink-2);
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          cursor: pointer;
-          font-family: inherit;
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; font-size: 11px; font-weight: 700; color: var(--ink-secondary);
         }
+        .btn-full {
+          width: 100%; height: 42px; background: var(--accent); color: white; border: none;
+          border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; margin-top: 8px;
+        }
+        .btn-full:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-full:disabled { opacity: 0.7; }
+        
+        .modal-message { padding: 10px; border-radius: var(--radius-sm); font-size: 13px; text-align: center; margin-top: 16px; }
+        .modal-message.info { display: none; }
+        .modal-message.err { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+        .modal-message.ok { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
 
-        .form-toggle-vis:hover {
-          color: var(--ink-0);
-        }
-
-        .btn-submit {
-          width: 100%;
-          height: 42px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: inherit;
-          transition: background 0.15s ease;
-          margin-top: 8px;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          background: var(--accent-hover);
-        }
-        .btn-submit:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .spinner {
-          width: 14px;
-          height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #fff;
-          border-radius: var(--radius-full);
-          animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .modal-message {
-          padding: 10px 12px;
-          background: var(--bg-2);
-          border-radius: var(--radius-sm);
-          font-size: 13px;
-          color: var(--ink-1);
-          text-align: center;
-          margin-top: 16px;
-        }
-
-        .modal-message.ok {
-          color: #22c55e;
-        }
-        .modal-message.err {
-          color: #ef4444;
-        }
-
-        .modal-footer {
-          margin-top: 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-        }
-
-        /* ✅ Forgot password / Create account => white */
-        .modal-link {
-          background: none;
-          border: none;
-          font-size: 13px;
-          color: var(--ink-0);
-          cursor: pointer;
-          font-family: inherit;
-          opacity: 0.92;
-        }
-
-        .modal-link:hover {
-          opacity: 1;
-        }
-
-        /* ✅ Turnstile/Recaptcha line -> one line (shrink only enough) */
-        .modal-card .recaptcha-badge,
-        .modal-card .turnstile-badge,
-        .modal-card .captcha-badge,
-        .modal-card [data-turnstile-badge],
-        .modal-card [data-recaptcha-badge] {
-          font-size: 10px !important;
-          white-space: nowrap !important;
-          line-height: 1.2 !important;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100%;
-        }
-
-        /* ✅ Pricing feature rows (FIX spacing between ✓ and text) */
-        .pricing-feature {
-          display: grid;
-          grid-template-columns: 16px 1fr;
-          column-gap: 10px;
-          align-items: start;
-          font-size: 13px;
-          line-height: 1.5;
-          opacity: 0.92;
-        }
-
-        .pricing-feature-check {
-          width: 16px;
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          line-height: 1;
-          margin-top: 2px;
-          font-size: 14px;
-        }
-
-        .pricing-feature-text {
-          display: block;
-          min-width: 0;
-        }
-
-        /* Chat */
-        .chat-root {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-height: 0;
-          background: var(--bg-0);
-          height: 100dvh;
-          overflow: hidden;
-        }
-
-        @supports (-webkit-touch-callout: none) {
-          .chat-root {
-            height: -webkit-fill-available;
-          }
-        }
-
+        .modal-footer { margin-top: 24px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
+        .modal-link { background: none; border: none; font-size: 13px; color: var(--ink-secondary); text-decoration: underline; }
+        
+        /* CHAT INTERFACE - Clipboard Style */
+        .chat-root { display: flex; flex-direction: column; height: 100vh; background: var(--bg-page); }
+        
         .chat-topbar {
-          width: 100%;
-          max-width: 880px;
-          margin: 0 auto;
-          padding: 16px 24px;
-          padding-left: max(24px, env(safe-area-inset-left));
-          padding-right: max(24px, env(safe-area-inset-right));
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-shrink: 0;
+          flex-shrink: 0; height: 64px; display: flex; align-items: center; justify-content: space-between;
+          padding: 0 24px; border-bottom: 1px solid var(--border-main); background: var(--bg-page);
         }
-
-        .chat-top-actions {
-          display: flex;
-          align-items: center;
-          gap: 4px;
+        
+        .chat-sub-badge {
+          padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+          text-transform: uppercase; background: var(--bg-panel); color: var(--ink-secondary);
+          border: 1px solid var(--border-main); margin-right: 12px;
         }
+        .chat-sub-badge.pro { color: #15803d; background: #dcfce7; border-color: #bbf7d0; }
 
-        /* ✅ Settings gear dropdown */
-        .chat-settings-wrap {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-
+        .chat-settings-wrap { position: relative; }
         .chat-settings-btn {
-          width: 36px;
-          height: 36px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: none;
-          border-radius: var(--radius-sm);
-          color: var(--ink-1);
-          cursor: pointer;
-          transition: color 0.15s ease, background 0.15s ease;
+          width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+          color: var(--ink-secondary); border-radius: var(--radius-sm); transition: background 0.15s;
+          border: none; background: transparent;
         }
-
-        .chat-settings-btn:hover {
-          color: var(--ink-0);
-          background: rgba(255, 255, 255, 0.04);
-        }
-
+        .chat-settings-btn:hover { background: var(--bg-panel); color: var(--ink-primary); }
+        
         .chat-settings-menu {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          min-width: 180px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-md);
-          padding: 8px;
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-          animation: dropdown-in 0.15s ease;
-          z-index: 50;
+          position: absolute; top: 100%; right: 0; width: 200px; margin-top: 8px;
+          background: white; border: 1px solid var(--border-main); border-radius: var(--radius-md);
+          box-shadow: var(--shadow-md); padding: 6px; z-index: 100;
         }
-
         .chat-settings-item {
-          width: 100%;
-          text-align: left;
-          padding: 10px 10px;
-          background: transparent;
-          border: none;
+          display: block; width: 100%; text-align: left; padding: 8px 12px;
+          background: transparent; border: none; font-size: 13px; color: var(--ink-primary);
           border-radius: var(--radius-sm);
-          color: var(--ink-0);
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: inherit;
-          transition: background 0.15s ease;
         }
-
-        .chat-settings-item:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .chat-settings-sep {
-          height: 1px;
-          background: var(--border-subtle);
-          margin: 6px 2px;
-        }
+        .chat-settings-item:hover { background: var(--bg-panel); }
 
         .chat-messages {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-          padding: 0 24px 32px;
-          background: var(--bg-0);
+          flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth;
         }
-
-        .chat-messages.empty {
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        
+        .chat-empty-state {
+          height: 100%; display: flex; align-items: center; justify-content: center;
+          color: var(--ink-muted); font-size: 14px;
         }
-
-        /* ✅ Slightly smaller so "regulations." doesn't get stranded */
-        .chat-empty-text {
-          font-size: 14px;
-          color: var(--ink-2);
-          line-height: 1.6;
-          margin: 0;
-        }
-
-        .chat-history {
-          max-width: 760px;
-          margin: 0 auto;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
-          padding-top: 16px;
-          padding-bottom: 6px;
-        }
-
-        .chat-message {
-          display: flex;
-          width: 100%;
-          align-items: flex-start;
-        }
-        .chat-message-user {
-          justify-content: flex-end;
-        }
-        .chat-message-assistant {
-          justify-content: flex-start;
-        }
-
+        
+        .chat-history { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+        
+        .chat-message { display: flex; width: 100%; }
+        .chat-message-user { justify-content: flex-end; }
+        .chat-message-assistant { justify-content: flex-start; }
+        
         .chat-bubble {
-          max-width: 75%;
-          font-size: 15px;
-          line-height: 1.7;
-          display: block;
+          max-width: 80%; padding: 16px 20px; border-radius: var(--radius-sm);
+          font-size: 15px; line-height: 1.6; position: relative;
         }
-
+        
+        /* User: Clean Blue Card */
         .chat-bubble-user {
-          color: var(--ink-0);
+          background: var(--accent-light); color: var(--ink-primary);
+          border: 1px solid #dbeafe;
         }
+        
+        /* Assistant: White Paper / Clipboard look */
         .chat-bubble-assistant {
-          color: var(--ink-1);
+          background: white; color: var(--ink-primary);
+          border: 1px solid var(--border-strong);
+          box-shadow: var(--shadow-sm);
         }
-
-        .chat-bubble-image {
-          border-radius: var(--radius-md);
-          overflow: hidden;
-          margin-bottom: 12px;
-          display: inline-block;
-        }
-
+        
+        .chat-content { white-space: pre-wrap; word-break: break-word; }
         .chat-bubble-image img {
-          display: block;
-          max-width: 100%;
-          max-height: 280px;
-          object-fit: contain;
+          max-width: 100%; max-height: 300px; border-radius: 4px; border: 1px solid var(--border-main); display: block; margin-bottom: 12px;
         }
 
-        .chat-content {
-          display: block;
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
-          word-break: break-word;
-        }
-
-        .chat-thinking {
-          display: block;
-          color: var(--ink-2);
-          font-style: italic;
-        }
-
+        /* INPUT AREA - Form Footer Style */
         .chat-input-area {
-          flex-shrink: 0;
-          border-top: 1px solid var(--border-subtle);
-          background: var(--bg-0);
+          flex-shrink: 0; background: var(--bg-page);
+          border-top: 1px solid var(--border-main);
+          padding: 20px 24px 32px;
         }
-
-        .chat-input-inner {
-          max-width: 760px;
-          margin: 0 auto;
-          padding: 16px 24px 24px;
-          padding-bottom: max(24px, env(safe-area-inset-bottom));
-        }
-
-        .chat-attachment {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px 12px;
-          background: var(--bg-2);
-          border-radius: var(--radius-sm);
+        
+        .chat-input-inner { max-width: 720px; margin: 0 auto; position: relative; }
+        
+        .chat-attachment-pill {
+          display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px;
+          background: var(--bg-panel); border: 1px solid var(--border-strong);
+          border-radius: var(--radius-sm); font-size: 12px; color: var(--ink-primary);
           margin-bottom: 12px;
-          font-size: 12px;
-          color: var(--ink-1);
         }
+        .chat-attachment-remove { border: none; background: none; color: var(--ink-secondary); }
 
-        .chat-attachment-icon {
-          color: var(--accent);
-          display: flex;
-        }
-
-        .chat-attachment-remove {
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: none;
-          color: var(--ink-2);
-          cursor: pointer;
-        }
-
-        .chat-attachment-remove:hover {
-          color: var(--ink-0);
-        }
-
-        .chat-input-row {
-          display: flex;
-          align-items: flex-end;
-          gap: 10px;
-        }
-
-        /* ✅ Camera button: blue border */
+        .chat-input-row { display: flex; align-items: flex-end; gap: 12px; }
+        
+        /* Camera Button - The "Draw" */
         .chat-camera-btn {
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--bg-2);
-          border: 1px solid var(--accent);
-          border-radius: var(--radius-md);
-          color: var(--accent);
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          width: 48px; height: 48px; border-radius: var(--radius-sm);
+          background: white; border: 1px solid var(--border-strong);
+          color: var(--accent); display: flex; align-items: center; justify-content: center;
+          transition: all 0.2s ease;
+          box-shadow: var(--shadow-sm);
         }
-
         .chat-camera-btn:hover {
-          border-color: var(--accent-hover);
-          box-shadow: 0 0 0 3px var(--accent-dim);
+          border-color: var(--accent); background: var(--accent-light);
+          transform: translateY(-1px);
         }
 
         .chat-input-wrapper {
-          flex: 1;
-          display: flex;
-          align-items: flex-end;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          transition: border-color 0.15s ease;
-          min-width: 0;
+          flex: 1; display: flex; align-items: flex-end;
+          border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+          background: white; min-height: 48px; transition: border-color 0.2s;
         }
-
-        .chat-input-wrapper:focus-within {
-          border-color: var(--accent);
-        }
-
+        .chat-input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        
         .chat-textarea {
-          flex: 1;
-          min-height: 44px;
-          max-height: 160px;
-          padding: 12px 14px;
-          background: transparent;
-          border: none;
-          color: var(--ink-0);
-          font-size: 14px;
-          line-height: 1.4;
-          resize: none;
-          font-family: inherit;
-          min-width: 0;
+          flex: 1; border: none; background: transparent; padding: 14px;
+          font-size: 15px; max-height: 160px; resize: none; color: var(--ink-primary);
         }
-
-        .chat-textarea::placeholder {
-          color: var(--ink-3);
-        }
-        .chat-textarea:focus {
-          outline: none;
-        }
-
+        
         .chat-send-btn {
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: none;
-          color: var(--ink-2);
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: color 0.15s ease;
+          width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+          border: none; background: transparent; color: var(--ink-secondary);
         }
-
-        .chat-send-btn:hover:not(:disabled) {
-          color: var(--accent);
-        }
-        .chat-send-btn:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-
-        .chat-send-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid var(--border-subtle);
-          border-top-color: var(--accent);
-          border-radius: var(--radius-full);
-          animation: spin 0.6s linear infinite;
-        }
-
+        .chat-send-btn:hover:not(:disabled) { color: var(--accent); }
+        .chat-send-btn:disabled { color: var(--border-main); }
+        
         .chat-disclaimer {
-          text-align: center;
-          font-size: 11px;
-          color: var(--ink-3);
-          margin-top: 14px;
+          text-align: center; font-size: 11px; color: var(--ink-muted);
+          margin-top: 12px;
         }
 
-        /* Responsive */
+        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
         @media (max-width: 768px) {
-          .landing-topbar {
-            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
-              max(16px, env(safe-area-inset-left));
-            gap: 14px;
-          }
-
-          .desktop-only {
-            display: none !important;
-          }
-          .mobile-only {
-            display: flex;
-          }
-
-          .landing-hero {
-            padding: 120px 20px 120px;
-          }
-
-          .plm-brand-mark {
-            width: 60px;
-            height: 60px;
-          }
-          .plm-brand-text {
-            font-size: 18px;
-          }
-
-          /* ✅ Sign-in as small white text on mobile */
-          .landing-signin-btn {
-            height: auto !important;
-            padding: 0 !important;
-            margin-right: 6px;
-            transform: translateY(-1px);
-            color: var(--ink-0) !important;
-            font-size: 12px !important;
-            font-weight: 600 !important;
-            letter-spacing: 0.04em !important;
-            line-height: 1 !important;
-          }
-
-          .landing-demo-messages {
-            height: 220px;
-          }
-
-          .landing-demo-bubble {
-            font-size: 13px;
-            max-width: 86%;
-          }
-
-          .mobile-start {
-            display: flex;
-          }
-
-          .chat-topbar {
-            padding: 12px 16px;
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
-            padding-top: max(12px, env(safe-area-inset-top));
-          }
-
-          .chat-messages {
-            padding: 0 16px calc(24px + env(safe-area-inset-bottom));
-          }
-
-          .chat-input-inner {
-            padding: 12px 16px 18px;
-            padding-bottom: max(18px, env(safe-area-inset-bottom));
-          }
-
-          .chat-bubble {
-            max-width: 85%;
-          }
-
-          .chat-empty-text {
-            font-size: 13px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .modal-card {
-            padding: 24px 20px;
-          }
-
-          .plm-brand-mark {
-            width: 55px;
-            height: 55px;
-          }
-          .plm-brand-text {
-            font-size: 17px;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          *,
-          *::before,
-          *::after {
-            animation-duration: 0.01ms !important;
-            transition-duration: 0.01ms !important;
-          }
+          .hero-title { font-size: 32px; }
+          .hero-sub { font-size: 16px; }
+          .chat-bubble { max-width: 90%; }
+          .chat-camera-btn { width: 44px; height: 44px; }
+          .chat-input-wrapper { min-height: 44px; }
         }
       `}</style>
 
@@ -2524,75 +1088,44 @@ export default function Page() {
             <div className={`${ibmMono.className} chat-root`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
-                <nav className="chat-top-actions" aria-label="Chat actions">
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                   {session && subscription && (
-                    <div
-                      style={{
-                        marginRight: '12px',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        letterSpacing: '0.02em',
-                        textTransform: 'uppercase',
-                        background:
-                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                        color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
-                        border: `1px solid ${
-                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'
-                        }`,
-                      }}
-                    >
-                      {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
+                    <div className={`chat-sub-badge ${subscription.status === 'active' ? 'pro' : ''}`}>
+                      {subscription.status === 'trialing' ? 'Trial' : 'Pro License'}
                     </div>
                   )}
-
                   <div className="chat-settings-wrap" ref={settingsRef}>
                     <button
-                      type="button"
                       className="chat-settings-btn"
                       onClick={() => setShowSettingsMenu((v) => !v)}
-                      aria-expanded={showSettingsMenu}
                       aria-label="Settings"
                     >
                       <Icons.Gear />
                     </button>
-
                     {showSettingsMenu && (
-                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
+                      <div className="chat-settings-menu">
                         <button
-                          type="button"
                           className="chat-settings-item"
-                          role="menuitem"
                           onClick={() => {
                             setShowSettingsMenu(false)
-                            if (hasActiveSubscription) {
-                              handleManageBilling()
-                            } else {
-                              setShowPricingModal(true)
-                            }
+                            hasActiveSubscription ? handleManageBilling() : setShowPricingModal(true)
                           }}
                         >
-                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                          {hasActiveSubscription ? 'Billing Portal' : 'Upgrade License'}
                         </button>
-
-                        <div className="chat-settings-sep" />
-
                         <button
-                          type="button"
                           className="chat-settings-item"
-                          role="menuitem"
                           onClick={() => {
                             setShowSettingsMenu(false)
                             handleSignOut()
                           }}
                         >
-                          Log out
+                          Sign Out
                         </button>
                       </div>
                     )}
                   </div>
-                </nav>
+                </div>
               </header>
 
               <div
@@ -2602,8 +1135,9 @@ export default function Page() {
               >
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
-                    <p className="chat-empty-text">
-                      Upload a photo or ask a question about Washtenaw County food safety regulations.
+                    <p style={{ maxWidth: '400px', textAlign: 'center', lineHeight: '1.6' }}>
+                      Ready for inspection.<br/>
+                      Upload a photo of your prep area, sink, or storage to detect violations.
                     </p>
                   </div>
                 ) : (
@@ -2616,12 +1150,11 @@ export default function Page() {
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
-                              <img src={msg.image} alt="Uploaded" />
+                              <img src={msg.image} alt="Evidence" />
                             </div>
                           )}
-
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="chat-thinking">Analyzing…</div>
+                            <span style={{color: 'var(--ink-muted)'}}>Analyzing compliance...</span>
                           ) : (
                             <div className="chat-content">{msg.content}</div>
                           )}
@@ -2637,17 +1170,9 @@ export default function Page() {
                   <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                   {selectedImage && (
-                    <div className="chat-attachment">
-                      <span className="chat-attachment-icon">
-                        <Icons.Camera />
-                      </span>
+                    <div className="chat-attachment-pill">
                       <span>Image attached</span>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="chat-attachment-remove"
-                        aria-label="Remove"
-                        type="button"
-                      >
+                      <button onClick={() => setSelectedImage(null)} className="chat-attachment-remove">
                         <Icons.X />
                       </button>
                     </div>
@@ -2665,7 +1190,8 @@ export default function Page() {
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       className="chat-camera-btn"
-                      aria-label="Upload photo"
+                      title="Analyze Photo"
+                      aria-label="Upload photo for analysis"
                       type="button"
                     >
                       <Icons.Camera />
@@ -2682,7 +1208,7 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Ask a question…"
+                        placeholder="Describe the issue or ask a regulation question..."
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
@@ -2692,7 +1218,6 @@ export default function Page() {
                           }
                         }}
                       />
-
                       <button
                         type="button"
                         onClick={handleSend}
@@ -2700,13 +1225,13 @@ export default function Page() {
                         className="chat-send-btn"
                         aria-label="Send"
                       >
-                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                         <Icons.ArrowUp />
                       </button>
                     </div>
                   </div>
 
                   <p className="chat-disclaimer">
-                    protocolLM may make mistakes. Verify critical decisions with official regulations.
+                    protocolLM assists with compliance but is not a substitute for official Health Department inspection.
                   </p>
                 </div>
               </div>
@@ -2715,10 +1240,8 @@ export default function Page() {
         </main>
       </div>
 
-      {/* Multi-location warning banner */}
       {isAuthenticated && locationCheck && <MultiLocationBanner locationCheck={locationCheck} />}
 
-      {/* Multi-location upgrade modal */}
       <MultiLocationUpgradeModal
         isOpen={showMultiLocationModal}
         onClose={() => setShowMultiLocationModal(false)}
@@ -2734,5 +1257,3 @@ export default function Page() {
     </>
   )
 }
-
-
