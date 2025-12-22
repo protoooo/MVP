@@ -48,8 +48,9 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Purchase not found' }, { status: 404 })
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ''
     const emailsSent = []
+    const updatedInviteCodes = Array.isArray(purchase.invite_codes) ? [...purchase.invite_codes] : []
 
     for (const loc of locations) {
       const { inviteCode, managerEmail, restaurantName } = loc
@@ -64,10 +65,22 @@ export async function POST(request) {
           invited_at: new Date().toISOString(),
         })
         .eq('code', inviteCode)
+        .eq('buyer_user_id', user.id)
 
       if (updateError) {
         logger.error('Failed to update invite', { error: updateError.message, inviteCode })
         continue
+      }
+
+      const inviteIndex = updatedInviteCodes.findIndex((code) => code.code === inviteCode)
+      if (inviteIndex !== -1) {
+        updatedInviteCodes[inviteIndex] = {
+          ...updatedInviteCodes[inviteIndex],
+          manager_email: managerEmail,
+          restaurant_name: restaurantName,
+          invited_at: new Date().toISOString(),
+          email_sent: false,
+        }
       }
 
       const signupUrl = `${baseUrl}/signup?invite=${inviteCode}`
@@ -75,7 +88,14 @@ export async function POST(request) {
       try {
         await emails.locationManagerInvite(managerEmail, restaurantName, signupUrl, purchase.buyer_email)
 
-        emailsSent.push(managerEmail)
+        emailsSent.push({ email: managerEmail, code: inviteCode })
+
+        if (inviteIndex !== -1) {
+          updatedInviteCodes[inviteIndex] = {
+            ...updatedInviteCodes[inviteIndex],
+            email_sent: true,
+          }
+        }
 
         logger.audit('Location manager invited', {
           buyerUserId: user.id,
@@ -91,15 +111,24 @@ export async function POST(request) {
     }
 
     const totalLocations = purchase.location_count
-    if (emailsSent.length === totalLocations) {
-      await supabase
-        .from('pending_multi_location_purchases')
-        .update({
-          status: 'invites_sent',
-          invites_sent_at: new Date().toISOString(),
-        })
-        .eq('id', purchaseId)
+    const completedCodes = updatedInviteCodes
+      .filter((code) => code.used || code.email_sent)
+      .map((code) => code.code)
+    const completedCount = new Set(completedCodes).size
+
+    const purchaseUpdate = {
+      invite_codes: updatedInviteCodes,
     }
+
+    if (completedCount >= totalLocations) {
+      purchaseUpdate.status = 'invites_sent'
+      purchaseUpdate.invites_sent_at = new Date().toISOString()
+    }
+
+    await supabase
+      .from('pending_multi_location_purchases')
+      .update(purchaseUpdate)
+      .eq('id', purchaseId)
 
     return NextResponse.json({
       success: true,
