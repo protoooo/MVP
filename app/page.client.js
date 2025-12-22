@@ -11,9 +11,6 @@ import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
-import MultiLocationBanner from '@/components/MultiLocationBanner'
-import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
-import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
 import PricingModal from '@/components/PricingModal'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
