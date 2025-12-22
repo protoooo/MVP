@@ -782,7 +782,7 @@ export async function POST(request) {
           openai.chat.completions.create({
             model: OPENAI_MODEL,
             temperature: 0,
-            max_tokens: 750,
+            max_output_tokens: 750,
             messages: [
               {
                 role: 'user',
@@ -1029,7 +1029,7 @@ Max findings: ${maxFindings}`
         openai.chat.completions.create({
           model: OPENAI_MODEL,
           temperature: 0.15,
-          max_tokens: fullAudit ? 1300 : 950,
+          max_output_tokens: fullAudit ? 1300 : 950,
           messages: [
             { role: 'system', content: systemPrompt },
             ...finalMessages,
