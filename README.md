@@ -2,7 +2,7 @@
 
 > AI-powered food safety compliance assistant for Washtenaw County restaurants
 
-Built with **Anthropic Claude** and **Cohere**
+Built with **OpenAI GPT-5.2** and **Cohere**
 
 ## 🚀 Quick Start
 
@@ -16,18 +16,14 @@ npm install
 cp .env.local.example .env.local
 # Edit .env.local with your API keys
 
-# 3. Verify setup (important!)
-npm run verify-openai
-# Should show: ✅ No OpenAI references found!
-
-# 4. Run development server
+# 3. Run development server
 npm run dev
 # Open http://localhost:3000
 ```
 
 ## 📚 Documentation
 
-- **[TECH_STACK.md](./TECH_STACK.md)** - Current architecture (Anthropic + Cohere)
+- **[TECH_STACK.md](./TECH_STACK.md)** - Current architecture (OpenAI + Cohere)
 - **[DOCUMENT_INGESTION.md](./DOCUMENT_INGESTION.md)** - How to ingest PDFs
 - **[RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)** - Deploy to production
 - **[.env.local.example](./.env.local.example)** - Environment variables
@@ -36,15 +32,13 @@ npm run dev
 
 | Component | Service | Purpose |
 |-----------|---------|---------|
-| Chat | Anthropic Claude (`claude-sonnet-4`) | Generate compliance answers |
+| Chat | OpenAI GPT-5.2 | Generate compliance answers + vision |
 | Embeddings | Cohere (`embed-english-v3.0`) | Document search (1024 dims) |
 | Database | Supabase (pgvector) | Vector storage + auth |
 | Hosting | Railway | App deployment |
 | Payments | Stripe | Subscriptions |
 | Email | Resend | Transactional emails |
 | Security | Cloudflare Turnstile | CAPTCHA |
-
-**❌ NOT using OpenAI** - See [TECH_STACK.md](./TECH_STACK.md) for details
 
 ## 🔧 Key Commands
 
@@ -53,9 +47,6 @@ npm run dev
 npm run dev              # Start dev server
 npm run build            # Build for production
 npm run start            # Start production server
-
-# Verification
-npm run verify-openai    # Check for OpenAI references (IMPORTANT!)
 
 # Documents
 npm run ingest           # Ingest PDFs (uses Cohere)
@@ -72,7 +63,7 @@ npm run test-emails      # Test email templates
 protocollm/
 ├── app/
 │   ├── api/
-│   │   ├── chat/route.js              # ✅ Anthropic Claude
+│   │   ├── chat/route.js              # ✅ OpenAI GPT-5.2
 │   │   ├── health/route.js            # System health check
 │   │   ├── webhook/route.js           # Stripe webhooks
 │   │   └── auth/                      # Authentication endpoints
@@ -86,7 +77,6 @@ protocollm/
 │   └── usage.js                       # Usage tracking
 ├── scripts/
 │   ├── ingest-documents.js            # ✅ Cohere batch ingestion
-│   ├── verify-no-openai.js            # ✅ Verification script
 │   └── send-trial-reminders.js        # Cron job
 ├── components/                        # React components
 ├── public/
@@ -100,8 +90,8 @@ protocollm/
 ### Required Variables
 
 ```bash
-# AI Services (NOT OpenAI!)
-ANTHROPIC_API_KEY=sk-ant-api03-...
+# AI Services
+OPENAI_API_KEY=sk-openai-...
 COHERE_API_KEY=...
 
 # Database & Auth
@@ -264,16 +254,13 @@ See [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) for step-by-step guide.
 ### Pre-Deployment Checklist
 
 ```bash
-# 1. Verify no OpenAI references
-npm run verify-openai
-
-# 2. Run build locally
+# 1. Run build locally
 npm run build
 
-# 3. Check environment variables
+# 2. Check environment variables
 # See .env.local.example
 
-# 4. Test health endpoint
+# 3. Test health endpoint
 npm run start
 curl http://localhost:3000/api/health
 ```
@@ -293,9 +280,8 @@ Expected response:
     "db": true,
     "env": true,
     "stripe": true,
-    "anthropic": true,
-    "cohere": true,
-    "emails": true
+    "openai": true,
+    "cohere": true
   }
 }
 ```
@@ -324,11 +310,9 @@ npm run build
 
 ### "OpenAI is not defined" error
 **Fix:**
-```bash
-npm run verify-openai  # Find OpenAI references
-# Remove any OpenAI code
-npm run build
-```
+- Ensure `OPENAI_API_KEY` is set in your environment
+- Run `npm install` to confirm the `openai` SDK is available
+- Restart the dev server after updating env vars
 
 ### Vector search returns no results
 **Fix:**
@@ -360,7 +344,7 @@ npm run ingest  -- Re-ingest documents
 ### Health Check Endpoint
 Monitor `/api/health` for:
 - Database connectivity
-- API key validity (Anthropic + Cohere)
+- API key validity (OpenAI + Cohere)
 - Stripe connection
 - Email service
 
@@ -390,7 +374,7 @@ Monthly costs for moderate usage (500 requests):
 | Service | Cost |
 |---------|------|
 | Railway (Pro) | $20 |
-| Anthropic Claude | $50-200 |
+| OpenAI GPT-5.2 | $40-180 |
 | Cohere | $5-20 |
 | Supabase | $0 (free tier) |
 | Stripe | 2.9% + $0.30/txn |
@@ -427,29 +411,26 @@ git checkout -b feature/your-feature
 # 2. Make changes
 # Edit files...
 
-# 3. Verify no OpenAI references
-npm run verify-openai
-
-# 4. Test locally
+# 3. Test locally
 npm run dev
 # Test in browser: http://localhost:3000
 
-# 5. Build and test
+# 4. Build and test
 npm run build
 npm run start
 
-# 6. Commit and push
+# 5. Commit and push
 git add .
 git commit -m "Add feature"
 git push origin feature/your-feature
 
-# 7. Create PR
+# 6. Create PR
 # Railway will auto-deploy preview
 ```
 
 ## 📚 Additional Resources
 
-- [Anthropic Claude Docs](https://docs.anthropic.com)
+- [OpenAI Platform Docs](https://platform.openai.com/docs)
 - [Cohere Embeddings Guide](https://docs.cohere.com/docs/embeddings)
 - [Supabase pgvector Guide](https://supabase.com/docs/guides/ai/vector-columns)
 - [Railway Deployment Docs](https://docs.railway.app)
