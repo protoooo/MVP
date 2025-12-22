@@ -856,7 +856,6 @@ export async function POST(request) {
         const visionResp = await withTimeout(
           openai.responses.create({
             model: OPENAI_MODEL,
-            temperature: 0,
             max_output_tokens: 750,
             input: toResponseInput([
               {
@@ -1103,7 +1102,6 @@ Max findings: ${maxFindings}`
       const answerResp = await withTimeout(
         openai.responses.create({
           model: OPENAI_MODEL,
-          temperature: 0.15,
           max_output_tokens: fullAudit ? 1300 : 950,
           input: toResponseInput([{ role: 'system', content: systemPrompt }, ...finalMessages]),
         }),
