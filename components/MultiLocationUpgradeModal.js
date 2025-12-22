@@ -1,4 +1,4 @@
-// components/MultiLocationUpgradeModal.js - UPDATED: $149/location + security notes
+// components/MultiLocationUpgradeModal.js - $149/location, no discounts
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,7 +7,6 @@ import { IBM_Plex_Mono } from 'next/font/google'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-// ✅ UPDATED: $149 per location (matches single plan pricing)
 const TIER_PRICES = {
   unlimited: { perLocation: 149, name: 'Professional', model: 'Sonnet 4.5' }
 }
@@ -109,7 +108,7 @@ export default function MultiLocationUpgradeModal({
               Add More Locations
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--ink-2)', margin: 0, lineHeight: '1.5' }}>
-              We detected <strong>{currentLocations} locations</strong>. Each location needs its own license.
+              We detected {currentLocations} locations. Each location needs its own license.
             </p>
           </div>
 
@@ -248,7 +247,7 @@ export default function MultiLocationUpgradeModal({
             </div>
           </div>
 
-          {/* ✅ NEW: Security Notice */}
+          {/* Security Notice */}
           <div style={{ 
             background: 'rgba(239, 68, 68, 0.1)', 
             border: '1px solid rgba(239, 68, 68, 0.3)', 
@@ -257,10 +256,10 @@ export default function MultiLocationUpgradeModal({
             marginBottom: '20px'
           }}>
             <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#ef4444', marginBottom: '8px' }}>
-              ⚠️ Important: Login Security
+              Important: Login Security
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.6', margin: 0 }}>
-              <strong>Each location requires its own protocolLM account.</strong> Sharing login credentials across multiple locations violates our Terms of Service and will result in account suspension. This ensures accurate compliance tracking per location.
+              Each location requires its own protocolLM account. Sharing login credentials across multiple locations violates our Terms of Service and will result in account suspension. This ensures accurate compliance tracking per location.
             </p>
           </div>
 
@@ -339,8 +338,7 @@ export default function MultiLocationUpgradeModal({
             textAlign: 'center',
             lineHeight: '1.5'
           }}>
-            Billing starts immediately. Each location requires a separate account.
-            <br />
+            Billing starts immediately. Each location requires a separate account.<br />
             Questions? Email <a href="mailto:support@protocollm.org" style={{ color: 'var(--accent)' }}>support@protocollm.org</a>
           </p>
 
