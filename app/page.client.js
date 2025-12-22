@@ -125,7 +125,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-headings">
             <h1 className="hero-title">Catch Violations, Not Fines.</h1>
             <p className="hero-support">
-              Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get instant answers and guidance from Washtenaw County Food Safety Regulations—Chapter 2, Michigan Modified Food Code 2009.
+              Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get instant answers and guidance from Washtenaw County Food Safety Regulations.
             </p>
           </div>
 
