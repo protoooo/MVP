@@ -20,6 +20,8 @@ export default function MultiLocationSetupPage() {
   const [success, setSuccess] = useState(false)
   const [purchaseData, setPurchaseData] = useState(null)
   const [locations, setLocations] = useState([])
+  const [setupLocked, setSetupLocked] = useState(false)
+  const [statusNotice, setStatusNotice] = useState('')
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -38,15 +40,12 @@ export default function MultiLocationSetupPage() {
           return
         }
 
-        const {
-          data: purchase,
-          error: purchaseError,
-        } = await supabase
+        const { data: purchase, error: purchaseError } = await supabase
           .from('pending_multi_location_purchases')
           .select('*')
           .eq('buyer_user_id', user.id)
-          .eq('status', 'completed')
-          .order('completed_at', { ascending: false })
+          .in('status', ['pending', 'completed', 'invites_sent'])
+          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
 
@@ -65,6 +64,14 @@ export default function MultiLocationSetupPage() {
         }
 
         setPurchaseData(purchase)
+
+        if (purchase.status === 'pending') {
+          setSetupLocked(true)
+          setStatusNotice('Payment is still processing. If you just checked out, refresh in a few seconds.')
+        } else if (purchase.status === 'invites_sent') {
+          setSetupLocked(true)
+          setStatusNotice('All signup links have already been sent for this purchase.')
+        }
 
         const locationFields = inviteCodes.map((code) => ({
           number: code.location_number,
@@ -88,7 +95,7 @@ export default function MultiLocationSetupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (submitting) return
+    if (submitting || setupLocked) return
 
     setSubmitting(true)
     setError('')
@@ -217,6 +224,12 @@ export default function MultiLocationSetupPage() {
               </div>
             )}
 
+            {statusNotice && (
+              <div style={{ padding: '12px', background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', color: '#bfdbfe', fontSize: '14px', marginBottom: '24px' }}>
+                {statusNotice}
+              </div>
+            )}
+
             {success && (
               <div style={{ padding: '12px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: '#6ee7b7', fontSize: '14px', marginBottom: '24px' }}>
                 ✓ Invites sent! Redirecting to dashboard...
@@ -321,7 +334,7 @@ export default function MultiLocationSetupPage() {
 
               <button
                 type="submit"
-                disabled={submitting || locations.filter((l) => !l.used).length === 0}
+                disabled={submitting || setupLocked || locations.filter((l) => !l.used).length === 0}
                 style={{
                   width: '100%',
                   height: '48px',
