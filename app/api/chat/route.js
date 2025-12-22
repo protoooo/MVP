@@ -50,7 +50,7 @@ const TOPK_PER_QUERY = 25
 const MAX_DOCS_FOR_CONTEXT = 40
 const PER_SOURCE_CAP = 4
 
-const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
+const ALLOWED_LIKELIHOOD = new Set(['Highly likely', 'Likely', 'Probable', 'Unlikely', 'Unclear'])
 const ALLOWED_CLASS = new Set(['P', 'Pf', 'C', 'Unclear'])
 
 // ============================================================================
@@ -1018,11 +1018,12 @@ RULES:
 3. No emojis.
 4. Ground every finding in the reference excerpts. Every finding must include source_ids.
 5. If you can't support it from the excerpts, do not call it a violation.
-6. Use probability language: "very likely", "likely", "possible".
+6. Use likelihood language only: "Highly likely", "Likely", "Probable", or "Unlikely" (no percentages, no scores).
 7. If the photo looks compliant, say: "No violations detected." and stop.
 8. Don't narrate the scene. Get to the point.
 9. Don't ask if this is residential/commercial. Assume food service.
 10. Prioritize Washtenaw County documents over general guidance.
+11. When findings exist, present them as: Possible violations (with likelihood), then remediation/steps, then timeframe and gentle penalties. Keep tone supportive, not alarming.
 
 OUTPUT FORMAT (JSON only):
 
@@ -1033,17 +1034,17 @@ For image analysis:
   "findings": [
     {
       "class": "P|Pf|C|Unclear",
-      "likelihood": "Very likely|Likely|Possible|Unclear",
+      "likelihood": "Highly likely|Likely|Probable|Unlikely|Unclear",
 
-      "observed": "What you see in the photo (one sentence, evidence only).",
+      "observed": "What you see in the photo (one sentence, evidence only). Acknowledge what looks okay if relevant.",
 
-      "violation": "What violation this would be, phrased as a requirement being violated (one sentence).",
+      "violation": "Possible violation you SEE (one sentence, requirement-focused).",
       "violation_type": "Short category label (example: Chemical storage, Hand sink use, Date marking, Temperature control).",
 
-      "why": "One sentence on risk/impact (must be supported by excerpts).",
-      "fix": "One sentence corrective action.",
+      "why": "Risk/impact in plain language, supported by excerpts.",
+      "fix": "Supportive remediation steps to correct the issue (concise).",
       "deadline": "Immediately|Within 10 days|Within 90 days",
-      "if_not_fixed": "One sentence on likely inspection/enforcement outcome per excerpts (only if supported).",
+      "if_not_fixed": "Soft, motivating note on likely enforcement/penalties if not resolved, based on excerpts.",
 
       "source_ids": ["DOC_1"]
     }
