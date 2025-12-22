@@ -1,4 +1,4 @@
-// components/MultiLocationBanner.js
+// components/MultiLocationBanner.js - No emojis
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -9,7 +9,6 @@ const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'
 export default function MultiLocationBanner({ locationCheck }) {
   const [dismissed, setDismissed] = useState(false)
 
-  // Reset dismissed state when location check changes
   useEffect(() => {
     setDismissed(false)
   }, [locationCheck?.uniqueLocationsUsed])
@@ -45,7 +44,7 @@ export default function MultiLocationBanner({ locationCheck }) {
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
         <div style={{ fontSize: '24px' }}>
-          {isUrgent ? '⚠️' : '📍'}
+          {isUrgent ? '!' : 'i'}
         </div>
         
         <div style={{ flex: 1 }}>
@@ -63,7 +62,6 @@ export default function MultiLocationBanner({ locationCheck }) {
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => {
-                // Trigger upgrade modal
                 window.dispatchEvent(new CustomEvent('openMultiLocationUpgrade', {
                   detail: { currentLocations: uniqueLocationsUsed }
                 }))
