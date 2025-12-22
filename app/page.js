@@ -1,21 +1,23 @@
 // app/page.js
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
-import PricingModal from '@/components/PricingModal' // ✅ external PricingModal component
+import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
 
+const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ✅ SINGLE PLAN - Unlimited monthly only
@@ -33,7 +35,7 @@ const logger = {
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
@@ -102,116 +104,265 @@ function FooterLinks() {
 }
 
 /* ------------------------------------------
-   Landing (NO demo chat box)
+   Landing demo (scripted, user presses Send)
 ------------------------------------------- */
 
+const LANDING_DEMO_STEPS = [
+  {
+    user: 'What does this do?',
+    assistant: "Snap a kitchen photo and I'll flag likely health-code violations — fast, plain language, plus what to fix.",
+  },
+  {
+    user: 'Nice. What else?',
+    assistant:
+      "Ask questions too — date marking, cooling, handwashing, sanitizer, temps, inspections. I answer from the Washtenaw County rules (not vibes).",
+  },
+  {
+    user: 'What kinds of violations do you catch?',
+    assistant:
+      'Common hits: cold food above 41°F, dirty or blocked hand sink, sanitizer too weak, unlabeled spray bottles, missing date marks, raw-over-ready, pest evidence, and cross-contamination risks.',
+  },
+  {
+    user: 'What can violations cost?',
+    assistant:
+      'Rough reality:\n• Small fixes (labels, minor cleaning, quick retrain): usually $0–$200\n• Moderate issues (discard food, deep clean, rework workflow): often $200–$2,000\n• Critical hits (unsafe temps, contaminated prep, repeat violations): $2,000–$10,000+ once you factor waste, labor, downtime, and emergency fixes.\n\nThe goal is catching them early — before they snowball.',
+  },
+  {
+    user: 'Got it. How do I try it?',
+    assistant: 'Whenever you are ready, hit Start trial.',
+    isFinal: true,
+  },
+]
+
+function LandingDemo({ onDemoDone }) {
+  const [msgs, setMsgs] = useState([{ role: 'assistant', content: 'Hey — welcome to protocolLM.' }])
+  const [stepIdx, setStepIdx] = useState(0)
+  const [draft, setDraft] = useState('')
+  const [phase, setPhase] = useState('typingDraft') // typingDraft | waitingSend | typingAssistant | done
+  const [isTyping, setIsTyping] = useState(false)
+
+  const timersRef = useRef([])
+  const scrollRef = useRef(null)
+  const reduceMotionRef = useRef(false)
+
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach((t) => clearTimeout(t))
+    timersRef.current = []
+  }, [])
+
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior })
+  }, [])
+
+  const typeInto = useCallback(
+    async ({ text, setValue, speed = 22, jitter = 14, onDone }) => {
+      clearTimers()
+      setIsTyping(true)
+
+      // Reduced motion: instant
+      if (reduceMotionRef.current) {
+        setValue(text)
+        setIsTyping(false)
+        onDone?.()
+        return
+      }
+
+      let i = 0
+      const tick = () => {
+        i += 1
+        setValue(text.slice(0, i))
+        requestAnimationFrame(() => scrollToBottom('auto'))
+
+        if (i >= text.length) {
+          setIsTyping(false)
+          onDone?.()
+          return
+        }
+
+        const base = speed
+        const wait = base + Math.floor(Math.random() * jitter)
+        const t = setTimeout(tick, wait)
+        timersRef.current.push(t)
+      }
+
+      const t0 = setTimeout(tick, 220)
+      timersRef.current.push(t0)
+    },
+    [clearTimers, scrollToBottom]
+  )
+
+  const startDraftForStep = useCallback(
+    (idx) => {
+      const step = LANDING_DEMO_STEPS[idx]
+      if (!step) return
+      setPhase('typingDraft')
+      setDraft('')
+      typeInto({
+        text: step.user,
+        setValue: setDraft,
+        speed: 18,
+        jitter: 18,
+        onDone: () => setPhase('waitingSend'),
+      })
+    },
+    [typeInto]
+  )
+
+  const typeAssistantReply = useCallback(
+    (replyText, after) => {
+      setPhase('typingAssistant')
+      setMsgs((prev) => [...prev, { role: 'assistant', content: '' }])
+
+      typeInto({
+        text: replyText,
+        setValue: (val) => {
+          setMsgs((prev) => {
+            const next = [...prev]
+            next[next.length - 1] = { ...next[next.length - 1], content: val }
+            return next
+          })
+        },
+        speed: 16,
+        jitter: 18,
+        onDone: after,
+      })
+    },
+    [typeInto]
+  )
+
+  useEffect(() => {
+    reduceMotionRef.current =
+      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+
+    startDraftForStep(0)
+    return () => clearTimers()
+  }, [startDraftForStep, clearTimers])
+
+  useEffect(() => {
+    requestAnimationFrame(() => scrollToBottom('auto'))
+  }, [msgs, scrollToBottom])
+
+  const canSend = phase === 'waitingSend' && !isTyping && !!draft
+
+  const handleSendDemo = useCallback(() => {
+    if (!canSend) return
+
+    const step = LANDING_DEMO_STEPS[stepIdx]
+    if (!step) return
+
+    setMsgs((prev) => [...prev, { role: 'user', content: draft }])
+    setDraft('')
+
+    typeAssistantReply(step.assistant, () => {
+      const nextIdx = stepIdx + 1
+      if (step.isFinal || !LANDING_DEMO_STEPS[nextIdx]) {
+        setPhase('done')
+        onDemoDone?.()
+        return
+      }
+      setStepIdx(nextIdx)
+      startDraftForStep(nextIdx)
+    })
+  }, [canSend, draft, stepIdx, startDraftForStep, typeAssistantReply, onDemoDone])
+
+  return (
+    <div className="landing-demo-window" aria-label="protocolLM demo">
+      <div className="landing-demo-header" aria-hidden="true">
+        <span className="terminal-dot red" />
+        <span className="terminal-dot yellow" />
+        <span className="terminal-dot green" />
+      </div>
+
+      <div className="landing-demo-body">
+        <div ref={scrollRef} className="landing-demo-messages" role="log" aria-live="polite">
+          {msgs.map((m, idx) => (
+            <div
+              key={idx}
+              className={`landing-demo-row ${m.role === 'user' ? 'is-user' : 'is-assistant'}`}
+              aria-label={m.role === 'user' ? 'User message' : 'Assistant message'}
+            >
+              <div className={`landing-demo-bubble ${m.role === 'user' ? 'user' : 'assistant'}`}>
+                <span className="landing-demo-text">{m.content}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="landing-demo-inputArea" aria-label="Demo input">
+          <div className="landing-demo-inputWrap">
+            <textarea
+              className="landing-demo-textarea"
+              value={draft}
+              readOnly
+              rows={1}
+              placeholder=""
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSendDemo()
+                }
+              }}
+            />
+            <button
+              type="button"
+              className={`landing-demo-send ${canSend ? 'active' : ''}`}
+              onClick={handleSendDemo}
+              aria-label="Send demo message"
+            >
+              <Icons.ArrowUp />
+            </button>
+          </div>
+
+          <div className="landing-demo-hint" aria-hidden="true">
+            {phase === 'done' ? ' ' : 'Press Send (or Enter) to continue'}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LandingPage({ onShowPricing, onShowAuth }) {
+  const [demoDone, setDemoDone] = useState(false)
+
   return (
     <div className={`${ibmMono.className} landing-root`}>
+      <div className="landing-bg" />
+
       <header className="landing-topbar">
         <div className="plm-brand-wrap">
           <BrandLink variant="landing" />
         </div>
 
         <nav className="landing-top-actions" aria-label="Top actions">
-          <button onClick={onShowAuth} className="btn-nav" type="button">
+          <div className="landing-top-actions-desktop desktop-only">
+            <button onClick={onShowPricing} className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} type="button">
+              Start trial
+            </button>
+          </div>
+
+          <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
             Sign in
-          </button>
-          <button onClick={onShowPricing} className="btn-primary" type="button">
-            Start trial
           </button>
         </nav>
       </header>
 
-      <main className="landing-main">
-        <section className="landing-sheet" aria-label="protocolLM overview">
-          <div className="landing-kicker">
-            <span className="kicker-dot" aria-hidden="true" />
-            Washtenaw County • Food safety compliance
+      <main className="landing-hero">
+        <div className="hero-content">
+          <LandingDemo
+            onDemoDone={() => {
+              setDemoDone(true)
+            }}
+          />
+
+          <div className="mobile-start mobile-only">
+            <button className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} onClick={onShowPricing} type="button">
+              Start trial
+            </button>
           </div>
-
-          <h1 className="landing-title">Photo-first compliance checks—written like an inspection note.</h1>
-
-          <p className="landing-subtitle">
-            Take a kitchen photo or ask a question. protocolLM cross-checks against local guidance and responds in plain
-            language: what’s wrong, why it matters, and what to fix.
-          </p>
-
-          <div className="landing-steps" role="list" aria-label="How it works">
-            <div className="step" role="listitem">
-              <div className="step-icon" aria-hidden="true">
-                <Icons.Camera />
-              </div>
-              <div className="step-body">
-                <div className="step-title">Capture</div>
-                <div className="step-text">Walk-in, prep line, hand sink, storage, dish area—anything.</div>
-              </div>
-            </div>
-
-            <div className="step" role="listitem">
-              <div className="step-icon" aria-hidden="true">
-                <Icons.Sparkle />
-              </div>
-              <div className="step-body">
-                <div className="step-title">Cross-check</div>
-                <div className="step-text">Flags likely issues against county docs—not generic advice.</div>
-              </div>
-            </div>
-
-            <div className="step" role="listitem">
-              <div className="step-icon" aria-hidden="true">
-                <Icons.Gear />
-              </div>
-              <div className="step-body">
-                <div className="step-title">Correct</div>
-                <div className="step-text">Straight to action: fix list, quick rationale, and next steps.</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="landing-divider" />
-
-          <div className="landing-note">
-            Inside the app, the <span className="inline-chip">camera</span> button runs photo checks. It stays next to
-            the input—no extra screens.
-          </div>
-        </section>
-
-        <aside className="landing-preview" aria-label="Sample output preview">
-          <div className="preview-sheet">
-            <div className="preview-head">
-              <div className="preview-title">Sample photo scan output</div>
-              <div className="preview-sub">Format mirrors a clipboard note—fast to read, easy to act on.</div>
-            </div>
-
-            <div className="preview-block">
-              <div className="preview-label">Findings</div>
-              <ul className="preview-list">
-                <li>
-                  <span className="preview-strong">Hand sink access:</span> blocked by containers.
-                </li>
-                <li>
-                  <span className="preview-strong">Cold holding:</span> items stored above 41°F risk zone (verify with
-                  thermometer).
-                </li>
-                <li>
-                  <span className="preview-strong">Chemical labeling:</span> spray bottle missing label.
-                </li>
-              </ul>
-            </div>
-
-            <div className="preview-block">
-              <div className="preview-label">Fix</div>
-              <ol className="preview-ol">
-                <li>Clear sink area immediately. Keep unobstructed at all times.</li>
-                <li>Move TCS foods to proper refrigeration; log temps; discard if time/temperature abused.</li>
-                <li>Label chemicals with common name; store away from food and single-service items.</li>
-              </ol>
-            </div>
-
-            <div className="preview-footer">No scare tactics. Just issue → why → fix.</div>
-          </div>
-        </aside>
+        </div>
       </main>
 
       <FooterLinks />
@@ -449,33 +600,6 @@ export default function Page() {
   // ✅ Chat settings menu (gear dropdown)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
-
-  // ✅ Camera nudge (subtle, anchored to camera button; one-time)
-  const [showCameraNudge, setShowCameraNudge] = useState(false)
-
-  const markCameraNudgeSeen = useCallback(() => {
-    try {
-      localStorage.setItem('plm_camera_nudge_seen', '1')
-    } catch {}
-    setShowCameraNudge(false)
-  }, [])
-
-  useEffect(() => {
-    if (!isAuthenticated) return
-    if (messages.length !== 0) return
-    if (selectedImage) return
-
-    let seen = false
-    try {
-      seen = localStorage.getItem('plm_camera_nudge_seen') === '1'
-    } catch {}
-
-    if (seen) return
-
-    setShowCameraNudge(true)
-    const t = setTimeout(() => setShowCameraNudge(false), 6500)
-    return () => clearTimeout(t)
-  }, [isAuthenticated, messages.length, selectedImage])
 
   // Close settings menu on outside click
   useEffect(() => {
@@ -942,6 +1066,7 @@ export default function Page() {
 
       const lc = await fetchLocationCheckFromServer(session)
       if (cancelled) return
+
       if (!lc) return
 
       // ✅ Step 3 behavior: log + store for banner
@@ -1117,7 +1242,6 @@ export default function Page() {
     try {
       const compressed = await compressImage(file)
       setSelectedImage(compressed)
-      markCameraNudgeSeen()
     } catch (error) {
       console.error('Image compression error', error)
       alert('Failed to process image.')
@@ -1143,32 +1267,27 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          /* Stainless / clipboard light theme */
-          --bg-0: #f3f5f8; /* page */
-          --bg-1: #ffffff; /* sheets/panels */
-          --bg-2: #f7f9fc; /* subtle fill */
-          --bg-3: #eef2f7; /* controls */
+          --bg-0: #09090b;
+          --bg-1: #0c0c0e;
+          --bg-2: #131316;
+          --bg-3: #1a1a1f;
 
-          --ink-0: #0b1220; /* primary */
-          --ink-1: #24324a; /* secondary */
-          --ink-2: #4b5b75; /* muted */
-          --ink-3: #6b7b94; /* faint */
+          --ink-0: #fafafa;
+          --ink-1: #a0a0a8;
+          --ink-2: #636369;
+          --ink-3: #3f3f46;
 
-          /* Match your logo vibe (kept close to your current blue, but more “gov”) */
-          --accent: #1f5eff;
-          --accent-hover: #174bd1;
-          --accent-dim: rgba(31, 94, 255, 0.12);
+          --accent: #3b82f6;
+          --accent-hover: #2563eb;
+          --accent-dim: rgba(59, 130, 246, 0.1);
 
-          --border-subtle: rgba(11, 18, 32, 0.10);
-          --border-default: rgba(11, 18, 32, 0.16);
+          --border-subtle: rgba(255, 255, 255, 0.05);
+          --border-default: rgba(255, 255, 255, 0.08);
 
           --radius-sm: 8px;
           --radius-md: 12px;
           --radius-lg: 16px;
           --radius-full: 9999px;
-
-          --shadow-sm: 0 1px 0 rgba(16, 24, 40, 0.06), 0 10px 24px rgba(16, 24, 40, 0.08);
-          --shadow-md: 0 1px 0 rgba(16, 24, 40, 0.06), 0 18px 44px rgba(16, 24, 40, 0.10);
         }
 
         *,
@@ -1222,17 +1341,14 @@ export default function Page() {
         }
 
         ::-webkit-scrollbar {
-          width: 8px;
+          width: 6px;
         }
         ::-webkit-scrollbar-track {
           background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(11, 18, 32, 0.18);
+          background: rgba(255, 255, 255, 0.06);
           border-radius: var(--radius-full);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(11, 18, 32, 0.28);
         }
 
         /* Loading */
@@ -1250,13 +1366,12 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 28px;
+          gap: 32px;
         }
 
         .loading-logo {
           width: 64px;
           height: 64px;
-          filter: saturate(1.05);
         }
 
         .loading-logo img {
@@ -1266,9 +1381,9 @@ export default function Page() {
         }
 
         .loading-bar {
-          width: 120px;
+          width: 100px;
           height: 2px;
-          background: rgba(11, 18, 32, 0.10);
+          background: var(--bg-3);
           border-radius: var(--radius-full);
           overflow: hidden;
         }
@@ -1277,7 +1392,7 @@ export default function Page() {
           height: 100%;
           width: 30%;
           background: var(--accent);
-          animation: loading-slide 1.05s ease-in-out infinite;
+          animation: loading-slide 1s ease-in-out infinite;
         }
 
         @keyframes loading-slide {
@@ -1285,7 +1400,7 @@ export default function Page() {
             transform: translateX(-100%);
           }
           100% {
-            transform: translateX(420%);
+            transform: translateX(400%);
           }
         }
 
@@ -1308,7 +1423,7 @@ export default function Page() {
         }
 
         .plm-brand:hover {
-          opacity: 0.75;
+          opacity: 0.7;
         }
 
         .plm-brand-inner {
@@ -1330,10 +1445,17 @@ export default function Page() {
         }
 
         .plm-brand-text {
-          font-size: 18px;
-          font-weight: 700;
+          font-size: 20px;
+          font-weight: 600;
           letter-spacing: -0.02em;
           white-space: nowrap;
+        }
+
+        .desktop-only {
+          display: flex;
+        }
+        .mobile-only {
+          display: none;
         }
 
         /* Landing */
@@ -1344,284 +1466,317 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           background: var(--bg-0);
+          overflow: hidden;
+        }
+
+        .landing-bg {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 130, 246, 0.06), transparent 70%);
+          pointer-events: none;
         }
 
         .landing-topbar {
-          position: sticky;
+          position: absolute;
           top: 0;
-          z-index: 10;
+          left: 0;
+          right: 0;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: max(18px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 14px
+          padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
             max(24px, env(safe-area-inset-left));
-          background: rgba(243, 245, 248, 0.82);
-          backdrop-filter: blur(8px);
-          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
+          z-index: 10;
         }
 
         .landing-top-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
+        }
+
+        .landing-top-actions-desktop {
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
 
         .btn-nav {
           height: 36px;
-          padding: 0 12px;
+          padding: 0 14px;
           background: transparent;
           color: var(--ink-1);
-          border: 1px solid transparent;
+          border: none;
           border-radius: var(--radius-sm);
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 13px;
+          font-weight: 500;
           cursor: pointer;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+          transition: color 0.15s ease;
           font-family: inherit;
-          letter-spacing: 0.01em;
         }
 
         .btn-nav:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.08);
+          color: var(--ink-0);
         }
 
         .btn-primary {
           height: 36px;
-          padding: 0 14px;
+          padding: 0 16px;
           background: var(--accent);
           color: #fff;
-          border: 1px solid rgba(0, 0, 0, 0.08);
+          border: none;
           border-radius: var(--radius-sm);
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 13px;
+          font-weight: 600;
           cursor: pointer;
           transition: background 0.15s ease;
           font-family: inherit;
-          letter-spacing: 0.01em;
         }
 
         .btn-primary:hover {
           background: var(--accent-hover);
         }
 
-        .landing-main {
+        .btn-primary.cta-pulse {
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
+          animation: cta-pulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes cta-pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+          }
+        }
+
+        /* Hero */
+        .landing-hero {
           flex: 1;
-          display: grid;
-          grid-template-columns: 1.15fr 0.85fr;
-          gap: 18px;
-          padding: 26px 24px 86px;
-          max-width: 1060px;
-          margin: 0 auto;
-          width: 100%;
-        }
-
-        .landing-sheet {
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-md);
-          padding: 26px;
-          position: relative;
-        }
-
-        .landing-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-        }
-
-        .kicker-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: var(--radius-full);
-          background: var(--accent);
-          box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
-        }
-
-        .landing-title {
-          margin: 14px 0 10px;
-          font-size: 26px;
-          line-height: 1.22;
-          letter-spacing: -0.03em;
-        }
-
-        .landing-subtitle {
-          margin: 0;
-          font-size: 13px;
-          line-height: 1.7;
-          color: var(--ink-1);
-          max-width: 62ch;
-        }
-
-        .landing-steps {
-          margin-top: 18px;
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-        }
-
-        .step {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 12px 12px;
-          border: 1px solid rgba(11, 18, 32, 0.08);
-          background: var(--bg-2);
-          border-radius: var(--radius-md);
-        }
-
-        .step-icon {
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--accent);
-          background: rgba(31, 94, 255, 0.08);
-          border: 1px solid rgba(31, 94, 255, 0.16);
-          flex-shrink: 0;
+          padding: 140px 24px 100px;
         }
 
-        .step-title {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          color: var(--ink-0);
-        }
-
-        .step-text {
-          margin-top: 3px;
-          font-size: 12px;
-          line-height: 1.6;
-          color: var(--ink-2);
-        }
-
-        .landing-divider {
-          height: 1px;
-          background: rgba(11, 18, 32, 0.08);
-          margin: 18px 0 14px;
-        }
-
-        .landing-note {
-          font-size: 12px;
-          color: var(--ink-2);
-          line-height: 1.6;
-        }
-
-        .inline-chip {
-          display: inline-flex;
+        .hero-content {
+          display: flex;
+          flex-direction: column;
           align-items: center;
-          padding: 2px 8px;
-          border-radius: 999px;
-          background: rgba(11, 18, 32, 0.06);
-          border: 1px solid rgba(11, 18, 32, 0.10);
-          color: var(--ink-1);
-          font-weight: 800;
-          letter-spacing: 0.02em;
-          text-transform: lowercase;
+          gap: 32px;
+          max-width: 720px;
+          width: 100%;
         }
 
-        .landing-preview {
-          position: relative;
+        .mobile-start {
+          width: 100%;
+          display: none;
         }
 
-        .preview-sheet {
-          position: sticky;
-          top: 86px;
+        .mobile-start .btn-primary {
+          width: 100%;
+          justify-content: center;
+          height: 44px;
+          font-size: 14px;
+        }
+
+        .terminal-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: var(--radius-full);
+        }
+
+        .terminal-dot.red {
+          background: #ff5f57;
+        }
+        .terminal-dot.yellow {
+          background: #febc2e;
+        }
+        .terminal-dot.green {
+          background: #28c840;
+        }
+
+        /* Landing demo window */
+        .landing-demo-window {
+          width: 100%;
           background: var(--bg-1);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-sm);
+          overflow: hidden;
+          box-shadow: 0 24px 90px rgba(0, 0, 0, 0.55);
+        }
+
+        .landing-demo-header {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 12px 14px;
+          background: var(--bg-2);
+          border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .landing-demo-body {
           padding: 18px;
         }
 
-        .preview-head {
-          padding-bottom: 14px;
-          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
-          margin-bottom: 14px;
+        .landing-demo-messages {
+          height: 240px;
+          overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          padding: 8px 6px 12px;
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.02);
         }
 
-        .preview-title {
-          font-size: 12px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ink-0);
+        .landing-demo-messages::-webkit-scrollbar {
+          width: 0px;
+          height: 0px;
         }
 
-        .preview-sub {
-          margin-top: 6px;
-          font-size: 12px;
-          color: var(--ink-2);
-          line-height: 1.6;
+        .landing-demo-row {
+          display: flex;
+          width: 100%;
+          margin: 10px 0;
         }
 
-        .preview-block + .preview-block {
-          margin-top: 14px;
+        .landing-demo-row.is-assistant {
+          justify-content: flex-start;
         }
 
-        .preview-label {
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-          margin-bottom: 8px;
+        .landing-demo-row.is-user {
+          justify-content: flex-end;
         }
 
-        .preview-list,
-        .preview-ol {
-          margin: 0;
-          padding-left: 16px;
+        /* ✅ UPDATED: no fill, no border — just font color difference */
+        .landing-demo-bubble {
+          max-width: min(560px, 82%);
+          padding: 0;
+          border: none;
+          border-radius: 0;
+          line-height: 1.55;
+          font-size: 14px;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          background: transparent;
+        }
+
+        .landing-demo-bubble.assistant {
+          background: transparent;
           color: var(--ink-1);
-          font-size: 12px;
-          line-height: 1.7;
+          border: none;
         }
 
-        .preview-strong {
-          font-weight: 900;
+        .landing-demo-bubble.user {
+          background: transparent;
           color: var(--ink-0);
+          border: none;
         }
 
-        .preview-footer {
+        .landing-demo-inputArea {
           margin-top: 14px;
-          padding-top: 12px;
-          border-top: 1px solid rgba(11, 18, 32, 0.08);
-          font-size: 12px;
+        }
+
+        /* ✅ NO blue rectangle border (ever) */
+        .landing-demo-inputWrap {
+          display: flex;
+          align-items: stretch;
+          gap: 10px;
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          padding: 10px 10px;
+        }
+
+        /* ✅ Prevent any focus-within accent border on the demo */
+        .landing-demo-inputWrap:focus-within {
+          border-color: var(--border-subtle);
+          box-shadow: none;
+        }
+
+        .landing-demo-textarea {
+          flex: 1;
+          min-height: 44px;
+          max-height: 120px;
+          padding: 10px 10px;
+          background: transparent;
+          border: none;
+          color: var(--ink-0);
+          font-size: 14px;
+          line-height: 1.4;
+          resize: none;
+          font-family: inherit;
+          min-width: 0;
+          outline: none;
+        }
+
+        .landing-demo-textarea:focus {
+          outline: none;
+        }
+
+        .landing-demo-send {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 12px;
           color: var(--ink-2);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .landing-demo-send.active {
+          background: var(--accent);
+          border-color: rgba(59, 130, 246, 0.6);
+          color: white;
+        }
+
+        .landing-demo-send:hover {
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .landing-demo-send.active:hover {
+          background: var(--accent-hover);
+        }
+
+        .landing-demo-hint {
+          margin-top: 8px;
+          padding-left: 4px;
+          font-size: 11px;
+          color: var(--ink-3);
+          letter-spacing: 0.02em;
+          user-select: none;
         }
 
         /* Footer links */
         .plm-footer-links {
-          position: fixed;
-          bottom: max(18px, env(safe-area-inset-bottom));
+          position: absolute;
+          bottom: max(20px, env(safe-area-inset-bottom));
           left: 50%;
           transform: translateX(-50%);
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 16px;
           z-index: 10;
-          padding: 6px 10px;
-          border-radius: 999px;
-          background: rgba(243, 245, 248, 0.72);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(11, 18, 32, 0.08);
         }
 
         .plm-footer-link {
           color: var(--ink-2);
           text-decoration: none;
           font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.06em;
+          font-weight: 500;
+          letter-spacing: 0.04em;
           text-transform: uppercase;
           transition: color 0.15s ease;
         }
@@ -1630,7 +1785,7 @@ export default function Page() {
           color: var(--ink-0);
         }
         .plm-footer-sep {
-          color: rgba(11, 18, 32, 0.22);
+          color: var(--ink-3);
         }
 
         /* Modals */
@@ -1638,13 +1793,13 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(11, 18, 32, 0.42);
-          backdrop-filter: blur(6px);
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
-          animation: fade-in 0.14s ease;
+          animation: fade-in 0.15s ease;
         }
 
         @keyframes fade-in {
@@ -1658,8 +1813,8 @@ export default function Page() {
 
         .modal-container {
           width: 100%;
-          max-width: 380px;
-          animation: modal-up 0.18s ease;
+          max-width: 360px;
+          animation: modal-up 0.2s ease;
         }
 
         @keyframes modal-up {
@@ -1676,43 +1831,39 @@ export default function Page() {
         .modal-card {
           position: relative;
           background: var(--bg-1);
-          border: 1px solid var(--border-default);
+          border: 1px solid var(--border-subtle);
           border-radius: var(--radius-lg);
-          padding: 26px;
-          box-shadow: var(--shadow-md);
+          padding: 28px;
         }
 
         .modal-close {
           position: absolute;
-          top: 14px;
-          right: 14px;
-          width: 30px;
-          height: 30px;
+          top: 16px;
+          right: 16px;
+          width: 28px;
+          height: 28px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: 1px solid transparent;
+          border: none;
           color: var(--ink-2);
           cursor: pointer;
-          border-radius: 10px;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+          border-radius: var(--radius-sm);
+          transition: color 0.15s ease;
         }
 
         .modal-close:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.08);
           color: var(--ink-0);
         }
 
         .modal-header {
-          margin-bottom: 18px;
+          margin-bottom: 24px;
         }
 
         .modal-title {
-          font-size: 16px;
-          font-weight: 900;
-          letter-spacing: 0.02em;
+          font-size: 18px;
+          font-weight: 600;
           margin: 0;
           color: var(--ink-0);
         }
@@ -1720,7 +1871,7 @@ export default function Page() {
         .modal-form {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 16px;
         }
 
         .form-group {
@@ -1729,12 +1880,13 @@ export default function Page() {
           gap: 8px;
         }
 
+        /* ✅ Email/Password label text to white */
         .form-label {
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.03em;
           text-transform: uppercase;
-          color: var(--ink-2);
+          color: var(--ink-0);
         }
 
         .form-input {
@@ -1742,20 +1894,19 @@ export default function Page() {
           height: 42px;
           padding: 0 12px;
           background: var(--bg-2);
-          border: 1px solid rgba(11, 18, 32, 0.12);
+          border: 1px solid var(--border-subtle);
           border-radius: var(--radius-sm);
           color: var(--ink-0);
-          font-size: 13px;
+          font-size: 14px;
           font-family: inherit;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          transition: border-color 0.15s ease;
         }
 
         .form-input::placeholder {
-          color: rgba(11, 18, 32, 0.38);
+          color: var(--ink-3);
         }
         .form-input:focus {
-          border-color: rgba(31, 94, 255, 0.55);
-          box-shadow: 0 0 0 3px var(--accent-dim);
+          border-color: var(--accent);
         }
 
         .form-input-wrap {
@@ -1764,26 +1915,21 @@ export default function Page() {
 
         .form-toggle-vis {
           position: absolute;
-          right: 10px;
+          right: 12px;
           top: 50%;
           transform: translateY(-50%);
           background: none;
-          border: 1px solid transparent;
+          border: none;
           color: var(--ink-2);
           font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
+          font-weight: 600;
+          letter-spacing: 0.03em;
           text-transform: uppercase;
           cursor: pointer;
           font-family: inherit;
-          border-radius: 8px;
-          padding: 6px 8px;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         }
 
         .form-toggle-vis:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.08);
           color: var(--ink-0);
         }
 
@@ -1796,29 +1942,28 @@ export default function Page() {
           gap: 8px;
           background: var(--accent);
           color: #fff;
-          border: 1px solid rgba(0, 0, 0, 0.08);
+          border: none;
           border-radius: var(--radius-sm);
-          font-size: 13px;
-          font-weight: 900;
+          font-size: 14px;
+          font-weight: 600;
           cursor: pointer;
           font-family: inherit;
           transition: background 0.15s ease;
-          margin-top: 6px;
-          letter-spacing: 0.01em;
+          margin-top: 8px;
         }
 
         .btn-submit:hover:not(:disabled) {
           background: var(--accent-hover);
         }
         .btn-submit:disabled {
-          opacity: 0.55;
+          opacity: 0.5;
           cursor: not-allowed;
         }
 
         .spinner {
           width: 14px;
           height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.35);
+          border: 2px solid rgba(255, 255, 255, 0.3);
           border-top-color: #fff;
           border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
@@ -1833,46 +1978,41 @@ export default function Page() {
         .modal-message {
           padding: 10px 12px;
           background: var(--bg-2);
-          border: 1px solid rgba(11, 18, 32, 0.08);
           border-radius: var(--radius-sm);
-          font-size: 12px;
+          font-size: 13px;
           color: var(--ink-1);
           text-align: center;
-          margin-top: 14px;
+          margin-top: 16px;
         }
 
         .modal-message.ok {
-          color: #0f7a3a;
+          color: #22c55e;
         }
         .modal-message.err {
-          color: #b42318;
+          color: #ef4444;
         }
 
         .modal-footer {
-          margin-top: 16px;
+          margin-top: 20px;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 8px;
         }
 
+        /* ✅ Forgot password / Create account => white */
         .modal-link {
           background: none;
-          border: 1px solid transparent;
-          font-size: 12px;
-          color: var(--ink-1);
+          border: none;
+          font-size: 13px;
+          color: var(--ink-0);
           cursor: pointer;
           font-family: inherit;
-          font-weight: 900;
-          letter-spacing: 0.04em;
-          padding: 6px 10px;
-          border-radius: 10px;
-          transition: background 0.15s ease, border-color 0.15s ease;
+          opacity: 0.92;
         }
 
         .modal-link:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.08);
+          opacity: 1;
         }
 
         /* ✅ Turnstile/Recaptcha line -> one line (shrink only enough) */
@@ -1887,18 +2027,17 @@ export default function Page() {
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 100%;
-          color: var(--ink-2);
         }
 
-        /* ✅ Pricing feature rows (spacing) */
+        /* ✅ Pricing feature rows (FIX spacing between ✓ and text) */
         .pricing-feature {
           display: grid;
           grid-template-columns: 16px 1fr;
           column-gap: 10px;
           align-items: start;
-          font-size: 12px;
-          line-height: 1.6;
-          color: var(--ink-1);
+          font-size: 13px;
+          line-height: 1.5;
+          opacity: 0.92;
         }
 
         .pricing-feature-check {
@@ -1935,26 +2074,21 @@ export default function Page() {
 
         .chat-topbar {
           width: 100%;
-          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
-          background: rgba(243, 245, 248, 0.82);
-          backdrop-filter: blur(8px);
-        }
-
-        .chat-topbar-inner {
-          max-width: 1000px;
+          max-width: 880px;
           margin: 0 auto;
-          padding: 14px 24px;
+          padding: 16px 24px;
           padding-left: max(24px, env(safe-area-inset-left));
           padding-right: max(24px, env(safe-area-inset-right));
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-shrink: 0;
         }
 
         .chat-top-actions {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
         }
 
         /* ✅ Settings gear dropdown */
@@ -1971,41 +2105,30 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: 1px solid transparent;
-          border-radius: 10px;
+          border: none;
+          border-radius: var(--radius-sm);
           color: var(--ink-1);
           cursor: pointer;
-          transition: background 0.15s ease, border-color 0.15s ease;
+          transition: color 0.15s ease, background 0.15s ease;
         }
 
         .chat-settings-btn:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.08);
+          color: var(--ink-0);
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .chat-settings-menu {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
-          min-width: 190px;
-          background: var(--bg-1);
+          min-width: 180px;
+          background: var(--bg-2);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
           padding: 8px;
-          box-shadow: var(--shadow-md);
-          animation: dropdown-in 0.14s ease;
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+          animation: dropdown-in 0.15s ease;
           z-index: 50;
-        }
-
-        @keyframes dropdown-in {
-          from {
-            opacity: 0;
-            transform: translateY(6px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
         }
 
         .chat-settings-item {
@@ -2013,25 +2136,23 @@ export default function Page() {
           text-align: left;
           padding: 10px 10px;
           background: transparent;
-          border: 1px solid transparent;
-          border-radius: 10px;
+          border: none;
+          border-radius: var(--radius-sm);
           color: var(--ink-0);
-          font-size: 12px;
-          font-weight: 900;
+          font-size: 13px;
+          font-weight: 600;
           cursor: pointer;
           font-family: inherit;
-          letter-spacing: 0.03em;
-          transition: background 0.15s ease, border-color 0.15s ease;
+          transition: background 0.15s ease;
         }
 
         .chat-settings-item:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.08);
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .chat-settings-sep {
           height: 1px;
-          background: rgba(11, 18, 32, 0.08);
+          background: var(--border-subtle);
           margin: 6px 2px;
         }
 
@@ -2042,109 +2163,33 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
-          padding: 18px 24px 20px;
+          padding: 0 24px 32px;
           background: var(--bg-0);
         }
 
-        .chat-sheet {
-          max-width: 1000px;
-          margin: 0 auto;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-sm);
-          padding: 18px;
-        }
-
-        .chat-sheet-head {
+        .chat-messages.empty {
           display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 12px;
-          padding-bottom: 12px;
-          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
-          margin-bottom: 14px;
+          align-items: center;
+          justify-content: center;
         }
 
-        .sheet-title {
-          font-size: 12px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ink-0);
-        }
-
-        .sheet-sub {
-          font-size: 12px;
+        /* ✅ Slightly smaller so "regulations." doesn't get stranded */
+        .chat-empty-text {
+          font-size: 14px;
           color: var(--ink-2);
-          line-height: 1.5;
-          max-width: 56ch;
-          text-align: right;
-        }
-
-        .sheet-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .sheet-block {
-          border: 1px solid rgba(11, 18, 32, 0.08);
-          background: var(--bg-2);
-          border-radius: var(--radius-md);
-          padding: 12px;
-        }
-
-        .sheet-k {
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-          margin-bottom: 8px;
-        }
-
-        .sheet-list {
+          line-height: 1.6;
           margin: 0;
-          padding-left: 16px;
-          font-size: 12px;
-          line-height: 1.7;
-          color: var(--ink-1);
-        }
-
-        .sheet-footer {
-          margin-top: 12px;
-          padding-top: 12px;
-          border-top: 1px solid rgba(11, 18, 32, 0.08);
-          font-size: 12px;
-          color: var(--ink-2);
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .sheet-footer .mini-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          background: rgba(31, 94, 255, 0.08);
-          border: 1px solid rgba(31, 94, 255, 0.16);
-          color: var(--accent);
-          font-weight: 900;
-          letter-spacing: 0.02em;
-          user-select: none;
         }
 
         .chat-history {
-          max-width: 920px;
+          max-width: 760px;
           margin: 0 auto;
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 26px;
-          padding: 2px 2px 6px;
+          gap: 32px;
+          padding-top: 16px;
+          padding-bottom: 6px;
         }
 
         .chat-message {
@@ -2160,13 +2205,12 @@ export default function Page() {
         }
 
         .chat-bubble {
-          max-width: 78%;
-          font-size: 14px;
-          line-height: 1.75;
+          max-width: 75%;
+          font-size: 15px;
+          line-height: 1.7;
           display: block;
         }
 
-        /* “Clipboard note” feel: no bubbles, just alignment + ink weight */
         .chat-bubble-user {
           color: var(--ink-0);
         }
@@ -2177,16 +2221,14 @@ export default function Page() {
         .chat-bubble-image {
           border-radius: var(--radius-md);
           overflow: hidden;
-          margin-bottom: 10px;
+          margin-bottom: 12px;
           display: inline-block;
-          border: 1px solid rgba(11, 18, 32, 0.10);
-          background: var(--bg-2);
         }
 
         .chat-bubble-image img {
           display: block;
           max-width: 100%;
-          max-height: 300px;
+          max-height: 280px;
           object-fit: contain;
         }
 
@@ -2205,16 +2247,15 @@ export default function Page() {
 
         .chat-input-area {
           flex-shrink: 0;
-          border-top: 1px solid rgba(11, 18, 32, 0.08);
-          background: rgba(243, 245, 248, 0.86);
-          backdrop-filter: blur(8px);
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-0);
         }
 
         .chat-input-inner {
-          max-width: 1000px;
+          max-width: 760px;
           margin: 0 auto;
-          padding: 12px 24px 18px;
-          padding-bottom: max(18px, env(safe-area-inset-bottom));
+          padding: 16px 24px 24px;
+          padding-bottom: max(24px, env(safe-area-inset-bottom));
         }
 
         .chat-attachment {
@@ -2222,13 +2263,11 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           padding: 8px 12px;
-          background: var(--bg-1);
-          border: 1px solid rgba(11, 18, 32, 0.10);
-          border-radius: 999px;
-          margin-bottom: 10px;
+          background: var(--bg-2);
+          border-radius: var(--radius-sm);
+          margin-bottom: 12px;
           font-size: 12px;
           color: var(--ink-1);
-          box-shadow: 0 1px 0 rgba(16, 24, 40, 0.04);
         }
 
         .chat-attachment-icon {
@@ -2243,16 +2282,12 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: 1px solid transparent;
+          border: none;
           color: var(--ink-2);
           cursor: pointer;
-          border-radius: 999px;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         }
 
         .chat-attachment-remove:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.08);
           color: var(--ink-0);
         }
 
@@ -2262,109 +2297,59 @@ export default function Page() {
           gap: 10px;
         }
 
-        .chat-input-wrapper {
-          position: relative;
-          flex: 1;
-          display: flex;
-          align-items: flex-end;
-          background: var(--bg-1);
-          border: 1px solid rgba(11, 18, 32, 0.12);
-          border-radius: var(--radius-md);
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
-          min-width: 0;
-          box-shadow: 0 1px 0 rgba(16, 24, 40, 0.04);
-        }
-
-        .chat-input-wrapper:focus-within {
-          border-color: rgba(31, 94, 255, 0.50);
-          box-shadow: 0 0 0 3px var(--accent-dim);
-        }
-
-        /* Camera button integrated (not a big center CTA) */
-        .chat-tool-btn {
+        /* ✅ Camera button: blue border */
+        .chat-camera-btn {
           width: 44px;
           height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--bg-3);
-          border: none;
-          border-right: 1px solid rgba(11, 18, 32, 0.10);
-          border-top-left-radius: var(--radius-md);
-          border-bottom-left-radius: var(--radius-md);
+          background: var(--bg-2);
+          border: 1px solid var(--accent);
+          border-radius: var(--radius-md);
           color: var(--accent);
           cursor: pointer;
           flex-shrink: 0;
-          transition: background 0.15s ease;
-          position: relative;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .chat-tool-btn:hover {
-          background: rgba(31, 94, 255, 0.08);
+        .chat-camera-btn:hover {
+          border-color: var(--accent-hover);
+          box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
-        /* Subtle, one-time nudge anchored to the camera control */
-        .camera-nudge {
-          position: absolute;
-          left: 10px;
-          bottom: calc(100% + 10px);
-          background: var(--ink-0);
-          color: #fff;
-          border-radius: 999px;
-          padding: 8px 10px;
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
-          user-select: none;
-          pointer-events: none;
-          animation: nudge-in 0.22s ease;
-          white-space: nowrap;
+        .chat-input-wrapper {
+          flex: 1;
+          display: flex;
+          align-items: flex-end;
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          transition: border-color 0.15s ease;
+          min-width: 0;
         }
 
-        .camera-nudge::after {
-          content: '';
-          position: absolute;
-          left: 18px;
-          top: 100%;
-          width: 10px;
-          height: 10px;
-          background: var(--ink-0);
-          transform: rotate(45deg);
-        }
-
-        @keyframes nudge-in {
-          from {
-            opacity: 0;
-            transform: translateY(6px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .chat-input-wrapper:focus-within {
+          border-color: var(--accent);
         }
 
         .chat-textarea {
           flex: 1;
           min-height: 44px;
           max-height: 160px;
-          padding: 12px 12px;
+          padding: 12px 14px;
           background: transparent;
           border: none;
           color: var(--ink-0);
-          font-size: 13px;
-          line-height: 1.45;
+          font-size: 14px;
+          line-height: 1.4;
           resize: none;
           font-family: inherit;
           min-width: 0;
         }
 
         .chat-textarea::placeholder {
-          color: rgba(11, 18, 32, 0.42);
+          color: var(--ink-3);
         }
         .chat-textarea:focus {
           outline: none;
@@ -2378,27 +2363,24 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: rgba(11, 18, 32, 0.56);
+          color: var(--ink-2);
           cursor: pointer;
           flex-shrink: 0;
-          transition: color 0.15s ease, background 0.15s ease;
-          border-top-right-radius: var(--radius-md);
-          border-bottom-right-radius: var(--radius-md);
+          transition: color 0.15s ease;
         }
 
         .chat-send-btn:hover:not(:disabled) {
           color: var(--accent);
-          background: rgba(31, 94, 255, 0.08);
         }
         .chat-send-btn:disabled {
-          opacity: 0.35;
+          opacity: 0.3;
           cursor: not-allowed;
         }
 
         .chat-send-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(11, 18, 32, 0.14);
+          border: 2px solid var(--border-subtle);
           border-top-color: var(--accent);
           border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
@@ -2408,44 +2390,63 @@ export default function Page() {
           text-align: center;
           font-size: 11px;
           color: var(--ink-3);
-          margin-top: 12px;
-          letter-spacing: 0.02em;
+          margin-top: 14px;
         }
 
         /* Responsive */
-        @media (max-width: 980px) {
-          .landing-main {
-            grid-template-columns: 1fr;
-          }
-          .preview-sheet {
-            position: static;
-          }
-        }
-
         @media (max-width: 768px) {
           .landing-topbar {
-            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px
+            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
               max(16px, env(safe-area-inset-left));
-          }
-
-          .landing-main {
-            padding: 18px 16px 98px;
             gap: 14px;
           }
 
-          .landing-title {
-            font-size: 22px;
+          .desktop-only {
+            display: none !important;
+          }
+          .mobile-only {
+            display: flex;
+          }
+
+          .landing-hero {
+            padding: 120px 20px 120px;
           }
 
           .plm-brand-mark {
-            width: 58px;
-            height: 58px;
+            width: 60px;
+            height: 60px;
           }
           .plm-brand-text {
-            font-size: 17px;
+            font-size: 18px;
           }
 
-          .chat-topbar-inner {
+          /* ✅ Sign-in as small white text on mobile */
+          .landing-signin-btn {
+            height: auto !important;
+            padding: 0 !important;
+            margin-right: 6px;
+            transform: translateY(-1px);
+            color: var(--ink-0) !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.04em !important;
+            line-height: 1 !important;
+          }
+
+          .landing-demo-messages {
+            height: 220px;
+          }
+
+          .landing-demo-bubble {
+            font-size: 13px;
+            max-width: 86%;
+          }
+
+          .mobile-start {
+            display: flex;
+          }
+
+          .chat-topbar {
             padding: 12px 16px;
             padding-left: max(16px, env(safe-area-inset-left));
             padding-right: max(16px, env(safe-area-inset-right));
@@ -2453,35 +2454,34 @@ export default function Page() {
           }
 
           .chat-messages {
-            padding: 14px 16px 18px;
+            padding: 0 16px calc(24px + env(safe-area-inset-bottom));
           }
 
           .chat-input-inner {
-            padding: 10px 16px 16px;
-            padding-bottom: max(16px, env(safe-area-inset-bottom));
-          }
-
-          .sheet-grid {
-            grid-template-columns: 1fr;
+            padding: 12px 16px 18px;
+            padding-bottom: max(18px, env(safe-area-inset-bottom));
           }
 
           .chat-bubble {
-            max-width: 90%;
+            max-width: 85%;
           }
 
-          .camera-nudge {
-            left: 8px;
+          .chat-empty-text {
+            font-size: 13px;
           }
         }
 
         @media (max-width: 480px) {
           .modal-card {
-            padding: 22px 18px;
+            padding: 24px 20px;
           }
 
           .plm-brand-mark {
-            width: 54px;
-            height: 54px;
+            width: 55px;
+            height: 55px;
+          }
+          .plm-brand-text {
+            font-size: 17px;
           }
         }
 
@@ -2523,119 +2523,88 @@ export default function Page() {
           ) : (
             <div className={`${ibmMono.className} chat-root`}>
               <header className="chat-topbar">
-                <div className="chat-topbar-inner">
-                  <BrandLink variant="chat" />
-                  <nav className="chat-top-actions" aria-label="Chat actions">
-                    {session && subscription && (
-                      <div
-                        style={{
-                          marginRight: '10px',
-                          padding: '6px 10px',
-                          borderRadius: '999px',
-                          fontSize: '11px',
-                          fontWeight: '900',
-                          letterSpacing: '0.06em',
-                          textTransform: 'uppercase',
-                          background:
-                            subscription.status === 'trialing'
-                              ? 'rgba(31, 94, 255, 0.10)'
-                              : 'rgba(15, 122, 58, 0.10)',
-                          color: subscription.status === 'trialing' ? '#1f5eff' : '#0f7a3a',
-                          border: `1px solid ${
-                            subscription.status === 'trialing' ? 'rgba(31, 94, 255, 0.22)' : 'rgba(15, 122, 58, 0.22)'
-                          }`,
-                        }}
-                      >
-                        {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
+                <BrandLink variant="chat" />
+                <nav className="chat-top-actions" aria-label="Chat actions">
+                  {session && subscription && (
+                    <div
+                      style={{
+                        marginRight: '12px',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        letterSpacing: '0.02em',
+                        textTransform: 'uppercase',
+                        background:
+                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                        color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
+                        border: `1px solid ${
+                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'
+                        }`,
+                      }}
+                    >
+                      {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
+                    </div>
+                  )}
+
+                  <div className="chat-settings-wrap" ref={settingsRef}>
+                    <button
+                      type="button"
+                      className="chat-settings-btn"
+                      onClick={() => setShowSettingsMenu((v) => !v)}
+                      aria-expanded={showSettingsMenu}
+                      aria-label="Settings"
+                    >
+                      <Icons.Gear />
+                    </button>
+
+                    {showSettingsMenu && (
+                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
+                        <button
+                          type="button"
+                          className="chat-settings-item"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            if (hasActiveSubscription) {
+                              handleManageBilling()
+                            } else {
+                              setShowPricingModal(true)
+                            }
+                          }}
+                        >
+                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                        </button>
+
+                        <div className="chat-settings-sep" />
+
+                        <button
+                          type="button"
+                          className="chat-settings-item"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            handleSignOut()
+                          }}
+                        >
+                          Log out
+                        </button>
                       </div>
                     )}
-
-                    <div className="chat-settings-wrap" ref={settingsRef}>
-                      <button
-                        type="button"
-                        className="chat-settings-btn"
-                        onClick={() => setShowSettingsMenu((v) => !v)}
-                        aria-expanded={showSettingsMenu}
-                        aria-label="Settings"
-                      >
-                        <Icons.Gear />
-                      </button>
-
-                      {showSettingsMenu && (
-                        <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                          <button
-                            type="button"
-                            className="chat-settings-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowSettingsMenu(false)
-                              if (hasActiveSubscription) {
-                                handleManageBilling()
-                              } else {
-                                setShowPricingModal(true)
-                              }
-                            }}
-                          >
-                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                          </button>
-
-                          <div className="chat-settings-sep" />
-
-                          <button
-                            type="button"
-                            className="chat-settings-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowSettingsMenu(false)
-                              handleSignOut()
-                            }}
-                          >
-                            Log out
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </nav>
-                </div>
+                  </div>
+                </nav>
               </header>
 
-              <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+              >
                 {messages.length === 0 ? (
-                  <div className="chat-sheet">
-                    <div className="chat-sheet-head">
-                      <div className="sheet-title">New check</div>
-                      <div className="sheet-sub">Start with a photo scan or type a question.</div>
-                    </div>
-
-                    <div className="sheet-grid">
-                      <div className="sheet-block">
-                        <div className="sheet-k">Photo scan</div>
-                        <ul className="sheet-list">
-                          <li>Walk-in & cold holding</li>
-                          <li>Hand sinks & soap/towels</li>
-                          <li>Storage & chemical separation</li>
-                          <li>Prep surfaces & cross-contamination risk</li>
-                        </ul>
-                      </div>
-
-                      <div className="sheet-block">
-                        <div className="sheet-k">Ask</div>
-                        <ul className="sheet-list">
-                          <li>Sanitizer, temps, cooling, reheating</li>
-                          <li>Date marking & time as a control</li>
-                          <li>Cleaning schedules & inspections</li>
-                          <li>“Is this a violation?” with context</li>
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div className="sheet-footer">
-                      <span className="mini-chip" aria-hidden="true">
-                        <Icons.Camera />
-                        Camera = photo scan
-                      </span>
-                      <span>Same screen. Same input. No workflow detours.</span>
-                    </div>
+                  <div className="chat-empty-state">
+                    <p className="chat-empty-text">
+                      Upload a photo or ask a question about Washtenaw County food safety regulations.
+                    </p>
                   </div>
                 ) : (
                   <div className="chat-history">
@@ -2693,26 +2662,16 @@ export default function Page() {
                       onChange={handleImageChange}
                     />
 
-                    <div className="chat-input-wrapper">
-                      <button
-                        onClick={() => {
-                          markCameraNudgeSeen()
-                          fileInputRef.current?.click()
-                        }}
-                        className="chat-tool-btn"
-                        aria-label="Upload photo"
-                        type="button"
-                        title="Photo scan"
-                      >
-                        <Icons.Camera />
-                        {showCameraNudge && (
-                          <div className="camera-nudge" aria-hidden="true">
-                            Photo scan
-                            <span style={{ opacity: 0.85 }}>→</span>
-                          </div>
-                        )}
-                      </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="chat-camera-btn"
+                      aria-label="Upload photo"
+                      type="button"
+                    >
+                      <Icons.Camera />
+                    </button>
 
+                    <div className="chat-input-wrapper">
                       <textarea
                         ref={textAreaRef}
                         value={input}
@@ -2723,7 +2682,7 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Start with a photo or ask a question…"
+                        placeholder="Ask a question…"
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
@@ -2740,7 +2699,6 @@ export default function Page() {
                         disabled={(!input.trim() && !selectedImage) || isSending}
                         className="chat-send-btn"
                         aria-label="Send"
-                        title="Send"
                       >
                         {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
                       </button>
@@ -2776,3 +2734,4 @@ export default function Page() {
     </>
   )
 }
+
