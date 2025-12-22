@@ -125,12 +125,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-kicker">Multi-location ready</div>
 
           <div className="hero-headings">
-            <h1 className="hero-title">Catch violations, not fines.</h1>
-            <p className="hero-subtitle">
-              Take photos or use image analysis to catch violations before the inspector does in your establishment.
-            </p>
+            <h1 className="hero-title">Take photos to catch violations.</h1>
             <p className="hero-support">
-              Helps your whole team stay on top of Washtenaw County regulations and policies.
+              Helps your team stay on top of Washtenaw County regulations and policies.
             </p>
           </div>
 
@@ -141,7 +138,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               <span />
               <span />
             </div>
-            <button className="btn-primary hero-cta cta-pulse" onClick={onShowPricing} type="button">
+            <button className="btn-primary hero-cta" onClick={onShowPricing} type="button">
               Start trial
             </button>
           </div>
@@ -1447,16 +1444,9 @@ export default function Page() {
           margin: 0;
         }
 
-        .hero-subtitle {
-          margin: 0;
-          font-size: 18px;
-          line-height: 1.6;
-          color: var(--ink-1);
-        }
-
         .hero-support {
           margin: 0;
-          font-size: 15px;
+          font-size: 16px;
           line-height: 1.6;
           color: var(--ink-2);
         }
@@ -1467,6 +1457,7 @@ export default function Page() {
           gap: 14px;
           justify-content: center;
           flex-wrap: nowrap;
+          flex-direction: row;
         }
 
         .hero-cta {
@@ -1478,30 +1469,36 @@ export default function Page() {
           justify-content: center;
           font-size: 14px;
           border-radius: var(--radius-full);
-          box-shadow: 0 16px 40px rgba(59, 130, 246, 0.25);
           overflow: hidden;
+          box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18);
         }
 
         .hero-cta::after {
           content: '';
           position: absolute;
-          inset: -6px;
+          inset: -2px;
           border-radius: var(--radius-full);
-          background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.35), transparent 60%);
-          opacity: 0.65;
-          filter: blur(6px);
-          z-index: -1;
-          animation: hero-glow 2.2s ease-in-out infinite alternate;
+          padding: 1px;
+          background: linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.35), rgba(255,255,255,0.15));
+          background-size: 200% 200%;
+          animation: hero-trace 3s linear infinite;
+          mask: 
+            linear-gradient(#000 0 0) content-box, 
+            linear-gradient(#000 0 0);
+          mask-composite: exclude;
+          -webkit-mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          pointer-events: none;
         }
 
-        @keyframes hero-glow {
-          from {
-            transform: scale(0.98);
-            opacity: 0.45;
+        @keyframes hero-trace {
+          0% {
+            background-position: 0% 50%;
           }
-          to {
-            transform: scale(1.02);
-            opacity: 0.7;
+          100% {
+            background-position: 200% 50%;
           }
         }
 
@@ -1524,13 +1521,13 @@ export default function Page() {
 
         .hero-arrow span {
           display: block;
-          width: 11px;
-          height: 11px;
+          width: 12px;
+          height: 12px;
           border-bottom: 3px solid currentColor;
           border-right: 3px solid currentColor;
-          transform: rotate(-45deg);
-          margin: -6px;
-          animation: hero-arrow-animate 2s infinite;
+          transform: rotate(45deg);
+          margin: -4px;
+          animation: hero-arrow-animate 1.8s infinite;
         }
 
         .hero-arrow span:nth-child(2) {
@@ -1544,14 +1541,14 @@ export default function Page() {
         @keyframes hero-arrow-animate {
           0% {
             opacity: 0;
-            transform: rotate(-45deg) translate(-12px, -6px);
+            transform: rotate(45deg) translateX(-10px);
           }
           50% {
             opacity: 1;
           }
           100% {
             opacity: 0;
-            transform: rotate(-45deg) translate(12px, 6px);
+            transform: rotate(45deg) translateX(10px);
           }
         }
 
@@ -2325,7 +2322,7 @@ export default function Page() {
           background: transparent;
           border: none;
           color: var(--ink-0);
-          font-size: 14px;
+          font-size: 16px;
           line-height: 1.4;
           resize: none;
           font-family: inherit;
@@ -2384,6 +2381,18 @@ export default function Page() {
             gap: 10px;
             align-items: center;
             text-align: center;
+          }
+          .hero-arrow-text {
+            font-size: 13px;
+          }
+          .hero-arrow {
+            order: 1;
+          }
+          .hero-cta {
+            order: 2;
+          }
+          .hero-arrow-text {
+            order: 0;
           }
 
           .hero-headings {
