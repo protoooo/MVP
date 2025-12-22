@@ -8,7 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { Public_Sans, JetBrains_Mono } from 'next/font/google'
+import { IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
@@ -16,8 +16,7 @@ import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
 import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
 
-const uiSans = Public_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
-const uiMono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
@@ -58,17 +57,37 @@ const Icons = {
         strokeLinejoin="round"
       />
       <path
-        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2 1-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
+        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
   ),
+  Doc: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinejoin="round" />
+      <path d="M14 2v6h6" strokeLinejoin="round" />
+      <path d="M8 13h8M8 17h8M8 9h4" strokeLinecap="round" />
+    </svg>
+  ),
+  Wrench: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path
+        d="M14.7 6.3a4.5 4.5 0 0 0-5.9 5.9L3 18v3h3l5.8-5.8a4.5 4.5 0 0 0 5.9-5.9l-2.1 2.1-2.8-2.8 1.9-2.3z"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  Shield: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path
+        d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"
+        strokeLinejoin="round"
+      />
+      <path d="M9.5 12l1.8 1.8L15.8 9.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
 }
-
-/* -------------------------------------------------------------------------- */
-/* Brand + footer                                                               */
-/* -------------------------------------------------------------------------- */
 
 function BrandLink({ variant = 'landing' }) {
   return (
@@ -85,7 +104,7 @@ function BrandLink({ variant = 'landing' }) {
 
 function FooterLinks() {
   return (
-    <div className={`plm-footer-links ${uiMono.className}`}>
+    <div className={`plm-footer-links ${ibmMono.className}`}>
       <Link className="plm-footer-link" href="/terms">
         Terms
       </Link>
@@ -101,167 +120,129 @@ function FooterLinks() {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Landing: “government defense / clipboard extension”                          */
-/* - No demo chat (removed)                                                     */
-/* - Short, direct: problem → solution                                          */
-/* - Monochrome + steel + controlled blue                                       */
-/* -------------------------------------------------------------------------- */
-
-function IsoClipboardMark() {
-  // Monochrome, isometric-ish, “case file / clipboard” line art.
-  // No gradients. Stroke only.
-  return (
-    <svg className="iso-mark" viewBox="0 0 420 300" fill="none" aria-hidden="true">
-      {/* base plate */}
-      <path d="M94 98 232 40l140 58-138 60L94 98Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M94 98v128l140 58V158L94 98Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M374 98v128l-140 58V158l140-60Z" stroke="currentColor" strokeWidth="2" />
-      {/* clipboard clip */}
-      <path d="M204 72l28-12 34 14-28 12-34-14Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M204 72v18l34 14V86l-34-14Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M266 74v18l-28 12V86l28-12Z" stroke="currentColor" strokeWidth="2" />
-
-      {/* “photo frame” on the board */}
-      <path d="M164 132l92-40 96 40-92 40-96-40Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M164 132v70l96 40v-70l-96-40Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M352 132v70l-92 40v-70l92-40Z" stroke="currentColor" strokeWidth="2" />
-      {/* tiny camera glyph inside */}
-      <path
-        d="M236 168l12-5 13 6-12 5-13-6Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M241 172v10l13 6v-10l-13-6Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M261 169v10l-7 3v-10l7-3Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M249.5 180.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" strokeWidth="2" />
-
-      {/* “checklist lines” */}
-      <path d="M128 174l10-4 10 4-10 4-10-4Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M152 184l44-18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M152 202l52-22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M152 220l38-16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className={`${uiSans.className} landing-root`}>
+    <div className="landing-root">
       <header className="landing-topbar">
         <div className="plm-brand-wrap">
           <BrandLink variant="landing" />
         </div>
 
         <nav className="landing-top-actions" aria-label="Top actions">
-          <button onClick={onShowAuth} className="btn-ghost" type="button">
-            Sign in
-          </button>
           <button onClick={onShowPricing} className="btn-primary" type="button">
             Start trial
+          </button>
+          <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
+            Sign in
           </button>
         </nav>
       </header>
 
       <main className="landing-main" aria-label="protocolLM landing">
-        <section className="gov-hero" aria-label="Summary">
-          <div className="gov-hero-left">
-            <div className={`gov-kicker ${uiMono.className}`}>WASHTENAW COUNTY · FOOD SAFETY COMPLIANCE</div>
+        <section className="gov-panel" aria-label="Product summary">
+          <div className="gov-panel-clip" aria-hidden="true" />
 
-            <h1 className="gov-title">Catch violations early.</h1>
+          <div className="gov-kicker-row">
+            <span className={`gov-kicker ${ibmMono.className}`}>
+              <span className="gov-dot" aria-hidden="true" />
+              WASHTENAW COUNTY · FOOD SERVICE · COMPLIANCE UTILITY
+            </span>
+          </div>
 
-            <p className="gov-subtitle">
-              protocolLM turns photos and questions into clear, source-backed fixes — so operators can correct issues before the
-              inspection.
-            </p>
+          <h1 className="gov-title">Plain-language compliance checks.</h1>
 
-            <div className="gov-brief">
-              <div className="gov-brief-row">
-                <div className={`gov-label ${uiMono.className}`}>Problem</div>
-                <div className="gov-text">Rules are long. Staff turnover is real. The inspector is not.</div>
+          <p className="gov-subtitle">
+            Snap a photo or ask a question. protocolLM answers from the Washtenaw County guidance you’re held to.
+          </p>
+
+          <div className="gov-divider" role="separator" />
+
+          <div className="gov-steps" aria-label="How it works">
+            <div className="gov-step">
+              <div className="gov-step-icon" aria-hidden="true">
+                <Icons.Camera />
               </div>
-              <div className="gov-brief-row">
-                <div className={`gov-label ${uiMono.className}`}>Solution</div>
-                <div className="gov-text">One tool: take a photo or ask a question. Get the fix — in plain language.</div>
+              <div className="gov-step-body">
+                <div className="gov-step-title">
+                  Capture <span className={`gov-step-tag ${ibmMono.className}`}>PHOTO SCAN</span>
+                </div>
+                <div className="gov-step-text">Take a photo of prep, dish, storage, coolers, labels, sinks—anything.</div>
               </div>
             </div>
 
-            <div className="gov-actions">
-              <button className="btn-primary btn-lg" onClick={onShowPricing} type="button">
+            <div className="gov-step">
+              <div className="gov-step-icon" aria-hidden="true">
+                <Icons.Doc />
+              </div>
+              <div className="gov-step-body">
+                <div className="gov-step-title">
+                  Cross-check <span className={`gov-step-tag ${ibmMono.className}`}>LOCAL DOCS</span>
+                </div>
+                <div className="gov-step-text">Flags likely issues and ties them back to local requirements.</div>
+              </div>
+            </div>
+
+            <div className="gov-step">
+              <div className="gov-step-icon" aria-hidden="true">
+                <Icons.Wrench />
+              </div>
+              <div className="gov-step-body">
+                <div className="gov-step-title">
+                  Correct <span className={`gov-step-tag ${ibmMono.className}`}>FIX LIST</span>
+                </div>
+                <div className="gov-step-text">Clear steps your staff can do now—no fluff, no scare tactics.</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="gov-divider" role="separator" />
+
+          <div className="gov-actions">
+            <div className="gov-action-preview" aria-label="Tool preview (non-interactive)">
+              <button type="button" className="tool-btn tool-btn-camera" aria-label="Camera (preview)" disabled>
+                <Icons.Camera />
+                <span className={`tool-btn-label ${ibmMono.className}`}>SCAN</span>
+              </button>
+
+              <div className="tool-input-preview" aria-hidden="true">
+                <span className={`tool-placeholder ${ibmMono.className}`}>Ask about temps, date marks, sanitizer, hand sinks…</span>
+              </div>
+
+              <button type="button" className="tool-btn tool-btn-send" aria-label="Send (preview)" disabled>
+                <Icons.ArrowUp />
+              </button>
+            </div>
+
+            <div className="gov-cta-row">
+              <button className="btn-primary btn-primary-lg" onClick={onShowPricing} type="button">
                 Start trial
               </button>
-              <button className="btn-ghost btn-lg" onClick={onShowAuth} type="button">
+              <button className="btn-secondary btn-secondary-lg" onClick={onShowAuth} type="button">
                 Sign in
               </button>
             </div>
 
-            <div className="gov-features" aria-label="Capabilities">
-              <div className="gov-feature">
-                <div className={`gov-feature-title ${uiMono.className}`}>PHOTO CHECK</div>
-                <div className="gov-feature-body">Snap a station, cooler, sink, sanitizer setup — get likely violations + what to do next.</div>
-              </div>
-              <div className="gov-feature">
-                <div className={`gov-feature-title ${uiMono.className}`}>QUESTION CHECK</div>
-                <div className="gov-feature-body">Date marking, cooling, reheating, handwashing, sanitizer, temps, storage — quick answers.</div>
-              </div>
-              <div className="gov-feature">
-                <div className={`gov-feature-title ${uiMono.className}`}>SOURCE DISCIPLINE</div>
-                <div className="gov-feature-body">Built to stay grounded in local rules and official references — not “vibes.”</div>
-              </div>
-            </div>
-
-            <div className={`gov-footnote ${uiMono.className}`}>
-              Designed like compliance software: minimal, readable, operational.
-            </div>
-          </div>
-
-          <div className="gov-hero-right" aria-label="Visual identity">
-            <div className="gov-panel">
-              <div className={`gov-panel-head ${uiMono.className}`}>
-                FIELD CLIPBOARD · IMAGE ANALYSIS READY
-              </div>
-
-              <div className="gov-panel-body">
-                <div className="gov-iso">
-                  <IsoClipboardMark />
-                </div>
-
-                <div className="gov-panel-lines">
-                  <div className="gov-line">
-                    <span className={`gov-chip ${uiMono.className}`}>CAPTURE</span>
-                    <span className="gov-line-text">Photo → structured findings</span>
-                  </div>
-                  <div className="gov-line">
-                    <span className={`gov-chip ${uiMono.className}`}>CROSS-CHECK</span>
-                    <span className="gov-line-text">Local docs → practical fixes</span>
-                  </div>
-                  <div className="gov-line">
-                    <span className={`gov-chip ${uiMono.className}`}>CORRECT</span>
-                    <span className="gov-line-text">Next steps → faster compliance</span>
-                  </div>
-                </div>
-
-                <div className={`gov-panel-note ${uiMono.className}`}>
-                  Tip: Photo checks are the fastest path to useful results.
-                </div>
-              </div>
+            <div className={`gov-footnote ${ibmMono.className}`}>
+              Built like a utility. Designed for busy operators. <span className="gov-footnote-sep">·</span> 1,166
+              inspected establishments in Washtenaw County.
             </div>
           </div>
         </section>
 
-        <FooterLinks />
+        <section className="gov-statusbar" aria-label="Status bar">
+          <div className={`gov-status-left ${ibmMono.className}`}>
+            <span className="status-pill">
+              <Icons.Shield /> VERIFIED FLOW · CSRF · TURNSTILE
+            </span>
+            <span className="status-sep">·</span>
+            <span className="status-muted">No imagery. No hype. Just compliance.</span>
+          </div>
+
+          <div className={`gov-status-right ${ibmMono.className}`}>protocolLM · v1</div>
+        </section>
       </main>
+
+      <FooterLinks />
     </div>
   )
 }
@@ -366,13 +347,13 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`${uiSans.className} modal-card`}>
+        <div className="modal-card">
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
           <div className="modal-header">
-            <div className={`modal-eyebrow ${uiMono.className}`}>SECURE ACCESS</div>
+            <div className={`modal-kicker ${ibmMono.className}`}>ACCOUNT ACCESS</div>
             <h2 className="modal-title">
               {mode === 'signin' && 'Sign in'}
               {mode === 'signup' && 'Create account'}
@@ -382,7 +363,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
-              <label className={`form-label ${uiMono.className}`}>Email</label>
+              <label className={`form-label ${ibmMono.className}`}>Email</label>
               <input
                 type="email"
                 value={email}
@@ -396,7 +377,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
             {mode !== 'reset' && (
               <div className="form-group">
-                <label className={`form-label ${uiMono.className}`}>Password</label>
+                <label className={`form-label ${ibmMono.className}`}>Password</label>
                 <div className="form-input-wrap">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -407,8 +388,8 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     className="form-input"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className={`form-toggle-vis ${uiMono.className}`}>
-                    {showPassword ? 'Hide' : 'Show'}
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className={`form-toggle-vis ${ibmMono.className}`}>
+                    {showPassword ? 'HIDE' : 'SHOW'}
                   </button>
                 </div>
               </div>
@@ -420,26 +401,26 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
             </button>
           </form>
 
-          {message && <div className={`modal-message ${messageKind}`}>{message}</div>}
+          {message && <div className={`modal-message ${messageKind} ${ibmMono.className}`}>{message}</div>}
 
           <div className="modal-footer">
             {mode === 'signin' && (
               <>
-                <button type="button" onClick={() => setMode('reset')} className="modal-link">
+                <button type="button" onClick={() => setMode('reset')} className={`modal-link ${ibmMono.className}`}>
                   Forgot password?
                 </button>
-                <button type="button" onClick={() => setMode('signup')} className="modal-link">
+                <button type="button" onClick={() => setMode('signup')} className={`modal-link ${ibmMono.className}`}>
                   Create an account
                 </button>
               </>
             )}
             {mode === 'signup' && (
-              <button type="button" onClick={() => setMode('signin')} className="modal-link">
+              <button type="button" onClick={() => setMode('signin')} className={`modal-link ${ibmMono.className}`}>
                 Already have an account? Sign in
               </button>
             )}
             {mode === 'reset' && (
-              <button type="button" onClick={() => setMode('signin')} className="modal-link">
+              <button type="button" onClick={() => setMode('signin')} className={`modal-link ${ibmMono.className}`}>
                 ← Back to sign in
               </button>
             )}
@@ -497,9 +478,6 @@ export default function Page() {
   // ✅ Chat settings menu (gear dropdown)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
-
-  // ✅ Subtle camera nudge (UI only)
-  const [cameraNudge, setCameraNudge] = useState(false)
 
   // Close settings menu on outside click
   useEffect(() => {
@@ -573,22 +551,6 @@ export default function Page() {
   useEffect(() => {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
-
-  // ✅ UI-only: nudge camera gently on first empty screen (not obnoxious)
-  useEffect(() => {
-    if (!isAuthenticated) return
-    if (messages.length !== 0) return
-
-    try {
-      const used = window.localStorage.getItem('plm_camera_used')
-      if (used) return
-      setCameraNudge(true)
-      const t = setTimeout(() => setCameraNudge(false), 5500)
-      return () => clearTimeout(t)
-    } catch {
-      // ignore
-    }
-  }, [isAuthenticated, messages.length])
 
   // ============================================================================
   // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
@@ -982,14 +944,17 @@ export default function Page() {
 
       const lc = await fetchLocationCheckFromServer(session)
       if (cancelled) return
+
       if (!lc) return
 
+      // ✅ Step 3 behavior: log + store for banner
       logger.info('License validated', {
         userId: session.user.id,
         uniqueLocationsUsed: lc.uniqueLocationsUsed,
         locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
       })
 
+      // Store location check for banner
       setLocationCheck(lc)
     }
 
@@ -1005,7 +970,7 @@ export default function Page() {
     try {
       loadingToast = document.createElement('div')
       loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
+      loadingToast.className = 'plm-toast'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
@@ -1161,27 +1126,22 @@ export default function Page() {
     }
   }
 
-  const handleCameraClick = useCallback(() => {
-    try {
-      window.localStorage.setItem('plm_camera_used', '1')
-    } catch {
-      // ignore
-    }
-    setCameraNudge(false)
-    fileInputRef.current?.click()
-  }, [])
+  // small derived flags for UI only
+  const shouldNudgeScan = useMemo(() => {
+    return isAuthenticated && messages.length === 0 && !selectedImage && !isSending
+  }, [isAuthenticated, messages.length, selectedImage, isSending])
 
   if (isLoading) {
     return (
-      <div className={`${uiSans.className} loading-screen`}>
+      <div className="loading-screen">
         <div className="loading-content">
           <div className="loading-logo">
             <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
           </div>
-          <div className={`loading-label ${uiMono.className}`}>INITIALIZING</div>
-          <div className="loading-bar">
+          <div className="loading-bar" aria-label="Loading">
             <div className="loading-bar-fill" />
           </div>
+          <div className={`loading-meta ${ibmMono.className}`}>INITIALIZING · {loadingStage.toUpperCase()}</div>
         </div>
       </div>
     )
@@ -1191,33 +1151,37 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          /* Stainless / paper */
-          --bg-0: #f3f5f7; /* app background */
+          /* Stainless / government utility */
+          --bg-0: #f3f5f7; /* page */
           --bg-1: #ffffff; /* panels */
-          --bg-2: #eef1f4; /* inputs */
-          --bg-3: #e5e9ef; /* rails */
+          --bg-2: #eef1f4; /* wells */
+          --bg-3: #e6ebf0; /* stronger well */
 
-          /* Ink (monochrome, “defense”) */
-          --ink-0: #0b1220;
-          --ink-1: #1a2636;
-          --ink-2: #4a5566;
-          --ink-3: #6b778a;
+          --ink-0: #0b1220; /* primary text */
+          --ink-1: #273043; /* secondary */
+          --ink-2: #5d6678; /* muted */
+          --ink-3: #8c95a6; /* faint */
 
-          /* Controlled blue (not “SaaS gradient blue”) */
-          --accent: #0b5bd3;
-          --accent-hover: #084aa9;
-          --accent-dim: rgba(11, 91, 211, 0.14);
+          /* From your logo palette (dominant blues) */
+          --accent: #2e66db;
+          --accent-ink: #0a34a8;
+          --accent-dim: rgba(46, 102, 219, 0.12);
+          --accent-dim-2: rgba(46, 102, 219, 0.22);
 
-          --border-subtle: rgba(11, 18, 32, 0.12);
-          --border-default: rgba(11, 18, 32, 0.18);
-
-          --shadow-soft: 0 14px 40px rgba(11, 18, 32, 0.12);
-          --shadow-tight: 0 10px 24px rgba(11, 18, 32, 0.12);
+          --border-subtle: rgba(11, 18, 32, 0.10);
+          --border-default: rgba(11, 18, 32, 0.16);
 
           --radius-sm: 8px;
           --radius-md: 12px;
           --radius-lg: 16px;
           --radius-full: 9999px;
+
+          --shadow-1: 0 10px 30px rgba(11, 18, 32, 0.08);
+          --shadow-2: 0 18px 60px rgba(11, 18, 32, 0.10);
+
+          /* “90s utility” bevel */
+          --bevel-hi: rgba(255, 255, 255, 0.95);
+          --bevel-lo: rgba(11, 18, 32, 0.14);
         }
 
         *,
@@ -1235,14 +1199,17 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
           overscroll-behavior-y: none;
+          font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji',
+            'Segoe UI Emoji';
         }
 
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background: var(--bg-0);
-          z-index: -1;
+        @supports (-webkit-touch-callout: none) {
+          html {
+            height: -webkit-fill-available;
+          }
+          body {
+            min-height: -webkit-fill-available;
+          }
         }
 
         a,
@@ -1267,17 +1234,22 @@ export default function Page() {
           background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(11, 18, 32, 0.18);
+          background: rgba(11, 18, 32, 0.14);
           border-radius: var(--radius-full);
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          *,
-          *::before,
-          *::after {
-            animation-duration: 0.01ms !important;
-            transition-duration: 0.01ms !important;
-          }
+        /* tiny toast used by billing portal */
+        .plm-toast {
+          position: fixed;
+          top: 16px;
+          right: 16px;
+          z-index: 9999;
+          background: var(--ink-0);
+          color: #fff;
+          padding: 10px 12px;
+          border-radius: 10px;
+          font-size: 12px;
+          box-shadow: var(--shadow-1);
         }
 
         /* Loading */
@@ -1295,27 +1267,25 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 18px;
+          gap: 16px;
+          padding: 18px;
+          text-align: center;
         }
 
         .loading-logo {
           width: 64px;
           height: 64px;
-          filter: saturate(1);
-        }
-
-        .loading-label {
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          color: var(--ink-2);
+          filter: drop-shadow(0 10px 20px rgba(11, 18, 32, 0.18));
         }
 
         .loading-bar {
           width: 140px;
-          height: 2px;
+          height: 6px;
           background: var(--bg-3);
           border-radius: var(--radius-full);
           overflow: hidden;
+          border: 1px solid var(--border-subtle);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .loading-bar-fill {
@@ -1325,16 +1295,23 @@ export default function Page() {
           animation: loading-slide 1s ease-in-out infinite;
         }
 
+        .loading-meta {
+          font-size: 11px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
         @keyframes loading-slide {
           0% {
-            transform: translateX(-110%);
+            transform: translateX(-120%);
           }
           100% {
             transform: translateX(420%);
           }
         }
 
-        /* App wrapper */
+        /* App */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
@@ -1353,7 +1330,7 @@ export default function Page() {
         }
 
         .plm-brand:hover {
-          opacity: 0.78;
+          opacity: 0.85;
         }
 
         .plm-brand-inner {
@@ -1381,51 +1358,108 @@ export default function Page() {
           white-space: nowrap;
         }
 
-        /* Buttons (defense / gov style) */
-        .btn-primary,
-        .btn-ghost {
-          height: 36px;
-          padding: 0 14px;
+        /* Buttons: government utility, not “SaaS pill” */
+        .btn-nav {
+          height: 34px;
+          padding: 0 12px;
+          background: transparent;
+          color: var(--ink-1);
+          border: 1px solid transparent;
           border-radius: var(--radius-sm);
           font-size: 13px;
           font-weight: 650;
           cursor: pointer;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-          font-family: inherit;
+          transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+        }
+
+        .btn-nav:hover {
+          color: var(--ink-0);
+          border-color: var(--border-subtle);
+          background: rgba(255, 255, 255, 0.35);
         }
 
         .btn-primary {
+          height: 34px;
+          padding: 0 14px;
           background: var(--accent);
           color: #fff;
-          border: 1px solid rgba(11, 91, 211, 0.65);
-          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
+          border: 1px solid rgba(11, 18, 32, 0.18);
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          font-weight: 750;
+          cursor: pointer;
+          transition: transform 0.08s ease, filter 0.12s ease;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
         }
 
         .btn-primary:hover {
-          background: var(--accent-hover);
-          border-color: rgba(8, 74, 169, 0.9);
+          filter: brightness(0.98);
         }
 
         .btn-primary:active {
           transform: translateY(1px);
         }
 
-        .btn-ghost {
-          background: transparent;
-          border: 1px solid var(--border-default);
-          color: var(--ink-1);
-        }
-
-        .btn-ghost:hover {
-          border-color: rgba(11, 18, 32, 0.28);
-          background: rgba(255, 255, 255, 0.6);
-        }
-
-        .btn-lg {
+        .btn-primary-lg {
           height: 44px;
           padding: 0 16px;
           font-size: 14px;
-          border-radius: 10px;
+        }
+
+        .btn-secondary {
+          height: 34px;
+          padding: 0 14px;
+          background: var(--bg-1);
+          color: var(--ink-0);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          font-weight: 750;
+          cursor: pointer;
+          transition: transform 0.08s ease, background 0.12s ease;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.75);
+        }
+
+        .btn-secondary:active {
+          transform: translateY(1px);
+        }
+
+        .btn-secondary-lg {
+          height: 44px;
+          padding: 0 16px;
+          font-size: 14px;
+        }
+
+        /* Footer links */
+        .plm-footer-links {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+          padding: 18px 16px;
+          color: var(--ink-2);
+        }
+
+        .plm-footer-link {
+          color: var(--ink-2);
+          text-decoration: none;
+          font-size: 11px;
+          font-weight: 650;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          transition: color 0.12s ease;
+        }
+
+        .plm-footer-link:hover {
+          color: var(--ink-0);
+        }
+
+        .plm-footer-sep {
+          color: var(--ink-3);
         }
 
         /* Landing */
@@ -1439,273 +1473,312 @@ export default function Page() {
         }
 
         .landing-topbar {
-          position: sticky;
-          top: 0;
-          z-index: 20;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: max(18px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) 14px
-            max(22px, env(safe-area-inset-left));
-          background: rgba(243, 245, 247, 0.84);
-          backdrop-filter: blur(8px);
-          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
+          padding: max(18px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 14px
+            max(20px, env(safe-area-inset-left));
+          border-bottom: 1px solid var(--border-subtle);
+          background: rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(6px);
         }
 
         .landing-top-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
 
         .landing-main {
-          flex: 1;
+          width: 100%;
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 22px 20px 0;
+          padding-left: max(20px, env(safe-area-inset-left));
+          padding-right: max(20px, env(safe-area-inset-right));
           display: flex;
           flex-direction: column;
-          padding: 22px;
-          padding-bottom: max(24px, env(safe-area-inset-bottom));
+          gap: 14px;
         }
 
-        .gov-hero {
-          flex: 1;
-          max-width: 1080px;
-          margin: 0 auto;
-          width: 100%;
-          display: grid;
-          grid-template-columns: 1.1fr 0.9fr;
-          gap: 18px;
-          align-items: start;
-          padding: 18px 0 64px;
+        .gov-panel {
+          position: relative;
+          background: var(--bg-1);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-2);
+          overflow: hidden;
+
+          /* 90s/defense bevel edges */
+          box-shadow: var(--shadow-2), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
-        .gov-hero-left,
-        .gov-hero-right {
-          min-width: 0;
+        .gov-panel-clip {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 190px;
+          height: 16px;
+          background: var(--bg-3);
+          border: 1px solid var(--border-subtle);
+          border-top: 0;
+          border-radius: 0 0 12px 12px;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .gov-kicker-row {
+          padding: 22px 22px 0;
         }
 
         .gov-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
           font-size: 11px;
-          letter-spacing: 0.16em;
-          color: var(--ink-2);
+          letter-spacing: 0.10em;
           text-transform: uppercase;
-          margin-bottom: 10px;
+          color: var(--ink-2);
+        }
+
+        .gov-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 2px;
+          background: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
         .gov-title {
-          margin: 0 0 10px;
-          font-size: 42px;
-          line-height: 1.05;
+          margin: 10px 22px 0;
+          font-size: 30px;
+          line-height: 1.15;
           letter-spacing: -0.03em;
           color: var(--ink-0);
+          font-weight: 820;
         }
 
         .gov-subtitle {
-          margin: 0 0 16px;
-          font-size: 16px;
+          margin: 10px 22px 0;
+          font-size: 15px;
           line-height: 1.55;
           color: var(--ink-1);
-          max-width: 56ch;
+          max-width: 60ch;
         }
 
-        .gov-brief {
-          border: 1px solid var(--border-subtle);
-          background: var(--bg-1);
-          border-radius: var(--radius-lg);
-          padding: 14px 14px;
-          box-shadow: var(--shadow-soft);
+        .gov-divider {
+          height: 1px;
+          background: var(--border-subtle);
+          margin: 18px 0;
         }
 
-        .gov-brief-row {
+        .gov-steps {
           display: grid;
-          grid-template-columns: 92px 1fr;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 0 22px;
+        }
+
+        .gov-step {
+          display: grid;
+          grid-template-columns: 44px 1fr;
           gap: 12px;
-          padding: 10px 10px;
+          align-items: start;
+          padding: 12px 12px;
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          background: rgba(238, 241, 244, 0.65);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .gov-step-icon {
+          width: 44px;
+          height: 44px;
           border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--bg-1);
+          border: 1px solid var(--border-subtle);
+          color: var(--accent-ink);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
-        .gov-brief-row + .gov-brief-row {
-          border-top: 1px solid rgba(11, 18, 32, 0.08);
+        .gov-step-title {
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          color: var(--ink-0);
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
 
-        .gov-label {
-          font-size: 11px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
+        .gov-step-tag {
+          display: inline-flex;
+          align-items: center;
+          padding: 3px 7px;
+          border-radius: 8px;
+          border: 1px solid var(--border-subtle);
+          background: rgba(255, 255, 255, 0.7);
           color: var(--ink-2);
-          padding-top: 2px;
+          font-size: 10px;
+          letter-spacing: 0.10em;
+          text-transform: uppercase;
         }
 
-        .gov-text {
-          font-size: 14px;
+        .gov-step-text {
+          margin-top: 6px;
+          font-size: 13px;
           line-height: 1.55;
           color: var(--ink-1);
         }
 
         .gov-actions {
+          padding: 0 22px 22px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .gov-action-preview {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px;
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.75);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .tool-btn {
+          height: 44px;
+          border-radius: 12px;
+          border: 1px solid var(--border-default);
+          background: var(--bg-1);
+          color: var(--ink-1);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 0 10px;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          cursor: default;
+        }
+
+        .tool-btn:disabled {
+          opacity: 1;
+        }
+
+        .tool-btn-camera {
+          color: var(--accent);
+          border-color: rgba(46, 102, 219, 0.35);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(46, 102, 219, 0.15);
+        }
+
+        .tool-btn-label {
+          font-size: 10px;
+          letter-spacing: 0.12em;
+        }
+
+        .tool-input-preview {
+          flex: 1;
+          height: 44px;
+          border-radius: 12px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-2);
+          display: flex;
+          align-items: center;
+          padding: 0 12px;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          min-width: 0;
+        }
+
+        .tool-placeholder {
+          font-size: 11px;
+          letter-spacing: 0.02em;
+          color: var(--ink-2);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .tool-btn-send {
+          width: 44px;
+          padding: 0;
+          color: var(--ink-2);
+        }
+
+        .gov-cta-row {
           display: flex;
           gap: 10px;
           align-items: center;
-          margin-top: 14px;
-          margin-bottom: 14px;
-        }
-
-        .gov-features {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-          margin-top: 10px;
-          max-width: 62ch;
-        }
-
-        .gov-feature {
-          border: 1px solid rgba(11, 18, 32, 0.10);
-          background: rgba(255, 255, 255, 0.72);
-          border-radius: 14px;
-          padding: 12px 12px;
-        }
-
-        .gov-feature-title {
-          font-size: 11px;
-          letter-spacing: 0.16em;
-          color: var(--ink-2);
-          text-transform: uppercase;
-          margin-bottom: 6px;
-        }
-
-        .gov-feature-body {
-          font-size: 14px;
-          line-height: 1.5;
-          color: var(--ink-1);
         }
 
         .gov-footnote {
-          margin-top: 12px;
           font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--ink-2);
+        }
+
+        .gov-footnote-sep {
+          margin: 0 8px;
           color: var(--ink-3);
         }
 
-        .gov-panel {
-          border: 1px solid var(--border-default);
-          background: var(--bg-1);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          box-shadow: var(--shadow-tight);
-        }
-
-        .gov-panel-head {
-          padding: 12px 14px;
-          font-size: 11px;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-          background: rgba(11, 18, 32, 0.03);
-          border-bottom: 1px solid rgba(11, 18, 32, 0.10);
-        }
-
-        .gov-panel-body {
-          padding: 14px 14px 14px;
-        }
-
-        .gov-iso {
+        .gov-statusbar {
           display: flex;
           align-items: center;
-          justify-content: center;
-          padding: 6px 6px 2px;
-          color: rgba(11, 18, 32, 0.78);
+          justify-content: space-between;
+          padding: 10px 4px 16px;
+          color: var(--ink-2);
         }
 
-        .iso-mark {
-          width: 100%;
-          max-width: 420px;
-          height: auto;
-          transform-origin: center;
-          animation: iso-float 4.8s ease-in-out infinite;
-        }
-
-        @keyframes iso-float {
-          0% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-6px);
-          }
-          100% {
-            transform: translateY(0px);
-          }
-        }
-
-        .gov-panel-lines {
-          margin-top: 10px;
-          display: grid;
-          gap: 8px;
-        }
-
-        .gov-line {
+        .gov-status-left {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 10px;
-          border: 1px solid rgba(11, 18, 32, 0.10);
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.7);
+          min-width: 0;
         }
 
-        .gov-chip {
+        .status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border-radius: 10px;
+          border: 1px solid var(--border-subtle);
+          background: rgba(255, 255, 255, 0.6);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
           font-size: 10px;
-          letter-spacing: 0.16em;
+          letter-spacing: 0.10em;
           text-transform: uppercase;
-          padding: 6px 8px;
-          border-radius: 999px;
-          border: 1px solid rgba(11, 18, 32, 0.16);
           color: var(--ink-1);
-          background: rgba(243, 245, 247, 0.9);
           white-space: nowrap;
         }
 
-        .gov-line-text {
-          font-size: 13px;
-          color: var(--ink-1);
-        }
-
-        .gov-panel-note {
-          margin-top: 10px;
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
+        .status-sep {
           color: var(--ink-3);
         }
 
-        /* Footer links */
-        .plm-footer-links {
-          position: fixed;
-          bottom: max(16px, env(safe-area-inset-bottom));
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          z-index: 10;
-          opacity: 0.9;
+        .status-muted {
+          color: var(--ink-2);
+          font-size: 10px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 46vw;
         }
 
-        .plm-footer-link {
-          color: var(--ink-2);
-          text-decoration: none;
-          font-size: 11px;
-          font-weight: 600;
+        .gov-status-right {
+          font-size: 10px;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          transition: color 0.15s ease;
-        }
-
-        .plm-footer-link:hover {
-          color: var(--ink-0);
-        }
-
-        .plm-footer-sep {
-          color: rgba(11, 18, 32, 0.28);
+          color: var(--ink-2);
+          white-space: nowrap;
         }
 
         /* Modals */
@@ -1713,13 +1786,13 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(11, 18, 32, 0.72);
+          background: rgba(11, 18, 32, 0.62);
           backdrop-filter: blur(6px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
-          animation: fade-in 0.15s ease;
+          animation: fade-in 0.12s ease;
         }
 
         @keyframes fade-in {
@@ -1734,13 +1807,13 @@ export default function Page() {
         .modal-container {
           width: 100%;
           max-width: 380px;
-          animation: modal-up 0.2s ease;
+          animation: modal-up 0.16s ease;
         }
 
         @keyframes modal-up {
           from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(8px);
           }
           to {
             opacity: 1;
@@ -1751,10 +1824,11 @@ export default function Page() {
         .modal-card {
           position: relative;
           background: var(--bg-1);
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          border: 1px solid var(--border-default);
           border-radius: var(--radius-lg);
-          padding: 26px;
-          box-shadow: 0 22px 70px rgba(11, 18, 32, 0.35);
+          padding: 22px;
+          box-shadow: var(--shadow-2);
+          box-shadow: var(--shadow-2), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .modal-close {
@@ -1766,34 +1840,36 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          border: 1px solid rgba(11, 18, 32, 0.10);
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
           color: var(--ink-2);
           cursor: pointer;
           border-radius: 10px;
-          transition: color 0.15s ease, background 0.15s ease;
+          transition: color 0.12s ease, background 0.12s ease;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .modal-close:hover {
           color: var(--ink-0);
-          background: rgba(11, 18, 32, 0.04);
+          background: var(--bg-3);
         }
 
         .modal-header {
-          margin-bottom: 18px;
+          margin-bottom: 16px;
+          padding-right: 36px;
         }
 
-        .modal-eyebrow {
-          font-size: 11px;
-          letter-spacing: 0.16em;
+        .modal-kicker {
+          font-size: 10px;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-2);
-          margin-bottom: 8px;
+          margin-bottom: 6px;
         }
 
         .modal-title {
-          font-size: 20px;
-          font-weight: 750;
+          font-size: 18px;
+          font-weight: 850;
           margin: 0;
           color: var(--ink-0);
           letter-spacing: -0.02em;
@@ -1812,33 +1888,33 @@ export default function Page() {
         }
 
         .form-label {
-          font-size: 11px;
-          letter-spacing: 0.14em;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-2);
-          font-weight: 700;
         }
 
         .form-input {
           width: 100%;
-          height: 44px;
+          height: 42px;
           padding: 0 12px;
           background: var(--bg-2);
-          border: 1px solid rgba(11, 18, 32, 0.14);
-          border-radius: 10px;
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
           color: var(--ink-0);
           font-size: 14px;
-          font-family: inherit;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          transition: border-color 0.12s ease, box-shadow 0.12s ease;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .form-input::placeholder {
-          color: rgba(11, 18, 32, 0.45);
+          color: var(--ink-3);
         }
 
         .form-input:focus {
-          border-color: rgba(11, 91, 211, 0.55);
-          box-shadow: 0 0 0 4px var(--accent-dim);
+          border-color: rgba(46, 102, 219, 0.55);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo), 0 0 0 3px var(--accent-dim);
         }
 
         .form-input-wrap {
@@ -1853,12 +1929,11 @@ export default function Page() {
           background: none;
           border: none;
           color: var(--ink-2);
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.14em;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           cursor: pointer;
-          font-family: inherit;
         }
 
         .form-toggle-vis:hover {
@@ -1867,25 +1942,29 @@ export default function Page() {
 
         .btn-submit {
           width: 100%;
-          height: 44px;
+          height: 42px;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
           background: var(--accent);
           color: #fff;
-          border: 1px solid rgba(11, 91, 211, 0.65);
-          border-radius: 10px;
+          border: 1px solid rgba(11, 18, 32, 0.18);
+          border-radius: var(--radius-sm);
           font-size: 14px;
-          font-weight: 750;
+          font-weight: 800;
           cursor: pointer;
-          font-family: inherit;
-          transition: background 0.15s ease;
+          transition: transform 0.08s ease, filter 0.12s ease;
           margin-top: 6px;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
         }
 
         .btn-submit:hover:not(:disabled) {
-          background: var(--accent-hover);
+          filter: brightness(0.98);
+        }
+
+        .btn-submit:active:not(:disabled) {
+          transform: translateY(1px);
         }
 
         .btn-submit:disabled {
@@ -1910,25 +1989,20 @@ export default function Page() {
 
         .modal-message {
           padding: 10px 12px;
-          background: rgba(11, 18, 32, 0.04);
-          border: 1px solid rgba(11, 18, 32, 0.10);
-          border-radius: 12px;
-          font-size: 13px;
-          color: var(--ink-1);
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
+          font-size: 11px;
+          letter-spacing: 0.04em;
           text-align: center;
           margin-top: 14px;
         }
 
         .modal-message.ok {
-          color: #067647;
-          border-color: rgba(6, 118, 71, 0.25);
-          background: rgba(6, 118, 71, 0.06);
+          color: #0a7a3f;
         }
-
         .modal-message.err {
           color: #b42318;
-          border-color: rgba(180, 35, 24, 0.22);
-          background: rgba(180, 35, 24, 0.06);
         }
 
         .modal-footer {
@@ -1942,18 +2016,18 @@ export default function Page() {
         .modal-link {
           background: none;
           border: none;
-          font-size: 13px;
-          color: var(--ink-0);
+          font-size: 11px;
+          color: var(--ink-1);
           cursor: pointer;
-          font-family: inherit;
-          opacity: 0.86;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
         }
 
         .modal-link:hover {
-          opacity: 1;
+          color: var(--ink-0);
         }
 
-        /* ✅ Turnstile/Recaptcha line -> one line (shrink only enough) */
+        /* Turnstile/Recaptcha badge: keep it tidy */
         .modal-card .recaptcha-badge,
         .modal-card .turnstile-badge,
         .modal-card .captcha-badge,
@@ -1965,7 +2039,33 @@ export default function Page() {
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 100%;
-          color: rgba(11, 18, 32, 0.55) !important;
+          color: var(--ink-2) !important;
+        }
+
+        /* Pricing feature rows (kept for your external PricingModal styles that rely on these hooks) */
+        .pricing-feature {
+          display: grid;
+          grid-template-columns: 16px 1fr;
+          column-gap: 10px;
+          align-items: start;
+          font-size: 13px;
+          line-height: 1.5;
+          opacity: 0.92;
+        }
+
+        .pricing-feature-check {
+          width: 16px;
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          line-height: 1;
+          margin-top: 2px;
+          font-size: 14px;
+        }
+
+        .pricing-feature-text {
+          display: block;
+          min-width: 0;
         }
 
         /* Chat */
@@ -1987,24 +2087,55 @@ export default function Page() {
 
         .chat-topbar {
           width: 100%;
+          border-bottom: 1px solid var(--border-subtle);
+          background: rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(6px);
+        }
+
+        .chat-topbar-inner {
           max-width: 980px;
           margin: 0 auto;
-          padding: 16px 22px;
-          padding-left: max(22px, env(safe-area-inset-left));
-          padding-right: max(22px, env(safe-area-inset-right));
+          padding: 14px 20px;
+          padding-left: max(20px, env(safe-area-inset-left));
+          padding-right: max(20px, env(safe-area-inset-right));
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-shrink: 0;
+          gap: 10px;
         }
 
         .chat-top-actions {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
         }
 
-        /* Settings menu */
+        .plan-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border-radius: 10px;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          border: 1px solid var(--border-subtle);
+          background: rgba(255, 255, 255, 0.7);
+          color: var(--ink-1);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          white-space: nowrap;
+        }
+
+        .plan-chip .plan-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 2px;
+          background: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        /* Settings gear dropdown */
         .chat-settings-wrap {
           position: relative;
           display: flex;
@@ -2012,22 +2143,23 @@ export default function Page() {
         }
 
         .chat-settings-btn {
-          width: 38px;
-          height: 38px;
+          width: 36px;
+          height: 36px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 255, 255, 0.7);
-          border: 1px solid rgba(11, 18, 32, 0.12);
+          background: var(--bg-1);
+          border: 1px solid var(--border-subtle);
           border-radius: 12px;
-          color: var(--ink-1);
+          color: var(--ink-2);
           cursor: pointer;
-          transition: border-color 0.15s ease, background 0.15s ease;
+          transition: background 0.12s ease, color 0.12s ease;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .chat-settings-btn:hover {
-          border-color: rgba(11, 18, 32, 0.22);
-          background: rgba(255, 255, 255, 0.95);
+          color: var(--ink-0);
+          background: var(--bg-2);
         }
 
         .chat-settings-menu {
@@ -2036,18 +2168,19 @@ export default function Page() {
           right: 0;
           min-width: 190px;
           background: var(--bg-1);
-          border: 1px solid rgba(11, 18, 32, 0.14);
+          border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
           padding: 8px;
-          box-shadow: var(--shadow-tight);
-          animation: dropdown-in 0.15s ease;
+          box-shadow: var(--shadow-1);
+          animation: dropdown-in 0.12s ease;
           z-index: 50;
+          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         @keyframes dropdown-in {
           from {
             opacity: 0;
-            transform: translateY(-6px);
+            transform: translateY(-4px);
           }
           to {
             opacity: 1;
@@ -2063,25 +2196,32 @@ export default function Page() {
           border: 1px solid transparent;
           border-radius: 10px;
           color: var(--ink-0);
-          font-size: 13px;
-          font-weight: 700;
+          font-size: 12px;
+          font-weight: 800;
           cursor: pointer;
-          font-family: inherit;
-          transition: background 0.15s ease, border-color 0.15s ease;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
         }
 
         .chat-settings-item:hover {
-          background: rgba(11, 18, 32, 0.04);
-          border-color: rgba(11, 18, 32, 0.10);
+          background: var(--bg-2);
+          border-color: var(--border-subtle);
         }
 
         .chat-settings-sep {
           height: 1px;
-          background: rgba(11, 18, 32, 0.10);
+          background: var(--border-subtle);
           margin: 6px 2px;
         }
 
-        /* Messages area as a “case file” */
+        .chat-shell {
+          flex: 1;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+        }
+
         .chat-messages {
           flex: 1;
           min-height: 0;
@@ -2089,141 +2229,70 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
-          padding: 0 22px 18px;
-        }
-
-        .chat-file {
-          max-width: 980px;
-          margin: 0 auto;
-          background: var(--bg-1);
-          border: 1px solid rgba(11, 18, 32, 0.12);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-soft);
-          overflow: hidden;
-        }
-
-        .chat-file-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 12px 14px;
-          border-bottom: 1px solid rgba(11, 18, 32, 0.10);
-          background: rgba(11, 18, 32, 0.03);
-        }
-
-        .chat-file-title {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          min-width: 0;
-        }
-
-        .chat-file-kicker {
-          font-size: 11px;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-        }
-
-        .chat-file-sub {
-          font-size: 13px;
-          color: var(--ink-1);
-          line-height: 1.35;
-        }
-
-        .chat-file-body {
-          padding: 14px 14px 10px;
-        }
-
-        .chat-empty {
-          padding: 10px 0 2px;
-          display: grid;
-          gap: 10px;
-        }
-
-        .chat-empty-card {
-          border: 1px solid rgba(11, 18, 32, 0.10);
-          background: rgba(255, 255, 255, 0.75);
-          border-radius: 14px;
-          padding: 12px 12px;
-        }
-
-        .chat-empty-title {
-          font-size: 12px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-          margin-bottom: 6px;
-        }
-
-        .chat-empty-text {
-          font-size: 14px;
-          color: var(--ink-1);
-          line-height: 1.55;
-          margin: 0;
-          max-width: 78ch;
+          padding: 0 20px 22px;
+          background: var(--bg-0);
         }
 
         .chat-history {
+          max-width: 980px;
+          margin: 0 auto;
+          width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          padding: 6px 0 4px;
+          gap: 18px;
+          padding-top: 16px;
+          padding-bottom: 6px;
         }
 
-        .chat-entry {
+        /* “Defense console” message format: label + content, no bubbles */
+        .chat-line {
           display: grid;
-          grid-template-columns: 120px 1fr;
-          gap: 12px;
+          grid-template-columns: 110px 1fr;
+          gap: 14px;
           align-items: start;
-          padding: 10px 10px;
-          border-radius: 14px;
-          border: 1px solid rgba(11, 18, 32, 0.08);
-          background: rgba(255, 255, 255, 0.72);
         }
 
-        .chat-entry.role-user {
-          border-left: 3px solid rgba(11, 18, 32, 0.22);
-        }
-
-        .chat-entry.role-assistant {
-          border-left: 3px solid rgba(11, 91, 211, 0.45);
-        }
-
-        .chat-role {
-          font-size: 11px;
-          letter-spacing: 0.16em;
+        .chat-label {
+          font-size: 10px;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
           color: var(--ink-2);
           padding-top: 2px;
           white-space: nowrap;
         }
 
-        .chat-body {
-          min-width: 0;
+        .chat-label.user {
+          color: var(--ink-1);
+        }
+
+        .chat-label.assistant {
+          color: var(--accent-ink);
+        }
+
+        .chat-content {
           font-size: 14px;
-          line-height: 1.65;
+          line-height: 1.7;
           color: var(--ink-0);
           white-space: pre-wrap;
           overflow-wrap: anywhere;
           word-break: break-word;
         }
 
-        .chat-body.assistant {
-          color: var(--ink-1);
-        }
-
         .chat-thinking {
+          font-size: 12px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
           color: var(--ink-2);
-          font-style: italic;
         }
 
         .chat-bubble-image {
-          border-radius: 12px;
+          border-radius: var(--radius-md);
           overflow: hidden;
+          display: inline-block;
           margin-bottom: 10px;
-          border: 1px solid rgba(11, 18, 32, 0.12);
-          background: rgba(243, 245, 247, 0.9);
+          border: 1px solid var(--border-subtle);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          background: var(--bg-1);
         }
 
         .chat-bubble-image img {
@@ -2233,45 +2302,68 @@ export default function Page() {
           object-fit: contain;
         }
 
-        /* Input area as “clipboard footer” */
+        .chat-empty-state {
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 22px 0 0;
+        }
+
+        .chat-empty-card {
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          background: var(--bg-1);
+          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          padding: 18px;
+        }
+
+        .chat-empty-title {
+          font-size: 14px;
+          font-weight: 850;
+          letter-spacing: -0.01em;
+          margin: 0;
+          color: var(--ink-0);
+        }
+
+        .chat-empty-text {
+          margin: 8px 0 0;
+          font-size: 13px;
+          line-height: 1.6;
+          color: var(--ink-1);
+          max-width: 70ch;
+        }
+
+        .chat-empty-hint {
+          margin-top: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(46, 102, 219, 0.35);
+          background: rgba(46, 102, 219, 0.08);
+          color: var(--ink-1);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(46, 102, 219, 0.12);
+        }
+
+        .chat-empty-hint .hint-label {
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+
+        /* Input area: “clipboard extension” */
         .chat-input-area {
           flex-shrink: 0;
-          padding: 0 22px 18px;
+          border-top: 1px solid var(--border-subtle);
+          background: rgba(255, 255, 255, 0.65);
+          backdrop-filter: blur(6px);
         }
 
         .chat-input-inner {
           max-width: 980px;
           margin: 0 auto;
-        }
-
-        .chat-input-shell {
-          background: rgba(255, 255, 255, 0.92);
-          border: 1px solid rgba(11, 18, 32, 0.14);
-          border-radius: 16px;
-          box-shadow: var(--shadow-soft);
-          overflow: hidden;
-        }
-
-        .chat-input-topline {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          padding: 10px 12px;
-          border-bottom: 1px solid rgba(11, 18, 32, 0.10);
-          background: rgba(11, 18, 32, 0.03);
-        }
-
-        .chat-input-label {
-          font-size: 11px;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-        }
-
-        .chat-input-hint {
-          font-size: 12px;
-          color: var(--ink-2);
+          padding: 12px 20px 18px;
+          padding-bottom: max(18px, env(safe-area-inset-bottom));
         }
 
         .chat-attachment {
@@ -2279,20 +2371,13 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           padding: 8px 10px;
-          background: rgba(11, 18, 32, 0.03);
-          border: 1px solid rgba(11, 18, 32, 0.10);
+          background: var(--bg-1);
           border-radius: 12px;
-          margin: 12px 12px 0;
-          font-size: 12px;
+          margin-bottom: 10px;
+          font-size: 11px;
           color: var(--ink-1);
-          width: calc(100% - 24px);
-          justify-content: space-between;
-        }
-
-        .chat-attachment-left {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
+          border: 1px solid var(--border-subtle);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .chat-attachment-icon {
@@ -2301,137 +2386,123 @@ export default function Page() {
         }
 
         .chat-attachment-remove {
-          width: 28px;
-          height: 28px;
+          width: 26px;
+          height: 26px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          border: 1px solid rgba(11, 18, 32, 0.12);
+          background: var(--bg-2);
+          border: 1px solid var(--border-subtle);
           color: var(--ink-2);
           cursor: pointer;
           border-radius: 10px;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .chat-attachment-remove:hover {
           color: var(--ink-0);
-          border-color: rgba(11, 18, 32, 0.22);
+          background: var(--bg-3);
         }
 
         .chat-input-row {
           display: flex;
           align-items: flex-end;
           gap: 10px;
-          padding: 12px;
         }
 
-        /* Camera button (subtle emphasis, not obnoxious) */
+        /* Camera button: “primary tool” without being obnoxious */
         .chat-camera-btn {
-          width: 46px;
           height: 46px;
-          display: flex;
+          min-width: 56px;
+          padding: 0 10px;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: rgba(243, 245, 247, 0.9);
-          border: 1px solid rgba(11, 91, 211, 0.35);
-          border-radius: 14px;
+          gap: 8px;
+          background: var(--bg-1);
+          border: 1px solid rgba(46, 102, 219, 0.35);
+          border-radius: 12px;
           color: var(--accent);
           cursor: pointer;
           flex-shrink: 0;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+          transition: box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease, transform 0.08s ease;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(46, 102, 219, 0.12);
           position: relative;
         }
 
         .chat-camera-btn:hover {
-          border-color: rgba(11, 91, 211, 0.55);
-          box-shadow: 0 0 0 4px var(--accent-dim);
-          background: #ffffff;
+          border-color: rgba(46, 102, 219, 0.55);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(46, 102, 219, 0.15),
+            0 0 0 3px var(--accent-dim);
         }
 
-        .chat-camera-btn.nudge::after {
+        .chat-camera-btn:active {
+          transform: translateY(1px);
+        }
+
+        .chat-camera-label {
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--accent-ink);
+        }
+
+        /* subtle “nudge” only when new + empty: faint scanning line */
+        .chat-camera-btn[data-nudge='true']::after {
           content: '';
           position: absolute;
-          inset: -6px;
-          border-radius: 18px;
-          border: 1px solid rgba(11, 91, 211, 0.22);
-          animation: nudge-ring 1.6s ease-in-out infinite;
+          inset: 6px;
+          border-radius: 10px;
           pointer-events: none;
+          border: 1px dashed rgba(46, 102, 219, 0.35);
+          animation: nudgePulse 2.1s ease-in-out infinite;
         }
 
-        @keyframes nudge-ring {
+        @keyframes nudgePulse {
           0% {
-            opacity: 0.0;
-            transform: scale(0.98);
+            opacity: 0.35;
           }
-          30% {
-            opacity: 0.55;
-          }
-          70% {
-            opacity: 0.15;
-            transform: scale(1.06);
+          50% {
+            opacity: 0.75;
           }
           100% {
-            opacity: 0.0;
-            transform: scale(1.08);
+            opacity: 0.35;
           }
-        }
-
-        .chat-nudge-pill {
-          position: absolute;
-          left: 0;
-          top: -36px;
-          transform: translateX(-2px);
-          background: rgba(255, 255, 255, 0.95);
-          border: 1px solid rgba(11, 18, 32, 0.14);
-          color: var(--ink-1);
-          border-radius: 999px;
-          padding: 6px 10px;
-          font-size: 11px;
-          letter-spacing: 0.02em;
-          box-shadow: 0 10px 24px rgba(11, 18, 32, 0.10);
-          white-space: nowrap;
-        }
-
-        .chat-nudge-pill b {
-          color: var(--accent);
-          font-weight: 800;
         }
 
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: var(--bg-2);
-          border: 1px solid rgba(11, 18, 32, 0.14);
-          border-radius: 14px;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          background: var(--bg-1);
+          border: 1px solid var(--border-default);
+          border-radius: 12px;
+          transition: box-shadow 0.12s ease, border-color 0.12s ease;
           min-width: 0;
-          overflow: hidden;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         .chat-input-wrapper:focus-within {
-          border-color: rgba(11, 91, 211, 0.55);
-          box-shadow: 0 0 0 4px var(--accent-dim);
-          background: rgba(255, 255, 255, 0.95);
+          border-color: rgba(46, 102, 219, 0.55);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo), 0 0 0 3px var(--accent-dim);
         }
 
         .chat-textarea {
           flex: 1;
           min-height: 46px;
-          max-height: 160px;
-          padding: 12px 14px;
+          max-height: 180px;
+          padding: 12px 12px;
           background: transparent;
           border: none;
           color: var(--ink-0);
           font-size: 14px;
-          line-height: 1.45;
+          line-height: 1.4;
           resize: none;
-          font-family: inherit;
           min-width: 0;
         }
 
         .chat-textarea::placeholder {
-          color: rgba(11, 18, 32, 0.45);
+          color: var(--ink-3);
         }
 
         .chat-textarea:focus {
@@ -2446,14 +2517,14 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: rgba(11, 18, 32, 0.55);
+          color: var(--ink-2);
           cursor: pointer;
           flex-shrink: 0;
-          transition: color 0.15s ease;
+          transition: color 0.12s ease;
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          color: var(--accent);
+          color: var(--accent-ink);
         }
 
         .chat-send-btn:disabled {
@@ -2472,83 +2543,113 @@ export default function Page() {
 
         .chat-disclaimer {
           text-align: center;
-          font-size: 11px;
-          color: rgba(11, 18, 32, 0.55);
-          margin: 10px 12px 12px;
+          font-size: 10px;
+          letter-spacing: 0.10em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          margin-top: 12px;
         }
 
         /* Responsive */
-        @media (max-width: 980px) {
-          .gov-hero {
-            grid-template-columns: 1fr;
-            padding-bottom: 110px;
-          }
-          .plm-footer-links {
-            position: static;
-            transform: none;
-            left: auto;
-            bottom: auto;
-            margin: 10px auto 0;
-            padding: 0 10px 18px;
-          }
-        }
-
         @media (max-width: 768px) {
-          .landing-main {
-            padding: 16px;
-          }
-
-          .gov-title {
-            font-size: 36px;
-          }
-
-          .gov-actions {
-            flex-direction: column;
-            align-items: stretch;
-          }
-
-          .gov-actions .btn-lg {
-            width: 100%;
-          }
-
-          .chat-topbar {
-            padding: 12px 16px;
-          }
-
-          .chat-messages {
-            padding: 0 16px 16px;
-          }
-
-          .chat-input-area {
-            padding: 0 16px 16px;
-          }
-
-          .chat-entry {
-            grid-template-columns: 1fr;
-            gap: 8px;
-          }
-
-          .chat-role {
-            order: 0;
-          }
-
-          .chat-body {
-            order: 1;
-          }
-
           .plm-brand-mark {
             width: 52px;
             height: 52px;
           }
+          .plm-brand-text {
+            font-size: 17px;
+          }
+
+          .gov-title {
+            font-size: 26px;
+          }
+
+          .gov-subtitle {
+            font-size: 14px;
+          }
+
+          .chat-line {
+            grid-template-columns: 86px 1fr;
+            gap: 12px;
+          }
+
+          .status-muted {
+            max-width: 40vw;
+          }
         }
 
         @media (max-width: 480px) {
-          .gov-title {
-            font-size: 32px;
+          .landing-topbar {
+            padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 12px
+              max(14px, env(safe-area-inset-left));
           }
 
-          .modal-card {
-            padding: 22px 18px;
+          .landing-main {
+            padding: 18px 14px 0;
+          }
+
+          .gov-kicker-row {
+            padding: 20px 16px 0;
+          }
+
+          .gov-title {
+            margin: 10px 16px 0;
+            font-size: 24px;
+          }
+
+          .gov-subtitle {
+            margin: 10px 16px 0;
+          }
+
+          .gov-steps {
+            padding: 0 16px;
+          }
+
+          .gov-actions {
+            padding: 0 16px 16px;
+          }
+
+          .gov-cta-row {
+            flex-direction: column;
+          }
+
+          .btn-primary-lg,
+          .btn-secondary-lg {
+            width: 100%;
+          }
+
+          .chat-topbar-inner {
+            padding: 12px 14px;
+          }
+
+          .chat-messages {
+            padding: 0 14px 18px;
+          }
+
+          .chat-input-inner {
+            padding: 10px 14px 14px;
+            padding-bottom: max(14px, env(safe-area-inset-bottom));
+          }
+
+          .chat-camera-btn {
+            min-width: 50px;
+          }
+
+          .chat-camera-label {
+            display: none;
+          }
+
+          .status-muted {
+            display: none;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
           }
         }
       `}</style>
@@ -2560,7 +2661,12 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2574,152 +2680,130 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${uiSans.className} chat-root`}>
+            <div className="chat-root">
               <header className="chat-topbar">
-                <BrandLink variant="chat" />
-                <nav className="chat-top-actions" aria-label="Chat actions">
-                  {session && subscription && (
-                    <div
-                      className={uiMono.className}
-                      style={{
-                        marginRight: '10px',
-                        padding: '6px 10px',
-                        borderRadius: '999px',
-                        fontSize: '11px',
-                        fontWeight: '800',
-                        letterSpacing: '0.12em',
-                        textTransform: 'uppercase',
-                        background: subscription.status === 'trialing' ? 'rgba(11, 91, 211, 0.08)' : 'rgba(6, 118, 71, 0.07)',
-                        color: subscription.status === 'trialing' ? 'rgba(11, 91, 211, 0.95)' : 'rgba(6, 118, 71, 0.95)',
-                        border: `1px solid ${subscription.status === 'trialing' ? 'rgba(11, 91, 211, 0.18)' : 'rgba(6, 118, 71, 0.18)'}`,
-                      }}
-                    >
-                      {subscription.status === 'trialing' ? 'Trial' : 'Active'}
-                    </div>
-                  )}
+                <div className="chat-topbar-inner">
+                  <BrandLink variant="chat" />
 
-                  <div className="chat-settings-wrap" ref={settingsRef}>
-                    <button
-                      type="button"
-                      className="chat-settings-btn"
-                      onClick={() => setShowSettingsMenu((v) => !v)}
-                      aria-expanded={showSettingsMenu}
-                      aria-label="Settings"
-                    >
-                      <Icons.Gear />
-                    </button>
-
-                    {showSettingsMenu && (
-                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                        <button
-                          type="button"
-                          className="chat-settings-item"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            if (hasActiveSubscription) {
-                              handleManageBilling()
-                            } else {
-                              setShowPricingModal(true)
-                            }
-                          }}
-                        >
-                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                        </button>
-
-                        <div className="chat-settings-sep" />
-
-                        <button
-                          type="button"
-                          className="chat-settings-item"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            handleSignOut()
-                          }}
-                        >
-                          Log out
-                        </button>
+                  <nav className="chat-top-actions" aria-label="Chat actions">
+                    {session && subscription && (
+                      <div className={`plan-chip ${ibmMono.className}`} aria-label="Plan status">
+                        <span className="plan-dot" aria-hidden="true" />
+                        {subscription.status === 'trialing' ? 'TRIAL' : 'PRO'}
                       </div>
                     )}
-                  </div>
-                </nav>
+
+                    <div className="chat-settings-wrap" ref={settingsRef}>
+                      <button
+                        type="button"
+                        className="chat-settings-btn"
+                        onClick={() => setShowSettingsMenu((v) => !v)}
+                        aria-expanded={showSettingsMenu}
+                        aria-label="Settings"
+                      >
+                        <Icons.Gear />
+                      </button>
+
+                      {showSettingsMenu && (
+                        <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
+                          <button
+                            type="button"
+                            className={`chat-settings-item ${ibmMono.className}`}
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              if (hasActiveSubscription) {
+                                handleManageBilling()
+                              } else {
+                                setShowPricingModal(true)
+                              }
+                            }}
+                          >
+                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                          </button>
+
+                          <div className="chat-settings-sep" />
+
+                          <button
+                            type="button"
+                            className={`chat-settings-item ${ibmMono.className}`}
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              handleSignOut()
+                            }}
+                          >
+                            Log out
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </nav>
+                </div>
               </header>
 
-              <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
-                <div className="chat-file">
-                  <div className="chat-file-head">
-                    <div className="chat-file-title">
-                      <div className={`chat-file-kicker ${uiMono.className}`}>CASE FILE</div>
-                      <div className="chat-file-sub">Washtenaw County food safety · photo checks + Q&A</div>
-                    </div>
-                    <div className={`chat-file-kicker ${uiMono.className}`} style={{ color: 'rgba(11,18,32,0.45)' }}>
-                      OPERATIONAL VIEW
-                    </div>
-                  </div>
+              <div className="chat-shell">
+                <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
+                  {messages.length === 0 ? (
+                    <div className="chat-empty-state">
+                      <div className="chat-empty-card">
+                        <p className="chat-empty-title">Start with a scan or a question.</p>
+                        <p className="chat-empty-text">
+                          Use the camera to cross-check a photo against Washtenaw County requirements, or type a question
+                          (temps, date marking, sanitizer, hand sinks, storage, cleaning, inspections).
+                        </p>
 
-                  <div className="chat-file-body">
-                    {messages.length === 0 ? (
-                      <div className="chat-empty">
-                        <div className="chat-empty-card">
-                          <div className={`chat-empty-title ${uiMono.className}`}>Photo check</div>
-                          <p className="chat-empty-text">
-                            Use the camera button to attach a photo. protocolLM will identify likely violations and the corrective steps.
-                          </p>
-                        </div>
-                        <div className="chat-empty-card">
-                          <div className={`chat-empty-title ${uiMono.className}`}>Question check</div>
-                          <p className="chat-empty-text">
-                            Ask about cooling, reheating, date marking, sanitizer strength, hand sinks, storage, temps — and get concise guidance.
-                          </p>
+                        <div className="chat-empty-hint" aria-label="Scan hint">
+                          <Icons.Camera />
+                          <span className={`hint-label ${ibmMono.className}`}>TIP</span>
+                          <span style={{ fontSize: 12, color: 'var(--ink-1)' }}>
+                            Camera is fastest—scan first, then ask follow-ups.
+                          </span>
                         </div>
                       </div>
-                    ) : (
-                      <div className="chat-history">
-                        {messages.map((msg, idx) => (
-                          <div key={idx} className={`chat-entry ${msg.role === 'user' ? 'role-user' : 'role-assistant'}`}>
-                            <div className={`chat-role ${uiMono.className}`}>{msg.role === 'user' ? 'Operator' : 'protocolLM'}</div>
-
-                            <div className={`chat-body ${msg.role === 'assistant' ? 'assistant' : ''}`}>
-                              {msg.image && (
-                                <div className="chat-bubble-image">
-                                  <img src={msg.image} alt="Uploaded" />
-                                </div>
-                              )}
-
-                              {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                                <div className="chat-thinking">Analyzing…</div>
-                              ) : (
-                                msg.content
-                              )}
-                            </div>
+                    </div>
+                  ) : (
+                    <div className="chat-history">
+                      {messages.map((msg, idx) => (
+                        <div key={idx} className="chat-line">
+                          <div
+                            className={`chat-label ${ibmMono.className} ${msg.role === 'user' ? 'user' : 'assistant'}`}
+                            aria-label={msg.role === 'user' ? 'User' : 'protocolLM'}
+                          >
+                            {msg.role === 'user' ? 'OPERATOR' : 'PROTOCOLLM'}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
 
-              <div className="chat-input-area">
-                <div className="chat-input-inner">
-                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+                          <div>
+                            {msg.image && (
+                              <div className="chat-bubble-image">
+                                <img src={msg.image} alt="Uploaded" />
+                              </div>
+                            )}
 
-                  <div className="chat-input-shell">
-                    <div className="chat-input-topline">
-                      <div className={`chat-input-label ${uiMono.className}`}>INPUT</div>
-                      <div className="chat-input-hint">Attach a photo for fastest results. Or ask a direct question.</div>
+                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                              <div className={`chat-thinking ${ibmMono.className}`}>ANALYZING…</div>
+                            ) : (
+                              <div className="chat-content">{msg.content}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  )}
+                </div>
+
+                <div className="chat-input-area">
+                  <div className="chat-input-inner">
+                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                     {selectedImage && (
                       <div className="chat-attachment">
-                        <span className="chat-attachment-left">
-                          <span className="chat-attachment-icon">
-                            <Icons.Camera />
-                          </span>
-                          <span>Image attached</span>
+                        <span className="chat-attachment-icon">
+                          <Icons.Camera />
                         </span>
-
+                        <span className={ibmMono.className} style={{ letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                          Image attached
+                        </span>
                         <button
                           onClick={() => setSelectedImage(null)}
                           className="chat-attachment-remove"
@@ -2732,16 +2816,23 @@ export default function Page() {
                     )}
 
                     <div className="chat-input-row">
-                      <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleImageChange}
+                      />
 
                       <button
-                        onClick={handleCameraClick}
-                        className={`chat-camera-btn ${cameraNudge ? 'nudge' : ''}`}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="chat-camera-btn"
                         aria-label="Upload photo"
                         type="button"
+                        data-nudge={shouldNudgeScan ? 'true' : 'false'}
                       >
-                        {cameraNudge && <div className={`chat-nudge-pill ${uiSans.className}`}>Try <b>Photo</b> check</div>}
                         <Icons.Camera />
+                        <span className={`chat-camera-label ${ibmMono.className}`}>SCAN</span>
                       </button>
 
                       <div className="chat-input-wrapper">
@@ -2752,7 +2843,7 @@ export default function Page() {
                             setInput(e.target.value)
                             if (textAreaRef.current) {
                               textAreaRef.current.style.height = 'auto'
-                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
+                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 180)}px`
                             }
                           }}
                           placeholder="Ask a question…"
@@ -2778,7 +2869,9 @@ export default function Page() {
                       </div>
                     </div>
 
-                    <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
+                    <p className={`chat-disclaimer ${ibmMono.className}`}>
+                      Verify critical decisions with official regulations.
+                    </p>
                   </div>
                 </div>
               </div>
