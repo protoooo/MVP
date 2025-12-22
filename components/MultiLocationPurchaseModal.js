@@ -1,10 +1,10 @@
-// components/MultiLocationPurchaseModal.js
-// Multi-location purchase modal - separate logins only, no discounts
+// components/MultiLocationPurchaseModal.js - FIXED: Auth validation
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import { IBM_Plex_Mono } from 'next/font/google'
+import { createClient } from '@/lib/supabase-browser'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -14,7 +14,37 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
   const [selectedLocations, setSelectedLocations] = useState(2)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  
   const { isLoaded, executeRecaptcha } = useRecaptcha()
+  const supabase = createClient()
+
+  // ✅ Check authentication when modal opens
+  useEffect(() => {
+    async function checkAuth() {
+      if (!isOpen) {
+        setCheckingAuth(true)
+        return
+      }
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setIsAuthenticated(!!user)
+        
+        if (!user) {
+          console.log('User not authenticated in purchase modal')
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+        setIsAuthenticated(false)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+    
+    checkAuth()
+  }, [isOpen, supabase])
 
   if (!isOpen) return null
 
@@ -22,6 +52,18 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
 
   const handlePurchase = async () => {
     if (loading || !isLoaded) return
+
+    // ✅ Double-check auth before purchase
+    if (!isAuthenticated) {
+      setError('Please sign in first')
+      onClose()
+      
+      sessionStorage.setItem('pendingMultiLocationPurchase', 'true')
+      window.dispatchEvent(new CustomEvent('openAuthModal', { 
+        detail: { mode: 'signup' } 
+      }))
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -48,6 +90,18 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
       const data = await res.json()
 
       if (!res.ok) {
+        // ✅ Handle auth errors
+        if (data.code === 'AUTH_REQUIRED') {
+          setError('Please sign in first')
+          onClose()
+          
+          sessionStorage.setItem('pendingMultiLocationPurchase', 'true')
+          window.dispatchEvent(new CustomEvent('openAuthModal', { 
+            detail: { mode: 'signup' } 
+          }))
+          return
+        }
+        
         setError(data.error || 'Failed to start purchase')
         setLoading(false)
         return
@@ -94,213 +148,266 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
             </p>
           </div>
 
-          {/* Location Count Selector */}
-          <div style={{ 
-            background: 'var(--bg-3)', 
-            border: '1px solid var(--border-subtle)', 
-            borderRadius: '12px', 
-            padding: '20px',
-            marginBottom: '20px'
-          }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '12px', 
-              fontWeight: '600', 
-              color: 'var(--ink-1)', 
-              marginBottom: '12px' 
-            }}>
-              Number of locations
-            </label>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <button
-                onClick={() => setSelectedLocations(Math.max(2, selectedLocations - 1))}
-                disabled={selectedLocations <= 2}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  background: selectedLocations <= 2 ? 'var(--bg-2)' : 'var(--accent)',
-                  color: selectedLocations <= 2 ? 'var(--ink-3)' : 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  cursor: selectedLocations <= 2 ? 'not-allowed' : 'pointer'
-                }}
-              >
-                −
-              </button>
-
-              <div style={{
-                flex: 1,
-                textAlign: 'center',
-                fontSize: '36px',
-                fontWeight: '700',
-                color: 'var(--ink-0)'
-              }}>
-                {selectedLocations}
-              </div>
-
-              <button
-                onClick={() => setSelectedLocations(Math.min(50, selectedLocations + 1))}
-                disabled={selectedLocations >= 50}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  background: selectedLocations >= 50 ? 'var(--bg-2)' : 'var(--accent)',
-                  color: selectedLocations >= 50 ? 'var(--ink-3)' : 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  cursor: selectedLocations >= 50 ? 'not-allowed' : 'pointer'
-                }}
-              >
-                +
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {[2, 3, 5, 10, 25].map(count => (
-                <button
-                  key={count}
-                  onClick={() => setSelectedLocations(count)}
-                  style={{
-                    padding: '6px 12px',
-                    background: selectedLocations === count ? 'var(--accent)' : 'var(--bg-2)',
-                    color: selectedLocations === count ? 'white' : 'var(--ink-1)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {count}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Pricing Summary */}
-          <div style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '20px',
-            color: 'white'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <div style={{ fontSize: '14px', opacity: 0.8 }}>Monthly Total</div>
-              <div style={{ fontSize: '36px', fontWeight: '700' }}>
-                ${monthlyPrice}
-              </div>
-            </div>
-
-            <div style={{ 
-              paddingTop: '12px', 
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              fontSize: '13px',
-              opacity: 0.8
-            }}>
-              ${PRICE_PER_LOCATION} × {selectedLocations} location{selectedLocations > 1 ? 's' : ''}
-            </div>
-          </div>
-
-          {/* What Happens Next */}
-          <div style={{ 
-            background: 'rgba(34, 197, 94, 0.1)', 
-            border: '1px solid rgba(34, 197, 94, 0.3)', 
-            borderRadius: '8px', 
-            padding: '16px',
-            marginBottom: '20px'
-          }}>
-            <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#22c55e', marginBottom: '8px' }}>
-              What happens next
-            </div>
-            <ol style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.8', margin: 0, paddingLeft: '20px' }}>
-              <li>You'll complete checkout for all {selectedLocations} locations</li>
-              <li>We'll email you {selectedLocations} unique signup links</li>
-              <li>Distribute links to each location manager</li>
-              <li>Each location creates their own account (no payment needed)</li>
-            </ol>
-          </div>
-
-          {/* Security Notice */}
-          <div style={{ 
-            background: 'rgba(59, 130, 246, 0.1)', 
-            border: '1px solid rgba(59, 130, 246, 0.3)', 
-            borderRadius: '8px', 
-            padding: '16px',
-            marginBottom: '20px'
-          }}>
-            <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#3b82f6', marginBottom: '8px' }}>
-              Important: Security & Compliance
-            </div>
-            <p style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.6', margin: 0 }}>
-              Each location must have its own account with unique login credentials. Sharing credentials across locations violates our Terms of Service and prevents accurate compliance tracking per location.
-            </p>
-          </div>
-
-          {error && (
+          {/* ✅ Show auth requirement if not authenticated */}
+          {!checkingAuth && !isAuthenticated && (
             <div style={{
-              padding: '12px',
+              padding: '20px',
               background: 'rgba(239, 68, 68, 0.1)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
               borderRadius: '8px',
-              color: '#ef4444',
-              fontSize: '14px',
-              marginBottom: '16px'
+              marginBottom: '20px',
+              textAlign: 'center'
             }}>
-              {error}
+              <p style={{ fontSize: '14px', color: '#ef4444', marginBottom: '16px', fontWeight: '600' }}>
+                ⚠️ Please sign in or create an account first
+              </p>
+              <button
+                onClick={() => {
+                  onClose()
+                  sessionStorage.setItem('pendingMultiLocationPurchase', 'true')
+                  window.dispatchEvent(new CustomEvent('openAuthModal', { 
+                    detail: { mode: 'signup' } 
+                  }))
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: 'var(--accent)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Sign Up / Sign In
+              </button>
             </div>
           )}
 
-          <button
-            onClick={handlePurchase}
-            disabled={loading || !isLoaded}
-            style={{
-              width: '100%',
-              height: '48px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              background: loading || !isLoaded ? 'var(--bg-3)' : 'var(--accent)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: loading || !isLoaded ? 'not-allowed' : 'pointer',
-              opacity: loading || !isLoaded ? 0.5 : 1
-            }}
-          >
-            {loading && (
+          {/* Show loading while checking auth */}
+          {checkingAuth && (
+            <div style={{
+              padding: '20px',
+              textAlign: 'center',
+              color: 'var(--ink-2)'
+            }}>
+              Checking authentication...
+            </div>
+          )}
+
+          {/* Only show form if authenticated */}
+          {!checkingAuth && isAuthenticated && (
+            <>
+              {/* Location Count Selector */}
+              <div style={{ 
+                background: 'var(--bg-3)', 
+                border: '1px solid var(--border-subtle)', 
+                borderRadius: '12px', 
+                padding: '20px',
+                marginBottom: '20px'
+              }}>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '12px', 
+                  fontWeight: '600', 
+                  color: 'var(--ink-1)', 
+                  marginBottom: '12px' 
+                }}>
+                  Number of locations
+                </label>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <button
+                    onClick={() => setSelectedLocations(Math.max(2, selectedLocations - 1))}
+                    disabled={selectedLocations <= 2}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      background: selectedLocations <= 2 ? 'var(--bg-2)' : 'var(--accent)',
+                      color: selectedLocations <= 2 ? 'var(--ink-3)' : 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      cursor: selectedLocations <= 2 ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    −
+                  </button>
+
+                  <div style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    fontSize: '36px',
+                    fontWeight: '700',
+                    color: 'var(--ink-0)'
+                  }}>
+                    {selectedLocations}
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedLocations(Math.min(50, selectedLocations + 1))}
+                    disabled={selectedLocations >= 50}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      background: selectedLocations >= 50 ? 'var(--bg-2)' : 'var(--accent)',
+                      color: selectedLocations >= 50 ? 'var(--ink-3)' : 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      cursor: selectedLocations >= 50 ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {[2, 3, 5, 10, 25].map(count => (
+                    <button
+                      key={count}
+                      onClick={() => setSelectedLocations(count)}
+                      style={{
+                        padding: '6px 12px',
+                        background: selectedLocations === count ? 'var(--accent)' : 'var(--bg-2)',
+                        color: selectedLocations === count ? 'white' : 'var(--ink-1)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pricing Summary */}
               <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid rgba(255,255,255,0.3)',
-                borderTopColor: 'white',
-                borderRadius: '50%',
-                animation: 'spin 0.6s linear infinite'
-              }} />
-            )}
-            <span>Purchase {selectedLocations} Location{selectedLocations > 1 ? 's' : ''} - ${monthlyPrice}/mo</span>
-          </button>
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                borderRadius: '12px',
+                padding: '20px',
+                marginBottom: '20px',
+                color: 'white'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '14px', opacity: 0.8 }}>Monthly Total</div>
+                  <div style={{ fontSize: '36px', fontWeight: '700' }}>
+                    ${monthlyPrice}
+                  </div>
+                </div>
 
-          <p style={{ 
-            marginTop: '16px', 
-            fontSize: '12px', 
-            color: 'var(--ink-2)', 
-            textAlign: 'center',
-            lineHeight: '1.5'
-          }}>
-            Questions about corporate or franchise pricing?<br />
-            Email <a href="mailto:support@protocollm.org" style={{ color: 'var(--accent)' }}>support@protocollm.org</a>
-          </p>
+                <div style={{ 
+                  paddingTop: '12px', 
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  fontSize: '13px',
+                  opacity: 0.8
+                }}>
+                  ${PRICE_PER_LOCATION} × {selectedLocations} location{selectedLocations > 1 ? 's' : ''}
+                </div>
+              </div>
 
-          <RecaptchaBadge />
+              {/* What Happens Next */}
+              <div style={{ 
+                background: 'rgba(34, 197, 94, 0.1)', 
+                border: '1px solid rgba(34, 197, 94, 0.3)', 
+                borderRadius: '8px', 
+                padding: '16px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#22c55e', marginBottom: '8px' }}>
+                  What happens next
+                </div>
+                <ol style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.8', margin: 0, paddingLeft: '20px' }}>
+                  <li>You'll complete checkout for all {selectedLocations} locations</li>
+                  <li>We'll email you {selectedLocations} unique signup links</li>
+                  <li>Distribute links to each location manager</li>
+                  <li>Each location creates their own account (no payment needed)</li>
+                </ol>
+              </div>
+
+              {/* Security Notice */}
+              <div style={{ 
+                background: 'rgba(59, 130, 246, 0.1)', 
+                border: '1px solid rgba(59, 130, 246, 0.3)', 
+                borderRadius: '8px', 
+                padding: '16px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#3b82f6', marginBottom: '8px' }}>
+                  Important: Security & Compliance
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.6', margin: 0 }}>
+                  Each location must have its own account with unique login credentials. Sharing credentials across locations violates our Terms of Service and prevents accurate compliance tracking per location.
+                </p>
+              </div>
+
+              {error && (
+                <div style={{
+                  padding: '12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '8px',
+                  color: '#ef4444',
+                  fontSize: '14px',
+                  marginBottom: '16px'
+                }}>
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handlePurchase}
+                disabled={loading || !isLoaded}
+                style={{
+                  width: '100%',
+                  height: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  background: loading || !isLoaded ? 'var(--bg-3)' : 'var(--accent)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: loading || !isLoaded ? 'not-allowed' : 'pointer',
+                  opacity: loading || !isLoaded ? 0.5 : 1
+                }}
+              >
+                {loading && (
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderTopColor: 'white',
+                    borderRadius: '50%',
+                    animation: 'spin 0.6s linear infinite'
+                  }} />
+                )}
+                <span>Purchase {selectedLocations} Location{selectedLocations > 1 ? 's' : ''} - ${monthlyPrice}/mo</span>
+              </button>
+
+              <p style={{ 
+                marginTop: '16px', 
+                fontSize: '12px', 
+                color: 'var(--ink-2)', 
+                textAlign: 'center',
+                lineHeight: '1.5'
+              }}>
+                Questions about corporate or franchise pricing?<br />
+                Email <a href="mailto:support@protocollm.org" style={{ color: 'var(--accent)' }}>support@protocollm.org</a>
+              </p>
+
+              <RecaptchaBadge />
+            </>
+          )}
         </div>
       </div>
 
