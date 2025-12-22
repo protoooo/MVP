@@ -103,230 +103,7 @@ function FooterLinks() {
   )
 }
 
-/* ------------------------------------------
-   Landing demo (scripted, user presses Send)
-------------------------------------------- */
-
-const LANDING_DEMO_STEPS = [
-  {
-    user: 'What does this do?',
-    assistant: "Snap a kitchen photo and I'll flag likely health-code violations — fast, plain language, plus what to fix.",
-  },
-  {
-    user: 'Nice. What else?',
-    assistant:
-      "Ask questions too — date marking, cooling, handwashing, sanitizer, temps, inspections. I answer from the Washtenaw County rules (not vibes).",
-  },
-  {
-    user: 'What kinds of violations do you catch?',
-    assistant:
-      'Common hits: cold food above 41°F, dirty or blocked hand sink, sanitizer too weak, unlabeled spray bottles, missing date marks, raw-over-ready, pest evidence, and cross-contamination risks.',
-  },
-  {
-    user: 'What can violations cost?',
-    assistant:
-      'Rough reality:\n• Small fixes (labels, minor cleaning, quick retrain): usually $0–$200\n• Moderate issues (discard food, deep clean, rework workflow): often $200–$2,000\n• Critical hits (unsafe temps, contaminated prep, repeat violations): $2,000–$10,000+ once you factor waste, labor, downtime, and emergency fixes.\n\nThe goal is catching them early — before they snowball.',
-  },
-  {
-    user: 'Got it. How do I try it?',
-    assistant: 'Whenever you are ready, hit Start trial.',
-    isFinal: true,
-  },
-]
-
-function LandingDemo({ onDemoDone }) {
-  const [msgs, setMsgs] = useState([{ role: 'assistant', content: 'Hey — welcome to protocolLM.' }])
-  const [stepIdx, setStepIdx] = useState(0)
-  const [draft, setDraft] = useState('')
-  const [phase, setPhase] = useState('typingDraft') // typingDraft | waitingSend | typingAssistant | done
-  const [isTyping, setIsTyping] = useState(false)
-
-  const timersRef = useRef([])
-  const scrollRef = useRef(null)
-  const reduceMotionRef = useRef(false)
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-  }, [])
-
-  const scrollToBottom = useCallback((behavior = 'smooth') => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior })
-  }, [])
-
-  const typeInto = useCallback(
-    async ({ text, setValue, speed = 22, jitter = 14, onDone }) => {
-      clearTimers()
-      setIsTyping(true)
-
-      // Reduced motion: instant
-      if (reduceMotionRef.current) {
-        setValue(text)
-        setIsTyping(false)
-        onDone?.()
-        return
-      }
-
-      let i = 0
-      const tick = () => {
-        i += 1
-        setValue(text.slice(0, i))
-        requestAnimationFrame(() => scrollToBottom('auto'))
-
-        if (i >= text.length) {
-          setIsTyping(false)
-          onDone?.()
-          return
-        }
-
-        const base = speed
-        const wait = base + Math.floor(Math.random() * jitter)
-        const t = setTimeout(tick, wait)
-        timersRef.current.push(t)
-      }
-
-      const t0 = setTimeout(tick, 220)
-      timersRef.current.push(t0)
-    },
-    [clearTimers, scrollToBottom]
-  )
-
-  const startDraftForStep = useCallback(
-    (idx) => {
-      const step = LANDING_DEMO_STEPS[idx]
-      if (!step) return
-      setPhase('typingDraft')
-      setDraft('')
-      typeInto({
-        text: step.user,
-        setValue: setDraft,
-        speed: 18,
-        jitter: 18,
-        onDone: () => setPhase('waitingSend'),
-      })
-    },
-    [typeInto]
-  )
-
-  const typeAssistantReply = useCallback(
-    (replyText, after) => {
-      setPhase('typingAssistant')
-      setMsgs((prev) => [...prev, { role: 'assistant', content: '' }])
-
-      typeInto({
-        text: replyText,
-        setValue: (val) => {
-          setMsgs((prev) => {
-            const next = [...prev]
-            next[next.length - 1] = { ...next[next.length - 1], content: val }
-            return next
-          })
-        },
-        speed: 16,
-        jitter: 18,
-        onDone: after,
-      })
-    },
-    [typeInto]
-  )
-
-  useEffect(() => {
-    reduceMotionRef.current =
-      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-
-    startDraftForStep(0)
-    return () => clearTimers()
-  }, [startDraftForStep, clearTimers])
-
-  useEffect(() => {
-    requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [msgs, scrollToBottom])
-
-  const canSend = phase === 'waitingSend' && !isTyping && !!draft
-
-  const handleSendDemo = useCallback(() => {
-    if (!canSend) return
-
-    const step = LANDING_DEMO_STEPS[stepIdx]
-    if (!step) return
-
-    setMsgs((prev) => [...prev, { role: 'user', content: draft }])
-    setDraft('')
-
-    typeAssistantReply(step.assistant, () => {
-      const nextIdx = stepIdx + 1
-      if (step.isFinal || !LANDING_DEMO_STEPS[nextIdx]) {
-        setPhase('done')
-        onDemoDone?.()
-        return
-      }
-      setStepIdx(nextIdx)
-      startDraftForStep(nextIdx)
-    })
-  }, [canSend, draft, stepIdx, startDraftForStep, typeAssistantReply, onDemoDone])
-
-  return (
-    <div className="landing-demo-window" aria-label="protocolLM demo">
-      <div className="landing-demo-header" aria-hidden="true">
-        <span className="terminal-dot red" />
-        <span className="terminal-dot yellow" />
-        <span className="terminal-dot green" />
-      </div>
-
-      <div className="landing-demo-body">
-        <div ref={scrollRef} className="landing-demo-messages" role="log" aria-live="polite">
-          {msgs.map((m, idx) => (
-            <div
-              key={idx}
-              className={`landing-demo-row ${m.role === 'user' ? 'is-user' : 'is-assistant'}`}
-              aria-label={m.role === 'user' ? 'User message' : 'Assistant message'}
-            >
-              <div className={`landing-demo-bubble ${m.role === 'user' ? 'user' : 'assistant'}`}>
-                <span className="landing-demo-text">{m.content}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="landing-demo-inputArea" aria-label="Demo input">
-          <div className="landing-demo-inputWrap">
-            <textarea
-              className="landing-demo-textarea"
-              value={draft}
-              readOnly
-              rows={1}
-              placeholder=""
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendDemo()
-                }
-              }}
-            />
-            <button
-              type="button"
-              className={`landing-demo-send ${canSend ? 'active' : ''}`}
-              onClick={handleSendDemo}
-              aria-label="Send demo message"
-            >
-              <Icons.ArrowUp />
-            </button>
-          </div>
-
-          <div className="landing-demo-hint" aria-hidden="true">
-            {phase === 'done' ? ' ' : 'Press Send (or Enter) to continue'}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const [demoDone, setDemoDone] = useState(false)
-
   return (
     <div className={`${ibmMono.className} landing-root`}>
       <div className="landing-bg" />
@@ -338,7 +115,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
         <nav className="landing-top-actions" aria-label="Top actions">
           <div className="landing-top-actions-desktop desktop-only">
-            <button onClick={onShowPricing} className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} type="button">
+            <button onClick={onShowPricing} className="btn-primary" type="button">
               Start trial
             </button>
           </div>
@@ -351,14 +128,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       <main className="landing-hero">
         <div className="hero-content">
-          <LandingDemo
-            onDemoDone={() => {
-              setDemoDone(true)
-            }}
-          />
-
           <div className="mobile-start mobile-only">
-            <button className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} onClick={onShowPricing} type="button">
+            <button className="btn-primary" onClick={onShowPricing} type="button">
               Start trial
             </button>
           </div>
@@ -2734,4 +2505,3 @@ export default function Page() {
     </>
   )
 }
-
