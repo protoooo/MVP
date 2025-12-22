@@ -8,25 +8,20 @@ import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
-import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
+import PricingModal from '@/components/PricingModal'
 
-const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-// ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
-// eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
-// lightweight logger (keeps your original “logger.info” style expectations)
 const logger = {
   info: (...args) => console.log(...args),
   warn: (...args) => console.warn(...args),
@@ -35,7 +30,7 @@ const logger = {
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
@@ -51,318 +46,62 @@ const Icons = {
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Sparkle: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-    </svg>
-  ),
-  Gear: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path
-        d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+  Menu: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="18" x2="21" y2="18" />
     </svg>
   ),
 }
 
 function BrandLink({ variant = 'landing' }) {
   return (
-    <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
-      <span className="plm-brand-inner">
-        <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={64} height={64} priority />
-        </span>
-        <span className="plm-brand-text">protocolLM</span>
-      </span>
+    <Link href="/" className="plm-brand" aria-label="protocolLM home">
+      <Image src={appleIcon} alt="" width={48} height={48} priority />
+      <span className="plm-brand-text">protocolLM</span>
     </Link>
   )
 }
 
 function FooterLinks() {
   return (
-    <div className={`plm-footer-links ${ibmMono.className}`}>
-      <Link className="plm-footer-link" href="/terms">
-        Terms
-      </Link>
-      <span className="plm-footer-sep">·</span>
-      <Link className="plm-footer-link" href="/privacy">
-        Privacy
-      </Link>
-      <span className="plm-footer-sep">·</span>
-      <Link className="plm-footer-link" href="/contact">
-        Contact
-      </Link>
-    </div>
-  )
-}
-
-/* ------------------------------------------
-   Landing demo (scripted, user presses Send)
-------------------------------------------- */
-
-const LANDING_DEMO_STEPS = [
-  {
-    user: 'What does this do?',
-    assistant:
-      "Snap a kitchen photo and I’ll cross-check it against local rules — then give you a clean list: what’s off + what to do next.",
-  },
-  {
-    user: 'Nice. What else?',
-    assistant:
-      'Ask questions too — date marking, cooling, handwashing, sanitizer, temps, inspections. Answers come from Washtenaw County guidance (not generic guesses).',
-  },
-  {
-    user: 'What kinds of issues do you catch?',
-    assistant:
-      'Common catches: cold food above 41°F, hand sink blocked, sanitizer too weak, unlabeled spray bottles, missing date marks, raw-over-ready storage, pest evidence, and cross-contamination risks.',
-  },
-  {
-    user: 'How does it help during a rush?',
-    assistant:
-      "You get quick, actionable output:\n• What to fix now\n• What to re-check (temps / sanitizer / setup)\n• What to document (labels / logs)\n\nIt’s a clipboard-style cross-check — not a lecture.",
-  },
-  {
-    user: 'Got it. How do I try it?',
-    assistant: 'Whenever you’re ready, hit Start trial.',
-    isFinal: true,
-  },
-]
-
-function LandingDemo({ onDemoDone }) {
-  const [msgs, setMsgs] = useState([{ role: 'assistant', content: 'Hey — welcome to protocolLM.' }])
-  const [stepIdx, setStepIdx] = useState(0)
-  const [draft, setDraft] = useState('')
-  const [phase, setPhase] = useState('typingDraft') // typingDraft | waitingSend | typingAssistant | done
-  const [isTyping, setIsTyping] = useState(false)
-
-  const timersRef = useRef([])
-  const scrollRef = useRef(null)
-  const reduceMotionRef = useRef(false)
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-  }, [])
-
-  const scrollToBottom = useCallback((behavior = 'smooth') => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior })
-  }, [])
-
-  const typeInto = useCallback(
-    async ({ text, setValue, speed = 22, jitter = 14, onDone }) => {
-      clearTimers()
-      setIsTyping(true)
-
-      // Reduced motion: instant
-      if (reduceMotionRef.current) {
-        setValue(text)
-        setIsTyping(false)
-        onDone?.()
-        return
-      }
-
-      let i = 0
-      const tick = () => {
-        i += 1
-        setValue(text.slice(0, i))
-        requestAnimationFrame(() => scrollToBottom('auto'))
-
-        if (i >= text.length) {
-          setIsTyping(false)
-          onDone?.()
-          return
-        }
-
-        const base = speed
-        const wait = base + Math.floor(Math.random() * jitter)
-        const t = setTimeout(tick, wait)
-        timersRef.current.push(t)
-      }
-
-      const t0 = setTimeout(tick, 220)
-      timersRef.current.push(t0)
-    },
-    [clearTimers, scrollToBottom]
-  )
-
-  const startDraftForStep = useCallback(
-    (idx) => {
-      const step = LANDING_DEMO_STEPS[idx]
-      if (!step) return
-      setPhase('typingDraft')
-      setDraft('')
-      typeInto({
-        text: step.user,
-        setValue: setDraft,
-        speed: 18,
-        jitter: 18,
-        onDone: () => setPhase('waitingSend'),
-      })
-    },
-    [typeInto]
-  )
-
-  const typeAssistantReply = useCallback(
-    (replyText, after) => {
-      setPhase('typingAssistant')
-      setMsgs((prev) => [...prev, { role: 'assistant', content: '' }])
-
-      typeInto({
-        text: replyText,
-        setValue: (val) => {
-          setMsgs((prev) => {
-            const next = [...prev]
-            next[next.length - 1] = { ...next[next.length - 1], content: val }
-            return next
-          })
-        },
-        speed: 16,
-        jitter: 18,
-        onDone: after,
-      })
-    },
-    [typeInto]
-  )
-
-  useEffect(() => {
-    reduceMotionRef.current =
-      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-
-    startDraftForStep(0)
-    return () => clearTimers()
-  }, [startDraftForStep, clearTimers])
-
-  useEffect(() => {
-    requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [msgs, scrollToBottom])
-
-  const canSend = phase === 'waitingSend' && !isTyping && !!draft
-
-  const handleSendDemo = useCallback(() => {
-    if (!canSend) return
-
-    const step = LANDING_DEMO_STEPS[stepIdx]
-    if (!step) return
-
-    setMsgs((prev) => [...prev, { role: 'user', content: draft }])
-    setDraft('')
-
-    typeAssistantReply(step.assistant, () => {
-      const nextIdx = stepIdx + 1
-      if (step.isFinal || !LANDING_DEMO_STEPS[nextIdx]) {
-        setPhase('done')
-        onDemoDone?.()
-        return
-      }
-      setStepIdx(nextIdx)
-      startDraftForStep(nextIdx)
-    })
-  }, [canSend, draft, stepIdx, startDraftForStep, typeAssistantReply, onDemoDone])
-
-  return (
-    <div className="landing-demo-window" aria-label="protocolLM demo">
-      <div className="landing-demo-header" aria-hidden="true">
-        <span className="terminal-dot red" />
-        <span className="terminal-dot yellow" />
-        <span className="terminal-dot green" />
-      </div>
-
-      <div className="landing-demo-body">
-        <div ref={scrollRef} className="landing-demo-messages" role="log" aria-live="polite">
-          {msgs.map((m, idx) => (
-            <div
-              key={idx}
-              className={`landing-demo-row ${m.role === 'user' ? 'is-user' : 'is-assistant'}`}
-              aria-label={m.role === 'user' ? 'User message' : 'Assistant message'}
-            >
-              <div className={`landing-demo-bubble ${m.role === 'user' ? 'user' : 'assistant'}`}>
-                <span className="landing-demo-text">{m.content}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="landing-demo-inputArea" aria-label="Demo input">
-          <div className="landing-demo-inputWrap">
-            <textarea
-              className="landing-demo-textarea"
-              value={draft}
-              readOnly
-              rows={1}
-              placeholder=""
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendDemo()
-                }
-              }}
-            />
-            <button
-              type="button"
-              className={`landing-demo-send ${canSend ? 'active' : ''}`}
-              onClick={handleSendDemo}
-              aria-label="Send demo message"
-            >
-              <Icons.ArrowUp />
-            </button>
-          </div>
-
-          <div className="landing-demo-hint" aria-hidden="true">
-            {phase === 'done' ? ' ' : 'Press Send (or Enter) to continue'}
-          </div>
-        </div>
-      </div>
+    <div className="plm-footer">
+      <Link href="/terms">Terms</Link>
+      <Link href="/privacy">Privacy</Link>
+      <Link href="/contact">Contact</Link>
     </div>
   )
 }
 
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const [demoDone, setDemoDone] = useState(false)
-
   return (
-    <div className={`${ibmMono.className} landing-root`}>
-      <div className="landing-bg" />
-
-      <header className="landing-topbar">
-        <div className="plm-brand-wrap">
-          <BrandLink variant="landing" />
-        </div>
-
-        <nav className="landing-top-actions" aria-label="Top actions">
-          <div className="landing-top-actions-desktop desktop-only">
-            <button onClick={onShowPricing} className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} type="button">
-              Start trial
-            </button>
-          </div>
-
-          <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
+    <div className={`${inter.className} landing-root`}>
+      <header className="landing-header">
+        <BrandLink variant="landing" />
+        <nav className="landing-nav">
+          <button onClick={onShowAuth} className="btn-ghost">
             Sign in
+          </button>
+          <button onClick={onShowPricing} className="btn-primary">
+            Start trial
           </button>
         </nav>
       </header>
 
-      <main className="landing-hero">
-        <div className="hero-content">
-          <LandingDemo
-            onDemoDone={() => {
-              setDemoDone(true)
-            }}
-          />
-
-          <div className="mobile-start mobile-only">
-            <button className={`btn-primary ${demoDone ? 'cta-pulse' : ''}`} onClick={onShowPricing} type="button">
-              Start trial
-            </button>
-          </div>
+      <main className="landing-main">
+        <div className="landing-content">
+          <h1 className="landing-title">
+            Food safety compliance
+            <br />
+            made simple
+          </h1>
+          <p className="landing-subtitle">
+            Snap a photo. Get instant violation checks. Stay compliant with Washtenaw County health code.
+          </p>
+          <button onClick={onShowPricing} className="btn-cta">
+            Start free trial
+          </button>
         </div>
       </main>
 
@@ -371,7 +110,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-// ✅ UPDATED: accepts selectedPriceId and passes it on signup
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -413,11 +151,9 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         endpoint = '/api/auth/reset-password'
       } else {
         body.password = password
-
         if (mode === 'signup' && selectedPriceId) {
           body.selectedPriceId = selectedPriceId
         }
-
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
@@ -471,18 +207,16 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${ibmMono.className}`}>
+        <div className={`modal-card ${inter.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
-          <div className="modal-header">
-            <h2 className="modal-title">
-              {mode === 'signin' && 'Sign in'}
-              {mode === 'signup' && 'Create account'}
-              {mode === 'reset' && 'Reset password'}
-            </h2>
-          </div>
+          <h2 className="modal-title">
+            {mode === 'signin' && 'Sign in'}
+            {mode === 'signup' && 'Create account'}
+            {mode === 'reset' && 'Reset password'}
+          </h2>
 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
@@ -511,7 +245,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     className="form-input"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle-vis">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle">
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
@@ -533,18 +267,18 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                   Forgot password?
                 </button>
                 <button type="button" onClick={() => setMode('signup')} className="modal-link">
-                  Create an account
+                  Create account
                 </button>
               </>
             )}
             {mode === 'signup' && (
               <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                Already have an account? Sign in
+                Already have an account?
               </button>
             )}
             {mode === 'reset' && (
               <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                ← Back to sign in
+                Back to sign in
               </button>
             )}
           </div>
@@ -560,7 +294,6 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
   const searchParams = useSearchParams()
-
   const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
 
   const [isLoading, setIsLoading] = useState(true)
@@ -573,8 +306,6 @@ export default function Page() {
   const [authInitialMode, setAuthInitialMode] = useState('signin')
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
-
-  // ✅ remember the selected Stripe price when user isn't logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -583,30 +314,26 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
-  // ✅ NEW: multi-location license state + modal
   const [locationCheck, setLocationCheck] = useState(null)
   const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
   const [showMultiLocationPurchaseModal, setShowMultiLocationPurchaseModal] = useState(false)
 
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
+  const [showMenu, setShowMenu] = useState(false)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
   const shouldAutoScrollRef = useRef(true)
+  const menuRef = useRef(null)
 
   const isAuthenticated = !!session
 
-  // ✅ Chat settings menu (gear dropdown)
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
-  const settingsRef = useRef(null)
-
-  // Close settings menu on outside click
   useEffect(() => {
     const onDown = (e) => {
-      if (!settingsRef.current) return
-      if (!settingsRef.current.contains(e.target)) setShowSettingsMenu(false)
+      if (!menuRef.current) return
+      if (!menuRef.current.contains(e.target)) setShowMenu(false)
     }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('touchstart', onDown, { passive: true })
@@ -616,43 +343,25 @@ export default function Page() {
     }
   }, [])
 
-  // ✅ NEW: Listen for multi-location upgrade events
   useEffect(() => {
-    const handleUpgradeEvent = () => {
-      setShowMultiLocationModal(true)
-    }
-
+    const handleUpgradeEvent = () => setShowMultiLocationModal(true)
     window.addEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-
-    return () => {
-      window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-    }
+    return () => window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
   }, [])
 
-  // ✅ NEW: Listen for multi-location purchase modal trigger
   useEffect(() => {
-    const handleOpenMultiLocationPurchase = () => {
-      setShowMultiLocationPurchaseModal(true)
-    }
-
+    const handleOpenMultiLocationPurchase = () => setShowMultiLocationPurchaseModal(true)
     window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
-
-    return () => {
-      window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
-    }
+    return () => window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
   }, [])
 
-  // Set view attribute for CSS + optional spline container hiding
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
     const splineContainer = document.getElementById('plm-spline-bg')
-    if (splineContainer) {
-      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
-    }
+    if (splineContainer) splineContainer.style.display = 'none'
   }, [isAuthenticated])
 
-  // Auto-scroll helpers
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
@@ -675,10 +384,6 @@ export default function Page() {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
-  // ============================================================================
-  // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
-  // Only show pricing via URL param if authenticated
-  // ============================================================================
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     const emailVerified = searchParams?.get('emailVerified')
@@ -686,7 +391,6 @@ export default function Page() {
     if (showPricing === 'true' && isAuthenticated) {
       if (hasActiveSubscription || subscription) {
         setShowPricingModal(false)
-
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
@@ -695,7 +399,6 @@ export default function Page() {
 
       if (!hasActiveSubscription && !subscription) {
         setShowPricingModal(true)
-
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
@@ -703,19 +406,14 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
-  // ============================================================================
-  // ✅ FIX 2: Keep ONLY this handleCheckout (full validation + CAPTCHA + verification)
-  // ============================================================================
   const handleCheckout = useCallback(
     async (priceId, planName) => {
       try {
-        // ✅ SECURITY: Validate price ID
         if (!priceId) {
           alert('Invalid price selected.')
           return
         }
 
-        // ✅ SECURITY: Verify priceId is one of the allowed values (single plan)
         const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
           console.error('Invalid price ID:', priceId)
@@ -726,7 +424,6 @@ export default function Page() {
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
-          // ✅ Store selected plan before showing auth
           console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
           setSelectedPriceId(priceId)
           setShowPricingModal(false)
@@ -735,7 +432,6 @@ export default function Page() {
           return
         }
 
-        // ✅ SECURITY: Check email is verified before allowing checkout
         if (!data.session.user.email_confirmed_at) {
           alert('Please verify your email before starting a trial. Check your inbox.')
           setShowPricingModal(false)
@@ -767,7 +463,6 @@ export default function Page() {
 
         const payload = await res.json().catch(() => ({}))
 
-        // ✅ SECURITY: Handle specific error codes
         if (!res.ok) {
           if (payload.code === 'EMAIL_NOT_VERIFIED') {
             alert('Please verify your email before starting a trial.')
@@ -799,7 +494,6 @@ export default function Page() {
     [supabase, captchaLoaded, executeRecaptcha, router]
   )
 
-  // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
     let isMounted = true
 
@@ -811,28 +505,21 @@ export default function Page() {
         setSubscription(null)
         setHasActiveSubscription(false)
         setShowPricingModal(false)
-
-        // ✅ clear multi-location states on logout
         setLocationCheck(null)
         setShowMultiLocationModal(false)
         setShowMultiLocationPurchaseModal(false)
-
         setIsLoading(false)
         return
       }
 
-      // ✅ CRITICAL: Check if email is verified + terms accepted
       try {
         if (!s.user.email_confirmed_at) {
           console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
           setHasActiveSubscription(false)
-
-          // ✅ clear multi-location states
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/verify-email')
           return
@@ -848,11 +535,9 @@ export default function Page() {
           console.error('❌ Profile check error:', profileError)
           setSubscription(null)
           setHasActiveSubscription(false)
-
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -861,11 +546,9 @@ export default function Page() {
         if (!profile) {
           setSubscription(null)
           setHasActiveSubscription(false)
-
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -875,11 +558,9 @@ export default function Page() {
         if (!accepted) {
           setSubscription(null)
           setHasActiveSubscription(false)
-
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
-
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -888,17 +569,14 @@ export default function Page() {
         console.error('❌ Policy check exception:', e)
         setSubscription(null)
         setHasActiveSubscription(false)
-
         setLocationCheck(null)
         setShowMultiLocationModal(false)
         setShowMultiLocationPurchaseModal(false)
-
         setIsLoading(false)
         router.replace('/accept-terms')
         return
       }
 
-      // ✅ CRITICAL: Check for active subscription
       let active = false
       let subData = null
 
@@ -927,7 +605,6 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
-      // ✅ if user lost subscription, clear location check so banner doesn't show incorrectly
       if (!subData) {
         setLocationCheck(null)
         setShowMultiLocationModal(false)
@@ -997,7 +674,6 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  // ✅ FIXED: Auto-checkout after email verification / auth callback
   useEffect(() => {
     const checkoutPlan = searchParams?.get('checkout')
     if (!checkoutPlan) return
@@ -1013,11 +689,6 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
-  // ============================================================================
-  // ✅ NEW: Fetch multi-location “license/locationCheck” after auth + subscription exists
-  // - This is intentionally non-blocking: it won’t affect isLoading
-  // - It safely no-ops if your endpoint isn’t present yet
-  // ============================================================================
   const fetchLocationCheckFromServer = useCallback(async (sess) => {
     try {
       const token = sess?.access_token
@@ -1050,7 +721,6 @@ export default function Page() {
       const data = await res.json().catch(() => null)
       if (!res.ok || !data) return null
 
-      // support either { locationCheck: {...} } or direct object
       return data.locationCheck || data
     } catch (e) {
       logger.warn('Location check fetch failed', e)
@@ -1062,7 +732,6 @@ export default function Page() {
     let cancelled = false
 
     async function run() {
-      // only for authenticated users with an active/trialing subscription record
       if (!isAuthenticated || !session?.user?.id || !subscription) return
 
       const lc = await fetchLocationCheckFromServer(session)
@@ -1070,14 +739,12 @@ export default function Page() {
 
       if (!lc) return
 
-      // ✅ Step 3 behavior: log + store for banner
       logger.info('License validated', {
         userId: session.user.id,
         uniqueLocationsUsed: lc.uniqueLocationsUsed,
         locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
       })
 
-      // Store location check for banner
       setLocationCheck(lc)
     }
 
@@ -1093,7 +760,7 @@ export default function Page() {
     try {
       loadingToast = document.createElement('div')
       loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
+      loadingToast.className = 'toast'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
@@ -1127,13 +794,10 @@ export default function Page() {
 
   const handleSignOut = async () => {
     try {
-      setShowSettingsMenu(false)
-
-      // ✅ clear multi-location states immediately
+      setShowMenu(false)
       setLocationCheck(null)
       setShowMultiLocationModal(false)
       setShowMultiLocationPurchaseModal(false)
-
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Sign out error', e)
@@ -1251,14 +915,10 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className={`loading-screen ${ibmMono.className}`}>
-        <div className="loading-content">
-          <div className="loading-logo">
-            <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
-          </div>
-          <div className="loading-bar">
-            <div className="loading-bar-fill" />
-          </div>
+      <div className={`loading ${inter.className}`}>
+        <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
+        <div className="loading-bar">
+          <div className="loading-fill" />
         </div>
       </div>
     )
@@ -1268,33 +928,19 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          /* Light “stainless + clean blue” */
-          --bg-0: #f8fafc; /* app backdrop */
-          --bg-1: #ffffff; /* card/surface */
-          --bg-2: #f1f5f9; /* elevated surface */
-          --bg-3: #e2e8f0; /* deeper surface */
-
-          --ink-0: #0f172a; /* primary text */
-          --ink-1: #334155; /* secondary text */
-          --ink-2: #64748b; /* muted */
-          --ink-3: #94a3b8; /* faint */
-
-          --accent: #2563eb; /* clean blue */
-          --accent-hover: #1d4ed8;
-          --accent-dim: rgba(37, 99, 235, 0.12);
-
-          --border-subtle: rgba(15, 23, 42, 0.08);
-          --border-default: rgba(15, 23, 42, 0.12);
-
-          --radius-sm: 8px;
-          --radius-md: 12px;
-          --radius-lg: 16px;
-          --radius-full: 9999px;
+          --steel: #e8eaed;
+          --steel-dark: #d1d5db;
+          --blue: #1e40af;
+          --blue-light: #3b82f6;
+          --blue-lighter: #60a5fa;
+          --ink: #111827;
+          --ink-light: #4b5563;
+          --ink-lighter: #9ca3af;
+          --border: #e5e7eb;
+          --shadow: rgba(0, 0, 0, 0.1);
         }
 
-        *,
-        *::before,
-        *::after {
+        * {
           box-sizing: border-box;
         }
 
@@ -1302,27 +948,10 @@ export default function Page() {
         body {
           height: 100%;
           margin: 0;
-          background: var(--bg-0);
-          background-color: var(--bg-0);
-          color: var(--ink-0);
+          background: var(--steel);
+          color: var(--ink);
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
-          overscroll-behavior-y: none;
-        }
-
-        /* Subtle “clipboard paper” vibe (very low contrast) */
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(ellipse 70% 50% at 50% 0%, rgba(37, 99, 235, 0.10), transparent 60%),
-            radial-gradient(ellipse 60% 50% at 15% 10%, rgba(37, 99, 235, 0.06), transparent 55%),
-            linear-gradient(rgba(15, 23, 42, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(15, 23, 42, 0.02) 1px, transparent 1px);
-          background-size: auto, auto, 48px 48px, 48px 48px;
-          background-position: center, center, 0 0, 0 0;
-          z-index: -1;
         }
 
         @supports (-webkit-touch-callout: none) {
@@ -1334,19 +963,9 @@ export default function Page() {
           }
         }
 
-        a,
-        button,
-        input,
-        textarea {
-          -webkit-tap-highlight-color: transparent;
-        }
-        :focus {
-          outline: none;
-        }
-
         ::selection {
-          background: var(--accent-dim);
-          color: var(--ink-0);
+          background: var(--blue-lighter);
+          color: white;
         }
 
         ::-webkit-scrollbar {
@@ -1356,55 +975,37 @@ export default function Page() {
           background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(15, 23, 42, 0.12);
-          border-radius: var(--radius-full);
+          background: var(--steel-dark);
+          border-radius: 4px;
         }
 
-        /* Loading */
-        .loading-screen {
+        .loading {
           position: fixed;
           inset: 0;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--bg-0);
-          z-index: 9999;
-        }
-
-        .loading-content {
-          display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
           gap: 32px;
-        }
-
-        .loading-logo {
-          width: 64px;
-          height: 64px;
-        }
-
-        .loading-logo img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
+          background: var(--steel);
         }
 
         .loading-bar {
           width: 120px;
-          height: 2px;
-          background: var(--bg-3);
-          border-radius: var(--radius-full);
+          height: 3px;
+          background: var(--border);
+          border-radius: 2px;
           overflow: hidden;
         }
 
-        .loading-bar-fill {
+        .loading-fill {
           height: 100%;
           width: 30%;
-          background: var(--accent);
-          animation: loading-slide 1s ease-in-out infinite;
+          background: var(--blue);
+          animation: loading 1s ease-in-out infinite;
         }
 
-        @keyframes loading-slide {
+        @keyframes loading {
           0% {
             transform: translateX(-100%);
           }
@@ -1413,472 +1014,207 @@ export default function Page() {
           }
         }
 
-        /* App */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          background: transparent;
         }
 
         /* Brand */
         .plm-brand {
-          color: var(--ink-0);
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          transition: opacity 0.15s ease;
-        }
-
-        .plm-brand:hover {
-          opacity: 0.75;
-        }
-
-        .plm-brand-inner {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
+          text-decoration: none;
+          color: var(--ink);
         }
 
-        .plm-brand-mark {
-          width: 64px;
-          height: 64px;
-          flex-shrink: 0;
-        }
-
-        .plm-brand-mark img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
+        .plm-brand img {
+          width: 48px;
+          height: 48px;
         }
 
         .plm-brand-text {
           font-size: 20px;
           font-weight: 700;
           letter-spacing: -0.02em;
-          white-space: nowrap;
-        }
-
-        .desktop-only {
-          display: flex;
-        }
-        .mobile-only {
-          display: none;
         }
 
         /* Landing */
         .landing-root {
-          position: relative;
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          background: transparent;
-          overflow: hidden;
+          background: var(--steel);
         }
 
-        .landing-bg {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(37, 99, 235, 0.10), transparent 65%);
-          pointer-events: none;
-        }
-
-        .landing-topbar {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
+        .landing-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
-            max(24px, env(safe-area-inset-left));
-          z-index: 10;
+          padding: 24px;
+          border-bottom: 1px solid var(--border);
+          background: white;
         }
 
-        .landing-top-actions {
+        .landing-nav {
           display: flex;
           align-items: center;
           gap: 8px;
         }
 
-        .landing-top-actions-desktop {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .btn-nav {
-          height: 36px;
-          padding: 0 14px;
+        .btn-ghost {
+          height: 40px;
+          padding: 0 16px;
           background: transparent;
-          color: var(--ink-2);
           border: none;
-          border-radius: var(--radius-sm);
-          font-size: 13px;
+          color: var(--ink-light);
+          font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: color 0.15s ease;
+          border-radius: 6px;
           font-family: inherit;
+          transition: color 0.15s;
         }
 
-        .btn-nav:hover {
-          color: var(--ink-0);
+        .btn-ghost:hover {
+          color: var(--ink);
         }
 
         .btn-primary {
-          height: 36px;
-          padding: 0 16px;
-          background: var(--accent);
-          color: #fff;
+          height: 40px;
+          padding: 0 20px;
+          background: var(--blue);
           border: none;
-          border-radius: var(--radius-sm);
-          font-size: 13px;
-          font-weight: 700;
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
           cursor: pointer;
-          transition: background 0.15s ease, box-shadow 0.15s ease;
+          border-radius: 6px;
           font-family: inherit;
-          box-shadow: 0 8px 18px rgba(37, 99, 235, 0.20);
+          transition: background 0.15s;
         }
 
         .btn-primary:hover {
-          background: var(--accent-hover);
+          background: var(--blue-light);
         }
 
-        .btn-primary.cta-pulse {
-          box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.22);
-          animation: cta-pulse 1.6s ease-in-out infinite;
-        }
-
-        @keyframes cta-pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.22);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
-          }
-        }
-
-        /* Hero */
-        .landing-hero {
+        .landing-main {
           flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 140px 24px 100px;
+          padding: 80px 24px;
         }
 
-        .hero-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 32px;
-          max-width: 720px;
-          width: 100%;
+        .landing-content {
+          max-width: 640px;
+          text-align: center;
         }
 
-        .mobile-start {
-          width: 100%;
-          display: none;
+        .landing-title {
+          font-size: 56px;
+          font-weight: 700;
+          line-height: 1.1;
+          margin: 0 0 24px;
+          color: var(--ink);
         }
 
-        .mobile-start .btn-primary {
-          width: 100%;
-          justify-content: center;
-          height: 44px;
-          font-size: 14px;
+        .landing-subtitle {
+          font-size: 20px;
+          line-height: 1.6;
+          color: var(--ink-light);
+          margin: 0 0 40px;
         }
 
-        .terminal-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: var(--radius-full);
-        }
-
-        .terminal-dot.red {
-          background: #ff5f57;
-        }
-        .terminal-dot.yellow {
-          background: #febc2e;
-        }
-        .terminal-dot.green {
-          background: #28c840;
-        }
-
-        /* Landing demo window */
-        .landing-demo-window {
-          width: 100%;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          box-shadow: 0 24px 90px rgba(15, 23, 42, 0.10);
-        }
-
-        .landing-demo-header {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 12px 14px;
-          background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
-          border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .landing-demo-body {
-          padding: 18px;
-        }
-
-        .landing-demo-messages {
-          height: 240px;
-          overflow-y: auto;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-          padding: 8px 6px 12px;
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          background: rgba(15, 23, 42, 0.02);
-        }
-
-        .landing-demo-messages::-webkit-scrollbar {
-          width: 0px;
-          height: 0px;
-        }
-
-        .landing-demo-row {
-          display: flex;
-          width: 100%;
-          margin: 10px 0;
-        }
-
-        .landing-demo-row.is-assistant {
-          justify-content: flex-start;
-        }
-
-        .landing-demo-row.is-user {
-          justify-content: flex-end;
-        }
-
-        /* ✅ no fill, no border — just font color difference */
-        .landing-demo-bubble {
-          max-width: min(560px, 82%);
-          padding: 0;
+        .btn-cta {
+          height: 56px;
+          padding: 0 32px;
+          background: var(--blue);
           border: none;
-          border-radius: 0;
-          line-height: 1.55;
-          font-size: 14px;
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
-          word-break: break-word;
-          background: transparent;
-        }
-
-        .landing-demo-bubble.assistant {
-          background: transparent;
-          color: var(--ink-1);
-          border: none;
-        }
-
-        .landing-demo-bubble.user {
-          background: transparent;
-          color: var(--ink-0);
-          border: none;
-        }
-
-        .landing-demo-inputArea {
-          margin-top: 14px;
-        }
-
-        /* ✅ no blue rectangle border (ever) */
-        .landing-demo-inputWrap {
-          display: flex;
-          align-items: stretch;
-          gap: 10px;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          padding: 10px 10px;
-          box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
-        }
-
-        .landing-demo-inputWrap:focus-within {
-          border-color: var(--border-default);
-          box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
-        }
-
-        .landing-demo-textarea {
-          flex: 1;
-          min-height: 44px;
-          max-height: 120px;
-          padding: 10px 10px;
-          background: transparent;
-          border: none;
-          color: var(--ink-0);
-          font-size: 14px;
-          line-height: 1.4;
-          resize: none;
-          font-family: inherit;
-          min-width: 0;
-          outline: none;
-        }
-
-        .landing-demo-textarea:focus {
-          outline: none;
-        }
-
-        .landing-demo-send {
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid var(--border-subtle);
-          background: var(--bg-2);
-          border-radius: 12px;
-          color: var(--ink-2);
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-        }
-
-        .landing-demo-send.active {
-          background: var(--accent);
-          border-color: rgba(37, 99, 235, 0.55);
           color: white;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          border-radius: 8px;
+          font-family: inherit;
+          transition: background 0.15s;
         }
 
-        .landing-demo-send:hover {
-          border-color: var(--border-default);
+        .btn-cta:hover {
+          background: var(--blue-light);
         }
 
-        .landing-demo-send.active:hover {
-          background: var(--accent-hover);
-        }
-
-        .landing-demo-hint {
-          margin-top: 8px;
-          padding-left: 4px;
-          font-size: 11px;
-          color: var(--ink-3);
-          letter-spacing: 0.02em;
-          user-select: none;
-        }
-
-        /* Footer links */
-        .plm-footer-links {
-          position: absolute;
-          bottom: max(20px, env(safe-area-inset-bottom));
+        .plm-footer {
+          position: fixed;
+          bottom: 24px;
           left: 50%;
           transform: translateX(-50%);
           display: flex;
-          align-items: center;
-          gap: 16px;
-          z-index: 10;
+          gap: 24px;
         }
 
-        .plm-footer-link {
-          color: var(--ink-2);
+        .plm-footer a {
+          color: var(--ink-lighter);
           text-decoration: none;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          transition: color 0.15s ease;
+          font-size: 13px;
+          font-weight: 500;
         }
 
-        .plm-footer-link:hover {
-          color: var(--ink-0);
-        }
-        .plm-footer-sep {
-          color: var(--ink-3);
+        .plm-footer a:hover {
+          color: var(--ink);
         }
 
-        /* Modals */
+        /* Modal */
         .modal-overlay {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(15, 23, 42, 0.55);
-          backdrop-filter: blur(6px);
+          background: rgba(0, 0, 0, 0.4);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
-          animation: fade-in 0.15s ease;
-        }
-
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
         }
 
         .modal-container {
           width: 100%;
-          max-width: 360px;
-          animation: modal-up 0.2s ease;
-        }
-
-        @keyframes modal-up {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          max-width: 400px;
         }
 
         .modal-card {
           position: relative;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          padding: 28px;
-          box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+          background: white;
+          border-radius: 12px;
+          padding: 32px;
+          box-shadow: 0 20px 60px var(--shadow);
         }
 
         .modal-close {
           position: absolute;
           top: 16px;
           right: 16px;
-          width: 28px;
-          height: 28px;
+          width: 32px;
+          height: 32px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--ink-2);
+          color: var(--ink-lighter);
           cursor: pointer;
-          border-radius: var(--radius-sm);
-          transition: color 0.15s ease, background 0.15s ease;
         }
 
         .modal-close:hover {
-          color: var(--ink-0);
-          background: rgba(15, 23, 42, 0.04);
-        }
-
-        .modal-header {
-          margin-bottom: 24px;
+          color: var(--ink);
         }
 
         .modal-title {
-          font-size: 18px;
-          font-weight: 800;
-          margin: 0;
-          color: var(--ink-0);
-          letter-spacing: -0.01em;
+          font-size: 24px;
+          font-weight: 700;
+          margin: 0 0 24px;
         }
 
         .modal-form {
@@ -1894,92 +1230,83 @@ export default function Page() {
         }
 
         .form-label {
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          color: var(--ink-1);
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--ink);
         }
 
         .form-input {
           width: 100%;
-          height: 42px;
+          height: 44px;
           padding: 0 12px;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
-          color: var(--ink-0);
+          background: var(--steel);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          color: var(--ink);
           font-size: 14px;
           font-family: inherit;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         .form-input::placeholder {
-          color: var(--ink-3);
+          color: var(--ink-lighter);
         }
+
         .form-input:focus {
-          border-color: rgba(37, 99, 235, 0.55);
-          box-shadow: 0 0 0 4px var(--accent-dim);
+          outline: none;
+          border-color: var(--blue);
         }
 
         .form-input-wrap {
           position: relative;
         }
 
-        .form-toggle-vis {
+        .form-toggle {
           position: absolute;
           right: 12px;
           top: 50%;
           transform: translateY(-50%);
           background: none;
           border: none;
-          color: var(--ink-2);
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
+          color: var(--blue);
+          font-size: 12px;
+          font-weight: 600;
           cursor: pointer;
           font-family: inherit;
-        }
-
-        .form-toggle-vis:hover {
-          color: var(--ink-0);
         }
 
         .btn-submit {
           width: 100%;
-          height: 42px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          background: var(--accent);
-          color: #fff;
+          background: var(--blue);
+          color: white;
           border: none;
-          border-radius: var(--radius-sm);
+          border-radius: 6px;
           font-size: 14px;
-          font-weight: 800;
+          font-weight: 600;
           cursor: pointer;
           font-family: inherit;
-          transition: background 0.15s ease, box-shadow 0.15s ease;
           margin-top: 8px;
-          box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
         }
 
         .btn-submit:hover:not(:disabled) {
-          background: var(--accent-hover);
+          background: var(--blue-light);
         }
+
         .btn-submit:disabled {
-          opacity: 0.55;
+          opacity: 0.5;
           cursor: not-allowed;
         }
 
         .spinner {
           width: 14px;
           height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.35);
-          border-top-color: #fff;
-          border-radius: var(--radius-full);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: white;
+          border-radius: 50%;
           animation: spin 0.6s linear infinite;
         }
 
@@ -1990,19 +1317,18 @@ export default function Page() {
         }
 
         .modal-message {
-          padding: 10px 12px;
-          background: rgba(15, 23, 42, 0.03);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
+          padding: 12px;
+          background: var(--steel);
+          border-radius: 6px;
           font-size: 13px;
-          color: var(--ink-1);
           text-align: center;
           margin-top: 16px;
         }
 
         .modal-message.ok {
-          color: #16a34a;
+          color: #059669;
         }
+
         .modal-message.err {
           color: #dc2626;
         }
@@ -2019,56 +1345,13 @@ export default function Page() {
           background: none;
           border: none;
           font-size: 13px;
-          color: var(--ink-0);
+          color: var(--blue);
           cursor: pointer;
           font-family: inherit;
-          opacity: 0.92;
-          font-weight: 600;
         }
 
         .modal-link:hover {
-          opacity: 1;
-        }
-
-        /* Turnstile/Recaptcha line -> one line */
-        .modal-card .recaptcha-badge,
-        .modal-card .turnstile-badge,
-        .modal-card .captcha-badge,
-        .modal-card [data-turnstile-badge],
-        .modal-card [data-recaptcha-badge] {
-          font-size: 10px !important;
-          white-space: nowrap !important;
-          line-height: 1.2 !important;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100%;
-          color: var(--ink-2);
-        }
-
-        /* Pricing feature rows */
-        .pricing-feature {
-          display: grid;
-          grid-template-columns: 16px 1fr;
-          column-gap: 10px;
-          align-items: start;
-          font-size: 13px;
-          line-height: 1.5;
-          opacity: 0.92;
-        }
-
-        .pricing-feature-check {
-          width: 16px;
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          line-height: 1;
-          margin-top: 2px;
-          font-size: 14px;
-        }
-
-        .pricing-feature-text {
-          display: block;
-          min-width: 0;
+          text-decoration: underline;
         }
 
         /* Chat */
@@ -2077,99 +1360,75 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: transparent;
           height: 100dvh;
           overflow: hidden;
         }
 
-        @supports (-webkit-touch-callout: none) {
-          .chat-root {
-            height: -webkit-fill-available;
-          }
-        }
-
-        .chat-topbar {
-          width: 100%;
-          max-width: 880px;
-          margin: 0 auto;
-          padding: 16px 24px;
-          padding-left: max(24px, env(safe-area-inset-left));
-          padding-right: max(24px, env(safe-area-inset-right));
+        .chat-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-shrink: 0;
+          padding: 16px 24px;
+          border-bottom: 1px solid var(--border);
+          background: white;
         }
 
-        .chat-top-actions {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        /* Settings gear dropdown */
-        .chat-settings-wrap {
+        .chat-menu-wrap {
           position: relative;
-          display: flex;
-          align-items: center;
         }
 
-        .chat-settings-btn {
-          width: 36px;
-          height: 36px;
+        .chat-menu-btn {
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
           border: none;
-          border-radius: var(--radius-sm);
-          color: var(--ink-2);
+          color: var(--ink-light);
           cursor: pointer;
-          transition: color 0.15s ease, background 0.15s ease;
+          border-radius: 6px;
         }
 
-        .chat-settings-btn:hover {
-          color: var(--ink-0);
-          background: rgba(15, 23, 42, 0.04);
+        .chat-menu-btn:hover {
+          background: var(--steel);
         }
 
-        .chat-settings-menu {
+        .chat-menu {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
           min-width: 180px;
-          background: var(--bg-1);
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-md);
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: 8px;
           padding: 8px;
-          box-shadow: 0 16px 48px rgba(15, 23, 42, 0.14);
-          animation: dropdown-in 0.15s ease;
+          box-shadow: 0 12px 40px var(--shadow);
           z-index: 50;
         }
 
-        .chat-settings-item {
+        .chat-menu-item {
           width: 100%;
           text-align: left;
-          padding: 10px 10px;
+          padding: 10px 12px;
           background: transparent;
           border: none;
-          border-radius: var(--radius-sm);
-          color: var(--ink-0);
-          font-size: 13px;
-          font-weight: 700;
+          color: var(--ink);
+          font-size: 14px;
+          font-weight: 600;
           cursor: pointer;
           font-family: inherit;
-          transition: background 0.15s ease;
+          border-radius: 4px;
         }
 
-        .chat-settings-item:hover {
-          background: rgba(15, 23, 42, 0.04);
+        .chat-menu-item:hover {
+          background: var(--steel);
         }
 
-        .chat-settings-sep {
+        .chat-menu-sep {
           height: 1px;
-          background: var(--border-subtle);
-          margin: 6px 2px;
+          background: var(--border);
+          margin: 8px 0;
         }
 
         .chat-messages {
@@ -2177,10 +1436,8 @@ export default function Page() {
           min-height: 0;
           overflow-y: auto;
           overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-          padding: 0 24px 32px;
-          background: transparent;
+          padding: 24px;
+          background: var(--steel);
         }
 
         .chat-messages.empty {
@@ -2189,110 +1446,98 @@ export default function Page() {
           justify-content: center;
         }
 
-        .chat-empty-text {
-          font-size: 14px;
-          color: var(--ink-2);
-          line-height: 1.6;
-          margin: 0;
+        .chat-empty {
+          font-size: 15px;
+          color: var(--ink-light);
+          text-align: center;
         }
 
         .chat-history {
-          max-width: 760px;
+          max-width: 800px;
           margin: 0 auto;
-          width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 28px;
-          padding-top: 16px;
-          padding-bottom: 6px;
+          gap: 24px;
         }
 
         .chat-message {
           display: flex;
-          width: 100%;
-          align-items: flex-start;
         }
+
         .chat-message-user {
           justify-content: flex-end;
         }
+
         .chat-message-assistant {
           justify-content: flex-start;
         }
 
         .chat-bubble {
-          max-width: 75%;
+          max-width: 70%;
+          padding: 14px 16px;
+          border-radius: 12px;
           font-size: 15px;
-          line-height: 1.7;
-          display: block;
+          line-height: 1.6;
         }
 
         .chat-bubble-user {
-          color: var(--ink-0);
+          background: var(--blue);
+          color: white;
         }
+
         .chat-bubble-assistant {
-          color: var(--ink-1);
+          background: white;
+          color: var(--ink);
+          border: 1px solid var(--border);
         }
 
         .chat-bubble-image {
-          border-radius: var(--radius-md);
-          overflow: hidden;
           margin-bottom: 12px;
-          display: inline-block;
-          border: 1px solid var(--border-subtle);
-          background: var(--bg-1);
+          border-radius: 8px;
+          overflow: hidden;
         }
 
         .chat-bubble-image img {
           display: block;
           max-width: 100%;
           max-height: 280px;
-          object-fit: contain;
         }
 
         .chat-content {
-          display: block;
           white-space: pre-wrap;
-          overflow-wrap: anywhere;
           word-break: break-word;
         }
 
         .chat-thinking {
-          display: block;
-          color: var(--ink-2);
+          color: var(--ink-lighter);
           font-style: italic;
         }
 
         .chat-input-area {
-          flex-shrink: 0;
-          border-top: 1px solid var(--border-subtle);
-          background: rgba(248, 250, 252, 0.85);
-          backdrop-filter: blur(8px);
+          border-top: 1px solid var(--border);
+          background: white;
+          padding: 16px 24px;
         }
 
         .chat-input-inner {
-          max-width: 760px;
+          max-width: 800px;
           margin: 0 auto;
-          padding: 16px 24px 24px;
-          padding-bottom: max(24px, env(safe-area-inset-bottom));
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           padding: 8px 12px;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
+          background: var(--steel);
+          border-radius: 6px;
           margin-bottom: 12px;
-          font-size: 12px;
-          color: var(--ink-1);
-          box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+          font-size: 13px;
+          color: var(--ink-light);
         }
 
         .chat-attachment-icon {
-          color: var(--accent);
-          display: flex;
+          color: var(--blue);
         }
 
         .chat-attachment-remove {
@@ -2303,77 +1548,69 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--ink-2);
+          color: var(--ink-lighter);
           cursor: pointer;
         }
 
         .chat-attachment-remove:hover {
-          color: var(--ink-0);
+          color: var(--ink);
         }
 
         .chat-input-row {
           display: flex;
           align-items: flex-end;
-          gap: 10px;
+          gap: 8px;
         }
 
-        /* Camera button: clean blue outline */
         .chat-camera-btn {
           width: 44px;
           height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--bg-1);
-          border: 1px solid rgba(37, 99, 235, 0.55);
-          border-radius: var(--radius-md);
-          color: var(--accent);
+          background: var(--steel);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--blue);
           cursor: pointer;
           flex-shrink: 0;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-          box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
         }
 
         .chat-camera-btn:hover {
-          border-color: rgba(37, 99, 235, 0.75);
-          box-shadow: 0 0 0 4px var(--accent-dim), 0 10px 20px rgba(15, 23, 42, 0.06);
+          background: var(--steel-dark);
         }
 
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
-          min-width: 0;
-          box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+          background: var(--steel);
+          border: 1px solid var(--border);
+          border-radius: 8px;
         }
 
         .chat-input-wrapper:focus-within {
-          border-color: rgba(37, 99, 235, 0.55);
-          box-shadow: 0 0 0 4px var(--accent-dim), 0 10px 20px rgba(15, 23, 42, 0.06);
+          border-color: var(--blue);
         }
 
         .chat-textarea {
           flex: 1;
           min-height: 44px;
           max-height: 160px;
-          padding: 12px 14px;
+          padding: 12px;
           background: transparent;
           border: none;
-          color: var(--ink-0);
+          color: var(--ink);
           font-size: 14px;
           line-height: 1.4;
           resize: none;
           font-family: inherit;
-          min-width: 0;
         }
 
         .chat-textarea::placeholder {
-          color: var(--ink-3);
+          color: var(--ink-lighter);
         }
+
         .chat-textarea:focus {
           outline: none;
         }
@@ -2386,15 +1623,14 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--ink-2);
+          color: var(--blue);
           cursor: pointer;
-          flex-shrink: 0;
-          transition: color 0.15s ease;
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          color: var(--accent);
+          color: var(--blue-light);
         }
+
         .chat-send-btn:disabled {
           opacity: 0.3;
           cursor: not-allowed;
@@ -2403,116 +1639,42 @@ export default function Page() {
         .chat-send-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid rgba(15, 23, 42, 0.14);
-          border-top-color: var(--accent);
-          border-radius: var(--radius-full);
+          border: 2px solid var(--border);
+          border-top-color: var(--blue);
+          border-radius: 50%;
           animation: spin 0.6s linear infinite;
         }
 
         .chat-disclaimer {
           text-align: center;
-          font-size: 11px;
-          color: var(--ink-3);
-          margin-top: 14px;
+          font-size: 12px;
+          color: var(--ink-lighter);
+          margin-top: 12px;
         }
 
-        /* Responsive */
+        .toast {
+          position: fixed;
+          top: 24px;
+          right: 24px;
+          background: var(--ink);
+          color: white;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+          z-index: 9999;
+        }
+
         @media (max-width: 768px) {
-          .landing-topbar {
-            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
-              max(16px, env(safe-area-inset-left));
-            gap: 14px;
+          .landing-title {
+            font-size: 40px;
           }
 
-          .desktop-only {
-            display: none !important;
-          }
-          .mobile-only {
-            display: flex;
-          }
-
-          .landing-hero {
-            padding: 120px 20px 120px;
-          }
-
-          .plm-brand-mark {
-            width: 60px;
-            height: 60px;
-          }
-          .plm-brand-text {
+          .landing-subtitle {
             font-size: 18px;
-          }
-
-          .landing-signin-btn {
-            height: auto !important;
-            padding: 0 !important;
-            margin-right: 6px;
-            transform: translateY(-1px);
-            color: var(--ink-0) !important;
-            font-size: 12px !important;
-            font-weight: 700 !important;
-            letter-spacing: 0.04em !important;
-            line-height: 1 !important;
-          }
-
-          .landing-demo-messages {
-            height: 220px;
-          }
-
-          .landing-demo-bubble {
-            font-size: 13px;
-            max-width: 86%;
-          }
-
-          .mobile-start {
-            display: flex;
-          }
-
-          .chat-topbar {
-            padding: 12px 16px;
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
-            padding-top: max(12px, env(safe-area-inset-top));
-          }
-
-          .chat-messages {
-            padding: 0 16px calc(24px + env(safe-area-inset-bottom));
-          }
-
-          .chat-input-inner {
-            padding: 12px 16px 18px;
-            padding-bottom: max(18px, env(safe-area-inset-bottom));
           }
 
           .chat-bubble {
             max-width: 85%;
-          }
-
-          .chat-empty-text {
-            font-size: 13px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .modal-card {
-            padding: 24px 20px;
-          }
-
-          .plm-brand-mark {
-            width: 55px;
-            height: 55px;
-          }
-          .plm-brand-text {
-            font-size: 17px;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          *,
-          *::before,
-          *::after {
-            animation-duration: 0.01ms !important;
-            transition-duration: 0.01ms !important;
           }
         }
       `}</style>
@@ -2543,78 +1705,51 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${ibmMono.className} chat-root`}>
-              <header className="chat-topbar">
+            <div className={`${inter.className} chat-root`}>
+              <header className="chat-header">
                 <BrandLink variant="chat" />
-                <nav className="chat-top-actions" aria-label="Chat actions">
-                  {session && subscription && (
-                    <div
-                      style={{
-                        marginRight: '12px',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        letterSpacing: '0.02em',
-                        textTransform: 'uppercase',
-                        background:
-                          subscription.status === 'trialing' ? 'rgba(37, 99, 235, 0.10)' : 'rgba(34, 197, 94, 0.10)',
-                        color: subscription.status === 'trialing' ? '#2563eb' : '#16a34a',
-                        border: `1px solid ${
-                          subscription.status === 'trialing' ? 'rgba(37, 99, 235, 0.25)' : 'rgba(34, 197, 94, 0.25)'
-                        }`,
-                      }}
-                    >
-                      {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
+                <div className="chat-menu-wrap" ref={menuRef}>
+                  <button
+                    type="button"
+                    className="chat-menu-btn"
+                    onClick={() => setShowMenu((v) => !v)}
+                    aria-label="Menu"
+                  >
+                    <Icons.Menu />
+                  </button>
+
+                  {showMenu && (
+                    <div className="chat-menu">
+                      <button
+                        type="button"
+                        className="chat-menu-item"
+                        onClick={() => {
+                          setShowMenu(false)
+                          if (hasActiveSubscription) {
+                            handleManageBilling()
+                          } else {
+                            setShowPricingModal(true)
+                          }
+                        }}
+                      >
+                        {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                      </button>
+
+                      <div className="chat-menu-sep" />
+
+                      <button
+                        type="button"
+                        className="chat-menu-item"
+                        onClick={() => {
+                          setShowMenu(false)
+                          handleSignOut()
+                        }}
+                      >
+                        Log out
+                      </button>
                     </div>
                   )}
-
-                  <div className="chat-settings-wrap" ref={settingsRef}>
-                    <button
-                      type="button"
-                      className="chat-settings-btn"
-                      onClick={() => setShowSettingsMenu((v) => !v)}
-                      aria-expanded={showSettingsMenu}
-                      aria-label="Settings"
-                    >
-                      <Icons.Gear />
-                    </button>
-
-                    {showSettingsMenu && (
-                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                        <button
-                          type="button"
-                          className="chat-settings-item"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            if (hasActiveSubscription) {
-                              handleManageBilling()
-                            } else {
-                              setShowPricingModal(true)
-                            }
-                          }}
-                        >
-                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                        </button>
-
-                        <div className="chat-settings-sep" />
-
-                        <button
-                          type="button"
-                          className="chat-settings-item"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            handleSignOut()
-                          }}
-                        >
-                          Log out
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </nav>
+                </div>
               </header>
 
               <div
@@ -2623,10 +1758,8 @@ export default function Page() {
                 className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
               >
                 {messages.length === 0 ? (
-                  <div className="chat-empty-state">
-                    <p className="chat-empty-text">
-                      Upload a photo or ask a question about Washtenaw County food safety regulations.
-                    </p>
+                  <div className="chat-empty">
+                    Upload a photo or ask a question about Washtenaw County food safety regulations.
                   </div>
                 ) : (
                   <div className="chat-history">
@@ -2727,7 +1860,9 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <p className="chat-disclaimer">Use protocolLM as a quick cross-check. Confirm critical calls with official regulations.</p>
+                  <p className="chat-disclaimer">
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
+                  </p>
                 </div>
               </div>
             </div>
@@ -2735,10 +1870,8 @@ export default function Page() {
         </main>
       </div>
 
-      {/* Multi-location warning banner */}
       {isAuthenticated && locationCheck && <MultiLocationBanner locationCheck={locationCheck} />}
 
-      {/* Multi-location upgrade modal */}
       <MultiLocationUpgradeModal
         isOpen={showMultiLocationModal}
         onClose={() => setShowMultiLocationModal(false)}
