@@ -1,13 +1,42 @@
-// components/PricingModal.js - UPDATED with multi-location purchase button
+// components/PricingModal.js - FIXED: Correct multi-location flow
 'use client'
 
 import { IBM_Plex_Mono } from 'next/font/google'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase-browser'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
 export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
+  const [hasExistingSubscription, setHasExistingSubscription] = useState(false)
+  const supabase = createClient()
+
+  // ✅ Check if user has existing subscription
+  useEffect(() => {
+    async function checkSubscription() {
+      if (!isOpen) return
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setHasExistingSubscription(false)
+        return
+      }
+
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .maybeSingle()
+
+      setHasExistingSubscription(!!subscription)
+    }
+
+    checkSubscription()
+  }, [isOpen, supabase])
+
   if (!isOpen) return null
 
   const Icons = {
@@ -19,10 +48,16 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
     )
   }
 
+  // ✅ FIXED: Use upgrade flow for existing users
   const handleMultiLocationClick = () => {
     onClose()
-    // Trigger multi-location purchase modal
-    window.dispatchEvent(new CustomEvent('openMultiLocationPurchase'))
+    if (hasExistingSubscription) {
+      // Existing users -> upgrade modal
+      window.dispatchEvent(new CustomEvent('openMultiLocationUpgrade'))
+    } else {
+      // New users -> purchase modal
+      window.dispatchEvent(new CustomEvent('openMultiLocationPurchase'))
+    }
   }
 
   return (
@@ -171,7 +206,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             </p>
           </div>
 
-          {/* ✅ NEW: Multi-Location Section */}
+          {/* ✅ FIXED: Show correct CTA based on subscription status */}
           <div style={{
             padding: '24px',
             borderTop: '1px solid var(--border-subtle)',
@@ -182,7 +217,10 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 📍 Have Multiple Locations?
               </div>
               <p style={{ fontSize: '13px', color: 'var(--ink-2)', lineHeight: '1.5', margin: '0 0 16px 0' }}>
-                Each restaurant location needs its own license. We make it easy to purchase and manage multiple locations.
+                {hasExistingSubscription 
+                  ? 'Upgrade your existing subscription to cover multiple locations.'
+                  : 'Each restaurant location needs its own license. We make it easy to purchase and manage multiple locations.'
+                }
               </p>
             </div>
 
@@ -213,14 +251,14 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 e.currentTarget.style.borderColor = 'var(--border-default)'
               }}
             >
-              <span>Purchase for 2+ Locations</span>
+              <span>{hasExistingSubscription ? 'Upgrade to Multi-Location' : 'Purchase for 2+ Locations'}</span>
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M5 12h14m-7-7l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
 
             <p style={{ fontSize: '11px', color: 'var(--ink-3)', marginTop: '12px', lineHeight: '1.4' }}>
-              Corporate & franchise pricing available • Separate logins for each location
+              $149/location • Separate logins for each location
             </p>
           </div>
 
