@@ -8,21 +8,23 @@ import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { Inter, IBM_Plex_Mono } from 'next/font/google'
+import { IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
-import PricingModal from '@/components/PricingModal'
+import PricingModal from '@/components/PricingModal' // ✅ external PricingModal component
 
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
-// lightweight logger
+// eslint-disable-next-line no-unused-vars
+const isAdmin = false
+
+// lightweight logger (keeps your original “logger.info” style expectations)
 const logger = {
   info: (...args) => console.log(...args),
   warn: (...args) => console.warn(...args),
@@ -31,24 +33,29 @@ const logger = {
 
 const Icons = {
   Camera: () => (
-    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   X: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
+  Sparkle: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+    </svg>
+  ),
   Gear: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path
         d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
         strokeLinecap="round"
@@ -82,11 +89,11 @@ function FooterLinks() {
       <Link className="plm-footer-link" href="/terms">
         Terms
       </Link>
-      <span className="plm-footer-sep">/</span>
+      <span className="plm-footer-sep">·</span>
       <Link className="plm-footer-link" href="/privacy">
         Privacy
       </Link>
-      <span className="plm-footer-sep">/</span>
+      <span className="plm-footer-sep">·</span>
       <Link className="plm-footer-link" href="/contact">
         Contact
       </Link>
@@ -94,42 +101,117 @@ function FooterLinks() {
   )
 }
 
+/* ------------------------------------------
+   Landing (NO demo chat box)
+------------------------------------------- */
+
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className={`${inter.className} landing-root`}>
+    <div className={`${ibmMono.className} landing-root`}>
       <header className="landing-topbar">
-        <BrandLink variant="landing" />
-        <nav className="landing-nav">
-          <button onClick={onShowAuth} className="btn-ghost" type="button">
-            Log in
+        <div className="plm-brand-wrap">
+          <BrandLink variant="landing" />
+        </div>
+
+        <nav className="landing-top-actions" aria-label="Top actions">
+          <button onClick={onShowAuth} className="btn-nav" type="button">
+            Sign in
           </button>
-          <button onClick={onShowPricing} className="btn-solid" type="button">
-            Start Trial
+          <button onClick={onShowPricing} className="btn-primary" type="button">
+            Start trial
           </button>
         </nav>
       </header>
 
-      <main className="landing-hero">
-        <div className="hero-container">
-          <div className="hero-badge">Washtenaw County Standard</div>
-          <h1 className="hero-title">
-            Health compliance.<br />
-            Extensions of your clipboard.
-          </h1>
-          <p className="hero-sub">
-            This is the problem: Violations happen when you aren't looking.<br />
-            This is the fix: Snap a photo. Identify the issue. Solve it before the inspection.
+      <main className="landing-main">
+        <section className="landing-sheet" aria-label="protocolLM overview">
+          <div className="landing-kicker">
+            <span className="kicker-dot" aria-hidden="true" />
+            Washtenaw County • Food safety compliance
+          </div>
+
+          <h1 className="landing-title">Photo-first compliance checks—written like an inspection note.</h1>
+
+          <p className="landing-subtitle">
+            Take a kitchen photo or ask a question. protocolLM cross-checks against local guidance and responds in plain
+            language: what’s wrong, why it matters, and what to fix.
           </p>
 
-          <div className="hero-actions">
-            <button className="btn-solid large" onClick={onShowPricing}>
-              Start Free Trial
-            </button>
-            <p className="hero-caption">
-              Trusted methodology. No scare tactics. Just results.
-            </p>
+          <div className="landing-steps" role="list" aria-label="How it works">
+            <div className="step" role="listitem">
+              <div className="step-icon" aria-hidden="true">
+                <Icons.Camera />
+              </div>
+              <div className="step-body">
+                <div className="step-title">Capture</div>
+                <div className="step-text">Walk-in, prep line, hand sink, storage, dish area—anything.</div>
+              </div>
+            </div>
+
+            <div className="step" role="listitem">
+              <div className="step-icon" aria-hidden="true">
+                <Icons.Sparkle />
+              </div>
+              <div className="step-body">
+                <div className="step-title">Cross-check</div>
+                <div className="step-text">Flags likely issues against county docs—not generic advice.</div>
+              </div>
+            </div>
+
+            <div className="step" role="listitem">
+              <div className="step-icon" aria-hidden="true">
+                <Icons.Gear />
+              </div>
+              <div className="step-body">
+                <div className="step-title">Correct</div>
+                <div className="step-text">Straight to action: fix list, quick rationale, and next steps.</div>
+              </div>
+            </div>
           </div>
-        </div>
+
+          <div className="landing-divider" />
+
+          <div className="landing-note">
+            Inside the app, the <span className="inline-chip">camera</span> button runs photo checks. It stays next to
+            the input—no extra screens.
+          </div>
+        </section>
+
+        <aside className="landing-preview" aria-label="Sample output preview">
+          <div className="preview-sheet">
+            <div className="preview-head">
+              <div className="preview-title">Sample photo scan output</div>
+              <div className="preview-sub">Format mirrors a clipboard note—fast to read, easy to act on.</div>
+            </div>
+
+            <div className="preview-block">
+              <div className="preview-label">Findings</div>
+              <ul className="preview-list">
+                <li>
+                  <span className="preview-strong">Hand sink access:</span> blocked by containers.
+                </li>
+                <li>
+                  <span className="preview-strong">Cold holding:</span> items stored above 41°F risk zone (verify with
+                  thermometer).
+                </li>
+                <li>
+                  <span className="preview-strong">Chemical labeling:</span> spray bottle missing label.
+                </li>
+              </ul>
+            </div>
+
+            <div className="preview-block">
+              <div className="preview-label">Fix</div>
+              <ol className="preview-ol">
+                <li>Clear sink area immediately. Keep unobstructed at all times.</li>
+                <li>Move TCS foods to proper refrigeration; log temps; discard if time/temperature abused.</li>
+                <li>Label chemicals with common name; store away from food and single-service items.</li>
+              </ol>
+            </div>
+
+            <div className="preview-footer">No scare tactics. Just issue → why → fix.</div>
+          </div>
+        </aside>
       </main>
 
       <FooterLinks />
@@ -137,6 +219,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
+// ✅ UPDATED: accepts selectedPriceId and passes it on signup
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -167,7 +250,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       const captchaToken = await executeRecaptcha(mode)
       if (!captchaToken || captchaToken === 'turnstile_unavailable') {
         setMessageKind('err')
-        setMessage('Security check failed.')
+        setMessage('Security verification failed. Please ensure Cloudflare Turnstile is allowed, then try again.')
         return
       }
 
@@ -178,9 +261,11 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         endpoint = '/api/auth/reset-password'
       } else {
         body.password = password
+
         if (mode === 'signup' && selectedPriceId) {
           body.selectedPriceId = selectedPriceId
         }
+
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
@@ -200,29 +285,30 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
       if (mode === 'reset') {
         setMessageKind('ok')
-        setMessage('Reset instructions sent to email.')
+        setMessage('Check your email for reset instructions.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2000)
       } else if (mode === 'signup') {
         setMessageKind('ok')
-        setMessage('Account created. Please verify your email.')
+        setMessage('Account created. Check your email to verify.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2000)
       } else {
         setMessageKind('ok')
-        setMessage('Authenticating...')
+        setMessage('Signed in. Redirecting…')
         setTimeout(() => {
           onClose()
           window.location.reload()
         }, 450)
       }
     } catch (error) {
+      console.error('Auth error:', error)
       setMessageKind('err')
-      setMessage('System error. Please retry.')
+      setMessage('Unexpected issue. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -233,27 +319,30 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${inter.className}`}>
-          <div className="modal-top">
-             <h2 className="modal-title">
-              {mode === 'signin' && 'Sign In'}
-              {mode === 'signup' && 'New Account'}
-              {mode === 'reset' && 'Reset Password'}
+        <div className={`modal-card ${ibmMono.className}`}>
+          <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
+            <Icons.X />
+          </button>
+
+          <div className="modal-header">
+            <h2 className="modal-title">
+              {mode === 'signin' && 'Sign in'}
+              {mode === 'signup' && 'Create account'}
+              {mode === 'reset' && 'Reset password'}
             </h2>
-            <button onClick={onClose} className="modal-close" aria-label="Close">
-              <Icons.X />
-            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
-              <label className="form-label">Email Address</label>
+              <label className="form-label">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
                 required
                 className="form-input"
+                autoComplete="email"
               />
             </div>
 
@@ -265,18 +354,21 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
                     required
                     className="form-input"
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle-vis">
-                    {showPassword ? 'HIDE' : 'SHOW'}
+                    {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
             )}
 
-            <button type="submit" disabled={loading || !isLoaded} className="btn-full">
-              {loading ? 'Processing...' : (mode === 'signin' ? 'Access Account' : mode === 'signup' ? 'Create Account' : 'Send Link')}
+            <button type="submit" disabled={loading || !isLoaded} className="btn-submit">
+              {loading && <span className="spinner" />}
+              <span>{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send link'}</span>
             </button>
           </form>
 
@@ -289,21 +381,22 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                   Forgot password?
                 </button>
                 <button type="button" onClick={() => setMode('signup')} className="modal-link">
-                  No account? Create one
+                  Create an account
                 </button>
               </>
             )}
             {mode === 'signup' && (
               <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                Have an account? Sign in
+                Already have an account? Sign in
               </button>
             )}
             {mode === 'reset' && (
               <button type="button" onClick={() => setMode('signin')} className="modal-link">
-                Return to sign in
+                ← Back to sign in
               </button>
             )}
           </div>
+
           <RecaptchaBadge />
         </div>
       </div>
@@ -315,9 +408,11 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
   const searchParams = useSearchParams()
+
   const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
 
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingStage, setLoadingStage] = useState('auth')
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [subscription, setSubscription] = useState(null)
@@ -326,6 +421,8 @@ export default function Page() {
   const [authInitialMode, setAuthInitialMode] = useState('signin')
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
+
+  // ✅ remember the selected Stripe price when user isn't logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -334,21 +431,51 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
+  // ✅ NEW: multi-location license state + modal
   const [locationCheck, setLocationCheck] = useState(null)
   const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
   const [showMultiLocationPurchaseModal, setShowMultiLocationPurchaseModal] = useState(false)
 
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
   const shouldAutoScrollRef = useRef(true)
-  const settingsRef = useRef(null)
 
   const isAuthenticated = !!session
+
+  // ✅ Chat settings menu (gear dropdown)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const settingsRef = useRef(null)
+
+  // ✅ Camera nudge (subtle, anchored to camera button; one-time)
+  const [showCameraNudge, setShowCameraNudge] = useState(false)
+
+  const markCameraNudgeSeen = useCallback(() => {
+    try {
+      localStorage.setItem('plm_camera_nudge_seen', '1')
+    } catch {}
+    setShowCameraNudge(false)
+  }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    if (messages.length !== 0) return
+    if (selectedImage) return
+
+    let seen = false
+    try {
+      seen = localStorage.getItem('plm_camera_nudge_seen') === '1'
+    } catch {}
+
+    if (seen) return
+
+    setShowCameraNudge(true)
+    const t = setTimeout(() => setShowCameraNudge(false), 6500)
+    return () => clearTimeout(t)
+  }, [isAuthenticated, messages.length, selectedImage])
 
   // Close settings menu on outside click
   useEffect(() => {
@@ -364,17 +491,43 @@ export default function Page() {
     }
   }, [])
 
+  // ✅ NEW: Listen for multi-location upgrade events
   useEffect(() => {
-    const handleUpgradeEvent = () => setShowMultiLocationModal(true)
-    const handleOpenMultiLocationPurchase = () => setShowMultiLocationPurchaseModal(true)
+    const handleUpgradeEvent = () => {
+      setShowMultiLocationModal(true)
+    }
+
     window.addEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-    window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
+
     return () => {
       window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
+    }
+  }, [])
+
+  // ✅ NEW: Listen for multi-location purchase modal trigger
+  useEffect(() => {
+    const handleOpenMultiLocationPurchase = () => {
+      setShowMultiLocationPurchaseModal(true)
+    }
+
+    window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
+
+    return () => {
       window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
     }
   }, [])
 
+  // Set view attribute for CSS + optional spline container hiding
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
+    const splineContainer = document.getElementById('plm-spline-bg')
+    if (splineContainer) {
+      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
+    }
+  }, [isAuthenticated])
+
+  // Auto-scroll helpers
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
@@ -391,8 +544,16 @@ export default function Page() {
 
   useEffect(() => {
     requestAnimationFrame(() => scrollToBottom('auto'))
+  }, [scrollToBottom])
+
+  useEffect(() => {
+    if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
+  // ============================================================================
+  // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
+  // Only show pricing via URL param if authenticated
+  // ============================================================================
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     const emailVerified = searchParams?.get('emailVerified')
@@ -400,13 +561,16 @@ export default function Page() {
     if (showPricing === 'true' && isAuthenticated) {
       if (hasActiveSubscription || subscription) {
         setShowPricingModal(false)
+
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
         return
       }
+
       if (!hasActiveSubscription && !subscription) {
         setShowPricingModal(true)
+
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
@@ -414,22 +578,31 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
+  // ============================================================================
+  // ✅ FIX 2: Keep ONLY this handleCheckout (full validation + CAPTCHA + verification)
+  // ============================================================================
   const handleCheckout = useCallback(
     async (priceId, planName) => {
       try {
+        // ✅ SECURITY: Validate price ID
         if (!priceId) {
           alert('Invalid price selected.')
           return
         }
+
+        // ✅ SECURITY: Verify priceId is one of the allowed values (single plan)
         const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
-          alert('Invalid plan selected.')
+          console.error('Invalid price ID:', priceId)
+          alert('Invalid plan selected. Please try again.')
           return
         }
 
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
+          // ✅ Store selected plan before showing auth
+          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
           setSelectedPriceId(priceId)
           setShowPricingModal(false)
           setAuthInitialMode('signup')
@@ -437,15 +610,16 @@ export default function Page() {
           return
         }
 
+        // ✅ SECURITY: Check email is verified before allowing checkout
         if (!data.session.user.email_confirmed_at) {
-          alert('Please verify your email before starting a trial.')
+          alert('Please verify your email before starting a trial. Check your inbox.')
           setShowPricingModal(false)
           router.push('/verify-email')
           return
         }
 
         if (!captchaLoaded) {
-          alert('Security verification loading. Try again.')
+          alert('Security verification is still loading. Please try again in a moment.')
           return
         }
 
@@ -453,7 +627,7 @@ export default function Page() {
 
         const captchaToken = await executeRecaptcha('checkout')
         if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-          throw new Error('Security verification failed.')
+          throw new Error('Security verification failed. Please refresh and try again.')
         }
 
         const res = await fetch('/api/create-checkout-session', {
@@ -468,24 +642,31 @@ export default function Page() {
 
         const payload = await res.json().catch(() => ({}))
 
+        // ✅ SECURITY: Handle specific error codes
         if (!res.ok) {
           if (payload.code === 'EMAIL_NOT_VERIFIED') {
+            alert('Please verify your email before starting a trial.')
             router.push('/verify-email')
             return
           }
+
           if (payload.code === 'ALREADY_SUBSCRIBED') {
+            alert('You already have an active subscription.')
             setShowPricingModal(false)
             return
           }
+
           throw new Error(payload.error || 'Checkout failed')
         }
 
         if (payload.url) {
           window.location.href = payload.url
+        } else {
+          throw new Error('No checkout URL returned')
         }
       } catch (error) {
         console.error('Checkout error:', error)
-        alert('Failed: ' + (error.message || 'Unknown error'))
+        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       } finally {
         setCheckoutLoading(null)
       }
@@ -493,6 +674,7 @@ export default function Page() {
     [supabase, captchaLoaded, executeRecaptcha, router]
   )
 
+  // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
     let isMounted = true
 
@@ -504,15 +686,28 @@ export default function Page() {
         setSubscription(null)
         setHasActiveSubscription(false)
         setShowPricingModal(false)
+
+        // ✅ clear multi-location states on logout
         setLocationCheck(null)
+        setShowMultiLocationModal(false)
+        setShowMultiLocationPurchaseModal(false)
+
         setIsLoading(false)
         return
       }
 
+      // ✅ CRITICAL: Check if email is verified + terms accepted
       try {
         if (!s.user.email_confirmed_at) {
+          console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
           setHasActiveSubscription(false)
+
+          // ✅ clear multi-location states
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
+
           setIsLoading(false)
           router.replace('/verify-email')
           return
@@ -524,19 +719,61 @@ export default function Page() {
           .eq('id', s.user.id)
           .maybeSingle()
 
-        if (profileError || !profile || !profile.accepted_terms) {
+        if (profileError) {
+          console.error('❌ Profile check error:', profileError)
           setSubscription(null)
           setHasActiveSubscription(false)
+
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
+
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
+        }
+
+        if (!profile) {
+          setSubscription(null)
+          setHasActiveSubscription(false)
+
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
+
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
+        }
+
+        const accepted = !!(profile.accepted_terms && profile.accepted_privacy)
+        if (!accepted) {
+          setSubscription(null)
+          setHasActiveSubscription(false)
+
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
+
           setIsLoading(false)
           router.replace('/accept-terms')
           return
         }
       } catch (e) {
+        console.error('❌ Policy check exception:', e)
+        setSubscription(null)
+        setHasActiveSubscription(false)
+
+        setLocationCheck(null)
+        setShowMultiLocationModal(false)
+        setShowMultiLocationPurchaseModal(false)
+
         setIsLoading(false)
         router.replace('/accept-terms')
         return
       }
 
+      // ✅ CRITICAL: Check for active subscription
       let active = false
       let subData = null
 
@@ -551,8 +788,11 @@ export default function Page() {
           .maybeSingle()
 
         subData = sub || null
+
         const now = new Date()
-        const endDate = sub?.current_period_end ? new Date(sub.current_period_end) : sub?.trial_end ? new Date(sub.trial_end) : null
+        const endDate =
+          sub?.current_period_end ? new Date(sub.current_period_end) : sub?.trial_end ? new Date(sub.trial_end) : null
+
         if (endDate && endDate > now) active = true
       } catch (e) {
         console.error('Subscription check error', e)
@@ -562,16 +802,46 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
+      // ✅ if user lost subscription, clear location check so banner doesn't show incorrectly
       if (!subData) {
         setLocationCheck(null)
+        setShowMultiLocationModal(false)
+        setShowMultiLocationPurchaseModal(false)
       }
 
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
 
+      if (s?.user) {
+        console.log('🔐 Auth state:', {
+          userId: String(s.user.id || '').substring(0, 8) + '***',
+          emailVerified: !!s.user.email_confirmed_at,
+          hasSubscription: !!subData,
+          subscriptionStatus: subData?.status,
+          trialEnd: subData?.trial_end ? new Date(subData.trial_end).toISOString() : null,
+        })
+      }
+
       if (!subData && !checkoutParam && showPricingParam !== 'true') {
+        console.log('💳 No subscription found - showing pricing modal')
         setShowPricingModal(true)
         setHasActiveSubscription(false)
+      }
+
+      if (subData?.status === 'trialing' && subData?.trial_end) {
+        const trialEnd = new Date(subData.trial_end)
+        const now = new Date()
+
+        if (trialEnd < now) {
+          console.log('❌ Trial expired - showing pricing')
+          if (!checkoutParam) setShowPricingModal(true)
+          setHasActiveSubscription(false)
+        } else {
+          const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
+          if (hoursLeft < 24 && hoursLeft > 0) {
+            console.log(`⚠️ Trial ends in ${Math.round(hoursLeft)} hours`)
+          }
+        }
       }
 
       setIsLoading(false)
@@ -579,9 +849,13 @@ export default function Page() {
 
     async function init() {
       try {
+        setLoadingStage('auth')
         const { data } = await supabase.auth.getSession()
+        setLoadingStage('subscription')
         await loadSessionAndSub(data.session || null)
+        setLoadingStage('ready')
       } catch (e) {
+        console.error('Auth init error', e)
         if (isMounted) setIsLoading(false)
       }
     }
@@ -598,72 +872,145 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
+  // ✅ FIXED: Auto-checkout after email verification / auth callback
   useEffect(() => {
     const checkoutPlan = searchParams?.get('checkout')
-    if (!checkoutPlan || isLoading) return
+    if (!checkoutPlan) return
+    if (isLoading) return
+
     if (checkoutPlan && isAuthenticated && !hasActiveSubscription && !subscription) {
+      console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
       handleCheckout(checkoutPlan, 'auto')
-      if (typeof window !== 'undefined') window.history.replaceState({}, '', '/')
+
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/')
+      }
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
+  // ============================================================================
+  // ✅ NEW: Fetch multi-location “license/locationCheck” after auth + subscription exists
+  // - This is intentionally non-blocking: it won’t affect isLoading
+  // - It safely no-ops if your endpoint isn’t present yet
+  // ============================================================================
   const fetchLocationCheckFromServer = useCallback(async (sess) => {
     try {
       const token = sess?.access_token
-      if (!token) return null
-      const res = await fetch('/api/license/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({}),
-      })
+      const userId = sess?.user?.id
+      if (!token || !userId) return null
+
+      const doPost = async () =>
+        fetch('/api/license/check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({}),
+          credentials: 'include',
+        })
+
+      const doGet = async () =>
+        fetch('/api/license/check', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        })
+
+      let res = await doPost()
+      if (res.status === 405) res = await doGet()
+
       const data = await res.json().catch(() => null)
       if (!res.ok || !data) return null
+
+      // support either { locationCheck: {...} } or direct object
       return data.locationCheck || data
     } catch (e) {
+      logger.warn('Location check fetch failed', e)
       return null
     }
   }, [])
 
   useEffect(() => {
     let cancelled = false
+
     async function run() {
+      // only for authenticated users with an active/trialing subscription record
       if (!isAuthenticated || !session?.user?.id || !subscription) return
+
       const lc = await fetchLocationCheckFromServer(session)
-      if (cancelled || !lc) return
+      if (cancelled) return
+      if (!lc) return
+
+      // ✅ Step 3 behavior: log + store for banner
+      logger.info('License validated', {
+        userId: session.user.id,
+        uniqueLocationsUsed: lc.uniqueLocationsUsed,
+        locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
+      })
+
+      // Store location check for banner
       setLocationCheck(lc)
     }
+
     run()
-    return () => { cancelled = true }
+
+    return () => {
+      cancelled = true
+    }
   }, [isAuthenticated, session, subscription, fetchLocationCheckFromServer])
 
   const handleManageBilling = async () => {
     let loadingToast = null
     try {
       loadingToast = document.createElement('div')
-      loadingToast.textContent = 'Redirecting to billing...'
-      loadingToast.style.cssText = 'position:fixed;top:16px;right:16px;background:#0f172a;color:white;padding:8px 16px;border-radius:6px;z-index:9999;font-family:sans-serif;font-size:14px;'
+      loadingToast.textContent = 'Opening billing portal...'
+      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
       const accessToken = data?.session?.access_token
+
       const res = await fetch('/api/create-portal-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        credentials: 'include',
       })
-      const payload = await res.json()
+
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(payload.error || 'Failed to open billing portal')
+        return
+      }
       if (payload.url) window.location.href = payload.url
+      else alert('No billing portal URL returned')
     } catch (error) {
+      console.error('Billing portal error:', error)
       alert('Failed to open billing portal')
     } finally {
-      if (loadingToast) document.body.removeChild(loadingToast)
+      try {
+        if (loadingToast) document.body.removeChild(loadingToast)
+      } catch {}
     }
   }
 
   const handleSignOut = async () => {
     try {
       setShowSettingsMenu(false)
+
+      // ✅ clear multi-location states immediately
       setLocationCheck(null)
+      setShowMultiLocationModal(false)
+      setShowMultiLocationPurchaseModal(false)
+
       await supabase.auth.signOut()
+    } catch (e) {
+      console.error('Sign out error', e)
     } finally {
       setMessages([])
       setCurrentChatId(null)
@@ -686,9 +1033,13 @@ export default function Page() {
     setInput('')
     setSelectedImage(null)
 
-    if (textAreaRef.current) textAreaRef.current.style.height = 'auto'
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = 'auto'
+    }
+
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
+
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
@@ -697,8 +1048,13 @@ export default function Page() {
       if (session && !activeChatId) {
         const { data: created } = await supabase
           .from('chats')
-          .insert({ user_id: session.user.id, title: (question || 'New chat').slice(0, 40) })
-          .select().single()
+          .insert({
+            user_id: session.user.id,
+            title: (question || 'New chat').slice(0, 40),
+          })
+          .select()
+          .single()
+
         if (created) {
           activeChatId = created.id
           setCurrentChatId(created.id)
@@ -708,12 +1064,27 @@ export default function Page() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, newUserMessage], image, chatId: activeChatId }),
+        body: JSON.stringify({
+          messages: [...messages, newUserMessage],
+          image,
+          chatId: activeChatId,
+        }),
       })
 
       if (!res.ok) {
-        if (res.status === 402) setShowPricingModal(true)
-        throw new Error('Processing failed.')
+        if (res.status === 402) {
+          setShowPricingModal(true)
+          throw new Error('Subscription required for additional questions.')
+        }
+        if (res.status === 429) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'Rate limit exceeded.')
+        }
+        if (res.status === 503) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'Service temporarily unavailable.')
+        }
+        throw new Error(`Server error (${res.status})`)
       }
 
       const data = await res.json()
@@ -723,6 +1094,13 @@ export default function Page() {
         return updated
       })
     } catch (error) {
+      console.error('Chat error:', error)
+
+      const msg = String(error?.message || '')
+      if (msg.includes('trial has ended') || msg.toLowerCase().includes('subscription')) {
+        setShowPricingModal(true)
+      }
+
       setMessages((prev) => {
         const updated = [...prev]
         updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
@@ -739,15 +1117,24 @@ export default function Page() {
     try {
       const compressed = await compressImage(file)
       setSelectedImage(compressed)
-    } catch {
-      alert('Image processing error.')
+      markCameraNudgeSeen()
+    } catch (error) {
+      console.error('Image compression error', error)
+      alert('Failed to process image.')
     }
   }
 
   if (isLoading) {
     return (
-      <div className={`loading-screen ${inter.className}`}>
-        <Image src={appleIcon} alt="" width={48} height={48} />
+      <div className={`loading-screen ${ibmMono.className}`}>
+        <div className="loading-content">
+          <div className="loading-logo">
+            <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
+          </div>
+          <div className="loading-bar">
+            <div className="loading-bar-fill" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -756,306 +1143,1355 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          /* Clean Blue & Stainless Theme */
-          --bg-page: #ffffff;
-          --bg-sidebar: #f8fafc;
-          --bg-input: #ffffff;
-          --bg-panel: #f1f5f9;
-          
-          --ink-primary: #0f172a;   /* Slate 900 */
-          --ink-secondary: #475569; /* Slate 600 */
-          --ink-muted: #94a3b8;     /* Slate 400 */
-          
-          --border-main: #e2e8f0;    /* Slate 200 */
-          --border-strong: #cbd5e1;  /* Slate 300 - Stainless look */
-          
-          --accent: #2563eb;         /* Royal Blue */
-          --accent-hover: #1d4ed8;
-          --accent-light: #eff6ff;
-          
-          --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-          --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-          --radius-sm: 6px;
-          --radius-md: 10px;
-          --radius-lg: 14px;
+          /* Stainless / clipboard light theme */
+          --bg-0: #f3f5f8; /* page */
+          --bg-1: #ffffff; /* sheets/panels */
+          --bg-2: #f7f9fc; /* subtle fill */
+          --bg-3: #eef2f7; /* controls */
+
+          --ink-0: #0b1220; /* primary */
+          --ink-1: #24324a; /* secondary */
+          --ink-2: #4b5b75; /* muted */
+          --ink-3: #6b7b94; /* faint */
+
+          /* Match your logo vibe (kept close to your current blue, but more “gov”) */
+          --accent: #1f5eff;
+          --accent-hover: #174bd1;
+          --accent-dim: rgba(31, 94, 255, 0.12);
+
+          --border-subtle: rgba(11, 18, 32, 0.10);
+          --border-default: rgba(11, 18, 32, 0.16);
+
+          --radius-sm: 8px;
+          --radius-md: 12px;
+          --radius-lg: 16px;
+          --radius-full: 9999px;
+
+          --shadow-sm: 0 1px 0 rgba(16, 24, 40, 0.06), 0 10px 24px rgba(16, 24, 40, 0.08);
+          --shadow-md: 0 1px 0 rgba(16, 24, 40, 0.06), 0 18px 44px rgba(16, 24, 40, 0.10);
         }
 
-        *, *::before, *::after { box-sizing: border-box; }
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
+        }
 
-        html, body {
+        html,
+        body {
           height: 100%;
           margin: 0;
-          background: var(--bg-page);
-          color: var(--ink-primary);
-          font-family: ${inter.style.fontFamily}, sans-serif;
+          background: var(--bg-0);
+          background-color: var(--bg-0);
+          color: var(--ink-0);
+          overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
+          overscroll-behavior-y: none;
         }
 
-        a, button { -webkit-tap-highlight-color: transparent; }
-        button { font-family: inherit; cursor: pointer; }
-        :focus { outline: none; }
+        body::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background: var(--bg-0);
+          z-index: -1;
+        }
 
-        /* LOADING */
+        @supports (-webkit-touch-callout: none) {
+          html {
+            height: -webkit-fill-available;
+          }
+          body {
+            min-height: -webkit-fill-available;
+          }
+        }
+
+        a,
+        button,
+        input,
+        textarea {
+          -webkit-tap-highlight-color: transparent;
+        }
+        :focus {
+          outline: none;
+        }
+
+        ::selection {
+          background: var(--accent-dim);
+          color: var(--ink-0);
+        }
+
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(11, 18, 32, 0.18);
+          border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(11, 18, 32, 0.28);
+        }
+
+        /* Loading */
         .loading-screen {
-          position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-          background: var(--bg-page); z-index: 9999;
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--bg-0);
+          z-index: 9999;
         }
 
-        /* LANDING */
+        .loading-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 28px;
+        }
+
+        .loading-logo {
+          width: 64px;
+          height: 64px;
+          filter: saturate(1.05);
+        }
+
+        .loading-logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .loading-bar {
+          width: 120px;
+          height: 2px;
+          background: rgba(11, 18, 32, 0.10);
+          border-radius: var(--radius-full);
+          overflow: hidden;
+        }
+
+        .loading-bar-fill {
+          height: 100%;
+          width: 30%;
+          background: var(--accent);
+          animation: loading-slide 1.05s ease-in-out infinite;
+        }
+
+        @keyframes loading-slide {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(420%);
+          }
+        }
+
+        /* App */
+        .app-container {
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          background: var(--bg-0);
+        }
+
+        /* Brand */
+        .plm-brand {
+          color: var(--ink-0);
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          transition: opacity 0.15s ease;
+        }
+
+        .plm-brand:hover {
+          opacity: 0.75;
+        }
+
+        .plm-brand-inner {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .plm-brand-mark {
+          width: 64px;
+          height: 64px;
+          flex-shrink: 0;
+        }
+
+        .plm-brand-mark img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .plm-brand-text {
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          white-space: nowrap;
+        }
+
+        /* Landing */
         .landing-root {
-          min-height: 100vh; display: flex; flex-direction: column;
-          background: var(--bg-page);
+          position: relative;
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          background: var(--bg-0);
         }
 
         .landing-topbar {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 24px; max-width: 1200px; margin: 0 auto; width: 100%;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: max(18px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 14px
+            max(24px, env(safe-area-inset-left));
+          background: rgba(243, 245, 248, 0.82);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
         }
 
-        .plm-brand {
-          display: flex; align-items: center; gap: 12px; text-decoration: none;
-          color: var(--ink-primary); transition: opacity 0.2s;
-        }
-        .plm-brand:hover { opacity: 0.8; }
-        .plm-brand-mark { width: 42px; height: 42px; }
-        .plm-brand-mark img { width: 100%; height: 100%; object-fit: contain; }
-        .plm-brand-text { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
-
-        .landing-nav { display: flex; gap: 12px; }
-        
-        .btn-ghost {
-          background: transparent; border: none; color: var(--ink-secondary);
-          font-weight: 500; font-size: 14px; padding: 8px 16px;
-        }
-        .btn-ghost:hover { color: var(--ink-primary); }
-
-        .btn-solid {
-          background: var(--ink-primary); color: white; border: none;
-          padding: 0 20px; height: 40px; border-radius: var(--radius-sm);
-          font-weight: 600; font-size: 14px; transition: background 0.2s;
-        }
-        .btn-solid:hover { background: #000; }
-        .btn-solid.large { height: 48px; padding: 0 32px; font-size: 16px; background: var(--accent); }
-        .btn-solid.large:hover { background: var(--accent-hover); }
-
-        .landing-hero {
-          flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-          padding: 80px 24px; text-align: center;
+        .landing-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
 
-        .hero-container { max-width: 800px; width: 100%; }
-        
-        .hero-badge {
-          display: inline-block; padding: 6px 12px; border-radius: 99px;
-          background: var(--accent-light); color: var(--accent);
-          font-size: 12px; font-weight: 700; text-transform: uppercase;
-          margin-bottom: 24px; letter-spacing: 0.05em;
-        }
-
-        .hero-title {
-          font-size: 48px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em;
-          color: var(--ink-primary); margin: 0 0 24px 0;
-        }
-
-        .hero-sub {
-          font-size: 18px; line-height: 1.6; color: var(--ink-secondary);
-          max-width: 600px; margin: 0 auto 48px;
-        }
-
-        .hero-actions { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-        .hero-caption { font-size: 13px; color: var(--ink-muted); margin: 0; }
-
-        /* FOOTER */
-        .plm-footer-links {
-          display: flex; justify-content: center; gap: 16px; padding: 40px;
-          color: var(--ink-muted); font-size: 12px; text-transform: uppercase;
-        }
-        .plm-footer-link { color: var(--ink-secondary); text-decoration: none; }
-        .plm-footer-link:hover { text-decoration: underline; }
-
-        /* AUTH MODAL */
-        .modal-overlay {
-          position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px);
-          z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;
-          animation: fadein 0.2s ease;
-        }
-        .modal-container { width: 100%; max-width: 400px; }
-        .modal-card {
-          background: white; border: 1px solid var(--border-strong);
-          border-radius: var(--radius-lg); padding: 32px;
-          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
-        }
-        .modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .modal-title { margin: 0; font-size: 20px; font-weight: 700; }
-        .modal-close { background: none; border: none; color: var(--ink-muted); }
-        .modal-close:hover { color: var(--ink-primary); }
-
-        .modal-form { display: flex; flex-direction: column; gap: 16px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--ink-secondary); letter-spacing: 0.05em; }
-        .form-input {
-          height: 42px; padding: 0 12px; border: 1px solid var(--border-strong);
-          border-radius: var(--radius-sm); font-size: 15px; color: var(--ink-primary);
-          background: var(--bg-input); transition: border-color 0.15s;
-        }
-        .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
-        .form-input-wrap { position: relative; }
-        .form-toggle-vis {
-          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-          background: none; border: none; font-size: 11px; font-weight: 700; color: var(--ink-secondary);
-        }
-        .btn-full {
-          width: 100%; height: 42px; background: var(--accent); color: white; border: none;
-          border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; margin-top: 8px;
-        }
-        .btn-full:hover:not(:disabled) { background: var(--accent-hover); }
-        .btn-full:disabled { opacity: 0.7; }
-        
-        .modal-message { padding: 10px; border-radius: var(--radius-sm); font-size: 13px; text-align: center; margin-top: 16px; }
-        .modal-message.info { display: none; }
-        .modal-message.err { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
-        .modal-message.ok { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
-
-        .modal-footer { margin-top: 24px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
-        .modal-link { background: none; border: none; font-size: 13px; color: var(--ink-secondary); text-decoration: underline; }
-        
-        /* CHAT INTERFACE - Clipboard Style */
-        .chat-root { display: flex; flex-direction: column; height: 100vh; background: var(--bg-page); }
-        
-        .chat-topbar {
-          flex-shrink: 0; height: 64px; display: flex; align-items: center; justify-content: space-between;
-          padding: 0 24px; border-bottom: 1px solid var(--border-main); background: var(--bg-page);
-        }
-        
-        .chat-sub-badge {
-          padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
-          text-transform: uppercase; background: var(--bg-panel); color: var(--ink-secondary);
-          border: 1px solid var(--border-main); margin-right: 12px;
-        }
-        .chat-sub-badge.pro { color: #15803d; background: #dcfce7; border-color: #bbf7d0; }
-
-        .chat-settings-wrap { position: relative; }
-        .chat-settings-btn {
-          width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-          color: var(--ink-secondary); border-radius: var(--radius-sm); transition: background 0.15s;
-          border: none; background: transparent;
-        }
-        .chat-settings-btn:hover { background: var(--bg-panel); color: var(--ink-primary); }
-        
-        .chat-settings-menu {
-          position: absolute; top: 100%; right: 0; width: 200px; margin-top: 8px;
-          background: white; border: 1px solid var(--border-main); border-radius: var(--radius-md);
-          box-shadow: var(--shadow-md); padding: 6px; z-index: 100;
-        }
-        .chat-settings-item {
-          display: block; width: 100%; text-align: left; padding: 8px 12px;
-          background: transparent; border: none; font-size: 13px; color: var(--ink-primary);
+        .btn-nav {
+          height: 36px;
+          padding: 0 12px;
+          background: transparent;
+          color: var(--ink-1);
+          border: 1px solid transparent;
           border-radius: var(--radius-sm);
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+          font-family: inherit;
+          letter-spacing: 0.01em;
         }
-        .chat-settings-item:hover { background: var(--bg-panel); }
+
+        .btn-nav:hover {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.08);
+        }
+
+        .btn-primary {
+          height: 36px;
+          padding: 0 14px;
+          background: var(--accent);
+          color: #fff;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s ease;
+          font-family: inherit;
+          letter-spacing: 0.01em;
+        }
+
+        .btn-primary:hover {
+          background: var(--accent-hover);
+        }
+
+        .landing-main {
+          flex: 1;
+          display: grid;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 18px;
+          padding: 26px 24px 86px;
+          max-width: 1060px;
+          margin: 0 auto;
+          width: 100%;
+        }
+
+        .landing-sheet {
+          background: var(--bg-1);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-md);
+          padding: 26px;
+          position: relative;
+        }
+
+        .landing-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .kicker-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: var(--radius-full);
+          background: var(--accent);
+          box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+        }
+
+        .landing-title {
+          margin: 14px 0 10px;
+          font-size: 26px;
+          line-height: 1.22;
+          letter-spacing: -0.03em;
+        }
+
+        .landing-subtitle {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.7;
+          color: var(--ink-1);
+          max-width: 62ch;
+        }
+
+        .landing-steps {
+          margin-top: 18px;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .step {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 12px 12px;
+          border: 1px solid rgba(11, 18, 32, 0.08);
+          background: var(--bg-2);
+          border-radius: var(--radius-md);
+        }
+
+        .step-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--accent);
+          background: rgba(31, 94, 255, 0.08);
+          border: 1px solid rgba(31, 94, 255, 0.16);
+          flex-shrink: 0;
+        }
+
+        .step-title {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--ink-0);
+        }
+
+        .step-text {
+          margin-top: 3px;
+          font-size: 12px;
+          line-height: 1.6;
+          color: var(--ink-2);
+        }
+
+        .landing-divider {
+          height: 1px;
+          background: rgba(11, 18, 32, 0.08);
+          margin: 18px 0 14px;
+        }
+
+        .landing-note {
+          font-size: 12px;
+          color: var(--ink-2);
+          line-height: 1.6;
+        }
+
+        .inline-chip {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 8px;
+          border-radius: 999px;
+          background: rgba(11, 18, 32, 0.06);
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          color: var(--ink-1);
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          text-transform: lowercase;
+        }
+
+        .landing-preview {
+          position: relative;
+        }
+
+        .preview-sheet {
+          position: sticky;
+          top: 86px;
+          background: var(--bg-1);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+          padding: 18px;
+        }
+
+        .preview-head {
+          padding-bottom: 14px;
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
+          margin-bottom: 14px;
+        }
+
+        .preview-title {
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-0);
+        }
+
+        .preview-sub {
+          margin-top: 6px;
+          font-size: 12px;
+          color: var(--ink-2);
+          line-height: 1.6;
+        }
+
+        .preview-block + .preview-block {
+          margin-top: 14px;
+        }
+
+        .preview-label {
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          margin-bottom: 8px;
+        }
+
+        .preview-list,
+        .preview-ol {
+          margin: 0;
+          padding-left: 16px;
+          color: var(--ink-1);
+          font-size: 12px;
+          line-height: 1.7;
+        }
+
+        .preview-strong {
+          font-weight: 900;
+          color: var(--ink-0);
+        }
+
+        .preview-footer {
+          margin-top: 14px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(11, 18, 32, 0.08);
+          font-size: 12px;
+          color: var(--ink-2);
+        }
+
+        /* Footer links */
+        .plm-footer-links {
+          position: fixed;
+          bottom: max(18px, env(safe-area-inset-bottom));
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          z-index: 10;
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(243, 245, 248, 0.72);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(11, 18, 32, 0.08);
+        }
+
+        .plm-footer-link {
+          color: var(--ink-2);
+          text-decoration: none;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          transition: color 0.15s ease;
+        }
+
+        .plm-footer-link:hover {
+          color: var(--ink-0);
+        }
+        .plm-footer-sep {
+          color: rgba(11, 18, 32, 0.22);
+        }
+
+        /* Modals */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          background: rgba(11, 18, 32, 0.42);
+          backdrop-filter: blur(6px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          animation: fade-in 0.14s ease;
+        }
+
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .modal-container {
+          width: 100%;
+          max-width: 380px;
+          animation: modal-up 0.18s ease;
+        }
+
+        @keyframes modal-up {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .modal-card {
+          position: relative;
+          background: var(--bg-1);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          padding: 26px;
+          box-shadow: var(--shadow-md);
+        }
+
+        .modal-close {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: 1px solid transparent;
+          color: var(--ink-2);
+          cursor: pointer;
+          border-radius: 10px;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .modal-close:hover {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.08);
+          color: var(--ink-0);
+        }
+
+        .modal-header {
+          margin-bottom: 18px;
+        }
+
+        .modal-title {
+          font-size: 16px;
+          font-weight: 900;
+          letter-spacing: 0.02em;
+          margin: 0;
+          color: var(--ink-0);
+        }
+
+        .modal-form {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .form-label {
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .form-input {
+          width: 100%;
+          height: 42px;
+          padding: 0 12px;
+          background: var(--bg-2);
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          border-radius: var(--radius-sm);
+          color: var(--ink-0);
+          font-size: 13px;
+          font-family: inherit;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-input::placeholder {
+          color: rgba(11, 18, 32, 0.38);
+        }
+        .form-input:focus {
+          border-color: rgba(31, 94, 255, 0.55);
+          box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .form-input-wrap {
+          position: relative;
+        }
+
+        .form-toggle-vis {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: 1px solid transparent;
+          color: var(--ink-2);
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          cursor: pointer;
+          font-family: inherit;
+          border-radius: 8px;
+          padding: 6px 8px;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .form-toggle-vis:hover {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.08);
+          color: var(--ink-0);
+        }
+
+        .btn-submit {
+          width: 100%;
+          height: 42px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: var(--accent);
+          color: #fff;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          font-weight: 900;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background 0.15s ease;
+          margin-top: 6px;
+          letter-spacing: 0.01em;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+          background: var(--accent-hover);
+        }
+        .btn-submit:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+
+        .spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(255, 255, 255, 0.35);
+          border-top-color: #fff;
+          border-radius: var(--radius-full);
+          animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .modal-message {
+          padding: 10px 12px;
+          background: var(--bg-2);
+          border: 1px solid rgba(11, 18, 32, 0.08);
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          color: var(--ink-1);
+          text-align: center;
+          margin-top: 14px;
+        }
+
+        .modal-message.ok {
+          color: #0f7a3a;
+        }
+        .modal-message.err {
+          color: #b42318;
+        }
+
+        .modal-footer {
+          margin-top: 16px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .modal-link {
+          background: none;
+          border: 1px solid transparent;
+          font-size: 12px;
+          color: var(--ink-1);
+          cursor: pointer;
+          font-family: inherit;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+          padding: 6px 10px;
+          border-radius: 10px;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .modal-link:hover {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.08);
+        }
+
+        /* ✅ Turnstile/Recaptcha line -> one line (shrink only enough) */
+        .modal-card .recaptcha-badge,
+        .modal-card .turnstile-badge,
+        .modal-card .captcha-badge,
+        .modal-card [data-turnstile-badge],
+        .modal-card [data-recaptcha-badge] {
+          font-size: 10px !important;
+          white-space: nowrap !important;
+          line-height: 1.2 !important;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          color: var(--ink-2);
+        }
+
+        /* ✅ Pricing feature rows (spacing) */
+        .pricing-feature {
+          display: grid;
+          grid-template-columns: 16px 1fr;
+          column-gap: 10px;
+          align-items: start;
+          font-size: 12px;
+          line-height: 1.6;
+          color: var(--ink-1);
+        }
+
+        .pricing-feature-check {
+          width: 16px;
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          line-height: 1;
+          margin-top: 2px;
+          font-size: 14px;
+        }
+
+        .pricing-feature-text {
+          display: block;
+          min-width: 0;
+        }
+
+        /* Chat */
+        .chat-root {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          background: var(--bg-0);
+          height: 100dvh;
+          overflow: hidden;
+        }
+
+        @supports (-webkit-touch-callout: none) {
+          .chat-root {
+            height: -webkit-fill-available;
+          }
+        }
+
+        .chat-topbar {
+          width: 100%;
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
+          background: rgba(243, 245, 248, 0.82);
+          backdrop-filter: blur(8px);
+        }
+
+        .chat-topbar-inner {
+          max-width: 1000px;
+          margin: 0 auto;
+          padding: 14px 24px;
+          padding-left: max(24px, env(safe-area-inset-left));
+          padding-right: max(24px, env(safe-area-inset-right));
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .chat-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        /* ✅ Settings gear dropdown */
+        .chat-settings-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .chat-settings-btn {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: 1px solid transparent;
+          border-radius: 10px;
+          color: var(--ink-1);
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .chat-settings-btn:hover {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.08);
+        }
+
+        .chat-settings-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 190px;
+          background: var(--bg-1);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
+          padding: 8px;
+          box-shadow: var(--shadow-md);
+          animation: dropdown-in 0.14s ease;
+          z-index: 50;
+        }
+
+        @keyframes dropdown-in {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .chat-settings-item {
+          width: 100%;
+          text-align: left;
+          padding: 10px 10px;
+          background: transparent;
+          border: 1px solid transparent;
+          border-radius: 10px;
+          color: var(--ink-0);
+          font-size: 12px;
+          font-weight: 900;
+          cursor: pointer;
+          font-family: inherit;
+          letter-spacing: 0.03em;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .chat-settings-item:hover {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.08);
+        }
+
+        .chat-settings-sep {
+          height: 1px;
+          background: rgba(11, 18, 32, 0.08);
+          margin: 6px 2px;
+        }
 
         .chat-messages {
-          flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth;
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          padding: 18px 24px 20px;
+          background: var(--bg-0);
         }
-        
-        .chat-empty-state {
-          height: 100%; display: flex; align-items: center; justify-content: center;
-          color: var(--ink-muted); font-size: 14px;
+
+        .chat-sheet {
+          max-width: 1000px;
+          margin: 0 auto;
+          background: var(--bg-1);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-sm);
+          padding: 18px;
         }
-        
-        .chat-history { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
-        
-        .chat-message { display: flex; width: 100%; }
-        .chat-message-user { justify-content: flex-end; }
-        .chat-message-assistant { justify-content: flex-start; }
-        
+
+        .chat-sheet-head {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid rgba(11, 18, 32, 0.08);
+          margin-bottom: 14px;
+        }
+
+        .sheet-title {
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-0);
+        }
+
+        .sheet-sub {
+          font-size: 12px;
+          color: var(--ink-2);
+          line-height: 1.5;
+          max-width: 56ch;
+          text-align: right;
+        }
+
+        .sheet-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .sheet-block {
+          border: 1px solid rgba(11, 18, 32, 0.08);
+          background: var(--bg-2);
+          border-radius: var(--radius-md);
+          padding: 12px;
+        }
+
+        .sheet-k {
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          margin-bottom: 8px;
+        }
+
+        .sheet-list {
+          margin: 0;
+          padding-left: 16px;
+          font-size: 12px;
+          line-height: 1.7;
+          color: var(--ink-1);
+        }
+
+        .sheet-footer {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(11, 18, 32, 0.08);
+          font-size: 12px;
+          color: var(--ink-2);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .sheet-footer .mini-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(31, 94, 255, 0.08);
+          border: 1px solid rgba(31, 94, 255, 0.16);
+          color: var(--accent);
+          font-weight: 900;
+          letter-spacing: 0.02em;
+          user-select: none;
+        }
+
+        .chat-history {
+          max-width: 920px;
+          margin: 0 auto;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 26px;
+          padding: 2px 2px 6px;
+        }
+
+        .chat-message {
+          display: flex;
+          width: 100%;
+          align-items: flex-start;
+        }
+        .chat-message-user {
+          justify-content: flex-end;
+        }
+        .chat-message-assistant {
+          justify-content: flex-start;
+        }
+
         .chat-bubble {
-          max-width: 80%; padding: 16px 20px; border-radius: var(--radius-sm);
-          font-size: 15px; line-height: 1.6; position: relative;
+          max-width: 78%;
+          font-size: 14px;
+          line-height: 1.75;
+          display: block;
         }
-        
-        /* User: Clean Blue Card */
+
+        /* “Clipboard note” feel: no bubbles, just alignment + ink weight */
         .chat-bubble-user {
-          background: var(--accent-light); color: var(--ink-primary);
-          border: 1px solid #dbeafe;
+          color: var(--ink-0);
         }
-        
-        /* Assistant: White Paper / Clipboard look */
         .chat-bubble-assistant {
-          background: white; color: var(--ink-primary);
-          border: 1px solid var(--border-strong);
-          box-shadow: var(--shadow-sm);
+          color: var(--ink-1);
         }
-        
-        .chat-content { white-space: pre-wrap; word-break: break-word; }
+
+        .chat-bubble-image {
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          margin-bottom: 10px;
+          display: inline-block;
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          background: var(--bg-2);
+        }
+
         .chat-bubble-image img {
-          max-width: 100%; max-height: 300px; border-radius: 4px; border: 1px solid var(--border-main); display: block; margin-bottom: 12px;
+          display: block;
+          max-width: 100%;
+          max-height: 300px;
+          object-fit: contain;
         }
 
-        /* INPUT AREA - Form Footer Style */
+        .chat-content {
+          display: block;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+
+        .chat-thinking {
+          display: block;
+          color: var(--ink-2);
+          font-style: italic;
+        }
+
         .chat-input-area {
-          flex-shrink: 0; background: var(--bg-page);
-          border-top: 1px solid var(--border-main);
-          padding: 20px 24px 32px;
+          flex-shrink: 0;
+          border-top: 1px solid rgba(11, 18, 32, 0.08);
+          background: rgba(243, 245, 248, 0.86);
+          backdrop-filter: blur(8px);
         }
-        
-        .chat-input-inner { max-width: 720px; margin: 0 auto; position: relative; }
-        
-        .chat-attachment-pill {
-          display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px;
-          background: var(--bg-panel); border: 1px solid var(--border-strong);
-          border-radius: var(--radius-sm); font-size: 12px; color: var(--ink-primary);
-          margin-bottom: 12px;
-        }
-        .chat-attachment-remove { border: none; background: none; color: var(--ink-secondary); }
 
-        .chat-input-row { display: flex; align-items: flex-end; gap: 12px; }
-        
-        /* Camera Button - The "Draw" */
-        .chat-camera-btn {
-          width: 48px; height: 48px; border-radius: var(--radius-sm);
-          background: white; border: 1px solid var(--border-strong);
-          color: var(--accent); display: flex; align-items: center; justify-content: center;
-          transition: all 0.2s ease;
-          box-shadow: var(--shadow-sm);
+        .chat-input-inner {
+          max-width: 1000px;
+          margin: 0 auto;
+          padding: 12px 24px 18px;
+          padding-bottom: max(18px, env(safe-area-inset-bottom));
         }
-        .chat-camera-btn:hover {
-          border-color: var(--accent); background: var(--accent-light);
-          transform: translateY(-1px);
+
+        .chat-attachment {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 12px;
+          background: var(--bg-1);
+          border: 1px solid rgba(11, 18, 32, 0.10);
+          border-radius: 999px;
+          margin-bottom: 10px;
+          font-size: 12px;
+          color: var(--ink-1);
+          box-shadow: 0 1px 0 rgba(16, 24, 40, 0.04);
+        }
+
+        .chat-attachment-icon {
+          color: var(--accent);
+          display: flex;
+        }
+
+        .chat-attachment-remove {
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: 1px solid transparent;
+          color: var(--ink-2);
+          cursor: pointer;
+          border-radius: 999px;
+          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .chat-attachment-remove:hover {
+          background: rgba(11, 18, 32, 0.04);
+          border-color: rgba(11, 18, 32, 0.08);
+          color: var(--ink-0);
+        }
+
+        .chat-input-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 10px;
         }
 
         .chat-input-wrapper {
-          flex: 1; display: flex; align-items: flex-end;
-          border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-          background: white; min-height: 48px; transition: border-color 0.2s;
-        }
-        .chat-input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-        
-        .chat-textarea {
-          flex: 1; border: none; background: transparent; padding: 14px;
-          font-size: 15px; max-height: 160px; resize: none; color: var(--ink-primary);
-        }
-        
-        .chat-send-btn {
-          width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
-          border: none; background: transparent; color: var(--ink-secondary);
-        }
-        .chat-send-btn:hover:not(:disabled) { color: var(--accent); }
-        .chat-send-btn:disabled { color: var(--border-main); }
-        
-        .chat-disclaimer {
-          text-align: center; font-size: 11px; color: var(--ink-muted);
-          margin-top: 12px;
+          position: relative;
+          flex: 1;
+          display: flex;
+          align-items: flex-end;
+          background: var(--bg-1);
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          border-radius: var(--radius-md);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          min-width: 0;
+          box-shadow: 0 1px 0 rgba(16, 24, 40, 0.04);
         }
 
-        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+        .chat-input-wrapper:focus-within {
+          border-color: rgba(31, 94, 255, 0.50);
+          box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        /* Camera button integrated (not a big center CTA) */
+        .chat-tool-btn {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--bg-3);
+          border: none;
+          border-right: 1px solid rgba(11, 18, 32, 0.10);
+          border-top-left-radius: var(--radius-md);
+          border-bottom-left-radius: var(--radius-md);
+          color: var(--accent);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.15s ease;
+          position: relative;
+        }
+
+        .chat-tool-btn:hover {
+          background: rgba(31, 94, 255, 0.08);
+        }
+
+        /* Subtle, one-time nudge anchored to the camera control */
+        .camera-nudge {
+          position: absolute;
+          left: 10px;
+          bottom: calc(100% + 10px);
+          background: var(--ink-0);
+          color: #fff;
+          border-radius: 999px;
+          padding: 8px 10px;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+          user-select: none;
+          pointer-events: none;
+          animation: nudge-in 0.22s ease;
+          white-space: nowrap;
+        }
+
+        .camera-nudge::after {
+          content: '';
+          position: absolute;
+          left: 18px;
+          top: 100%;
+          width: 10px;
+          height: 10px;
+          background: var(--ink-0);
+          transform: rotate(45deg);
+        }
+
+        @keyframes nudge-in {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .chat-textarea {
+          flex: 1;
+          min-height: 44px;
+          max-height: 160px;
+          padding: 12px 12px;
+          background: transparent;
+          border: none;
+          color: var(--ink-0);
+          font-size: 13px;
+          line-height: 1.45;
+          resize: none;
+          font-family: inherit;
+          min-width: 0;
+        }
+
+        .chat-textarea::placeholder {
+          color: rgba(11, 18, 32, 0.42);
+        }
+        .chat-textarea:focus {
+          outline: none;
+        }
+
+        .chat-send-btn {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: none;
+          color: rgba(11, 18, 32, 0.56);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: color 0.15s ease, background 0.15s ease;
+          border-top-right-radius: var(--radius-md);
+          border-bottom-right-radius: var(--radius-md);
+        }
+
+        .chat-send-btn:hover:not(:disabled) {
+          color: var(--accent);
+          background: rgba(31, 94, 255, 0.08);
+        }
+        .chat-send-btn:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
+
+        .chat-send-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(11, 18, 32, 0.14);
+          border-top-color: var(--accent);
+          border-radius: var(--radius-full);
+          animation: spin 0.6s linear infinite;
+        }
+
+        .chat-disclaimer {
+          text-align: center;
+          font-size: 11px;
+          color: var(--ink-3);
+          margin-top: 12px;
+          letter-spacing: 0.02em;
+        }
+
+        /* Responsive */
+        @media (max-width: 980px) {
+          .landing-main {
+            grid-template-columns: 1fr;
+          }
+          .preview-sheet {
+            position: static;
+          }
+        }
 
         @media (max-width: 768px) {
-          .hero-title { font-size: 32px; }
-          .hero-sub { font-size: 16px; }
-          .chat-bubble { max-width: 90%; }
-          .chat-camera-btn { width: 44px; height: 44px; }
-          .chat-input-wrapper { min-height: 44px; }
+          .landing-topbar {
+            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px
+              max(16px, env(safe-area-inset-left));
+          }
+
+          .landing-main {
+            padding: 18px 16px 98px;
+            gap: 14px;
+          }
+
+          .landing-title {
+            font-size: 22px;
+          }
+
+          .plm-brand-mark {
+            width: 58px;
+            height: 58px;
+          }
+          .plm-brand-text {
+            font-size: 17px;
+          }
+
+          .chat-topbar-inner {
+            padding: 12px 16px;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-top: max(12px, env(safe-area-inset-top));
+          }
+
+          .chat-messages {
+            padding: 14px 16px 18px;
+          }
+
+          .chat-input-inner {
+            padding: 10px 16px 16px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+          }
+
+          .sheet-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .chat-bubble {
+            max-width: 90%;
+          }
+
+          .camera-nudge {
+            left: 8px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .modal-card {
+            padding: 22px 18px;
+          }
+
+          .plm-brand-mark {
+            width: 54px;
+            height: 54px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+          }
         }
       `}</style>
 
@@ -1087,58 +2523,119 @@ export default function Page() {
           ) : (
             <div className={`${ibmMono.className} chat-root`}>
               <header className="chat-topbar">
-                <BrandLink variant="chat" />
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {session && subscription && (
-                    <div className={`chat-sub-badge ${subscription.status === 'active' ? 'pro' : ''}`}>
-                      {subscription.status === 'trialing' ? 'Trial' : 'Pro License'}
-                    </div>
-                  )}
-                  <div className="chat-settings-wrap" ref={settingsRef}>
-                    <button
-                      className="chat-settings-btn"
-                      onClick={() => setShowSettingsMenu((v) => !v)}
-                      aria-label="Settings"
-                    >
-                      <Icons.Gear />
-                    </button>
-                    {showSettingsMenu && (
-                      <div className="chat-settings-menu">
-                        <button
-                          className="chat-settings-item"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            hasActiveSubscription ? handleManageBilling() : setShowPricingModal(true)
-                          }}
-                        >
-                          {hasActiveSubscription ? 'Billing Portal' : 'Upgrade License'}
-                        </button>
-                        <button
-                          className="chat-settings-item"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            handleSignOut()
-                          }}
-                        >
-                          Sign Out
-                        </button>
+                <div className="chat-topbar-inner">
+                  <BrandLink variant="chat" />
+                  <nav className="chat-top-actions" aria-label="Chat actions">
+                    {session && subscription && (
+                      <div
+                        style={{
+                          marginRight: '10px',
+                          padding: '6px 10px',
+                          borderRadius: '999px',
+                          fontSize: '11px',
+                          fontWeight: '900',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          background:
+                            subscription.status === 'trialing'
+                              ? 'rgba(31, 94, 255, 0.10)'
+                              : 'rgba(15, 122, 58, 0.10)',
+                          color: subscription.status === 'trialing' ? '#1f5eff' : '#0f7a3a',
+                          border: `1px solid ${
+                            subscription.status === 'trialing' ? 'rgba(31, 94, 255, 0.22)' : 'rgba(15, 122, 58, 0.22)'
+                          }`,
+                        }}
+                      >
+                        {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
                       </div>
                     )}
-                  </div>
+
+                    <div className="chat-settings-wrap" ref={settingsRef}>
+                      <button
+                        type="button"
+                        className="chat-settings-btn"
+                        onClick={() => setShowSettingsMenu((v) => !v)}
+                        aria-expanded={showSettingsMenu}
+                        aria-label="Settings"
+                      >
+                        <Icons.Gear />
+                      </button>
+
+                      {showSettingsMenu && (
+                        <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
+                          <button
+                            type="button"
+                            className="chat-settings-item"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              if (hasActiveSubscription) {
+                                handleManageBilling()
+                              } else {
+                                setShowPricingModal(true)
+                              }
+                            }}
+                          >
+                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                          </button>
+
+                          <div className="chat-settings-sep" />
+
+                          <button
+                            type="button"
+                            className="chat-settings-item"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              handleSignOut()
+                            }}
+                          >
+                            Log out
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </nav>
                 </div>
               </header>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
+              <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
                 {messages.length === 0 ? (
-                  <div className="chat-empty-state">
-                    <p style={{ maxWidth: '400px', textAlign: 'center', lineHeight: '1.6' }}>
-                      Ready for inspection.<br/>
-                      Upload a photo of your prep area, sink, or storage to detect violations.
-                    </p>
+                  <div className="chat-sheet">
+                    <div className="chat-sheet-head">
+                      <div className="sheet-title">New check</div>
+                      <div className="sheet-sub">Start with a photo scan or type a question.</div>
+                    </div>
+
+                    <div className="sheet-grid">
+                      <div className="sheet-block">
+                        <div className="sheet-k">Photo scan</div>
+                        <ul className="sheet-list">
+                          <li>Walk-in & cold holding</li>
+                          <li>Hand sinks & soap/towels</li>
+                          <li>Storage & chemical separation</li>
+                          <li>Prep surfaces & cross-contamination risk</li>
+                        </ul>
+                      </div>
+
+                      <div className="sheet-block">
+                        <div className="sheet-k">Ask</div>
+                        <ul className="sheet-list">
+                          <li>Sanitizer, temps, cooling, reheating</li>
+                          <li>Date marking & time as a control</li>
+                          <li>Cleaning schedules & inspections</li>
+                          <li>“Is this a violation?” with context</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="sheet-footer">
+                      <span className="mini-chip" aria-hidden="true">
+                        <Icons.Camera />
+                        Camera = photo scan
+                      </span>
+                      <span>Same screen. Same input. No workflow detours.</span>
+                    </div>
                   </div>
                 ) : (
                   <div className="chat-history">
@@ -1150,11 +2647,12 @@ export default function Page() {
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
-                              <img src={msg.image} alt="Evidence" />
+                              <img src={msg.image} alt="Uploaded" />
                             </div>
                           )}
+
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <span style={{color: 'var(--ink-muted)'}}>Analyzing compliance...</span>
+                            <div className="chat-thinking">Analyzing…</div>
                           ) : (
                             <div className="chat-content">{msg.content}</div>
                           )}
@@ -1170,9 +2668,17 @@ export default function Page() {
                   <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                   {selectedImage && (
-                    <div className="chat-attachment-pill">
+                    <div className="chat-attachment">
+                      <span className="chat-attachment-icon">
+                        <Icons.Camera />
+                      </span>
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="chat-attachment-remove">
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="chat-attachment-remove"
+                        aria-label="Remove"
+                        type="button"
+                      >
                         <Icons.X />
                       </button>
                     </div>
@@ -1187,17 +2693,26 @@ export default function Page() {
                       onChange={handleImageChange}
                     />
 
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="chat-camera-btn"
-                      title="Analyze Photo"
-                      aria-label="Upload photo for analysis"
-                      type="button"
-                    >
-                      <Icons.Camera />
-                    </button>
-
                     <div className="chat-input-wrapper">
+                      <button
+                        onClick={() => {
+                          markCameraNudgeSeen()
+                          fileInputRef.current?.click()
+                        }}
+                        className="chat-tool-btn"
+                        aria-label="Upload photo"
+                        type="button"
+                        title="Photo scan"
+                      >
+                        <Icons.Camera />
+                        {showCameraNudge && (
+                          <div className="camera-nudge" aria-hidden="true">
+                            Photo scan
+                            <span style={{ opacity: 0.85 }}>→</span>
+                          </div>
+                        )}
+                      </button>
+
                       <textarea
                         ref={textAreaRef}
                         value={input}
@@ -1208,7 +2723,7 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Describe the issue or ask a regulation question..."
+                        placeholder="Start with a photo or ask a question…"
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
@@ -1218,20 +2733,22 @@ export default function Page() {
                           }
                         }}
                       />
+
                       <button
                         type="button"
                         onClick={handleSend}
                         disabled={(!input.trim() && !selectedImage) || isSending}
                         className="chat-send-btn"
                         aria-label="Send"
+                        title="Send"
                       >
-                         <Icons.ArrowUp />
+                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
                       </button>
                     </div>
                   </div>
 
                   <p className="chat-disclaimer">
-                    protocolLM assists with compliance but is not a substitute for official Health Department inspection.
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
                   </p>
                 </div>
               </div>
@@ -1240,8 +2757,10 @@ export default function Page() {
         </main>
       </div>
 
+      {/* Multi-location warning banner */}
       {isAuthenticated && locationCheck && <MultiLocationBanner locationCheck={locationCheck} />}
 
+      {/* Multi-location upgrade modal */}
       <MultiLocationUpgradeModal
         isOpen={showMultiLocationModal}
         onClose={() => setShowMultiLocationModal(false)}
