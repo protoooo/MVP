@@ -46,8 +46,7 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { priceId, captchaToken, isMultiLocation: isMultiLocationRaw } = body
-    const isMultiLocation = isMultiLocationRaw === true || isMultiLocationRaw === 'true'
+    const { priceId, captchaToken } = body
 
     // ✅ Validate price ID - must be the unlimited plan
     if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
@@ -247,9 +246,7 @@ export async function POST(request) {
       billing_address_collection: 'required',
       automatic_tax: { enabled: true },
       tax_id_collection: { enabled: true },
-      success_url: isMultiLocation
-        ? `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/multi-location-setup`
-        : `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
       metadata: {
         userId: user.id,
