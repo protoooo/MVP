@@ -1,4 +1,4 @@
-// app/api/accept-terms/route.js - SECURITY FIX: Subscription verification before terms acceptance
+// app/api/accept-terms/route.js - FIXED: Subscription verification before terms acceptance
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -10,7 +10,6 @@ export async function POST(request) {
   try {
     const cookieStore = cookies()
     
-    // First, authenticate the user with anon key
     const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -30,7 +29,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // ✅ SECURITY FIX: Verify user has active subscription BEFORE allowing terms acceptance
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!serviceRoleKey) {
       const message = 'SUPABASE_SERVICE_ROLE_KEY is missing; service role key is required for accept-terms'
@@ -51,10 +49,11 @@ export async function POST(request) {
       }
     )
 
-    // ✅ CRITICAL: Check for active subscription
+    // ✅ CRITICAL FIX: Verify subscription FIRST (before email verification)
+    // This prevents the race condition where user verifies email during checkout
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
-      .select('status, trial_end, current_period_end')
+      .select('status, trial_end, current_period_end, stripe_subscription_id')
       .eq('user_id', user.id)
       .in('status', ['active', 'trialing'])
       .order('created_at', { ascending: false })
@@ -71,6 +70,7 @@ export async function POST(request) {
       }, { status: 500 })
     }
 
+    // ✅ FIX: Subscription must exist before accepting terms
     if (!subscription) {
       logger.security('Attempted terms acceptance without subscription', { 
         userId: user.id,
@@ -82,7 +82,7 @@ export async function POST(request) {
       }, { status: 402 })
     }
 
-    // ✅ CRITICAL: Check if trial has expired
+    // ✅ FIX: Check if trial has expired (secondary check after subscription exists)
     if (subscription.status === 'trialing' && subscription.trial_end) {
       const trialEnd = new Date(subscription.trial_end)
       const now = new Date()
@@ -100,7 +100,7 @@ export async function POST(request) {
       }
     }
 
-    // ✅ ENHANCEMENT: Check if paid subscription has expired
+    // ✅ FIX: Check if paid subscription has expired
     if (subscription.status === 'active' && subscription.current_period_end) {
       const periodEnd = new Date(subscription.current_period_end)
       const now = new Date()
@@ -115,6 +115,18 @@ export async function POST(request) {
           code: 'SUBSCRIPTION_EXPIRED'
         }, { status: 402 })
       }
+    }
+
+    // ✅ NOW check email verification (after subscription is confirmed)
+    if (!user.email_confirmed_at) {
+      logger.security('Attempted terms acceptance without email verification', {
+        userId: user.id,
+        hasSubscription: true
+      })
+      return NextResponse.json({
+        error: 'Please verify your email before accepting terms.',
+        code: 'EMAIL_NOT_VERIFIED'
+      }, { status: 403 })
     }
 
     const now = new Date().toISOString()
@@ -173,7 +185,8 @@ export async function POST(request) {
     logger.audit('Terms accepted (with valid subscription)', { 
       userId: user.id, 
       email: user.email,
-      subscriptionStatus: subscription.status
+      subscriptionStatus: subscription.status,
+      hasStripeSubscription: !!subscription.stripe_subscription_id
     })
 
     return NextResponse.json({ success: true })
