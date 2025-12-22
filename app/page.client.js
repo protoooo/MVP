@@ -114,12 +114,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         </div>
 
         <nav className="landing-top-actions" aria-label="Top actions">
-          <div className="landing-top-actions-desktop desktop-only">
-            <button onClick={onShowPricing} className="btn-primary" type="button">
-              Start trial
-            </button>
-          </div>
-
           <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
             Sign in
           </button>
@@ -141,30 +135,15 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
 
           <div className="hero-cta-row">
+            <div className="hero-arrow-text">Get started in minutes</div>
+            <div className="hero-arrow" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
             <button className="btn-primary hero-cta cta-pulse" onClick={onShowPricing} type="button">
               Start trial
             </button>
-            <div className="hero-arrow">
-              <svg viewBox="0 0 120 40" aria-hidden="true" focusable="false">
-                <path
-                  d="M5 25c25-10 55-12 85-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M78 16l12 6-10 8"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="hero-arrow-text">Get started in minutes</span>
-            </div>
           </div>
 
           <div className="mobile-start mobile-only">
@@ -1491,7 +1470,8 @@ export default function Page() {
         .hero-cta-row {
           display: flex;
           align-items: center;
-          gap: 18px;
+          gap: 14px;
+          justify-content: center;
         }
 
         .hero-cta {
@@ -1530,24 +1510,55 @@ export default function Page() {
           }
         }
 
-        .hero-arrow {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: var(--ink-2);
-          font-size: 13px;
-          line-height: 1.4;
-        }
-
-        .hero-arrow svg {
-          width: 68px;
-          height: 28px;
-          color: var(--accent);
-          opacity: 0.85;
-        }
-
         .hero-arrow-text {
           white-space: nowrap;
+          color: var(--ink-1);
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .hero-arrow {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
+          height: 24px;
+          color: var(--accent);
+          transform: rotate(0deg);
+        }
+
+        .hero-arrow span {
+          display: block;
+          width: 12px;
+          height: 12px;
+          border-bottom: 3px solid currentColor;
+          border-right: 3px solid currentColor;
+          transform: rotate(-45deg);
+          margin: -8px;
+          animation: hero-arrow-animate 2s infinite;
+        }
+
+        .hero-arrow span:nth-child(2) {
+          animation-delay: -0.2s;
+        }
+
+        .hero-arrow span:nth-child(3) {
+          animation-delay: -0.4s;
+        }
+
+        @keyframes hero-arrow-animate {
+          0% {
+            opacity: 0;
+            transform: rotate(-45deg) translate(-12px, -6px);
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: rotate(-45deg) translate(12px, 6px);
+          }
         }
 
         .mobile-start {
@@ -1558,8 +1569,9 @@ export default function Page() {
         .mobile-start .btn-primary {
           width: 100%;
           justify-content: center;
-          height: 44px;
-          font-size: 14px;
+          height: 46px;
+          font-size: 15px;
+          border-radius: var(--radius-full);
         }
 
         .terminal-dot {
@@ -2375,11 +2387,7 @@ export default function Page() {
         @media (max-width: 768px) {
           .hero-cta-row {
             flex-direction: column;
-            gap: 10px;
-          }
-
-          .hero-arrow {
-            display: none;
+            gap: 12px;
           }
 
           .hero-headings {
