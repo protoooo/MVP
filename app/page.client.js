@@ -14,19 +14,17 @@ import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
-import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
+import PricingModal from '@/components/PricingModal'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
-// ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
-// lightweight logger (keeps your original “logger.info” style expectations)
 const logger = {
   info: (...args) => console.log(...args),
   warn: (...args) => console.warn(...args),
@@ -43,6 +41,11 @@ const Icons = {
   ArrowUp: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  ArrowRight: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   X: () => (
@@ -127,13 +130,15 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-headings">
             <h1 className="hero-title">Catch Violations, Not Fines.</h1>
             <p className="hero-support">
-              Get inspection-ready with quick answers grounded in Washtenaw County food safety rules. Snap a photo or ask
-              a question—protocolLM flags potential issues and points you to the relevant guidance.
+              Snap a photo or ask a question—get instant, AI-powered food safety guidance for Washtenaw County.
             </p>
           </div>
 
           <div className="hero-cta-row">
             <div className="hero-arrow-text">Get started in minutes</div>
+            <div className="hero-arrow-icon">
+              <Icons.ArrowRight />
+            </div>
             <button className="btn-primary hero-cta" onClick={onShowPricing} type="button">
               Start trial
             </button>
@@ -146,7 +151,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-// ✅ UPDATED: accepts selectedPriceId and passes it on signup
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -349,7 +353,6 @@ export default function Page() {
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
-  // ✅ remember the selected Stripe price when user isn't logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -358,7 +361,6 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
-  // ✅ NEW: multi-location license state + modal
   const [locationCheck, setLocationCheck] = useState(null)
   const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
   const [showMultiLocationPurchaseModal, setShowMultiLocationPurchaseModal] = useState(false)
@@ -374,11 +376,9 @@ export default function Page() {
 
   const isAuthenticated = !!session
 
-  // ✅ Chat settings menu (gear dropdown)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
 
-  // Close settings menu on outside click
   useEffect(() => {
     const onDown = (e) => {
       if (!settingsRef.current) return
@@ -392,7 +392,6 @@ export default function Page() {
     }
   }, [])
 
-  // ✅ NEW: Listen for auth modal open events
   useEffect(() => {
     const handleOpenAuthModal = (event) => {
       const { mode } = event.detail || {}
@@ -408,10 +407,8 @@ export default function Page() {
     }
   }, [])
 
-  // ✅ NEW: Check for pending multi-location purchase after auth
   useEffect(() => {
     async function checkPendingPurchase() {
-      // Only run when user is authenticated
       if (!isAuthenticated) return
 
       const pending = sessionStorage.getItem('pendingMultiLocationPurchase')
@@ -423,23 +420,19 @@ export default function Page() {
 
       console.log('Found pending multi-location purchase, authenticated:', isAuthenticated)
 
-      // Clear the flag
       sessionStorage.removeItem('pendingMultiLocationPurchase')
       sessionStorage.removeItem('pendingLocationCount')
 
-      // Wait a bit for subscription check to complete
       setTimeout(() => {
         console.log('Opening multi-location modal, hasSubscription:', hasActiveSubscription)
 
         if (hasActiveSubscription) {
-          // Existing subscriber -> upgrade flow
           window.dispatchEvent(
             new CustomEvent('openMultiLocationUpgrade', {
               detail: { currentLocations: 2 },
             })
           )
         } else {
-          // New user -> purchase flow
           window.dispatchEvent(
             new CustomEvent('openMultiLocationPurchase', {
               detail: { preferredCount: resolvedCount },
@@ -452,7 +445,6 @@ export default function Page() {
     checkPendingPurchase()
   }, [isAuthenticated, hasActiveSubscription])
 
-  // ✅ NEW: Listen for multi-location upgrade events
   useEffect(() => {
     const handleUpgradeEvent = () => {
       setShowMultiLocationModal(true)
@@ -465,7 +457,6 @@ export default function Page() {
     }
   }, [])
 
-  // ✅ NEW: Listen for multi-location purchase modal trigger
   useEffect(() => {
     const handleOpenMultiLocationPurchase = (event) => {
       const count = event?.detail?.preferredCount
@@ -482,7 +473,6 @@ export default function Page() {
     }
   }, [])
 
-  // Set view attribute for CSS + optional spline container hiding
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
@@ -492,7 +482,6 @@ export default function Page() {
     }
   }, [isAuthenticated])
 
-  // Auto-scroll helpers
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
@@ -515,10 +504,6 @@ export default function Page() {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
-  // ============================================================================
-  // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
-  // Only show pricing via URL param if authenticated
-  // ============================================================================
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     const emailVerified = searchParams?.get('emailVerified')
@@ -543,19 +528,14 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
-  // ============================================================================
-  // ✅ FIX 2: Keep ONLY this handleCheckout (full validation + CAPTCHA + verification)
-  // ============================================================================
   const handleCheckout = useCallback(
     async (priceId, planName) => {
       try {
-        // ✅ SECURITY: Validate price ID
         if (!priceId) {
           alert('Invalid price selected.')
           return
         }
 
-        // ✅ SECURITY: Verify priceId is one of the allowed values (single plan)
         const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
           console.error('Invalid price ID:', priceId)
@@ -566,7 +546,6 @@ export default function Page() {
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
-          // ✅ Store selected plan before showing auth
           console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
           setSelectedPriceId(priceId)
           setShowPricingModal(false)
@@ -575,7 +554,6 @@ export default function Page() {
           return
         }
 
-        // ✅ SECURITY: Check email is verified before allowing checkout
         if (!data.session.user.email_confirmed_at) {
           alert('Please verify your email before starting a trial. Check your inbox.')
           setShowPricingModal(false)
@@ -607,7 +585,6 @@ export default function Page() {
 
         const payload = await res.json().catch(() => ({}))
 
-        // ✅ SECURITY: Handle specific error codes
         if (!res.ok) {
           if (payload.code === 'EMAIL_NOT_VERIFIED') {
             alert('Please verify your email before starting a trial.')
@@ -639,7 +616,6 @@ export default function Page() {
     [supabase, captchaLoaded, executeRecaptcha, router]
   )
 
-  // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
     let isMounted = true
 
@@ -652,7 +628,6 @@ export default function Page() {
         setHasActiveSubscription(false)
         setShowPricingModal(false)
 
-        // ✅ clear multi-location states on logout
         setLocationCheck(null)
         setShowMultiLocationModal(false)
         setShowMultiLocationPurchaseModal(false)
@@ -661,14 +636,12 @@ export default function Page() {
         return
       }
 
-      // ✅ CRITICAL: Check if email is verified + terms accepted
       try {
         if (!s.user.email_confirmed_at) {
           console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
           setHasActiveSubscription(false)
 
-          // ✅ clear multi-location states
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
@@ -738,7 +711,6 @@ export default function Page() {
         return
       }
 
-      // ✅ CRITICAL: Check for active subscription
       let active = false
       let subData = null
 
@@ -767,7 +739,6 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
-      // ✅ if user lost subscription, clear location check so banner doesn't show incorrectly
       if (!subData) {
         setLocationCheck(null)
         setShowMultiLocationModal(false)
@@ -837,7 +808,6 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  // ✅ FIXED: Auto-checkout after email verification / auth callback
   useEffect(() => {
     const checkoutPlan = searchParams?.get('checkout')
     if (!checkoutPlan) return
@@ -853,11 +823,6 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
-  // ============================================================================
-  // ✅ NEW: Fetch multi-location “license/locationCheck” after auth + subscription exists
-  // - This is intentionally non-blocking: it won’t affect isLoading
-  // - It safely no-ops if your endpoint isn’t present yet
-  // ============================================================================
   const fetchLocationCheckFromServer = useCallback(async (sess) => {
     try {
       const token = sess?.access_token
@@ -890,7 +855,6 @@ export default function Page() {
       const data = await res.json().catch(() => null)
       if (!res.ok || !data) return null
 
-      // support either { locationCheck: {...} } or direct object
       return data.locationCheck || data
     } catch (e) {
       logger.warn('Location check fetch failed', e)
@@ -902,7 +866,6 @@ export default function Page() {
     let cancelled = false
 
     async function run() {
-      // only for authenticated users with an active/trialing subscription record
       if (!isAuthenticated || !session?.user?.id || !subscription) return
 
       const lc = await fetchLocationCheckFromServer(session)
@@ -910,14 +873,12 @@ export default function Page() {
 
       if (!lc) return
 
-      // ✅ Step 3 behavior: log + store for banner
       logger.info('License validated', {
         userId: session.user.id,
         uniqueLocationsUsed: lc.uniqueLocationsUsed,
         locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
       })
 
-      // Store location check for banner
       setLocationCheck(lc)
     }
 
@@ -969,7 +930,6 @@ export default function Page() {
     try {
       setShowSettingsMenu(false)
 
-      // ✅ clear multi-location states immediately
       setLocationCheck(null)
       setShowMultiLocationModal(false)
       setShowMultiLocationPurchaseModal(false)
@@ -1360,6 +1320,12 @@ export default function Page() {
           color: var(--ink-0);
         }
 
+        /* Sign-in button white on all devices */
+        .landing-signin-btn {
+          color: #fff !important;
+          font-weight: 600 !important;
+        }
+
         .btn-primary {
           height: 36px;
           padding: 0 16px;
@@ -1395,22 +1361,25 @@ export default function Page() {
           }
         }
 
-        /* Hero */
+        /* Hero - TRUE CENTER */
         .landing-hero {
           flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 140px 24px 100px;
+          padding: 0 24px;
+          min-height: 0;
         }
 
         .hero-content {
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
           gap: 24px;
           max-width: 720px;
           width: 100%;
+          text-align: center;
         }
 
         .hero-kicker {
@@ -1429,6 +1398,7 @@ export default function Page() {
           text-align: center;
           display: flex;
           flex-direction: column;
+          align-items: center;
           gap: 14px;
         }
 
@@ -1445,17 +1415,43 @@ export default function Page() {
           font-size: 16px;
           line-height: 1.65;
           color: var(--ink-2);
-          max-width: 56ch;
+          max-width: 52ch;
         }
 
         .hero-cta-row {
           display: flex;
           align-items: center;
-          gap: 18px;
+          gap: 14px;
           justify-content: center;
           flex-wrap: nowrap;
           flex-direction: row;
-          margin-top: 4px;
+          margin-top: 8px;
+        }
+
+        .hero-arrow-text {
+          white-space: nowrap;
+          color: var(--ink-1);
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .hero-arrow-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--ink-2);
+          animation: arrow-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes arrow-pulse {
+          0%, 100% {
+            opacity: 0.6;
+            transform: translateX(0);
+          }
+          50% {
+            opacity: 1;
+            transform: translateX(3px);
+          }
         }
 
         .hero-cta {
@@ -1512,13 +1508,6 @@ export default function Page() {
           100% {
             background-position: 200% 50%;
           }
-        }
-
-        .hero-arrow-text {
-          white-space: nowrap;
-          color: var(--ink-1);
-          font-size: 14px;
-          font-weight: 600;
         }
 
         .mobile-start {
@@ -1604,7 +1593,6 @@ export default function Page() {
           justify-content: flex-end;
         }
 
-        /* ✅ UPDATED: no fill, no border — just font color difference */
         .landing-demo-bubble {
           max-width: min(560px, 82%);
           padding: 0;
@@ -1634,7 +1622,6 @@ export default function Page() {
           margin-top: 14px;
         }
 
-        /* ✅ NO blue rectangle border (ever) */
         .landing-demo-inputWrap {
           display: flex;
           align-items: stretch;
@@ -1645,7 +1632,6 @@ export default function Page() {
           padding: 10px 10px;
         }
 
-        /* ✅ Prevent any focus-within accent border on the demo */
         .landing-demo-inputWrap:focus-within {
           border-color: var(--border-subtle);
           box-shadow: none;
@@ -1830,7 +1816,6 @@ export default function Page() {
           gap: 8px;
         }
 
-        /* ✅ Email/Password label text to white */
         .form-label {
           font-size: 12px;
           font-weight: 600;
@@ -1950,7 +1935,6 @@ export default function Page() {
           gap: 8px;
         }
 
-        /* ✅ Forgot password / Create account => white */
         .modal-link {
           background: none;
           border: none;
@@ -1965,7 +1949,6 @@ export default function Page() {
           opacity: 1;
         }
 
-        /* ✅ Turnstile/Recaptcha line -> one line (shrink only enough) */
         .modal-card .recaptcha-badge,
         .modal-card .turnstile-badge,
         .modal-card .captcha-badge,
@@ -1979,7 +1962,6 @@ export default function Page() {
           max-width: 100%;
         }
 
-        /* ✅ Pricing feature rows (FIX spacing between ✓ and text) */
         .pricing-feature {
           display: grid;
           grid-template-columns: 16px 1fr;
@@ -2041,7 +2023,6 @@ export default function Page() {
           gap: 4px;
         }
 
-        /* ✅ Settings gear dropdown */
         .chat-settings-wrap {
           position: relative;
           display: flex;
@@ -2123,12 +2104,12 @@ export default function Page() {
           justify-content: center;
         }
 
-        /* ✅ Slightly smaller so "regulations." doesn't get stranded */
         .chat-empty-text {
           font-size: 14px;
           color: var(--ink-2);
           line-height: 1.6;
           margin: 0;
+          text-align: center;
         }
 
         .chat-history {
@@ -2247,7 +2228,6 @@ export default function Page() {
           gap: 10px;
         }
 
-        /* ✅ Camera button: blue border */
         .chat-camera-btn {
           width: 44px;
           height: 44px;
@@ -2347,16 +2327,39 @@ export default function Page() {
         @media (max-width: 768px) {
           .hero-cta-row {
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             align-items: center;
             text-align: center;
           }
+          
           .hero-arrow-text {
             font-size: 13px;
             order: 0;
           }
-          .hero-cta {
+          
+          .hero-arrow-icon {
             order: 1;
+            transform: rotate(90deg);
+          }
+          
+          .hero-arrow-icon svg {
+            width: 18px;
+            height: 18px;
+          }
+          
+          @keyframes arrow-pulse {
+            0%, 100% {
+              opacity: 0.6;
+              transform: rotate(90deg) translateX(0);
+            }
+            50% {
+              opacity: 1;
+              transform: rotate(90deg) translateX(3px);
+            }
+          }
+          
+          .hero-cta {
+            order: 2;
           }
 
           .hero-headings {
@@ -2378,7 +2381,7 @@ export default function Page() {
           }
 
           .landing-hero {
-            padding: 120px 20px 120px;
+            padding: 0 20px;
           }
 
           .plm-brand-mark {
@@ -2389,13 +2392,10 @@ export default function Page() {
             font-size: 18px;
           }
 
-          /* ✅ Sign-in as small white text on mobile */
           .landing-signin-btn {
             height: auto !important;
             padding: 0 !important;
             margin-right: 6px;
-            transform: translateY(-1px);
-            color: var(--ink-0) !important;
             font-size: 12px !important;
             font-weight: 600 !important;
             letter-spacing: 0.04em !important;
@@ -2684,10 +2684,8 @@ export default function Page() {
         </main>
       </div>
 
-      {/* Multi-location warning banner */}
       {isAuthenticated && locationCheck && <MultiLocationBanner locationCheck={locationCheck} />}
 
-      {/* Multi-location upgrade modal */}
       <MultiLocationUpgradeModal
         isOpen={showMultiLocationModal}
         onClose={() => setShowMultiLocationModal(false)}
