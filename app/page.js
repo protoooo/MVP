@@ -8,7 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Public_Sans, JetBrains_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
@@ -16,7 +16,8 @@ import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
 import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const publicSans = Public_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const ibmMono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
@@ -80,10 +81,7 @@ const Icons = {
   ),
   Shield: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <path
-        d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"
-        strokeLinejoin="round"
-      />
+      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" strokeLinejoin="round" />
       <path d="M9.5 12l1.8 1.8L15.8 9.3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
@@ -129,117 +127,107 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         </div>
 
         <nav className="landing-top-actions" aria-label="Top actions">
-          <button onClick={onShowPricing} className="btn-primary" type="button">
-            Start trial
-          </button>
           <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
-            Sign in
+            <span className={ibmMono.className}>SIGN IN</span>
+          </button>
+          <button onClick={onShowPricing} className="btn-primary" type="button">
+            <span className={ibmMono.className}>START TRIAL</span>
           </button>
         </nav>
       </header>
 
       <main className="landing-main" aria-label="protocolLM landing">
-        <section className="gov-panel" aria-label="Product summary">
-          <div className="gov-panel-clip" aria-hidden="true" />
+        <div className="landing-grid">
+          {/* LEFT: procurement-style facts */}
+          <section className="hero-left">
+            <div className={`kicker ${ibmMono.className}`}>
+              WASHTENAW COUNTY · FOOD SAFETY COMPLIANCE
+            </div>
 
-          <div className="gov-kicker-row">
-            <span className={`gov-kicker ${ibmMono.className}`}>
-              <span className="gov-dot" aria-hidden="true" />
-              WASHTENAW COUNTY · FOOD SERVICE · COMPLIANCE UTILITY
-            </span>
-          </div>
+            <h1 className="headline">Catch violations early.</h1>
 
-          <h1 className="gov-title">Plain-language compliance checks.</h1>
+            <p className="subtitle">
+              Photo checks and Q&A cross-referenced to the local guidance you’re held to. Output is structured findings and corrective steps.
+            </p>
 
-          <p className="gov-subtitle">
-            Snap a photo or ask a question. protocolLM answers from the Washtenaw County guidance you’re held to.
-          </p>
-
-          <div className="gov-divider" role="separator" />
-
-          <div className="gov-steps" aria-label="How it works">
-            <div className="gov-step">
-              <div className="gov-step-icon" aria-hidden="true">
-                <Icons.Camera />
+            <div className="report-panel" aria-label="Problem and solution">
+              <div className="report-row">
+                <div className={`report-label ${ibmMono.className}`}>PROBLEM</div>
+                <div className="report-value">Operational issues are missed during service.</div>
               </div>
-              <div className="gov-step-body">
-                <div className="gov-step-title">
-                  Capture <span className={`gov-step-tag ${ibmMono.className}`}>PHOTO SCAN</span>
-                </div>
-                <div className="gov-step-text">Take a photo of prep, dish, storage, coolers, labels, sinks—anything.</div>
+              <div className="report-row">
+                <div className={`report-label ${ibmMono.className}`}>SOLUTION</div>
+                <div className="report-value">Fast checks tied to local requirements. Clear fixes with no filler.</div>
               </div>
             </div>
 
-            <div className="gov-step">
-              <div className="gov-step-icon" aria-hidden="true">
-                <Icons.Doc />
-              </div>
-              <div className="gov-step-body">
-                <div className="gov-step-title">
-                  Cross-check <span className={`gov-step-tag ${ibmMono.className}`}>LOCAL DOCS</span>
-                </div>
-                <div className="gov-step-text">Flags likely issues and ties them back to local requirements.</div>
-              </div>
-            </div>
-
-            <div className="gov-step">
-              <div className="gov-step-icon" aria-hidden="true">
-                <Icons.Wrench />
-              </div>
-              <div className="gov-step-body">
-                <div className="gov-step-title">
-                  Correct <span className={`gov-step-tag ${ibmMono.className}`}>FIX LIST</span>
-                </div>
-                <div className="gov-step-text">Clear steps your staff can do now—no fluff, no scare tactics.</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="gov-divider" role="separator" />
-
-          <div className="gov-actions">
-            <div className="gov-action-preview" aria-label="Tool preview (non-interactive)">
-              <button type="button" className="tool-btn tool-btn-camera" aria-label="Camera (preview)" disabled>
-                <Icons.Camera />
-                <span className={`tool-btn-label ${ibmMono.className}`}>SCAN</span>
-              </button>
-
-              <div className="tool-input-preview" aria-hidden="true">
-                <span className={`tool-placeholder ${ibmMono.className}`}>Ask about temps, date marks, sanitizer, hand sinks…</span>
-              </div>
-
-              <button type="button" className="tool-btn tool-btn-send" aria-label="Send (preview)" disabled>
-                <Icons.ArrowUp />
-              </button>
-            </div>
-
-            <div className="gov-cta-row">
+            <div className="hero-actions">
               <button className="btn-primary btn-primary-lg" onClick={onShowPricing} type="button">
-                Start trial
+                <span className={ibmMono.className}>START TRIAL</span>
               </button>
               <button className="btn-secondary btn-secondary-lg" onClick={onShowAuth} type="button">
-                Sign in
+                <span className={ibmMono.className}>SIGN IN</span>
               </button>
             </div>
 
-            <div className={`gov-footnote ${ibmMono.className}`}>
-              Built like a utility. Designed for busy operators. <span className="gov-footnote-sep">·</span> 1,166
-              inspected establishments in Washtenaw County.
+            <div className="caps-grid" aria-label="Capabilities">
+              <div className="cap-card">
+                <div className={`cap-title ${ibmMono.className}`}>PHOTO CHECK</div>
+                <div className="cap-text">Attach a photo. Receive findings and corrective steps.</div>
+              </div>
+              <div className="cap-card">
+                <div className={`cap-title ${ibmMono.className}`}>QUESTION CHECK</div>
+                <div className="cap-text">Ask about temps, sanitizer, storage, date marks, cleaning.</div>
+              </div>
+              <div className="cap-card">
+                <div className={`cap-title ${ibmMono.className}`}>SOURCE DISCIPLINE</div>
+                <div className="cap-text">Answers are grounded in the operational documents you’re held to.</div>
+              </div>
             </div>
-          </div>
-        </section>
 
-        <section className="gov-statusbar" aria-label="Status bar">
-          <div className={`gov-status-left ${ibmMono.className}`}>
-            <span className="status-pill">
-              <Icons.Shield /> VERIFIED FLOW · CSRF · TURNSTILE
-            </span>
-            <span className="status-sep">·</span>
-            <span className="status-muted">No imagery. No hype. Just compliance.</span>
-          </div>
+            <div className={`hero-foot ${ibmMono.className}`}>DESIGNED LIKE COMPLIANCE SOFTWARE · MINIMAL · OPERATIONAL</div>
+          </section>
 
-          <div className={`gov-status-right ${ibmMono.className}`}>protocolLM · v1</div>
-        </section>
+          {/* RIGHT: clipboard/status panel */}
+          <aside className="hero-right" aria-label="Field clipboard panel">
+            <div className="panel">
+              <div className="panel-head">
+                <div className={`panel-kicker ${ibmMono.className}`}>FIELD CLIPBOARD · IMAGE ANALYSIS READY</div>
+              </div>
+
+              <div className="panel-body">
+                <div className="workflow">
+                  <div className="wf-row">
+                    <div className={`wf-label ${ibmMono.className}`}>CAPTURE</div>
+                    <div className="wf-value">Photo → structured findings</div>
+                  </div>
+                  <div className="wf-row">
+                    <div className={`wf-label ${ibmMono.className}`}>CROSS-CHECK</div>
+                    <div className="wf-value">Local docs → practical fixes</div>
+                  </div>
+                  <div className="wf-row">
+                    <div className={`wf-label ${ibmMono.className}`}>CORRECT</div>
+                    <div className="wf-value">Next steps → faster compliance</div>
+                  </div>
+                </div>
+
+                <div className={`panel-note ${ibmMono.className}`}>TIP: PHOTO CHECKS ARE THE FASTEST PATH TO USEFUL OUTPUT.</div>
+              </div>
+            </div>
+
+            <div className="gov-statusbar" aria-label="Status bar">
+              <div className={`gov-status-left ${ibmMono.className}`}>
+                <span className="status-pill">
+                  <Icons.Shield /> VERIFIED FLOW · CSRF · TURNSTILE
+                </span>
+                <span className="status-sep">·</span>
+                <span className="status-muted">NO IMAGERY · NO HYPE · COMPLIANCE UTILITY</span>
+              </div>
+
+              <div className={`gov-status-right ${ibmMono.className}`}>protocolLM · v1</div>
+            </div>
+          </aside>
+        </div>
       </main>
 
       <FooterLinks />
@@ -388,7 +376,11 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     className="form-input"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className={`form-toggle-vis ${ibmMono.className}`}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`form-toggle-vis ${ibmMono.className}`}
+                  >
                     {showPassword ? 'HIDE' : 'SHOW'}
                   </button>
                 </div>
@@ -1168,7 +1160,7 @@ export default function Page() {
           --accent-dim: rgba(46, 102, 219, 0.12);
           --accent-dim-2: rgba(46, 102, 219, 0.22);
 
-          --border-subtle: rgba(11, 18, 32, 0.10);
+          --border-subtle: rgba(11, 18, 32, 0.1);
           --border-default: rgba(11, 18, 32, 0.16);
 
           --radius-sm: 8px;
@@ -1177,7 +1169,7 @@ export default function Page() {
           --radius-full: 9999px;
 
           --shadow-1: 0 10px 30px rgba(11, 18, 32, 0.08);
-          --shadow-2: 0 18px 60px rgba(11, 18, 32, 0.10);
+          --shadow-2: 0 18px 60px rgba(11, 18, 32, 0.1);
 
           /* “90s utility” bevel */
           --bevel-hi: rgba(255, 255, 255, 0.95);
@@ -1199,8 +1191,8 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
           overscroll-behavior-y: none;
-          font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji',
-            'Segoe UI Emoji';
+          font-family: ${publicSans.style.fontFamily}, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+            Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
         }
 
         @supports (-webkit-touch-callout: none) {
@@ -1358,7 +1350,7 @@ export default function Page() {
           white-space: nowrap;
         }
 
-        /* Buttons: government utility, not “SaaS pill” */
+        /* Buttons: government utility */
         .btn-nav {
           height: 34px;
           padding: 0 12px;
@@ -1491,9 +1483,9 @@ export default function Page() {
 
         .landing-main {
           width: 100%;
-          max-width: 980px;
+          max-width: 1080px;
           margin: 0 auto;
-          padding: 22px 20px 0;
+          padding: 18px 20px 0;
           padding-left: max(20px, env(safe-area-inset-left));
           padding-right: max(20px, env(safe-area-inset-right));
           display: flex;
@@ -1501,238 +1493,195 @@ export default function Page() {
           gap: 14px;
         }
 
-        .gov-panel {
-          position: relative;
+        .landing-grid {
+          display: grid;
+          grid-template-columns: 1.2fr 0.8fr;
+          gap: 16px;
+          align-items: start;
+        }
+
+        .kicker {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .headline {
+          margin: 10px 0 0;
+          font-size: 42px;
+          letter-spacing: -0.03em;
+          line-height: 1.06;
+          color: var(--ink-0);
+          font-weight: 800;
+        }
+
+        .subtitle {
+          margin: 10px 0 0;
+          color: var(--ink-1);
+          line-height: 1.6;
+          max-width: 62ch;
+          font-size: 15px;
+        }
+
+        .report-panel {
+          margin-top: 14px;
           background: var(--bg-1);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-2);
           overflow: hidden;
-
-          /* 90s/defense bevel edges */
-          box-shadow: var(--shadow-2), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
-        .gov-panel-clip {
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 190px;
-          height: 16px;
-          background: var(--bg-3);
-          border: 1px solid var(--border-subtle);
-          border-top: 0;
-          border-radius: 0 0 12px 12px;
-          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        .report-row {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          border-top: 1px solid var(--border-subtle);
+        }
+        .report-row:first-child {
+          border-top: none;
         }
 
-        .gov-kicker-row {
-          padding: 22px 22px 0;
-        }
-
-        .gov-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
+        .report-label {
+          padding: 12px;
+          background: var(--bg-2);
+          border-right: 1px solid var(--border-subtle);
           font-size: 11px;
-          letter-spacing: 0.10em;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-2);
         }
 
-        .gov-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 2px;
-          background: var(--accent);
-          box-shadow: 0 0 0 3px var(--accent-dim);
-        }
-
-        .gov-title {
-          margin: 10px 22px 0;
-          font-size: 30px;
-          line-height: 1.15;
-          letter-spacing: -0.03em;
+        .report-value {
+          padding: 12px;
           color: var(--ink-0);
-          font-weight: 820;
-        }
-
-        .gov-subtitle {
-          margin: 10px 22px 0;
-          font-size: 15px;
           line-height: 1.55;
-          color: var(--ink-1);
-          max-width: 60ch;
+          font-size: 14px;
         }
 
-        .gov-divider {
-          height: 1px;
-          background: var(--border-subtle);
-          margin: 18px 0;
+        .hero-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 14px;
+          flex-wrap: wrap;
         }
 
-        .gov-steps {
+        .caps-grid {
+          margin-top: 14px;
           display: grid;
           grid-template-columns: 1fr;
           gap: 10px;
-          padding: 0 22px;
         }
 
-        .gov-step {
-          display: grid;
-          grid-template-columns: 44px 1fr;
-          gap: 12px;
-          align-items: start;
-          padding: 12px 12px;
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          background: rgba(238, 241, 244, 0.65);
-          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
-        }
-
-        .gov-step-icon {
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        .cap-card {
           background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          color: var(--accent-ink);
-          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
-        }
-
-        .gov-step-title {
-          font-size: 13px;
-          font-weight: 800;
-          letter-spacing: -0.01em;
-          color: var(--ink-0);
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .gov-step-tag {
-          display: inline-flex;
-          align-items: center;
-          padding: 3px 7px;
-          border-radius: 8px;
-          border: 1px solid var(--border-subtle);
-          background: rgba(255, 255, 255, 0.7);
-          color: var(--ink-2);
-          font-size: 10px;
-          letter-spacing: 0.10em;
-          text-transform: uppercase;
-        }
-
-        .gov-step-text {
-          margin-top: 6px;
-          font-size: 13px;
-          line-height: 1.55;
-          color: var(--ink-1);
-        }
-
-        .gov-actions {
-          padding: 0 22px 22px;
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-
-        .gov-action-preview {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px;
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
+          padding: 12px;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .cap-title {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .cap-text {
+          margin-top: 6px;
+          color: var(--ink-0);
+          line-height: 1.55;
+          font-size: 14px;
+        }
+
+        .hero-foot {
+          margin-top: 12px;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-3);
+        }
+
+        /* Right panel */
+        .panel {
+          background: var(--bg-1);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .panel-head {
+          background: var(--bg-2);
+          border-bottom: 1px solid var(--border-subtle);
+          padding: 12px;
+        }
+
+        .panel-kicker {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .panel-body {
+          padding: 12px;
+        }
+
+        .workflow {
+          display: grid;
+          gap: 10px;
+        }
+
+        .wf-row {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          border: 1px solid var(--border-subtle);
+          border-radius: 10px;
+          overflow: hidden;
           background: rgba(255, 255, 255, 0.75);
           box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
-        .tool-btn {
-          height: 44px;
-          border-radius: 12px;
-          border: 1px solid var(--border-default);
-          background: var(--bg-1);
-          color: var(--ink-1);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 0 10px;
-          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
-          cursor: default;
-        }
-
-        .tool-btn:disabled {
-          opacity: 1;
-        }
-
-        .tool-btn-camera {
-          color: var(--accent);
-          border-color: rgba(46, 102, 219, 0.35);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(46, 102, 219, 0.15);
-        }
-
-        .tool-btn-label {
-          font-size: 10px;
-          letter-spacing: 0.12em;
-        }
-
-        .tool-input-preview {
-          flex: 1;
-          height: 44px;
-          border-radius: 12px;
-          border: 1px solid var(--border-subtle);
+        .wf-label {
+          padding: 10px;
           background: var(--bg-2);
-          display: flex;
-          align-items: center;
-          padding: 0 12px;
-          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
-          min-width: 0;
-        }
-
-        .tool-placeholder {
+          border-right: 1px solid var(--border-subtle);
           font-size: 11px;
-          letter-spacing: 0.02em;
-          color: var(--ink-2);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .tool-btn-send {
-          width: 44px;
-          padding: 0;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
           color: var(--ink-2);
         }
 
-        .gov-cta-row {
-          display: flex;
-          gap: 10px;
-          align-items: center;
+        .wf-value {
+          padding: 10px;
+          line-height: 1.55;
+          font-size: 14px;
+          color: var(--ink-0);
         }
 
-        .gov-footnote {
+        .panel-note {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid var(--border-subtle);
           font-size: 11px;
-          letter-spacing: 0.04em;
-          color: var(--ink-2);
-        }
-
-        .gov-footnote-sep {
-          margin: 0 8px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
           color: var(--ink-3);
         }
 
+        /* Status bar (kept) */
         .gov-statusbar {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 10px 4px 16px;
           color: var(--ink-2);
+          margin-top: 10px;
         }
 
         .gov-status-left {
@@ -1752,7 +1701,7 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.6);
           box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
           font-size: 10px;
-          letter-spacing: 0.10em;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
           color: var(--ink-1);
           white-space: nowrap;
@@ -1781,7 +1730,7 @@ export default function Page() {
           white-space: nowrap;
         }
 
-        /* Modals */
+        /* Modals (unchanged) */
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -2042,7 +1991,7 @@ export default function Page() {
           color: var(--ink-2) !important;
         }
 
-        /* Pricing feature rows (kept for your external PricingModal styles that rely on these hooks) */
+        /* Pricing hooks (kept for external PricingModal expectations) */
         .pricing-feature {
           display: grid;
           grid-template-columns: 16px 1fr;
@@ -2068,7 +2017,7 @@ export default function Page() {
           min-width: 0;
         }
 
-        /* Chat */
+        /* Chat (topbar kept) */
         .chat-root {
           flex: 1;
           display: flex;
@@ -2093,7 +2042,7 @@ export default function Page() {
         }
 
         .chat-topbar-inner {
-          max-width: 980px;
+          max-width: 1080px;
           margin: 0 auto;
           padding: 14px 20px;
           padding-left: max(20px, env(safe-area-inset-left));
@@ -2171,10 +2120,9 @@ export default function Page() {
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
           padding: 8px;
-          box-shadow: var(--shadow-1);
+          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
           animation: dropdown-in 0.12s ease;
           z-index: 50;
-          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
         @keyframes dropdown-in {
@@ -2214,6 +2162,7 @@ export default function Page() {
           margin: 6px 2px;
         }
 
+        /* Chat content wrapper */
         .chat-shell {
           flex: 1;
           min-height: 0;
@@ -2222,148 +2171,200 @@ export default function Page() {
           width: 100%;
         }
 
-        .chat-messages {
+        .chat-wrap {
+          max-width: 1080px;
+          margin: 0 auto;
+          padding: 16px 20px 24px;
+          padding-left: max(20px, env(safe-area-inset-left));
+          padding-right: max(20px, env(safe-area-inset-right));
+          width: 100%;
+          min-height: 0;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* CASE FILE panel */
+        .casefile {
+          background: var(--bg-1);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          flex: 1;
+        }
+
+        .casefile-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 12px;
+          background: var(--bg-2);
+          border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .case-kicker {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .case-sub {
+          margin-top: 4px;
+          color: var(--ink-2);
+          font-size: 13px;
+        }
+
+        .case-tag {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+          border: 1px solid var(--border-subtle);
+          border-radius: 10px;
+          padding: 6px 10px;
+          background: rgba(255, 255, 255, 0.6);
+          white-space: nowrap;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .casefile-body {
           flex: 1;
           min-height: 0;
-          overflow-y: auto;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-          padding: 0 20px 22px;
+          overflow: auto;
+          padding: 12px;
           background: var(--bg-0);
         }
 
-        .chat-history {
-          max-width: 980px;
-          margin: 0 auto;
-          width: 100%;
+        .empty-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .empty-card {
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.75);
+          padding: 12px;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+        }
+
+        .empty-title {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .empty-text {
+          margin-top: 8px;
+          line-height: 1.55;
+          color: var(--ink-0);
+          font-size: 14px;
+        }
+
+        .msg-list {
           display: flex;
           flex-direction: column;
-          gap: 18px;
-          padding-top: 16px;
-          padding-bottom: 6px;
+          gap: 12px;
         }
 
-        /* “Defense console” message format: label + content, no bubbles */
-        .chat-line {
+        .msg-row {
           display: grid;
-          grid-template-columns: 110px 1fr;
-          gap: 14px;
-          align-items: start;
+          grid-template-columns: 120px 1fr;
+          gap: 12px;
+          padding: 12px;
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.75);
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
-        .chat-label {
-          font-size: 10px;
-          letter-spacing: 0.14em;
+        .msg-row.user {
+          border-left: 3px solid rgba(11, 18, 32, 0.35);
+        }
+
+        .msg-row.assistant {
+          border-left: 3px solid var(--accent);
+        }
+
+        .msg-role {
+          font-size: 11px;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-2);
           padding-top: 2px;
           white-space: nowrap;
         }
 
-        .chat-label.user {
-          color: var(--ink-1);
-        }
-
-        .chat-label.assistant {
+        .msg-role.assistant {
           color: var(--accent-ink);
         }
 
-        .chat-content {
-          font-size: 14px;
-          line-height: 1.7;
-          color: var(--ink-0);
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
-          word-break: break-word;
-        }
-
-        .chat-thinking {
-          font-size: 12px;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-        }
-
-        .chat-bubble-image {
+        .msg-image {
+          border: 1px solid var(--border-subtle);
           border-radius: var(--radius-md);
           overflow: hidden;
-          display: inline-block;
-          margin-bottom: 10px;
-          border: 1px solid var(--border-subtle);
-          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
           background: var(--bg-1);
+          margin-bottom: 10px;
+          box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
         }
 
-        .chat-bubble-image img {
+        .msg-image img {
           display: block;
           max-width: 100%;
           max-height: 320px;
           object-fit: contain;
         }
 
-        .chat-empty-state {
-          max-width: 980px;
-          margin: 0 auto;
-          padding: 22px 0 0;
-        }
-
-        .chat-empty-card {
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-lg);
-          background: var(--bg-1);
-          box-shadow: var(--shadow-1), inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
-          padding: 18px;
-        }
-
-        .chat-empty-title {
-          font-size: 14px;
-          font-weight: 850;
-          letter-spacing: -0.01em;
-          margin: 0;
+        .msg-text {
+          white-space: pre-wrap;
+          line-height: 1.7;
           color: var(--ink-0);
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          font-size: 14px;
         }
 
-        .chat-empty-text {
-          margin: 8px 0 0;
-          font-size: 13px;
-          line-height: 1.6;
-          color: var(--ink-1);
-          max-width: 70ch;
-        }
-
-        .chat-empty-hint {
-          margin-top: 12px;
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          border-radius: 12px;
-          border: 1px solid rgba(46, 102, 219, 0.35);
-          background: rgba(46, 102, 219, 0.08);
-          color: var(--ink-1);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(46, 102, 219, 0.12);
-        }
-
-        .chat-empty-hint .hint-label {
-          font-size: 10px;
-          letter-spacing: 0.14em;
+        .sys {
+          font-size: 11px;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
+          color: var(--ink-2);
         }
 
-        /* Input area: “clipboard extension” */
-        .chat-input-area {
-          flex-shrink: 0;
+        /* Clipboard footer */
+        .clipboard {
           border-top: 1px solid var(--border-subtle);
           background: rgba(255, 255, 255, 0.65);
           backdrop-filter: blur(6px);
+          padding: 12px;
         }
 
-        .chat-input-inner {
-          max-width: 980px;
-          margin: 0 auto;
-          padding: 12px 20px 18px;
-          padding-bottom: max(18px, env(safe-area-inset-bottom));
+        .clipboard-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+
+        .clip-label {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-2);
+        }
+
+        .clip-hint {
+          color: var(--ink-2);
+          font-size: 13px;
         }
 
         .chat-attachment {
@@ -2404,51 +2405,41 @@ export default function Page() {
           background: var(--bg-3);
         }
 
-        .chat-input-row {
+        .input-row {
           display: flex;
-          align-items: flex-end;
           gap: 10px;
+          align-items: flex-end;
+          margin: 0;
         }
 
-        /* Camera button: “primary tool” without being obnoxious */
-        .chat-camera-btn {
+        .cam {
+          width: 46px;
           height: 46px;
-          min-width: 56px;
-          padding: 0 10px;
-          display: inline-flex;
+          border-radius: 12px;
+          border: 1px solid rgba(46, 102, 219, 0.35);
+          background: var(--bg-1);
+          color: var(--accent);
+          display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          background: var(--bg-1);
-          border: 1px solid rgba(46, 102, 219, 0.35);
-          border-radius: 12px;
-          color: var(--accent);
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease, transform 0.08s ease;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(46, 102, 219, 0.12);
+          cursor: pointer;
           position: relative;
+          flex-shrink: 0;
+          transition: box-shadow 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
         }
 
-        .chat-camera-btn:hover {
+        .cam:hover {
           border-color: rgba(46, 102, 219, 0.55);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(46, 102, 219, 0.15),
             0 0 0 3px var(--accent-dim);
         }
 
-        .chat-camera-btn:active {
+        .cam:active {
           transform: translateY(1px);
         }
 
-        .chat-camera-label {
-          font-size: 10px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: var(--accent-ink);
-        }
-
-        /* subtle “nudge” only when new + empty: faint scanning line */
-        .chat-camera-btn[data-nudge='true']::after {
+        .cam[data-nudge='true']::after {
           content: '';
           position: absolute;
           inset: 6px;
@@ -2470,64 +2461,62 @@ export default function Page() {
           }
         }
 
-        .chat-input-wrapper {
+        .field {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: var(--bg-1);
+          gap: 8px;
           border: 1px solid var(--border-default);
           border-radius: 12px;
-          transition: box-shadow 0.12s ease, border-color 0.12s ease;
+          background: var(--bg-1);
+          padding: 8px 8px 8px 10px;
           min-width: 0;
           box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo);
+          transition: box-shadow 0.12s ease, border-color 0.12s ease;
         }
 
-        .chat-input-wrapper:focus-within {
+        .field:focus-within {
           border-color: rgba(46, 102, 219, 0.55);
           box-shadow: inset 0 1px 0 var(--bevel-hi), inset 0 -1px 0 var(--bevel-lo), 0 0 0 3px var(--accent-dim);
         }
 
-        .chat-textarea {
+        .textarea {
           flex: 1;
-          min-height: 46px;
-          max-height: 180px;
-          padding: 12px 12px;
-          background: transparent;
           border: none;
-          color: var(--ink-0);
+          background: transparent;
+          resize: none;
+          min-height: 30px;
+          max-height: 180px;
           font-size: 14px;
           line-height: 1.4;
-          resize: none;
+          color: var(--ink-0);
+          outline: none;
           min-width: 0;
         }
 
-        .chat-textarea::placeholder {
+        .textarea::placeholder {
           color: var(--ink-3);
         }
 
-        .chat-textarea:focus {
-          outline: none;
-        }
-
-        .chat-send-btn {
+        .send {
           width: 46px;
           height: 46px;
+          border: none;
+          background: transparent;
+          color: var(--ink-2);
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          border: none;
-          color: var(--ink-2);
           cursor: pointer;
           flex-shrink: 0;
           transition: color 0.12s ease;
         }
 
-        .chat-send-btn:hover:not(:disabled) {
+        .send:hover:not(:disabled) {
           color: var(--accent-ink);
         }
 
-        .chat-send-btn:disabled {
+        .send:disabled {
           opacity: 0.35;
           cursor: not-allowed;
         }
@@ -2541,40 +2530,38 @@ export default function Page() {
           animation: spin 0.6s linear infinite;
         }
 
-        .chat-disclaimer {
+        .disclaimer {
+          margin-top: 10px;
           text-align: center;
           font-size: 10px;
-          letter-spacing: 0.10em;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
           color: var(--ink-2);
-          margin-top: 12px;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-          .plm-brand-mark {
-            width: 52px;
-            height: 52px;
+        @media (max-width: 980px) {
+          .landing-grid {
+            grid-template-columns: 1fr;
           }
-          .plm-brand-text {
-            font-size: 17px;
+          .empty-grid {
+            grid-template-columns: 1fr;
           }
-
-          .gov-title {
-            font-size: 26px;
+          .headline {
+            font-size: 34px;
           }
-
-          .gov-subtitle {
-            font-size: 14px;
-          }
-
-          .chat-line {
-            grid-template-columns: 86px 1fr;
-            gap: 12px;
-          }
-
           .status-muted {
             max-width: 40vw;
+          }
+          .chat-topbar-inner,
+          .landing-main {
+            max-width: 980px;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .msg-row {
+            grid-template-columns: 96px 1fr;
           }
         }
 
@@ -2585,58 +2572,11 @@ export default function Page() {
           }
 
           .landing-main {
-            padding: 18px 14px 0;
+            padding: 16px 14px 0;
           }
 
-          .gov-kicker-row {
-            padding: 20px 16px 0;
-          }
-
-          .gov-title {
-            margin: 10px 16px 0;
-            font-size: 24px;
-          }
-
-          .gov-subtitle {
-            margin: 10px 16px 0;
-          }
-
-          .gov-steps {
-            padding: 0 16px;
-          }
-
-          .gov-actions {
-            padding: 0 16px 16px;
-          }
-
-          .gov-cta-row {
-            flex-direction: column;
-          }
-
-          .btn-primary-lg,
-          .btn-secondary-lg {
-            width: 100%;
-          }
-
-          .chat-topbar-inner {
-            padding: 12px 14px;
-          }
-
-          .chat-messages {
-            padding: 0 14px 18px;
-          }
-
-          .chat-input-inner {
-            padding: 10px 14px 14px;
-            padding-bottom: max(14px, env(safe-area-inset-bottom));
-          }
-
-          .chat-camera-btn {
-            min-width: 50px;
-          }
-
-          .chat-camera-label {
-            display: none;
+          .gov-statusbar {
+            padding: 10px 2px 16px;
           }
 
           .status-muted {
@@ -2668,7 +2608,7 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="app-container">
+      <div className={`app-container ${publicSans.className}`}>
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {!isAuthenticated ? (
             <LandingPage
@@ -2743,136 +2683,150 @@ export default function Page() {
               </header>
 
               <div className="chat-shell">
-                <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
-                  {messages.length === 0 ? (
-                    <div className="chat-empty-state">
-                      <div className="chat-empty-card">
-                        <p className="chat-empty-title">Start with a scan or a question.</p>
-                        <p className="chat-empty-text">
-                          Use the camera to cross-check a photo against Washtenaw County requirements, or type a question
-                          (temps, date marking, sanitizer, hand sinks, storage, cleaning, inspections).
-                        </p>
-
-                        <div className="chat-empty-hint" aria-label="Scan hint">
-                          <Icons.Camera />
-                          <span className={`hint-label ${ibmMono.className}`}>TIP</span>
-                          <span style={{ fontSize: 12, color: 'var(--ink-1)' }}>
-                            Camera is fastest—scan first, then ask follow-ups.
-                          </span>
-                        </div>
+                <div className="chat-wrap">
+                  <section className="casefile" aria-label="Case file">
+                    <div className="casefile-head">
+                      <div>
+                        <div className={`case-kicker ${ibmMono.className}`}>CASE FILE</div>
+                        <div className="case-sub">Washtenaw County food safety · photo checks + Q&amp;A</div>
                       </div>
+                      <div className={`case-tag ${ibmMono.className}`}>OPERATIONAL VIEW</div>
                     </div>
-                  ) : (
-                    <div className="chat-history">
-                      {messages.map((msg, idx) => (
-                        <div key={idx} className="chat-line">
-                          <div
-                            className={`chat-label ${ibmMono.className} ${msg.role === 'user' ? 'user' : 'assistant'}`}
-                            aria-label={msg.role === 'user' ? 'User' : 'protocolLM'}
-                          >
-                            {msg.role === 'user' ? 'OPERATOR' : 'PROTOCOLLM'}
-                          </div>
 
-                          <div>
-                            {msg.image && (
-                              <div className="chat-bubble-image">
-                                <img src={msg.image} alt="Uploaded" />
+                    <div ref={scrollRef} onScroll={handleScroll} className="casefile-body">
+                      {messages.length === 0 ? (
+                        <div className="empty-grid">
+                          <div className="empty-card">
+                            <div className={`empty-title ${ibmMono.className}`}>PHOTO CHECK</div>
+                            <div className="empty-text">
+                              Use the camera button to attach a photo. protocolLM returns findings and corrective steps.
+                            </div>
+                          </div>
+                          <div className="empty-card">
+                            <div className={`empty-title ${ibmMono.className}`}>QUESTION CHECK</div>
+                            <div className="empty-text">
+                              Ask about cooling, reheating, sanitizer, date marking, storage, temps, hand sinks.
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="msg-list">
+                          {messages.map((msg, idx) => (
+                            <div
+                              key={idx}
+                              className={`msg-row ${msg.role === 'user' ? 'user' : 'assistant'}`}
+                            >
+                              <div
+                                className={`msg-role ${ibmMono.className} ${
+                                  msg.role === 'user' ? 'user' : 'assistant'
+                                }`}
+                                aria-label={msg.role === 'user' ? 'User' : 'protocolLM'}
+                              >
+                                {msg.role === 'user' ? 'OPERATOR' : 'PROTOCOLLM'}
                               </div>
-                            )}
 
-                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                              <div className={`chat-thinking ${ibmMono.className}`}>ANALYZING…</div>
-                            ) : (
-                              <div className="chat-content">{msg.content}</div>
-                            )}
-                          </div>
+                              <div>
+                                {msg.image && (
+                                  <div className="msg-image">
+                                    <img src={msg.image} alt="Uploaded" />
+                                  </div>
+                                )}
+
+                                {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                                  <div className={`sys ${ibmMono.className}`}>ANALYZING…</div>
+                                ) : (
+                                  <div className="msg-text">{msg.content}</div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <div className="chat-input-area">
-                  <div className="chat-input-inner">
-                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-
-                    {selectedImage && (
-                      <div className="chat-attachment">
-                        <span className="chat-attachment-icon">
-                          <Icons.Camera />
-                        </span>
-                        <span className={ibmMono.className} style={{ letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                          Image attached
-                        </span>
-                        <button
-                          onClick={() => setSelectedImage(null)}
-                          className="chat-attachment-remove"
-                          aria-label="Remove"
-                          type="button"
-                        >
-                          <Icons.X />
-                        </button>
+                    <div className="clipboard">
+                      <div className="clipboard-head">
+                        <div className={`clip-label ${ibmMono.className}`}>INPUT</div>
+                        <div className="clip-hint">Attach a photo or send a question.</div>
                       </div>
-                    )}
 
-                    <div className="chat-input-row">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={handleImageChange}
-                      />
+                      <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="chat-camera-btn"
-                        aria-label="Upload photo"
-                        type="button"
-                        data-nudge={shouldNudgeScan ? 'true' : 'false'}
-                      >
-                        <Icons.Camera />
-                        <span className={`chat-camera-label ${ibmMono.className}`}>SCAN</span>
-                      </button>
+                      {selectedImage && (
+                        <div className="chat-attachment">
+                          <span className="chat-attachment-icon">
+                            <Icons.Camera />
+                          </span>
+                          <span className={ibmMono.className} style={{ letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            Image attached
+                          </span>
+                          <button
+                            onClick={() => setSelectedImage(null)}
+                            className="chat-attachment-remove"
+                            aria-label="Remove"
+                            type="button"
+                          >
+                            <Icons.X />
+                          </button>
+                        </div>
+                      )}
 
-                      <div className="chat-input-wrapper">
-                        <textarea
-                          ref={textAreaRef}
-                          value={input}
-                          onChange={(e) => {
-                            setInput(e.target.value)
-                            if (textAreaRef.current) {
-                              textAreaRef.current.style.height = 'auto'
-                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 180)}px`
-                            }
-                          }}
-                          placeholder="Ask a question…"
-                          rows={1}
-                          className="chat-textarea"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSend(e)
-                            }
-                          }}
+                      <div className="input-row">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleImageChange}
                         />
 
                         <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="cam"
+                          aria-label="Upload photo"
                           type="button"
-                          onClick={handleSend}
-                          disabled={(!input.trim() && !selectedImage) || isSending}
-                          className="chat-send-btn"
-                          aria-label="Send"
+                          data-nudge={shouldNudgeScan ? 'true' : 'false'}
                         >
-                          {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                          <Icons.Camera />
                         </button>
-                      </div>
-                    </div>
 
-                    <p className={`chat-disclaimer ${ibmMono.className}`}>
-                      Verify critical decisions with official regulations.
-                    </p>
-                  </div>
+                        <div className="field">
+                          <textarea
+                            ref={textAreaRef}
+                            value={input}
+                            onChange={(e) => {
+                              setInput(e.target.value)
+                              if (textAreaRef.current) {
+                                textAreaRef.current.style.height = 'auto'
+                                textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 180)}px`
+                              }
+                            }}
+                            placeholder="Ask a question…"
+                            rows={1}
+                            className="textarea"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleSend(e)
+                              }
+                            }}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={(!input.trim() && !selectedImage) || isSending}
+                            className="send"
+                            aria-label="Send"
+                          >
+                            {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className={`disclaimer ${ibmMono.className}`}>PROTOCOLLM MAY MAKE MISTAKES. VERIFY CRITICAL DECISIONS.</p>
+                    </div>
+                  </section>
                 </div>
               </div>
             </div>
