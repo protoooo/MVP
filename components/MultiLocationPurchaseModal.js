@@ -1,5 +1,5 @@
 // components/MultiLocationPurchaseModal.js
-// NEW: Proactive multi-location purchase (before abuse detection)
+// Multi-location purchase modal - separate logins only, no discounts
 'use client'
 
 import { useState } from 'react'
@@ -12,7 +12,6 @@ const PRICE_PER_LOCATION = 149
 
 export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) {
   const [selectedLocations, setSelectedLocations] = useState(2)
-  const [purchaseType, setPurchaseType] = useState('separate') // 'separate' or 'single'
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
@@ -41,7 +40,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locationCount: selectedLocations,
-          purchaseType,
+          purchaseType: 'separate',
           captchaToken
         })
       })
@@ -91,107 +90,8 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
               Purchase for Multiple Locations
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--ink-2)', margin: 0, lineHeight: '1.5' }}>
-              Choose how you want to manage your licenses
+              Each location requires its own account with individual login credentials
             </p>
-          </div>
-
-          {/* Purchase Type Selector */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '12px' }}>
-              How will these locations be managed?
-            </label>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Option 1: Separate logins (RECOMMENDED) */}
-              <label 
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '12px',
-                  padding: '16px',
-                  background: purchaseType === 'separate' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-3)',
-                  border: `2px solid ${purchaseType === 'separate' ? 'var(--accent)' : 'var(--border-subtle)'}`,
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <input
-                  type="radio"
-                  name="purchaseType"
-                  value="separate"
-                  checked={purchaseType === 'separate'}
-                  onChange={(e) => setPurchaseType(e.target.value)}
-                  style={{ marginTop: '2px', flexShrink: 0 }}
-                />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--ink-0)', marginBottom: '4px' }}>
-                    ✅ Separate Login Per Location (Recommended)
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.5' }}>
-                    Each location gets its own account with individual login credentials. Best for compliance tracking and security.
-                  </div>
-                  <div style={{ 
-                    display: 'inline-block',
-                    marginTop: '8px',
-                    padding: '4px 8px',
-                    background: 'rgba(34, 197, 94, 0.1)',
-                    border: '1px solid rgba(34, 197, 94, 0.3)',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    color: '#22c55e'
-                  }}>
-                    ✓ Most secure option
-                  </div>
-                </div>
-              </label>
-
-              {/* Option 2: Single master account (NOT RECOMMENDED) */}
-              <label 
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '12px',
-                  padding: '16px',
-                  background: purchaseType === 'single' ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-3)',
-                  border: `2px solid ${purchaseType === 'single' ? '#ef4444' : 'var(--border-subtle)'}`,
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <input
-                  type="radio"
-                  name="purchaseType"
-                  value="single"
-                  checked={purchaseType === 'single'}
-                  onChange={(e) => setPurchaseType(e.target.value)}
-                  style={{ marginTop: '2px', flexShrink: 0 }}
-                />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--ink-0)', marginBottom: '4px' }}>
-                    ⚠️ Single Shared Login (Not Recommended)
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.5' }}>
-                    One account shared across all locations. Less secure and makes compliance tracking difficult. Only choose if absolutely necessary.
-                  </div>
-                  <div style={{ 
-                    display: 'inline-block',
-                    marginTop: '8px',
-                    padding: '4px 8px',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    color: '#ef4444'
-                  }}>
-                    ⚠️ Security risk
-                  </div>
-                </div>
-              </label>
-            </div>
           </div>
 
           {/* Location Count Selector */}
@@ -307,43 +207,40 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
             </div>
           </div>
 
-          {/* Next Steps Info */}
-          {purchaseType === 'separate' && (
-            <div style={{ 
-              background: 'rgba(34, 197, 94, 0.1)', 
-              border: '1px solid rgba(34, 197, 94, 0.3)', 
-              borderRadius: '8px', 
-              padding: '16px',
-              marginBottom: '20px'
-            }}>
-              <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#22c55e', marginBottom: '8px' }}>
-                ✓ What happens next
-              </div>
-              <ol style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.8', margin: 0, paddingLeft: '20px' }}>
-                <li>You'll complete checkout for all {selectedLocations} locations</li>
-                <li>We'll email you {selectedLocations} unique signup links</li>
-                <li>Distribute links to each location manager</li>
-                <li>Each location creates their own account (no payment needed)</li>
-              </ol>
+          {/* What Happens Next */}
+          <div style={{ 
+            background: 'rgba(34, 197, 94, 0.1)', 
+            border: '1px solid rgba(34, 197, 94, 0.3)', 
+            borderRadius: '8px', 
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#22c55e', marginBottom: '8px' }}>
+              What happens next
             </div>
-          )}
+            <ol style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.8', margin: 0, paddingLeft: '20px' }}>
+              <li>You'll complete checkout for all {selectedLocations} locations</li>
+              <li>We'll email you {selectedLocations} unique signup links</li>
+              <li>Distribute links to each location manager</li>
+              <li>Each location creates their own account (no payment needed)</li>
+            </ol>
+          </div>
 
-          {purchaseType === 'single' && (
-            <div style={{ 
-              background: 'rgba(239, 68, 68, 0.1)', 
-              border: '1px solid rgba(239, 68, 68, 0.3)', 
-              borderRadius: '8px', 
-              padding: '16px',
-              marginBottom: '20px'
-            }}>
-              <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#ef4444', marginBottom: '8px' }}>
-                ⚠️ Security Notice
-              </div>
-              <p style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.6', margin: 0 }}>
-                With a shared login, you cannot track which location flagged which violations. If an inspector asks "who caught this issue?" you won't have an audit trail. Consider separate logins for compliance tracking.
-              </p>
+          {/* Security Notice */}
+          <div style={{ 
+            background: 'rgba(59, 130, 246, 0.1)', 
+            border: '1px solid rgba(59, 130, 246, 0.3)', 
+            borderRadius: '8px', 
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#3b82f6', marginBottom: '8px' }}>
+              Important: Security & Compliance
             </div>
-          )}
+            <p style={{ fontSize: '13px', color: 'var(--ink-1)', lineHeight: '1.6', margin: 0 }}>
+              Each location must have its own account with unique login credentials. Sharing credentials across locations violates our Terms of Service and prevents accurate compliance tracking per location.
+            </p>
+          </div>
 
           {error && (
             <div style={{
@@ -399,7 +296,7 @@ export default function MultiLocationPurchaseModal({ isOpen, onClose, userId }) 
             textAlign: 'center',
             lineHeight: '1.5'
           }}>
-            Questions about corporate/franchise pricing?<br />
+            Questions about corporate or franchise pricing?<br />
             Email <a href="mailto:support@protocollm.org" style={{ color: 'var(--accent)' }}>support@protocollm.org</a>
           </p>
 
