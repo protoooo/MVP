@@ -386,6 +386,57 @@ export default function Page() {
     }
   }, [])
 
+  // ✅ NEW: Listen for auth modal open events
+  useEffect(() => {
+    const handleOpenAuthModal = (event) => {
+      const { mode } = event.detail || {}
+      console.log('Opening auth modal, mode:', mode)
+      setAuthInitialMode(mode || 'signin')
+      setShowAuthModal(true)
+    }
+
+    window.addEventListener('openAuthModal', handleOpenAuthModal)
+
+    return () => {
+      window.removeEventListener('openAuthModal', handleOpenAuthModal)
+    }
+  }, [])
+
+  // ✅ NEW: Check for pending multi-location purchase after auth
+  useEffect(() => {
+    async function checkPendingPurchase() {
+      // Only run when user is authenticated
+      if (!isAuthenticated) return
+
+      const pending = sessionStorage.getItem('pendingMultiLocationPurchase')
+      if (!pending) return
+
+      console.log('Found pending multi-location purchase, authenticated:', isAuthenticated)
+
+      // Clear the flag
+      sessionStorage.removeItem('pendingMultiLocationPurchase')
+
+      // Wait a bit for subscription check to complete
+      setTimeout(() => {
+        console.log('Opening multi-location modal, hasSubscription:', hasActiveSubscription)
+
+        if (hasActiveSubscription) {
+          // Existing subscriber -> upgrade flow
+          window.dispatchEvent(
+            new CustomEvent('openMultiLocationUpgrade', {
+              detail: { currentLocations: 2 },
+            })
+          )
+        } else {
+          // New user -> purchase flow
+          window.dispatchEvent(new CustomEvent('openMultiLocationPurchase'))
+        }
+      }, 500)
+    }
+
+    checkPendingPurchase()
+  }, [isAuthenticated, hasActiveSubscription])
+
   // ✅ NEW: Listen for multi-location upgrade events
   useEffect(() => {
     const handleUpgradeEvent = () => {
