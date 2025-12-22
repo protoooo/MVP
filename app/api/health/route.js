@@ -11,7 +11,7 @@ export async function GET() {
     db: false, 
     env: false,
     stripe: false,
-    anthropic: false,
+    openai: false,
     cohere: false,
   }
   
@@ -23,7 +23,7 @@ export async function GET() {
     const criticalEnv = [
       'NEXT_PUBLIC_SUPABASE_URL',
       'SUPABASE_SERVICE_ROLE_KEY',
-      'ANTHROPIC_API_KEY',
+      'OPENAI_API_KEY',
       'COHERE_API_KEY',
       'STRIPE_SECRET_KEY',
       'TURNSTILE_SECRET_KEY',
@@ -67,10 +67,10 @@ export async function GET() {
       checks.stripe = true
     }
 
-    // 4. Skip Anthropic check (too slow for health endpoint)
+    // 4. Skip OpenAI check (too slow for health endpoint)
     // Just verify key exists
-    if (process.env.ANTHROPIC_API_KEY) {
-      checks.anthropic = true
+    if (process.env.OPENAI_API_KEY) {
+      checks.openai = true
     }
 
     // 5. Skip Cohere check (too slow for health endpoint)
