@@ -128,8 +128,47 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       <main className="landing-hero">
         <div className="hero-content">
+          <div className="hero-kicker">Multi-location ready</div>
+
+          <div className="hero-headings">
+            <h1 className="hero-title">Catch violations, not fines.</h1>
+            <p className="hero-subtitle">
+              Take photos or use image analysis to catch violations before the inspector does in your establishment.
+            </p>
+            <p className="hero-support">
+              Helps your whole team stay on top of Washtenaw County regulations and policies.
+            </p>
+          </div>
+
+          <div className="hero-cta-row">
+            <button className="btn-primary hero-cta cta-pulse" onClick={onShowPricing} type="button">
+              Start trial
+            </button>
+            <div className="hero-arrow">
+              <svg viewBox="0 0 120 40" aria-hidden="true" focusable="false">
+                <path
+                  d="M5 25c25-10 55-12 85-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M78 16l12 6-10 8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="hero-arrow-text">Get started in minutes</span>
+            </div>
+          </div>
+
           <div className="mobile-start mobile-only">
-            <button className="btn-primary" onClick={onShowPricing} type="button">
+            <button className="btn-primary hero-cta" onClick={onShowPricing} type="button">
               Start trial
             </button>
           </div>
@@ -1403,9 +1442,112 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 32px;
+          gap: 20px;
           max-width: 720px;
           width: 100%;
+        }
+
+        .hero-kicker {
+          padding: 8px 14px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--ink-1);
+          border-radius: var(--radius-full);
+          font-size: 12px;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          font-weight: 600;
+        }
+
+        .hero-headings {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .hero-title {
+          font-size: clamp(28px, 5vw, 40px);
+          font-weight: 800;
+          color: var(--ink-0);
+          letter-spacing: -0.03em;
+          margin: 0;
+        }
+
+        .hero-subtitle {
+          margin: 0;
+          font-size: 18px;
+          line-height: 1.6;
+          color: var(--ink-1);
+        }
+
+        .hero-support {
+          margin: 0;
+          font-size: 15px;
+          line-height: 1.6;
+          color: var(--ink-2);
+        }
+
+        .hero-cta-row {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+        }
+
+        .hero-cta {
+          position: relative;
+          padding: 0 18px;
+          height: 46px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          border-radius: var(--radius-full);
+          box-shadow: 0 16px 40px rgba(59, 130, 246, 0.25);
+          overflow: hidden;
+        }
+
+        .hero-cta::after {
+          content: '';
+          position: absolute;
+          inset: -6px;
+          border-radius: var(--radius-full);
+          background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.35), transparent 60%);
+          opacity: 0.65;
+          filter: blur(6px);
+          z-index: -1;
+          animation: hero-glow 2.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes hero-glow {
+          from {
+            transform: scale(0.98);
+            opacity: 0.45;
+          }
+          to {
+            transform: scale(1.02);
+            opacity: 0.7;
+          }
+        }
+
+        .hero-arrow {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: var(--ink-2);
+          font-size: 13px;
+          line-height: 1.4;
+        }
+
+        .hero-arrow svg {
+          width: 68px;
+          height: 28px;
+          color: var(--accent);
+          opacity: 0.85;
+        }
+
+        .hero-arrow-text {
+          white-space: nowrap;
         }
 
         .mobile-start {
@@ -2231,6 +2373,20 @@ export default function Page() {
 
         /* Responsive */
         @media (max-width: 768px) {
+          .hero-cta-row {
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .hero-arrow {
+            display: none;
+          }
+
+          .hero-headings {
+            text-align: left;
+            align-items: flex-start;
+          }
+
           .landing-topbar {
             padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
               max(16px, env(safe-area-inset-left));
