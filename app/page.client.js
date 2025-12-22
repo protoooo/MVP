@@ -130,7 +130,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-headings">
             <h1 className="hero-title">Catch Violations, Not Fines.</h1>
             <p className="hero-support">
-              Snap a photo or ask a question—get instant, AI-powered food safety guidance for Washtenaw County.
+              Snap a photo or ask a question. Get instant guidance based on Washtenaw County food safety regulations.
             </p>
           </div>
 
@@ -1440,6 +1440,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           color: var(--ink-2);
+          flex-shrink: 0;
           animation: arrow-pulse 2s ease-in-out infinite;
         }
 
@@ -2325,9 +2326,10 @@ export default function Page() {
 
         /* Responsive */
         @media (max-width: 768px) {
+          /* Mobile CTA row - equal spacing with centered arrow */
           .hero-cta-row {
             flex-direction: column;
-            gap: 12px;
+            gap: 0;
             align-items: center;
             text-align: center;
           }
@@ -2335,11 +2337,13 @@ export default function Page() {
           .hero-arrow-text {
             font-size: 13px;
             order: 0;
+            margin-bottom: 10px;
           }
           
           .hero-arrow-icon {
             order: 1;
             transform: rotate(90deg);
+            margin: 6px 0;
           }
           
           .hero-arrow-icon svg {
@@ -2360,6 +2364,7 @@ export default function Page() {
           
           .hero-cta {
             order: 2;
+            margin-top: 10px;
           }
 
           .hero-headings {
