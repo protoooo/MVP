@@ -1,26 +1,32 @@
 // app/page.js
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
+import { Public_Sans, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import MultiLocationBanner from '@/components/MultiLocationBanner'
 import MultiLocationUpgradeModal from '@/components/MultiLocationUpgradeModal'
 import MultiLocationPurchaseModal from '@/components/MultiLocationPurchaseModal'
-import PricingModal from '@/components/PricingModal'
+import PricingModal from '@/components/PricingModal' // ✅ using external PricingModal component
 
-const ibmSans = IBM_Plex_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'] })
+// ✅ “Gov + modern” typography (USWDS-adjacent)
+const publicSans = Public_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
+// ✅ SINGLE PLAN - Unlimited monthly only
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
+// eslint-disable-next-line no-unused-vars
+const isAdmin = false
+
+// lightweight logger (keeps your original “logger.info” style expectations)
 const logger = {
   info: (...args) => console.log(...args),
   warn: (...args) => console.warn(...args),
@@ -45,27 +51,28 @@ const Icons = {
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Gear: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z" strokeLinecap="round" strokeLinejoin="round" />
+  Sparkle: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
     </svg>
   ),
-  Shield: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+  Gear: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path
+        d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2 0.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   ),
   Check: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  Image: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 }
@@ -75,7 +82,7 @@ function BrandLink({ variant = 'landing' }) {
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={40} height={40} priority />
+          <Image src={appleIcon} alt="" width={64} height={64} priority />
         </span>
         <span className="plm-brand-text">protocolLM</span>
       </span>
@@ -86,87 +93,188 @@ function BrandLink({ variant = 'landing' }) {
 function FooterLinks() {
   return (
     <div className={`plm-footer-links ${ibmMono.className}`}>
-      <Link className="plm-footer-link" href="/terms">Terms</Link>
+      <Link className="plm-footer-link" href="/terms">
+        Terms
+      </Link>
       <span className="plm-footer-sep">·</span>
-      <Link className="plm-footer-link" href="/privacy">Privacy</Link>
+      <Link className="plm-footer-link" href="/privacy">
+        Privacy
+      </Link>
       <span className="plm-footer-sep">·</span>
-      <Link className="plm-footer-link" href="/contact">Contact</Link>
+      <Link className="plm-footer-link" href="/contact">
+        Contact
+      </Link>
     </div>
   )
 }
 
+/* ------------------------------------------
+   Landing (NO demo chat) — “Clipboard extension”
+------------------------------------------- */
+
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className={`${ibmSans.className} landing-root`}>
+    <div className={`${publicSans.className} landing-root`}>
       <header className="landing-topbar">
-        <BrandLink variant="landing" />
-        <nav className="landing-nav">
-          <button onClick={onShowAuth} className="nav-link" type="button">Sign in</button>
-          <button onClick={onShowPricing} className="btn-primary" type="button">Start free trial</button>
+        <div className="plm-brand-wrap">
+          <BrandLink variant="landing" />
+        </div>
+
+        <nav className="landing-top-actions" aria-label="Top actions">
+          <button onClick={onShowAuth} className="btn-ghost" type="button">
+            Sign in
+          </button>
+          <button onClick={onShowPricing} className="btn-primary" type="button">
+            Start trial
+          </button>
         </nav>
       </header>
 
-      <main className="landing-main">
-        <div className="landing-content">
-          <div className="landing-badge">
-            <Icons.Shield />
-            <span>Washtenaw County Health Code Compliance</span>
-          </div>
-          
-          <h1 className="landing-headline">
-            Catch violations<br />before inspectors do.
-          </h1>
-          
-          <p className="landing-subhead">
-            Upload a photo of your kitchen. Get instant feedback on health code issues with plain-language fixes.
-          </p>
+      <main className="landing-main" aria-label="protocolLM landing">
+        <section className="landing-hero">
+          <div className="landing-hero-left">
+            <div className={`landing-kicker ${ibmMono.className}`}>
+              Washtenaw County • Food safety compliance
+            </div>
 
-          <div className="landing-actions">
-            <button onClick={onShowPricing} className="btn-primary btn-lg" type="button">
-              Start 7-day free trial
-            </button>
+            <h1 className="landing-title">Compliance checks that feel like a clipboard.</h1>
+
+            <p className="landing-subtitle">
+              Take a photo or ask a question. protocolLM cross-checks against your local rules and returns clear, actionable fixes—without
+              fluff.
+            </p>
+
+            <div className="landing-actions">
+              <button className="btn-primary btn-lg" onClick={onShowPricing} type="button">
+                Start 7-day trial
+              </button>
+              <button className="btn-ghost btn-lg" onClick={onShowAuth} type="button">
+                Sign in
+              </button>
+            </div>
+
+            <div className="landing-meta">
+              <div className="meta-row">
+                <span className="meta-dot" />
+                <span>Built for daily station checks, manager walkthroughs, and training.</span>
+              </div>
+              <div className="meta-row">
+                <span className="meta-dot" />
+                <span>Designed to read like a report: problem → why it matters → what to do next.</span>
+              </div>
+              <div className="meta-row">
+                <span className="meta-dot" />
+                <span>Fastest path: use the camera button for a photo cross-check.</span>
+              </div>
+            </div>
           </div>
 
-          <div className="landing-features">
-            <div className="feature-item">
-              <span className="feature-check"><Icons.Check /></span>
-              <span>Photo analysis in seconds</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-check"><Icons.Check /></span>
-              <span>Michigan food code reference</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-check"><Icons.Check /></span>
-              <span>Plain-language explanations</span>
-            </div>
-          </div>
-        </div>
+          <div className="landing-hero-right" aria-hidden="false">
+            <div className="sheet">
+              <div className="sheet-top">
+                <div className="sheet-title">Quick Check</div>
+                <div className={`sheet-tag ${ibmMono.className}`}>
+                  <span className="sheet-tag-icon">
+                    <Icons.Camera />
+                  </span>
+                  Photo-first workflow
+                </div>
+              </div>
 
-        <div className="landing-visual">
-          <div className="visual-card">
-            <div className="visual-header">
-              <div className="visual-status">
-                <span className="status-dot"></span>
-                <span>Analysis complete</span>
+              <div className="sheet-section">
+                <div className={`sheet-label ${ibmMono.className}`}>How it works</div>
+                <ol className="sheet-steps">
+                  <li>
+                    <span className="step-bullet">1</span>
+                    <span>Upload a photo of a station, sink, cooler, prep area, or chemical setup.</span>
+                  </li>
+                  <li>
+                    <span className="step-bullet">2</span>
+                    <span>Get likely issues in plain language with a fix list.</span>
+                  </li>
+                  <li>
+                    <span className="step-bullet">3</span>
+                    <span>Use the same screen for follow-ups and policy questions.</span>
+                  </li>
+                </ol>
               </div>
-            </div>
-            <div className="visual-body">
-              <div className="visual-finding">
-                <div className="finding-label">Issue detected</div>
-                <div className="finding-text">Raw chicken stored above ready-to-eat items</div>
+
+              <div className="sheet-divider" />
+
+              <div className="sheet-section">
+                <div className={`sheet-label ${ibmMono.className}`}>Typical photo checks</div>
+                <div className="pill-grid">
+                  <span className="pill">Hand sink access</span>
+                  <span className="pill">Sanitizer setup</span>
+                  <span className="pill">Date marking</span>
+                  <span className="pill">Cold holding</span>
+                  <span className="pill">Chemical labeling</span>
+                  <span className="pill">Raw / ready storage</span>
+                </div>
               </div>
-              <div className="visual-finding">
-                <div className="finding-label">Code reference</div>
-                <div className="finding-text">Michigan Food Code 3-302.11</div>
+
+              <div className="sheet-divider" />
+
+              <div className="sheet-section">
+                <div className={`sheet-label ${ibmMono.className}`}>Output style</div>
+                <div className="sheet-lines">
+                  <div className="sheet-line">
+                    <span className="line-key">Finding</span>
+                    <span className="line-val">What looks off</span>
+                  </div>
+                  <div className="sheet-line">
+                    <span className="line-key">Why</span>
+                    <span className="line-val">The risk in one sentence</span>
+                  </div>
+                  <div className="sheet-line">
+                    <span className="line-key">Fix</span>
+                    <span className="line-val">Concrete steps to correct</span>
+                  </div>
+                </div>
               </div>
-              <div className="visual-finding">
-                <div className="finding-label">Fix</div>
-                <div className="finding-text">Move raw proteins to lowest shelf. Store ready-to-eat items above.</div>
+
+              <div className="sheet-foot">
+                <div className={`sheet-foot-note ${ibmMono.className}`}>
+                  Start with a photo → faster answers, fewer back-and-forths.
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        <section className="landing-grid" aria-label="Key capabilities">
+          <div className="card">
+            <div className="card-head">
+              <span className="card-ico" aria-hidden="true">
+                <Icons.Camera />
+              </span>
+              <div className="card-title">Photo cross-check</div>
+            </div>
+            <div className="card-body">
+              Upload a real kitchen photo and get a focused list of what to fix next—written for operators, not engineers.
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <span className="card-ico" aria-hidden="true">
+                <Icons.Check />
+              </span>
+              <div className="card-title">Clear, repeatable checks</div>
+            </div>
+            <div className="card-body">Use it like a daily clipboard: same stations, same expectations, consistent output.</div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <span className="card-ico" aria-hidden="true">
+                <Icons.Gear />
+              </span>
+              <div className="card-title">Policy Q&amp;A</div>
+            </div>
+            <div className="card-body">Ask quick questions during service. Keep the answer short, specific, and practical.</div>
+          </div>
+        </section>
       </main>
 
       <FooterLinks />
@@ -174,6 +282,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
+// ✅ UPDATED: accepts selectedPriceId and passes it on signup
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -204,7 +313,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       const captchaToken = await executeRecaptcha(mode)
       if (!captchaToken || captchaToken === 'turnstile_unavailable') {
         setMessageKind('err')
-        setMessage('Security verification failed. Please try again.')
+        setMessage('Security verification failed. Please ensure Cloudflare Turnstile is allowed, then try again.')
         return
       }
 
@@ -215,9 +324,11 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         endpoint = '/api/auth/reset-password'
       } else {
         body.password = password
+
         if (mode === 'signup' && selectedPriceId) {
           body.selectedPriceId = selectedPriceId
         }
+
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
@@ -251,7 +362,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         }, 2000)
       } else {
         setMessageKind('ok')
-        setMessage('Signed in successfully.')
+        setMessage('Signed in. Redirecting…')
         setTimeout(() => {
           onClose()
           window.location.reload()
@@ -260,7 +371,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
     } catch (error) {
       console.error('Auth error:', error)
       setMessageKind('err')
-      setMessage('Something went wrong. Please try again.')
+      setMessage('Unexpected issue. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -271,12 +382,13 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${ibmSans.className}`}>
+        <div className={`modal-card ${publicSans.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
 
           <div className="modal-header">
+            <div className={`modal-kicker ${ibmMono.className}`}>Account access</div>
             <h2 className="modal-title">
               {mode === 'signin' && 'Sign in'}
               {mode === 'signup' && 'Create account'}
@@ -286,12 +398,12 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
-              <label className="form-label">Email</label>
+              <label className={`form-label ${ibmMono.className}`}>Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@restaurant.com"
+                placeholder="you@company.com"
                 required
                 className="form-input"
                 autoComplete="email"
@@ -300,7 +412,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
             {mode !== 'reset' && (
               <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className={`form-label ${ibmMono.className}`}>Password</label>
                 <div className="form-input-wrap">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -311,7 +423,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                     className="form-input"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle-vis">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className={`form-toggle-vis ${ibmMono.className}`}>
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
@@ -329,15 +441,23 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
           <div className="modal-footer">
             {mode === 'signin' && (
               <>
-                <button type="button" onClick={() => setMode('reset')} className="modal-link">Forgot password?</button>
-                <button type="button" onClick={() => setMode('signup')} className="modal-link">Create an account</button>
+                <button type="button" onClick={() => setMode('reset')} className="modal-link">
+                  Forgot password?
+                </button>
+                <button type="button" onClick={() => setMode('signup')} className="modal-link">
+                  Create an account
+                </button>
               </>
             )}
             {mode === 'signup' && (
-              <button type="button" onClick={() => setMode('signin')} className="modal-link">Already have an account?</button>
+              <button type="button" onClick={() => setMode('signin')} className="modal-link">
+                Already have an account? Sign in
+              </button>
             )}
             {mode === 'reset' && (
-              <button type="button" onClick={() => setMode('signin')} className="modal-link">Back to sign in</button>
+              <button type="button" onClick={() => setMode('signin')} className="modal-link">
+                ← Back to sign in
+              </button>
             )}
           </div>
 
@@ -365,6 +485,8 @@ export default function Page() {
   const [authInitialMode, setAuthInitialMode] = useState('signin')
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
+
+  // ✅ remember the selected Stripe price when user isn't logged in
   const [selectedPriceId, setSelectedPriceId] = useState(null)
 
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -373,6 +495,7 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
+  // ✅ NEW: multi-location license state + modal
   const [locationCheck, setLocationCheck] = useState(null)
   const [showMultiLocationModal, setShowMultiLocationModal] = useState(false)
   const [showMultiLocationPurchaseModal, setShowMultiLocationPurchaseModal] = useState(false)
@@ -387,9 +510,11 @@ export default function Page() {
 
   const isAuthenticated = !!session
 
+  // ✅ Chat settings menu (gear dropdown)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
 
+  // Close settings menu on outside click
   useEffect(() => {
     const onDown = (e) => {
       if (!settingsRef.current) return
@@ -403,23 +528,43 @@ export default function Page() {
     }
   }, [])
 
+  // ✅ NEW: Listen for multi-location upgrade events
   useEffect(() => {
-    const handleUpgradeEvent = () => setShowMultiLocationModal(true)
+    const handleUpgradeEvent = () => {
+      setShowMultiLocationModal(true)
+    }
+
     window.addEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
-    return () => window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
+
+    return () => {
+      window.removeEventListener('openMultiLocationUpgrade', handleUpgradeEvent)
+    }
   }, [])
 
+  // ✅ NEW: Listen for multi-location purchase modal trigger
   useEffect(() => {
-    const handleOpenMultiLocationPurchase = () => setShowMultiLocationPurchaseModal(true)
+    const handleOpenMultiLocationPurchase = () => {
+      setShowMultiLocationPurchaseModal(true)
+    }
+
     window.addEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
-    return () => window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
+
+    return () => {
+      window.removeEventListener('openMultiLocationPurchase', handleOpenMultiLocationPurchase)
+    }
   }, [])
 
+  // Set view attribute for CSS + optional spline container hiding
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
+    const splineContainer = document.getElementById('plm-spline-bg')
+    if (splineContainer) {
+      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
+    }
   }, [isAuthenticated])
 
+  // Auto-scroll helpers
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
@@ -442,6 +587,10 @@ export default function Page() {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages, scrollToBottom])
 
+  // ============================================================================
+  // ✅ FIX 1: SECURE pricing modal auto-trigger (URL param)
+  // Only show pricing via URL param if authenticated
+  // ============================================================================
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     const emailVerified = searchParams?.get('emailVerified')
@@ -449,13 +598,16 @@ export default function Page() {
     if (showPricing === 'true' && isAuthenticated) {
       if (hasActiveSubscription || subscription) {
         setShowPricingModal(false)
+
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
         return
       }
+
       if (!hasActiveSubscription && !subscription) {
         setShowPricingModal(true)
+
         if (emailVerified === 'true' && typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/')
         }
@@ -463,24 +615,31 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
+  // ============================================================================
+  // ✅ FIX 2: Keep ONLY this handleCheckout (full validation + CAPTCHA + verification)
+  // ============================================================================
   const handleCheckout = useCallback(
     async (priceId, planName) => {
       try {
+        // ✅ SECURITY: Validate price ID
         if (!priceId) {
           alert('Invalid price selected.')
           return
         }
 
+        // ✅ SECURITY: Verify priceId is one of the allowed values (single plan)
         const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
         if (validPrices.length > 0 && !validPrices.includes(priceId)) {
           console.error('Invalid price ID:', priceId)
-          alert('Invalid plan selected.')
+          alert('Invalid plan selected. Please try again.')
           return
         }
 
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
+          // ✅ Store selected plan before showing auth
+          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
           setSelectedPriceId(priceId)
           setShowPricingModal(false)
           setAuthInitialMode('signup')
@@ -488,15 +647,16 @@ export default function Page() {
           return
         }
 
+        // ✅ SECURITY: Check email is verified before allowing checkout
         if (!data.session.user.email_confirmed_at) {
-          alert('Please verify your email first.')
+          alert('Please verify your email before starting a trial. Check your inbox.')
           setShowPricingModal(false)
           router.push('/verify-email')
           return
         }
 
         if (!captchaLoaded) {
-          alert('Security verification loading. Please try again.')
+          alert('Security verification is still loading. Please try again in a moment.')
           return
         }
 
@@ -504,7 +664,7 @@ export default function Page() {
 
         const captchaToken = await executeRecaptcha('checkout')
         if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-          throw new Error('Security verification failed.')
+          throw new Error('Security verification failed. Please refresh and try again.')
         }
 
         const res = await fetch('/api/create-checkout-session', {
@@ -519,17 +679,20 @@ export default function Page() {
 
         const payload = await res.json().catch(() => ({}))
 
+        // ✅ SECURITY: Handle specific error codes
         if (!res.ok) {
           if (payload.code === 'EMAIL_NOT_VERIFIED') {
-            alert('Please verify your email first.')
+            alert('Please verify your email before starting a trial.')
             router.push('/verify-email')
             return
           }
+
           if (payload.code === 'ALREADY_SUBSCRIBED') {
             alert('You already have an active subscription.')
             setShowPricingModal(false)
             return
           }
+
           throw new Error(payload.error || 'Checkout failed')
         }
 
@@ -540,7 +703,7 @@ export default function Page() {
         }
       } catch (error) {
         console.error('Checkout error:', error)
-        alert('Checkout failed: ' + (error.message || 'Unknown error'))
+        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       } finally {
         setCheckoutLoading(null)
       }
@@ -548,6 +711,7 @@ export default function Page() {
     [supabase, captchaLoaded, executeRecaptcha, router]
   )
 
+  // ✅ CRITICAL: Main authentication and subscription check
   useEffect(() => {
     let isMounted = true
 
@@ -559,20 +723,28 @@ export default function Page() {
         setSubscription(null)
         setHasActiveSubscription(false)
         setShowPricingModal(false)
+
+        // ✅ clear multi-location states on logout
         setLocationCheck(null)
         setShowMultiLocationModal(false)
         setShowMultiLocationPurchaseModal(false)
+
         setIsLoading(false)
         return
       }
 
+      // ✅ CRITICAL: Check if email is verified + terms accepted
       try {
         if (!s.user.email_confirmed_at) {
+          console.log('❌ Email not verified - redirecting to verify page')
           setSubscription(null)
           setHasActiveSubscription(false)
+
+          // ✅ clear multi-location states
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
+
           setIsLoading(false)
           router.replace('/verify-email')
           return
@@ -584,12 +756,28 @@ export default function Page() {
           .eq('id', s.user.id)
           .maybeSingle()
 
-        if (profileError || !profile) {
+        if (profileError) {
+          console.error('❌ Profile check error:', profileError)
           setSubscription(null)
           setHasActiveSubscription(false)
+
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
+
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
+        }
+
+        if (!profile) {
+          setSubscription(null)
+          setHasActiveSubscription(false)
+
+          setLocationCheck(null)
+          setShowMultiLocationModal(false)
+          setShowMultiLocationPurchaseModal(false)
+
           setIsLoading(false)
           router.replace('/accept-terms')
           return
@@ -599,25 +787,30 @@ export default function Page() {
         if (!accepted) {
           setSubscription(null)
           setHasActiveSubscription(false)
+
           setLocationCheck(null)
           setShowMultiLocationModal(false)
           setShowMultiLocationPurchaseModal(false)
+
           setIsLoading(false)
           router.replace('/accept-terms')
           return
         }
       } catch (e) {
-        console.error('Policy check error:', e)
+        console.error('❌ Policy check exception:', e)
         setSubscription(null)
         setHasActiveSubscription(false)
+
         setLocationCheck(null)
         setShowMultiLocationModal(false)
         setShowMultiLocationPurchaseModal(false)
+
         setIsLoading(false)
         router.replace('/accept-terms')
         return
       }
 
+      // ✅ CRITICAL: Check for active subscription
       let active = false
       let subData = null
 
@@ -646,6 +839,7 @@ export default function Page() {
       setSubscription(subData)
       setHasActiveSubscription(active)
 
+      // ✅ if user lost subscription, clear location check so banner doesn't show incorrectly
       if (!subData) {
         setLocationCheck(null)
         setShowMultiLocationModal(false)
@@ -655,7 +849,18 @@ export default function Page() {
       const checkoutParam = searchParams?.get('checkout')
       const showPricingParam = searchParams?.get('showPricing')
 
+      if (s?.user) {
+        console.log('🔐 Auth state:', {
+          userId: String(s.user.id || '').substring(0, 8) + '***',
+          emailVerified: !!s.user.email_confirmed_at,
+          hasSubscription: !!subData,
+          subscriptionStatus: subData?.status,
+          trialEnd: subData?.trial_end ? new Date(subData.trial_end).toISOString() : null,
+        })
+      }
+
       if (!subData && !checkoutParam && showPricingParam !== 'true') {
+        console.log('💳 No subscription found - showing pricing modal')
         setShowPricingModal(true)
         setHasActiveSubscription(false)
       }
@@ -663,9 +868,16 @@ export default function Page() {
       if (subData?.status === 'trialing' && subData?.trial_end) {
         const trialEnd = new Date(subData.trial_end)
         const now = new Date()
+
         if (trialEnd < now) {
+          console.log('❌ Trial expired - showing pricing')
           if (!checkoutParam) setShowPricingModal(true)
           setHasActiveSubscription(false)
+        } else {
+          const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
+          if (hoursLeft < 24 && hoursLeft > 0) {
+            console.log(`⚠️ Trial ends in ${Math.round(hoursLeft)} hours`)
+          }
         }
       }
 
@@ -697,19 +909,25 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
+  // ✅ FIXED: Auto-checkout after email verification / auth callback
   useEffect(() => {
     const checkoutPlan = searchParams?.get('checkout')
     if (!checkoutPlan) return
     if (isLoading) return
 
     if (checkoutPlan && isAuthenticated && !hasActiveSubscription && !subscription) {
+      console.log('🛒 Auto-checkout triggered:', checkoutPlan.substring(0, 15) + '***')
       handleCheckout(checkoutPlan, 'auto')
+
       if (typeof window !== 'undefined') {
         window.history.replaceState({}, '', '/')
       }
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
+  // ============================================================================
+  // ✅ NEW: Fetch multi-location “license/locationCheck” after auth + subscription exists
+  // ============================================================================
   const fetchLocationCheckFromServer = useCallback(async (sess) => {
     try {
       const token = sess?.access_token
@@ -730,7 +948,9 @@ export default function Page() {
       const doGet = async () =>
         fetch('/api/license/check', {
           method: 'GET',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           credentials: 'include',
         })
 
@@ -740,6 +960,7 @@ export default function Page() {
       const data = await res.json().catch(() => null)
       if (!res.ok || !data) return null
 
+      // support either { locationCheck: {...} } or direct object
       return data.locationCheck || data
     } catch (e) {
       logger.warn('Location check fetch failed', e)
@@ -751,6 +972,7 @@ export default function Page() {
     let cancelled = false
 
     async function run() {
+      // only for authenticated users with an active/trialing subscription record
       if (!isAuthenticated || !session?.user?.id || !subscription) return
 
       const lc = await fetchLocationCheckFromServer(session)
@@ -760,21 +982,25 @@ export default function Page() {
       logger.info('License validated', {
         userId: session.user.id,
         uniqueLocationsUsed: lc.uniqueLocationsUsed,
+        locationFingerprint: lc.locationFingerprint?.substring(0, 8) + '***',
       })
 
       setLocationCheck(lc)
     }
 
     run()
-    return () => { cancelled = true }
+
+    return () => {
+      cancelled = true
+    }
   }, [isAuthenticated, session, subscription, fetchLocationCheckFromServer])
 
   const handleManageBilling = async () => {
     let loadingToast = null
     try {
       loadingToast = document.createElement('div')
-      loadingToast.textContent = 'Opening billing...'
-      loadingToast.className = 'toast-loading'
+      loadingToast.textContent = 'Opening billing portal...'
+      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
@@ -809,9 +1035,12 @@ export default function Page() {
   const handleSignOut = async () => {
     try {
       setShowSettingsMenu(false)
+
+      // ✅ clear multi-location states immediately
       setLocationCheck(null)
       setShowMultiLocationModal(false)
       setShowMultiLocationPurchaseModal(false)
+
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Sign out error', e)
@@ -878,7 +1107,7 @@ export default function Page() {
       if (!res.ok) {
         if (res.status === 402) {
           setShowPricingModal(true)
-          throw new Error('Subscription required.')
+          throw new Error('Subscription required for additional questions.')
         }
         if (res.status === 429) {
           const data = await res.json().catch(() => ({}))
@@ -929,10 +1158,13 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className={`loading-screen ${ibmSans.className}`}>
+      <div className={`loading-screen ${publicSans.className}`}>
         <div className="loading-content">
           <div className="loading-logo">
-            <Image src={appleIcon} alt="protocolLM" width={48} height={48} priority />
+            <Image src={appleIcon} alt="protocolLM" width={64} height={64} priority />
+          </div>
+          <div className={`loading-meta ${ibmMono.className}`}>
+            {loadingStage === 'auth' ? 'AUTH' : loadingStage === 'subscription' ? 'SUBSCRIPTION' : 'READY'}
           </div>
           <div className="loading-bar">
             <div className="loading-bar-fill" />
@@ -942,81 +1174,102 @@ export default function Page() {
     )
   }
 
+  const shouldNudgeCamera = messages.length === 0 && !selectedImage && !input && !isSending
+
   return (
     <>
       <style jsx global>{`
         :root {
-          --white: #ffffff;
-          --gray-50: #f8fafc;
-          --gray-100: #f1f5f9;
-          --gray-200: #e2e8f0;
-          --gray-300: #cbd5e1;
-          --gray-400: #94a3b8;
-          --gray-500: #64748b;
-          --gray-600: #475569;
-          --gray-700: #334155;
-          --gray-800: #1e293b;
-          --gray-900: #0f172a;
-          
-          --blue-50: #eff6ff;
-          --blue-100: #dbeafe;
-          --blue-200: #bfdbfe;
-          --blue-500: #3b82f6;
-          --blue-600: #2563eb;
-          --blue-700: #1d4ed8;
-          
-          --steel-50: #f0f4f8;
-          --steel-100: #d9e2ec;
-          --steel-200: #bcccdc;
-          --steel-500: #627d98;
-          --steel-600: #486581;
-          --steel-700: #334e68;
-          --steel-800: #243b53;
-          --steel-900: #102a43;
-          
-          --radius-sm: 6px;
-          --radius-md: 8px;
-          --radius-lg: 12px;
-          
-          --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-          --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-          --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+          /* ✅ “Stainless steel” base */
+          --bg-0: #f6f8fb; /* app background */
+          --bg-1: #ffffff; /* paper */
+          --bg-2: #eef2f7; /* field */
+          --bg-3: #e3eaf3; /* dividers */
+
+          --ink-0: #0b1220; /* primary text */
+          --ink-1: #1f2a3a; /* strong secondary */
+          --ink-2: #40536a; /* secondary */
+          --ink-3: #6f8196; /* muted */
+
+          /* ✅ Accent: set this to match your logo’s blue if needed */
+          --accent: #0b5cab;
+          --accent-hover: #094e92;
+          --accent-dim: rgba(11, 92, 171, 0.12);
+
+          --border-subtle: rgba(12, 22, 40, 0.12);
+          --border-default: rgba(12, 22, 40, 0.18);
+
+          --shadow-1: 0 1px 0 rgba(12, 22, 40, 0.04), 0 10px 24px rgba(12, 22, 40, 0.06);
+          --shadow-2: 0 1px 0 rgba(12, 22, 40, 0.05), 0 18px 44px rgba(12, 22, 40, 0.08);
+
+          --radius-sm: 10px;
+          --radius-md: 14px;
+          --radius-lg: 18px;
+          --radius-full: 9999px;
         }
 
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
           box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
           height: 100%;
           margin: 0;
-          background: var(--white);
-          color: var(--gray-900);
+          background: var(--bg-0);
+          color: var(--ink-0);
+          overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
+          overscroll-behavior-y: none;
+        }
+
+        body::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background: var(--bg-0);
+          z-index: -1;
         }
 
         @supports (-webkit-touch-callout: none) {
-          html { height: -webkit-fill-available; }
-          body { min-height: -webkit-fill-available; }
+          html {
+            height: -webkit-fill-available;
+          }
+          body {
+            min-height: -webkit-fill-available;
+          }
         }
 
-        a, button, input, textarea {
+        a,
+        button,
+        input,
+        textarea {
           -webkit-tap-highlight-color: transparent;
         }
-
-        :focus { outline: none; }
-        :focus-visible { outline: 2px solid var(--blue-500); outline-offset: 2px; }
-
-        ::selection {
-          background: var(--blue-100);
-          color: var(--gray-900);
+        :focus {
+          outline: none;
         }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--gray-100); }
-        ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+        ::selection {
+          background: var(--accent-dim);
+          color: var(--ink-0);
+        }
+
+        ::-webkit-scrollbar {
+          width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(12, 22, 40, 0.14);
+          border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(12, 22, 40, 0.2);
+        }
 
         /* Loading */
         .loading-screen {
@@ -1025,7 +1278,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--white);
+          background: var(--bg-0);
           z-index: 9999;
         }
 
@@ -1033,18 +1286,19 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 24px;
+          gap: 18px;
+        }
+
+        .loading-meta {
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          color: var(--ink-3);
+          user-select: none;
         }
 
         .loading-logo {
-          width: 48px;
-          height: 48px;
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          width: 64px;
+          height: 64px;
         }
 
         .loading-logo img {
@@ -1054,54 +1308,60 @@ export default function Page() {
         }
 
         .loading-bar {
-          width: 120px;
-          height: 3px;
-          background: var(--gray-200);
-          border-radius: 2px;
+          width: 160px;
+          height: 2px;
+          background: rgba(12, 22, 40, 0.12);
+          border-radius: var(--radius-full);
           overflow: hidden;
         }
 
         .loading-bar-fill {
           height: 100%;
-          width: 40%;
-          background: var(--blue-500);
-          animation: loading-slide 1.2s ease-in-out infinite;
+          width: 30%;
+          background: var(--accent);
+          animation: loading-slide 1.05s ease-in-out infinite;
         }
 
         @keyframes loading-slide {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(350%); }
+          0% {
+            transform: translateX(-120%);
+          }
+          100% {
+            transform: translateX(420%);
+          }
         }
 
-        /* App container */
+        /* App */
         .app-container {
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          background: var(--white);
+          background: var(--bg-0);
         }
 
         /* Brand */
         .plm-brand {
-          color: var(--gray-900);
+          color: var(--ink-0);
           text-decoration: none;
           display: inline-flex;
           align-items: center;
-          transition: opacity 0.2s ease;
+          transition: opacity 0.15s ease;
         }
 
-        .plm-brand:hover { opacity: 0.8; }
+        .plm-brand:hover {
+          opacity: 0.82;
+        }
 
         .plm-brand-inner {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 14px;
         }
 
         .plm-brand-mark {
-          width: 40px;
-          height: 40px;
+          width: 64px;
+          height: 64px;
           flex-shrink: 0;
         }
 
@@ -1112,272 +1372,426 @@ export default function Page() {
         }
 
         .plm-brand-text {
-          font-size: 18px;
-          font-weight: 600;
-          letter-spacing: -0.01em;
-          color: var(--steel-900);
-        }
-
-        /* Landing */
-        .landing-root {
-          min-height: 100vh;
-          min-height: 100dvh;
-          display: flex;
-          flex-direction: column;
-          background: var(--white);
-        }
-
-        .landing-topbar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 24px;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(8px);
-          border-bottom: 1px solid var(--gray-200);
-          z-index: 100;
-        }
-
-        .landing-nav {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .nav-link {
-          height: 40px;
-          padding: 0 16px;
-          display: flex;
-          align-items: center;
-          background: transparent;
-          border: none;
-          color: var(--gray-600);
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: color 0.15s ease;
-          font-family: inherit;
-        }
-
-        .nav-link:hover { color: var(--gray-900); }
-
-        .btn-primary {
-          height: 40px;
-          padding: 0 20px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--blue-600);
-          color: var(--white);
-          border: none;
-          border-radius: var(--radius-md);
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s ease, transform 0.1s ease;
-          font-family: inherit;
-        }
-
-        .btn-primary:hover { background: var(--blue-700); }
-        .btn-primary:active { transform: scale(0.98); }
-
-        .btn-lg {
-          height: 48px;
-          padding: 0 28px;
-          font-size: 15px;
-          border-radius: var(--radius-lg);
-        }
-
-        /* Landing main */
-        .landing-main {
-          flex: 1;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 64px;
-          align-items: center;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 120px 48px 80px;
-        }
-
-        .landing-content {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .landing-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 14px;
-          background: var(--blue-50);
-          border: 1px solid var(--blue-200);
-          border-radius: 100px;
-          color: var(--blue-700);
-          font-size: 13px;
-          font-weight: 500;
-          width: fit-content;
-        }
-
-        .landing-badge svg {
-          flex-shrink: 0;
-        }
-
-        .landing-headline {
-          font-size: 48px;
+          font-size: 20px;
           font-weight: 700;
-          line-height: 1.1;
           letter-spacing: -0.02em;
-          color: var(--steel-900);
-          margin: 0;
+          white-space: nowrap;
         }
 
-        .landing-subhead {
-          font-size: 18px;
-          line-height: 1.6;
-          color: var(--gray-600);
-          margin: 0;
-          max-width: 480px;
-        }
-
-        .landing-actions {
-          display: flex;
-          gap: 12px;
-          margin-top: 8px;
-        }
-
-        .landing-features {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-top: 16px;
-        }
-
-        .feature-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 14px;
-          color: var(--gray-700);
-        }
-
-        .feature-check {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 20px;
-          height: 20px;
-          background: var(--blue-50);
-          border-radius: 50%;
-          color: var(--blue-600);
-        }
-
-        /* Visual card */
-        .landing-visual {
-          display: flex;
-          justify-content: center;
-        }
-
-        .visual-card {
-          width: 100%;
-          max-width: 420px;
-          background: var(--white);
-          border: 1px solid var(--gray-200);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-lg);
-          overflow: hidden;
-        }
-
-        .visual-header {
-          padding: 16px 20px;
-          background: var(--steel-50);
-          border-bottom: 1px solid var(--gray-200);
-        }
-
-        .visual-status {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        /* Buttons */
+        .btn-primary {
+          height: 36px;
+          padding: 0 14px;
+          background: var(--accent);
+          color: #fff;
+          border: 1px solid rgba(0, 0, 0, 0);
+          border-radius: var(--radius-sm);
           font-size: 13px;
-          font-weight: 500;
-          color: var(--steel-700);
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+          font-family: inherit;
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
         }
 
-        .status-dot {
-          width: 8px;
-          height: 8px;
-          background: #22c55e;
-          border-radius: 50%;
-          animation: status-pulse 2s ease-in-out infinite;
+        .btn-primary:hover {
+          background: var(--accent-hover);
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 10px 20px rgba(11, 92, 171, 0.14);
         }
 
-        @keyframes status-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+        .btn-primary:active {
+          transform: translateY(1px);
         }
 
-        .visual-body {
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
+        .btn-ghost {
+          height: 36px;
+          padding: 0 12px;
+          background: transparent;
+          color: var(--ink-2);
+          border: 1px solid transparent;
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+          font-family: inherit;
         }
 
-        .visual-finding {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
+        .btn-ghost:hover {
+          background: rgba(12, 22, 40, 0.04);
+          color: var(--ink-0);
+          border-color: rgba(12, 22, 40, 0.08);
         }
 
-        .finding-label {
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--gray-500);
-        }
-
-        .finding-text {
+        .btn-primary.btn-lg,
+        .btn-ghost.btn-lg {
+          height: 44px;
+          padding: 0 16px;
           font-size: 14px;
-          line-height: 1.5;
-          color: var(--gray-800);
         }
 
         /* Footer */
         .plm-footer-links {
-          position: fixed;
-          bottom: 24px;
+          position: absolute;
+          bottom: max(18px, env(safe-area-inset-bottom));
           left: 50%;
           transform: translateX(-50%);
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 14px;
           z-index: 10;
         }
 
         .plm-footer-link {
-          color: var(--gray-500);
+          color: var(--ink-3);
           text-decoration: none;
-          font-size: 12px;
-          font-weight: 500;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
           transition: color 0.15s ease;
         }
 
-        .plm-footer-link:hover { color: var(--gray-700); }
-        .plm-footer-sep { color: var(--gray-300); }
+        .plm-footer-link:hover {
+          color: var(--ink-1);
+        }
+        .plm-footer-sep {
+          color: rgba(12, 22, 40, 0.22);
+        }
 
-        /* Modal */
+        /* Landing */
+        .landing-root {
+          position: relative;
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          background: var(--bg-0);
+          overflow: hidden;
+        }
+
+        .landing-topbar {
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: max(16px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) 12px
+            max(22px, env(safe-area-inset-left));
+          background: rgba(246, 248, 251, 0.86);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(12, 22, 40, 0.08);
+        }
+
+        .landing-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .landing-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          padding: 28px 22px 96px;
+        }
+
+        .landing-hero {
+          width: 100%;
+          max-width: 1080px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1.1fr 0.9fr;
+          gap: 28px;
+          align-items: start;
+          padding-top: 10px;
+        }
+
+        .landing-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--ink-3);
+          padding: 8px 10px;
+          border-radius: var(--radius-full);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          background: rgba(255, 255, 255, 0.62);
+          width: fit-content;
+        }
+
+        .landing-title {
+          margin: 16px 0 10px;
+          font-size: 46px;
+          line-height: 1.06;
+          letter-spacing: -0.04em;
+          color: var(--ink-0);
+          font-weight: 800;
+        }
+
+        .landing-subtitle {
+          margin: 0;
+          font-size: 16px;
+          line-height: 1.6;
+          color: var(--ink-2);
+          max-width: 56ch;
+        }
+
+        .landing-actions {
+          margin-top: 18px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .landing-meta {
+          margin-top: 18px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(12, 22, 40, 0.10);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          max-width: 70ch;
+        }
+
+        .meta-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          color: var(--ink-2);
+          font-size: 14px;
+          line-height: 1.55;
+        }
+
+        .meta-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: rgba(12, 22, 40, 0.22);
+          margin-top: 7px;
+          flex-shrink: 0;
+        }
+
+        .sheet {
+          background: var(--bg-1);
+          border: 1px solid rgba(12, 22, 40, 0.14);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-2);
+          overflow: hidden;
+        }
+
+        .sheet-top {
+          padding: 16px 16px 12px;
+          border-bottom: 1px solid rgba(12, 22, 40, 0.10);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          background: rgba(255, 255, 255, 0.92);
+        }
+
+        .sheet-title {
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--ink-0);
+          font-size: 16px;
+        }
+
+        .sheet-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--accent);
+          background: var(--accent-dim);
+          border: 1px solid rgba(11, 92, 171, 0.22);
+          padding: 8px 10px;
+          border-radius: var(--radius-full);
+          white-space: nowrap;
+        }
+
+        .sheet-tag-icon {
+          display: inline-flex;
+        }
+
+        .sheet-section {
+          padding: 14px 16px;
+        }
+
+        .sheet-label {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-3);
+          margin-bottom: 10px;
+        }
+
+        .sheet-steps {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          color: var(--ink-2);
+          font-size: 14px;
+          line-height: 1.55;
+        }
+
+        .sheet-steps li {
+          display: grid;
+          grid-template-columns: 26px 1fr;
+          gap: 10px;
+          align-items: start;
+        }
+
+        .step-bullet {
+          width: 22px;
+          height: 22px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(12, 22, 40, 0.06);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          font-weight: 800;
+          color: var(--ink-1);
+          font-size: 12px;
+        }
+
+        .sheet-divider {
+          height: 1px;
+          background: rgba(12, 22, 40, 0.10);
+        }
+
+        .pill-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          padding: 8px 10px;
+          border-radius: var(--radius-full);
+          background: rgba(12, 22, 40, 0.04);
+          border: 1px solid rgba(12, 22, 40, 0.10);
+          color: var(--ink-2);
+          font-size: 13px;
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        .sheet-lines {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .sheet-line {
+          display: grid;
+          grid-template-columns: 76px 1fr;
+          gap: 10px;
+          padding: 10px 10px;
+          border-radius: 12px;
+          border: 1px solid rgba(12, 22, 40, 0.10);
+          background: rgba(246, 248, 251, 0.7);
+        }
+
+        .line-key {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-3);
+          font-weight: 700;
+        }
+
+        .line-val {
+          color: var(--ink-2);
+          font-size: 13px;
+        }
+
+        .sheet-foot {
+          padding: 14px 16px 16px;
+          background: rgba(246, 248, 251, 0.62);
+          border-top: 1px solid rgba(12, 22, 40, 0.10);
+        }
+
+        .sheet-foot-note {
+          font-size: 11px;
+          letter-spacing: 0.10em;
+          text-transform: uppercase;
+          color: var(--ink-3);
+        }
+
+        .landing-grid {
+          width: 100%;
+          max-width: 1080px;
+          margin: 22px auto 0;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+        }
+
+        .card {
+          background: rgba(255, 255, 255, 0.76);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          border-radius: var(--radius-lg);
+          padding: 16px;
+          box-shadow: var(--shadow-1);
+          transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+        }
+
+        .card:hover {
+          transform: translateY(-1px);
+          border-color: rgba(12, 22, 40, 0.18);
+          background: rgba(255, 255, 255, 0.9);
+        }
+
+        .card-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 8px;
+        }
+
+        .card-ico {
+          width: 34px;
+          height: 34px;
+          border-radius: 12px;
+          background: rgba(11, 92, 171, 0.10);
+          border: 1px solid rgba(11, 92, 171, 0.20);
+          color: var(--accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .card-title {
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--ink-0);
+        }
+
+        .card-body {
+          color: var(--ink-2);
+          font-size: 14px;
+          line-height: 1.55;
+        }
+
+        /* Modals */
         .modal-overlay {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(4px);
+          background: rgba(8, 12, 18, 0.62);
+          backdrop-filter: blur(6px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1386,115 +1800,148 @@ export default function Page() {
         }
 
         @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
 
         .modal-container {
           width: 100%;
-          max-width: 400px;
-          animation: modal-up 0.2s ease;
+          max-width: 380px;
+          animation: modal-up 0.18s ease;
         }
 
         @keyframes modal-up {
-          from { opacity: 0; transform: translateY(8px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .modal-card {
           position: relative;
-          background: var(--white);
-          border: 1px solid var(--gray-200);
+          background: var(--bg-1);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: var(--radius-lg);
-          padding: 32px;
-          box-shadow: var(--shadow-lg);
+          padding: 26px;
+          box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
         }
 
         .modal-close {
           position: absolute;
-          top: 16px;
-          right: 16px;
-          width: 32px;
-          height: 32px;
+          top: 14px;
+          right: 14px;
+          width: 30px;
+          height: 30px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: none;
-          color: var(--gray-400);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          color: var(--ink-2);
           cursor: pointer;
-          border-radius: var(--radius-sm);
-          transition: color 0.15s ease, background 0.15s ease;
+          border-radius: 12px;
+          transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
 
         .modal-close:hover {
-          color: var(--gray-600);
-          background: var(--gray-100);
+          color: var(--ink-0);
+          background: rgba(12, 22, 40, 0.04);
+          border-color: rgba(12, 22, 40, 0.18);
         }
 
-        .modal-header { margin-bottom: 24px; }
+        .modal-header {
+          margin-bottom: 18px;
+        }
+
+        .modal-kicker {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-3);
+          margin-bottom: 6px;
+        }
 
         .modal-title {
-          font-size: 20px;
-          font-weight: 600;
+          font-size: 18px;
+          font-weight: 800;
           margin: 0;
-          color: var(--gray-900);
+          color: var(--ink-0);
+          letter-spacing: -0.02em;
         }
 
         .modal-form {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 14px;
         }
 
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 8px;
         }
 
         .form-label {
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--gray-700);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-3);
         }
 
         .form-input {
           width: 100%;
           height: 44px;
-          padding: 0 14px;
-          background: var(--white);
-          border: 1px solid var(--gray-300);
-          border-radius: var(--radius-md);
-          color: var(--gray-900);
+          padding: 0 12px;
+          background: var(--bg-2);
+          border: 1px solid rgba(12, 22, 40, 0.14);
+          border-radius: var(--radius-sm);
+          color: var(--ink-0);
           font-size: 14px;
           font-family: inherit;
           transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .form-input::placeholder { color: var(--gray-400); }
-        .form-input:focus {
-          border-color: var(--blue-500);
-          box-shadow: 0 0 0 3px var(--blue-100);
+        .form-input::placeholder {
+          color: rgba(64, 83, 106, 0.65);
         }
 
-        .form-input-wrap { position: relative; }
+        .form-input:focus {
+          border-color: rgba(11, 92, 171, 0.45);
+          box-shadow: 0 0 0 4px rgba(11, 92, 171, 0.10);
+        }
+
+        .form-input-wrap {
+          position: relative;
+        }
 
         .form-toggle-vis {
           position: absolute;
-          right: 14px;
+          right: 12px;
           top: 50%;
           transform: translateY(-50%);
           background: none;
           border: none;
-          color: var(--gray-500);
-          font-size: 12px;
-          font-weight: 500;
+          color: var(--ink-2);
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
           cursor: pointer;
           font-family: inherit;
         }
 
-        .form-toggle-vis:hover { color: var(--gray-700); }
+        .form-toggle-vis:hover {
+          color: var(--ink-0);
+        }
 
         .btn-submit {
           width: 100%;
@@ -1503,47 +1950,65 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          background: var(--blue-600);
-          color: var(--white);
+          background: var(--accent);
+          color: #fff;
           border: none;
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-sm);
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 800;
           cursor: pointer;
           font-family: inherit;
           transition: background 0.15s ease;
-          margin-top: 8px;
+          margin-top: 6px;
         }
 
-        .btn-submit:hover:not(:disabled) { background: var(--blue-700); }
-        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-submit:hover:not(:disabled) {
+          background: var(--accent-hover);
+        }
+        .btn-submit:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
 
         .spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: var(--white);
-          border-radius: 50%;
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(255, 255, 255, 0.35);
+          border-top-color: #fff;
+          border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .modal-message {
-          padding: 12px 14px;
-          background: var(--gray-100);
-          border-radius: var(--radius-md);
-          font-size: 13px;
-          color: var(--gray-600);
-          text-align: center;
-          margin-top: 16px;
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
         }
 
-        .modal-message.ok { background: #dcfce7; color: #166534; }
-        .modal-message.err { background: #fee2e2; color: #991b1b; }
+        .modal-message {
+          padding: 10px 12px;
+          background: rgba(12, 22, 40, 0.04);
+          border: 1px solid rgba(12, 22, 40, 0.10);
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          color: var(--ink-2);
+          text-align: center;
+          margin-top: 14px;
+        }
+
+        .modal-message.ok {
+          color: #15803d;
+          border-color: rgba(21, 128, 61, 0.22);
+          background: rgba(21, 128, 61, 0.06);
+        }
+        .modal-message.err {
+          color: #b91c1c;
+          border-color: rgba(185, 28, 28, 0.22);
+          background: rgba(185, 28, 28, 0.06);
+        }
 
         .modal-footer {
-          margin-top: 20px;
+          margin-top: 16px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -1554,13 +2019,60 @@ export default function Page() {
           background: none;
           border: none;
           font-size: 13px;
-          color: var(--blue-600);
+          color: var(--ink-1);
           cursor: pointer;
           font-family: inherit;
-          font-weight: 500;
+          opacity: 0.9;
+          font-weight: 700;
         }
 
-        .modal-link:hover { color: var(--blue-700); text-decoration: underline; }
+        .modal-link:hover {
+          opacity: 1;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
+        /* Turnstile badge line */
+        .modal-card .recaptcha-badge,
+        .modal-card .turnstile-badge,
+        .modal-card .captcha-badge,
+        .modal-card [data-turnstile-badge],
+        .modal-card [data-recaptcha-badge] {
+          font-size: 10px !important;
+          white-space: nowrap !important;
+          line-height: 1.2 !important;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          color: rgba(64, 83, 106, 0.75) !important;
+        }
+
+        /* Pricing feature rows (spacing between ✓ and text) */
+        .pricing-feature {
+          display: grid;
+          grid-template-columns: 16px 1fr;
+          column-gap: 10px;
+          align-items: start;
+          font-size: 13px;
+          line-height: 1.5;
+          opacity: 0.96;
+          color: var(--ink-2);
+        }
+
+        .pricing-feature-check {
+          width: 16px;
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          line-height: 1;
+          margin-top: 2px;
+          font-size: 14px;
+        }
+
+        .pricing-feature-text {
+          display: block;
+          min-width: 0;
+        }
 
         /* Chat */
         .chat-root {
@@ -1568,19 +2080,28 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: var(--gray-50);
+          background: var(--bg-0);
           height: 100dvh;
           overflow: hidden;
+          font-family: inherit;
+        }
+
+        @supports (-webkit-touch-callout: none) {
+          .chat-root {
+            height: -webkit-fill-available;
+          }
         }
 
         .chat-topbar {
           width: 100%;
-          padding: 12px 24px;
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 12px 22px;
+          padding-left: max(22px, env(safe-area-inset-left));
+          padding-right: max(22px, env(safe-area-inset-right));
           display: flex;
           align-items: center;
           justify-content: space-between;
-          background: var(--white);
-          border-bottom: 1px solid var(--gray-200);
           flex-shrink: 0;
         }
 
@@ -1590,83 +2111,83 @@ export default function Page() {
           gap: 8px;
         }
 
-        .chat-status-badge {
-          padding: 6px 12px;
-          border-radius: 100px;
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.02em;
+        /* Settings gear dropdown */
+        .chat-settings-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
         }
-
-        .chat-status-badge.trial {
-          background: var(--blue-50);
-          color: var(--blue-700);
-          border: 1px solid var(--blue-200);
-        }
-
-        .chat-status-badge.pro {
-          background: #dcfce7;
-          color: #166534;
-          border: 1px solid #bbf7d0;
-        }
-
-        .chat-settings-wrap { position: relative; }
 
         .chat-settings-btn {
-          width: 40px;
-          height: 40px;
+          width: 38px;
+          height: 38px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          border: 1px solid var(--gray-200);
-          border-radius: var(--radius-md);
-          color: var(--gray-500);
+          background: rgba(255, 255, 255, 0.64);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          border-radius: 14px;
+          color: var(--ink-2);
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
         }
 
         .chat-settings-btn:hover {
-          color: var(--gray-700);
-          background: var(--gray-100);
-          border-color: var(--gray-300);
+          color: var(--ink-0);
+          background: rgba(255, 255, 255, 0.9);
+          border-color: rgba(12, 22, 40, 0.16);
         }
 
         .chat-settings-menu {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
-          min-width: 180px;
-          background: var(--white);
-          border: 1px solid var(--gray-200);
+          min-width: 190px;
+          background: var(--bg-1);
+          border: 1px solid rgba(12, 22, 40, 0.14);
           border-radius: var(--radius-md);
-          padding: 6px;
-          box-shadow: var(--shadow-lg);
+          padding: 8px;
+          box-shadow: var(--shadow-2);
+          animation: dropdown-in 0.14s ease;
           z-index: 50;
+        }
+
+        @keyframes dropdown-in {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .chat-settings-item {
           width: 100%;
           text-align: left;
-          padding: 10px 12px;
+          padding: 10px 10px;
           background: transparent;
-          border: none;
-          border-radius: var(--radius-sm);
-          color: var(--gray-700);
-          font-size: 14px;
-          font-weight: 500;
+          border: 1px solid transparent;
+          border-radius: 12px;
+          color: var(--ink-0);
+          font-size: 13px;
+          font-weight: 800;
           cursor: pointer;
           font-family: inherit;
-          transition: background 0.15s ease;
+          transition: background 0.15s ease, border-color 0.15s ease;
         }
 
-        .chat-settings-item:hover { background: var(--gray-100); }
+        .chat-settings-item:hover {
+          background: rgba(12, 22, 40, 0.04);
+          border-color: rgba(12, 22, 40, 0.10);
+        }
 
         .chat-settings-sep {
           height: 1px;
-          background: var(--gray-200);
-          margin: 6px 0;
+          background: rgba(12, 22, 40, 0.10);
+          margin: 6px 2px;
         }
 
         .chat-messages {
@@ -1674,109 +2195,147 @@ export default function Page() {
           min-height: 0;
           overflow-y: auto;
           overflow-x: hidden;
-          padding: 24px;
-          background: var(--gray-50);
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          padding: 0 22px 18px;
+          background: var(--bg-0);
         }
 
-        .chat-messages.empty {
+        .chat-sheet {
+          max-width: 980px;
+          margin: 0 auto;
+          background: rgba(255, 255, 255, 0.72);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-1);
+          min-height: calc(100% - 4px);
+          padding: 16px 16px;
+        }
+
+        .chat-messages.empty .chat-sheet {
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 24px;
         }
 
         .chat-empty-state {
-          text-align: center;
-          max-width: 400px;
+          width: 100%;
+          max-width: 720px;
+          text-align: left;
+          padding: 6px 4px;
         }
 
-        .chat-empty-icon {
-          width: 64px;
-          height: 64px;
-          margin: 0 auto 16px;
-          display: flex;
+        .chat-empty-eyebrow {
+          display: inline-flex;
           align-items: center;
-          justify-content: center;
-          background: var(--blue-50);
-          border-radius: 50%;
-          color: var(--blue-500);
+          gap: 8px;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-3);
+          padding: 8px 10px;
+          border-radius: var(--radius-full);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          background: rgba(255, 255, 255, 0.7);
+          width: fit-content;
+          margin-bottom: 10px;
         }
 
         .chat-empty-title {
+          margin: 0 0 6px;
           font-size: 18px;
-          font-weight: 600;
-          color: var(--gray-900);
-          margin: 0 0 8px;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+          color: var(--ink-0);
         }
 
         .chat-empty-text {
           font-size: 14px;
-          color: var(--gray-600);
+          color: var(--ink-2);
           line-height: 1.6;
           margin: 0;
+          max-width: 66ch;
         }
 
         .chat-empty-hint {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 16px;
-          background: var(--white);
-          border: 1px solid var(--gray-200);
-          border-radius: var(--radius-md);
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(12, 22, 40, 0.10);
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          color: var(--ink-2);
           font-size: 13px;
-          color: var(--gray-600);
-          margin-top: 8px;
+          line-height: 1.55;
         }
 
-        .chat-empty-hint svg {
-          color: var(--blue-500);
-          flex-shrink: 0;
+        .hint-row {
+          display: grid;
+          grid-template-columns: 20px 1fr;
+          gap: 10px;
+          align-items: start;
+        }
+
+        .hint-ico {
+          width: 20px;
+          height: 20px;
+          border-radius: 8px;
+          background: rgba(11, 92, 171, 0.10);
+          border: 1px solid rgba(11, 92, 171, 0.18);
+          color: var(--accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 2px;
         }
 
         .chat-history {
-          max-width: 760px;
+          max-width: 860px;
           margin: 0 auto;
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 26px;
+          padding-top: 6px;
+          padding-bottom: 6px;
         }
 
         .chat-message {
           display: flex;
           width: 100%;
+          align-items: flex-start;
         }
-
-        .chat-message-user { justify-content: flex-end; }
-        .chat-message-assistant { justify-content: flex-start; }
+        .chat-message-user {
+          justify-content: flex-end;
+        }
+        .chat-message-assistant {
+          justify-content: flex-start;
+        }
 
         .chat-bubble {
-          max-width: 75%;
-          font-size: 14px;
-          line-height: 1.6;
-          padding: 14px 18px;
-          border-radius: var(--radius-lg);
+          max-width: 78%;
+          font-size: 15px;
+          line-height: 1.75;
+          display: block;
         }
 
+        /* Minimal “report text” bubbles: no fills, just alignment + tone */
         .chat-bubble-user {
-          background: var(--blue-600);
-          color: var(--white);
-          border-bottom-right-radius: 4px;
+          color: var(--ink-0);
+          font-weight: 650;
         }
-
         .chat-bubble-assistant {
-          background: var(--white);
-          color: var(--gray-800);
-          border: 1px solid var(--gray-200);
-          border-bottom-left-radius: 4px;
+          color: var(--ink-2);
+          font-weight: 550;
         }
 
         .chat-bubble-image {
           border-radius: var(--radius-md);
           overflow: hidden;
           margin-bottom: 12px;
+          display: inline-block;
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          background: rgba(255, 255, 255, 0.8);
         }
 
         .chat-bubble-image img {
@@ -1787,61 +2346,67 @@ export default function Page() {
         }
 
         .chat-content {
+          display: block;
           white-space: pre-wrap;
+          overflow-wrap: anywhere;
           word-break: break-word;
         }
 
         .chat-thinking {
-          color: var(--gray-500);
+          display: block;
+          color: var(--ink-3);
           font-style: italic;
         }
 
         .chat-input-area {
           flex-shrink: 0;
-          background: var(--white);
-          border-top: 1px solid var(--gray-200);
+          border-top: 1px solid rgba(12, 22, 40, 0.10);
+          background: rgba(246, 248, 251, 0.82);
+          backdrop-filter: blur(8px);
         }
 
         .chat-input-inner {
-          max-width: 760px;
+          max-width: 980px;
           margin: 0 auto;
-          padding: 16px 24px 24px;
+          padding: 12px 22px 16px;
+          padding-bottom: max(16px, env(safe-area-inset-bottom));
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 14px;
-          background: var(--blue-50);
-          border: 1px solid var(--blue-200);
-          border-radius: var(--radius-md);
-          margin-bottom: 12px;
-          font-size: 13px;
-          color: var(--blue-700);
+          padding: 8px 12px;
+          background: rgba(255, 255, 255, 0.72);
+          border: 1px solid rgba(12, 22, 40, 0.12);
+          border-radius: var(--radius-sm);
+          margin-bottom: 10px;
+          font-size: 12px;
+          color: var(--ink-2);
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
         }
 
         .chat-attachment-icon {
+          color: var(--accent);
           display: flex;
-          color: var(--blue-500);
         }
 
         .chat-attachment-remove {
-          width: 24px;
-          height: 24px;
+          width: 26px;
+          height: 26px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--blue-500);
+          color: var(--ink-3);
           cursor: pointer;
-          border-radius: var(--radius-sm);
-          transition: background 0.15s ease;
+          border-radius: 10px;
         }
 
         .chat-attachment-remove:hover {
-          background: var(--blue-100);
+          color: var(--ink-0);
+          background: rgba(12, 22, 40, 0.04);
         }
 
         .chat-input-row {
@@ -1850,72 +2415,85 @@ export default function Page() {
           gap: 10px;
         }
 
+        /* Camera button: subtle “invitation” when empty (no new buttons) */
         .chat-camera-btn {
           width: 48px;
           height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--white);
-          border: 2px solid var(--blue-500);
+          background: rgba(255, 255, 255, 0.78);
+          border: 1px solid rgba(11, 92, 171, 0.26);
           border-radius: var(--radius-md);
-          color: var(--blue-500);
+          color: var(--accent);
           cursor: pointer;
           flex-shrink: 0;
-          transition: all 0.15s ease;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease;
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
           position: relative;
         }
 
         .chat-camera-btn:hover {
-          background: var(--blue-50);
-          border-color: var(--blue-600);
-          color: var(--blue-600);
+          border-color: rgba(11, 92, 171, 0.42);
+          box-shadow: 0 0 0 4px rgba(11, 92, 171, 0.10), 0 1px 0 rgba(0, 0, 0, 0.03);
+          background: rgba(255, 255, 255, 0.92);
         }
 
-        .chat-camera-btn::after {
-          content: '';
-          position: absolute;
-          inset: -4px;
-          border-radius: calc(var(--radius-md) + 4px);
-          border: 2px solid transparent;
-          transition: border-color 0.15s ease;
+        .chat-camera-btn.nudge {
+          animation: camera-nudge 1.9s ease-in-out infinite;
         }
 
-        .chat-camera-btn:focus-visible::after {
-          border-color: var(--blue-300);
+        @keyframes camera-nudge {
+          0%,
+          100% {
+            transform: translateY(0);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+          }
+          50% {
+            transform: translateY(-1px);
+            box-shadow: 0 0 0 6px rgba(11, 92, 171, 0.08), 0 1px 0 rgba(0, 0, 0, 0.03);
+          }
         }
 
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: var(--white);
-          border: 1px solid var(--gray-300);
+          background: rgba(255, 255, 255, 0.78);
+          border: 1px solid rgba(12, 22, 40, 0.14);
           border-radius: var(--radius-md);
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+          min-width: 0;
+          box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
         }
 
         .chat-input-wrapper:focus-within {
-          border-color: var(--blue-500);
-          box-shadow: 0 0 0 3px var(--blue-100);
+          border-color: rgba(11, 92, 171, 0.40);
+          box-shadow: 0 0 0 4px rgba(11, 92, 171, 0.10), 0 1px 0 rgba(0, 0, 0, 0.03);
+          background: rgba(255, 255, 255, 0.92);
         }
 
         .chat-textarea {
           flex: 1;
           min-height: 48px;
           max-height: 160px;
-          padding: 14px 16px;
+          padding: 14px 14px;
           background: transparent;
           border: none;
-          color: var(--gray-900);
+          color: var(--ink-0);
           font-size: 14px;
-          line-height: 1.4;
+          line-height: 1.45;
           resize: none;
           font-family: inherit;
+          min-width: 0;
         }
 
-        .chat-textarea::placeholder { color: var(--gray-400); }
-        .chat-textarea:focus { outline: none; }
+        .chat-textarea::placeholder {
+          color: rgba(64, 83, 106, 0.62);
+        }
+        .chat-textarea:focus {
+          outline: none;
+        }
 
         .chat-send-btn {
           width: 48px;
@@ -1925,126 +2503,117 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--gray-400);
+          color: rgba(64, 83, 106, 0.85);
           cursor: pointer;
           flex-shrink: 0;
-          transition: color 0.15s ease;
+          transition: color 0.15s ease, transform 0.12s ease;
         }
 
-        .chat-send-btn:hover:not(:disabled) { color: var(--blue-500); }
-        .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .chat-send-btn:hover:not(:disabled) {
+          color: var(--accent);
+        }
+        .chat-send-btn:active:not(:disabled) {
+          transform: translateY(1px);
+        }
+        .chat-send-btn:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
 
         .chat-send-spinner {
-          width: 18px;
-          height: 18px;
-          border: 2px solid var(--gray-300);
-          border-top-color: var(--blue-500);
-          border-radius: 50%;
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(12, 22, 40, 0.18);
+          border-top-color: var(--accent);
+          border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
 
         .chat-disclaimer {
           text-align: center;
-          font-size: 12px;
-          color: var(--gray-500);
-          margin-top: 12px;
-        }
-
-        .toast-loading {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          padding: 12px 20px;
-          background: var(--gray-900);
-          color: var(--white);
-          border-radius: var(--radius-md);
-          font-size: 14px;
-          font-weight: 500;
-          z-index: 9999;
-          box-shadow: var(--shadow-lg);
+          font-size: 11px;
+          color: rgba(64, 83, 106, 0.72);
+          margin-top: 10px;
         }
 
         /* Responsive */
-        @media (max-width: 968px) {
-          .landing-main {
+        @media (max-width: 960px) {
+          .landing-hero {
             grid-template-columns: 1fr;
-            gap: 48px;
-            padding: 100px 24px 60px;
           }
-
-          .landing-visual {
-            order: -1;
+          .landing-title {
+            font-size: 40px;
           }
-
-          .visual-card {
-            max-width: 100%;
-          }
-
-          .landing-headline {
-            font-size: 36px;
-          }
-
-          .landing-content {
-            text-align: center;
-            align-items: center;
-          }
-
-          .landing-features {
-            align-items: center;
+          .landing-grid {
+            grid-template-columns: 1fr;
           }
         }
 
-        @media (max-width: 640px) {
-          .landing-topbar {
-            padding: 12px 16px;
-          }
-
-          .landing-headline {
-            font-size: 28px;
-          }
-
-          .landing-subhead {
-            font-size: 16px;
-          }
-
+        @media (max-width: 768px) {
           .landing-main {
-            padding: 88px 16px 48px;
+            padding: 18px 16px 96px;
           }
 
-          .chat-topbar {
-            padding: 12px 16px;
-          }
-
-          .chat-messages {
-            padding: 16px;
-          }
-
-          .chat-input-inner {
-            padding: 12px 16px 20px;
-          }
-
-          .chat-bubble {
-            max-width: 85%;
-          }
-
-          .plm-footer-links {
-            bottom: 16px;
+          .landing-title {
+            font-size: 34px;
           }
 
           .plm-brand-mark {
-            width: 32px;
-            height: 32px;
+            width: 58px;
+            height: 58px;
+          }
+          .plm-brand-text {
+            font-size: 18px;
           }
 
+          .chat-topbar {
+            padding: 10px 16px;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-top: max(10px, env(safe-area-inset-top));
+          }
+
+          .chat-messages {
+            padding: 0 16px 14px;
+          }
+
+          .chat-sheet {
+            padding: 14px 12px;
+          }
+
+          .chat-input-inner {
+            padding: 10px 16px 14px;
+            padding-bottom: max(14px, env(safe-area-inset-bottom));
+          }
+
+          .chat-bubble {
+            max-width: 88%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .modal-card {
+            padding: 22px 18px;
+          }
+
+          .plm-brand-mark {
+            width: 54px;
+            height: 54px;
+          }
           .plm-brand-text {
-            font-size: 16px;
+            font-size: 17px;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          *, *::before, *::after {
+          *,
+          *::before,
+          *::after {
             animation-duration: 0.01ms !important;
             transition-duration: 0.01ms !important;
+          }
+          .chat-camera-btn.nudge {
+            animation: none !important;
           }
         }
       `}</style>
@@ -2075,13 +2644,29 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${ibmSans.className} chat-root`}>
+            <div className={`${publicSans.className} chat-root`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
-                <nav className="chat-top-actions">
+                <nav className="chat-top-actions" aria-label="Chat actions">
                   {session && subscription && (
-                    <div className={`chat-status-badge ${subscription.status === 'trialing' ? 'trial' : 'pro'}`}>
-                      {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
+                    <div
+                      className={ibmMono.className}
+                      style={{
+                        marginRight: '2px',
+                        padding: '8px 10px',
+                        borderRadius: '999px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        background: subscription.status === 'trialing' ? 'rgba(11, 92, 171, 0.10)' : 'rgba(21, 128, 61, 0.10)',
+                        color: subscription.status === 'trialing' ? 'var(--accent)' : '#15803d',
+                        border: `1px solid ${
+                          subscription.status === 'trialing' ? 'rgba(11, 92, 171, 0.22)' : 'rgba(21, 128, 61, 0.22)'
+                        }`,
+                      }}
+                    >
+                      {subscription.status === 'trialing' ? 'Trial' : 'Active'}
                     </div>
                   )}
 
@@ -2097,10 +2682,11 @@ export default function Page() {
                     </button>
 
                     {showSettingsMenu && (
-                      <div className="chat-settings-menu">
+                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
                         <button
                           type="button"
                           className="chat-settings-item"
+                          role="menuitem"
                           onClick={() => {
                             setShowSettingsMenu(false)
                             if (hasActiveSubscription) {
@@ -2110,18 +2696,21 @@ export default function Page() {
                             }
                           }}
                         >
-                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                          {hasActiveSubscription ? 'Manage billing' : 'Start trial'}
                         </button>
+
                         <div className="chat-settings-sep" />
+
                         <button
                           type="button"
                           className="chat-settings-item"
+                          role="menuitem"
                           onClick={() => {
                             setShowSettingsMenu(false)
                             handleSignOut()
                           }}
                         >
-                          Sign out
+                          Log out
                         </button>
                       </div>
                     )}
@@ -2134,43 +2723,65 @@ export default function Page() {
                 onScroll={handleScroll}
                 className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
               >
-                {messages.length === 0 ? (
-                  <div className="chat-empty-state">
-                    <div className="chat-empty-icon">
-                      <Icons.Shield />
-                    </div>
-                    <h2 className="chat-empty-title">Ready for analysis</h2>
-                    <p className="chat-empty-text">
-                      Ask a question about Washtenaw County food safety regulations, or upload a photo for instant feedback.
-                    </p>
-                    <div className="chat-empty-hint">
-                      <Icons.Camera />
-                      <span>Tap the camera button to analyze your kitchen</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="chat-history">
-                    {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
-                      >
-                        <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
-                          {msg.image && (
-                            <div className="chat-bubble-image">
-                              <img src={msg.image} alt="Uploaded" />
-                            </div>
-                          )}
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="chat-thinking">Analyzing…</div>
-                          ) : (
-                            <div className="chat-content">{msg.content}</div>
-                          )}
+                <div className="chat-sheet">
+                  {messages.length === 0 ? (
+                    <div className="chat-empty-state">
+                      <div className={`chat-empty-eyebrow ${ibmMono.className}`}>
+                        <span style={{ display: 'inline-flex' }}>
+                          <Icons.Sparkle />
+                        </span>
+                        Ready for a check
+                      </div>
+                      <h2 className="chat-empty-title">Start with a photo, or ask a question.</h2>
+                      <p className="chat-empty-text">
+                        The camera button is the fastest way to use protocolLM. Upload a clear photo of the station and you’ll get a concise
+                        fix list.
+                      </p>
+
+                      <div className="chat-empty-hint">
+                        <div className="hint-row">
+                          <span className="hint-ico" aria-hidden="true">
+                            <Icons.Camera />
+                          </span>
+                          <span>
+                            <strong style={{ color: 'var(--ink-0)' }}>Photo cross-check:</strong> closer + well-lit beats wide shots.
+                          </span>
+                        </div>
+                        <div className="hint-row">
+                          <span className="hint-ico" aria-hidden="true">
+                            <Icons.Check />
+                          </span>
+                          <span>
+                            <strong style={{ color: 'var(--ink-0)' }}>Q&amp;A:</strong> ask one station question at a time for the cleanest output.
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  ) : (
+                    <div className="chat-history">
+                      {messages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                        >
+                          <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+                            {msg.image && (
+                              <div className="chat-bubble-image">
+                                <img src={msg.image} alt="Uploaded" />
+                              </div>
+                            )}
+
+                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                              <div className="chat-thinking">Analyzing…</div>
+                            ) : (
+                              <div className="chat-content">{msg.content}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="chat-input-area">
@@ -2205,8 +2816,8 @@ export default function Page() {
 
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="chat-camera-btn"
-                      aria-label="Upload photo for analysis"
+                      className={`chat-camera-btn ${shouldNudgeCamera ? 'nudge' : ''}`}
+                      aria-label="Upload photo"
                       type="button"
                     >
                       <Icons.Camera />
@@ -2223,7 +2834,7 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Ask about food safety regulations…"
+                        placeholder="Ask a question…"
                         rows={1}
                         className="chat-textarea"
                         onKeyDown={(e) => {
@@ -2256,8 +2867,10 @@ export default function Page() {
         </main>
       </div>
 
+      {/* Multi-location warning banner */}
       {isAuthenticated && locationCheck && <MultiLocationBanner locationCheck={locationCheck} />}
 
+      {/* Multi-location upgrade modal */}
       <MultiLocationUpgradeModal
         isOpen={showMultiLocationModal}
         onClose={() => setShowMultiLocationModal(false)}
