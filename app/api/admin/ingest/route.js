@@ -14,9 +14,9 @@ const CHUNK_SIZE = 1000
 const CHUNK_OVERLAP = 150
 const BATCH_SIZE = 96 // Cohere max batch size
 
-// ✅ Cohere Embed v4
-const COHERE_EMBED_MODEL =
-  process.env.COHERE_EMBED_MODEL || "embed-english-v4.0"
+// ✅ Cohere Embed v4 (support legacy env value)
+const rawModel = process.env.COHERE_EMBED_MODEL || "embed-v4.0"
+const COHERE_EMBED_MODEL = rawModel === "embed-english-v4.0" ? "embed-v4.0" : rawModel
 
 // ✅ Correct dimension for v4
 const COHERE_EMBED_DIMS =
