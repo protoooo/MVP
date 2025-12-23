@@ -36,8 +36,8 @@ const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() ===
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
 const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'command-a-vision-07-2025'
-const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
-const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
+const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-english-v3.0'
+const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1024
 const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v3.5'
 const MODEL_LABEL = 'Cohere'
 
