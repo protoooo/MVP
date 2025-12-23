@@ -1,4 +1,4 @@
-// app/api/chat/route.js - Cohere text + Aya vision (legacy payload only)
+// app/api/chat/route.js - Cohere text + Aya vision (v2 messages for vision)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 
 import { NextResponse } from 'next/server'
@@ -29,7 +29,7 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// IMAGE VALIDATION + NORMALIZATION (COHERE: ALWAYS PRODUCE A DATA URL)
+// IMAGE VALIDATION + NORMALIZATION (ALWAYS PRODUCE A DATA URL)
 // ============================================================================
 
 function isBase64Like(s) {
@@ -243,8 +243,7 @@ function responseOutputToString(resp) {
 }
 
 // ============================================================================
-// COHERE CHAT CALL
-// Aya vision: legacy payload with explicit images, no v2 fallback.
+// COHERE RESPONSE EXTRACTION
 // ============================================================================
 
 function cohereResponseToText(resp) {
@@ -259,11 +258,63 @@ function cohereResponseToText(resp) {
   if (typeof resp?.text === 'string' && resp.text.trim()) return resp.text
   if (typeof resp?.output_text === 'string' && resp.output_text.trim()) return resp.output_text
 
-  // extra fallbacks
   const alt = responseOutputToString(resp)
   if (alt && alt.trim()) return alt
 
   return ''
+}
+
+// ============================================================================
+// COHERE CHAT CALL
+// IMPORTANT: Aya Vision expects v2 "messages" with image_url parts (not legacy images)
+// See Cohere image inputs docs. :contentReference[oaicite:2]{index=2}
+// ============================================================================
+
+function isVisionModel(model) {
+  const m = String(model || '').toLowerCase()
+  return m.includes('vision') || m.includes('aya-vision')
+}
+
+function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
+  const messages = []
+
+  // system message replaces v1 preamble in v2
+  if (safeText(preamble)) {
+    messages.push({ role: 'system', content: safeText(preamble) })
+  }
+
+  // convert v1-ish chatHistory into v2 messages
+  const hist = Array.isArray(chatHistory) ? chatHistory : []
+  for (const h of hist) {
+    const roleRaw = String(h?.role || '').toUpperCase()
+    const text = safeText(h?.message || '')
+    if (!text) continue
+
+    if (roleRaw === 'USER') messages.push({ role: 'user', content: text })
+    else if (roleRaw === 'CHATBOT' || roleRaw === 'ASSISTANT') messages.push({ role: 'assistant', content: text })
+  }
+
+  // current user turn with image parts
+  const parts = []
+
+  const msgText = safeText(userMessage)
+  if (msgText) parts.push({ type: 'text', text: msgText })
+
+  const normalizedImages = normalizeImagesForCohere(images)
+  for (const url of normalizedImages) {
+    parts.push({
+      type: 'image_url',
+      image_url: {
+        url,
+        detail: 'auto', // you can set 'low' to cut cost/latency
+      },
+    })
+  }
+
+  // v2 expects content array for multimodal
+  messages.push({ role: 'user', content: parts.length ? parts : [{ type: 'text', text: 'Analyze the image.' }] })
+
+  return { messages, normalizedImagesCount: normalizedImages.length }
 }
 
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
@@ -274,6 +325,31 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     text: doc?.text || '',
   }))
 
+  // ✅ Vision path (v2 messages with image_url)
+  if (isVisionModel(model) && images) {
+    const { messages, normalizedImagesCount } = buildV2Messages({
+      preamble,
+      chatHistory,
+      userMessage: message,
+      images,
+    })
+
+    if (normalizedImagesCount === 0) {
+      throw new Error('Image payload missing after normalization (v2)')
+    }
+
+    const respV2 = await cohereClient.chat({
+      model,
+      messages,
+      documents: docs,
+    })
+
+    respV2.__text = cohereResponseToText(respV2)
+    respV2.__format = 'v2_messages'
+    return respV2
+  }
+
+  // ✅ Text / legacy path (v1 style)
   const payloadLegacy = {
     model,
     message,
@@ -282,9 +358,9 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     documents: docs,
   }
 
-  // Cohere vision expects images as an array of data URL strings
   const normalizedImages = normalizeImagesForCohere(images)
   if (normalizedImages.length) {
+    // Some text models may ignore images; we only attach here if provided
     payloadLegacy.images = normalizedImages
   }
 
@@ -461,25 +537,6 @@ function safeErrorDetails(err) {
   }
 }
 
-function getHttpStatusFromCohereError(err) {
-  const s =
-    err?.statusCode ??
-    err?.status ??
-    err?.response?.status ??
-    err?.response?.statusCode ??
-    err?.cause?.statusCode ??
-    null
-  return typeof s === 'number' ? s : null
-}
-
-function isCohereBadRequest(err) {
-  const status = getHttpStatusFromCohereError(err)
-  if (status === 400) return true
-  const msg = String(err?.message || '')
-  const detail = safeErrorDetails(err)
-  return msg.includes('BadRequest') || msg.includes('400') || detail.includes('BadRequest') || detail.includes('400')
-}
-
 // ============================================================================
 // LOGGING
 // ============================================================================
@@ -583,7 +640,7 @@ export async function POST(request) {
     }
 
     if (!userMessage && hasImage) {
-      userMessage = 'Please inspect the attached image for potential food safety violations based on county regulations.'
+      userMessage = 'Inspect the attached photo for potential food safety / sanitation issues that are covered by the provided county documents. Cite the relevant DOC IDs.'
     }
 
     if (!userMessage) {
@@ -605,18 +662,22 @@ export async function POST(request) {
 
     try {
       const cookieStore = await cookies()
-      const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll()
+            },
+            setAll(cookiesToSet) {
+              try {
+                cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+              } catch {}
+            },
           },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-            } catch {}
-          },
-        },
-      })
+        }
+      )
 
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
@@ -641,17 +702,9 @@ export async function POST(request) {
         const count = rateLimitMap.get(rateLimitKey) || 0
 
         if (count >= MAX_REQUESTS_PER_MINUTE) {
-          logger.security('Chat rate limit exceeded', {
-            userId,
-            count,
-            limit: MAX_REQUESTS_PER_MINUTE,
-          })
-
+          logger.security('Chat rate limit exceeded', { userId, count, limit: MAX_REQUESTS_PER_MINUTE })
           return NextResponse.json(
-            {
-              error: 'Too many requests. Please wait a moment and try again.',
-              code: 'RATE_LIMIT_EXCEEDED',
-            },
+            { error: 'Too many requests. Please wait a moment and try again.', code: 'RATE_LIMIT_EXCEEDED' },
             { status: 429 }
           )
         }
@@ -662,9 +715,7 @@ export async function POST(request) {
           const currentMinute = Math.floor(Date.now() / 60000)
           for (const [key] of rateLimitMap.entries()) {
             const keyMinute = parseInt(key.split('_').pop())
-            if (currentMinute - keyMinute > 5) {
-              rateLimitMap.delete(key)
-            }
+            if (currentMinute - keyMinute > 5) rateLimitMap.delete(key)
           }
         }
       } catch (rateLimitError) {
@@ -678,16 +729,9 @@ export async function POST(request) {
         if (!accessCheck?.valid) {
           logger.warn('Access denied - trial expired or no subscription', { userId })
           return NextResponse.json(
-            {
-              error: 'Your trial has ended. Please subscribe to continue using protocolLM.',
-              code: 'TRIAL_EXPIRED',
-            },
+            { error: 'Your trial has ended. Please subscribe to continue using protocolLM.', code: 'TRIAL_EXPIRED' },
             { status: 402 }
           )
-        }
-
-        if (accessCheck.gracePeriod) {
-          logger.info('User in trial conversion grace period', { userId })
         }
 
         logger.info('Access granted', {
@@ -697,16 +741,6 @@ export async function POST(request) {
           gracePeriod: accessCheck?.gracePeriod || false,
         })
       } catch (error) {
-        if (error?.code === 'TRIAL_EXPIRED') {
-          return NextResponse.json({ error: error.message, code: 'TRIAL_EXPIRED' }, { status: 402 })
-        }
-        if (error?.code === 'NO_SUBSCRIPTION') {
-          return NextResponse.json({ error: 'An active subscription is required.', code: 'NO_SUBSCRIPTION' }, { status: 402 })
-        }
-        if (error?.code === 'SUBSCRIPTION_EXPIRED') {
-          return NextResponse.json({ error: error.message, code: 'SUBSCRIPTION_EXPIRED' }, { status: 402 })
-        }
-
         logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
         return NextResponse.json(
           { error: 'Unable to verify subscription. Please sign in again or contact support.', code: 'ACCESS_CHECK_FAILED' },
@@ -764,12 +798,7 @@ export async function POST(request) {
     const searchDocumentsFn = await getSearchDocuments()
 
     // Placeholder for future image-derived search cues
-    const vision = {
-      summary: '',
-      searchTerms: '',
-      issues: [],
-      facts: [],
-    }
+    const vision = { summary: '', searchTerms: '', issues: [], facts: [] }
 
     // ========================================================================
     // DOCUMENT RETRIEVAL
@@ -816,11 +845,7 @@ export async function POST(request) {
         rerankedDocs = (rerankResponse?.results || [])
           .map((result, idx) => {
             const sourceDoc = limitedCandidates[result.index]
-            return {
-              ...sourceDoc,
-              rerankScore: result.relevanceScore,
-              id: `DOC_${idx + 1}`,
-            }
+            return { ...sourceDoc, rerankScore: result.relevanceScore, id: `DOC_${idx + 1}` }
           })
           .filter(Boolean)
           .slice(0, RERANK_TOP_N)
@@ -913,9 +938,6 @@ Strict rules:
 
     // ========================================================================
     // GENERATE RESPONSE
-    // Fixes:
-    //  1) Always pass images as data URLs (already done via fullDataUrl)
-    //  2) If Aya vision returns 400 BadRequest, fall back to text model (no 500)
     // ========================================================================
 
     let modelText = ''
@@ -926,102 +948,87 @@ Strict rules:
     let tokenUsage = {}
     let visionFallbackUsed = false
 
-    const visionImages = hasImage && fullDataUrl ? [fullDataUrl] : []
-
     try {
-      if (hasImage && visionImages.length === 0) {
-        throw new Error('Image payload missing after validation')
-      }
+      const buildCohereRequest = (model) => {
+        // For vision we pass the data URL(s) into callCohereChat which will build v2 messages.
+        const visionImages = hasImage && fullDataUrl ? [fullDataUrl] : []
 
-      // Attempt vision first (if hasImage)
-      const attemptVision = async () => {
-        const req = {
-          model: COHERE_VISION_MODEL,
+        const requestPayload = {
+          model,
           message: userMessage,
           chatHistory: cohereChatHistory,
           preamble,
-          documents: contextDocs,
+          documents: contextDocs.map((doc) => ({
+            id: doc.id || 'unknown',
+            title: doc.source || 'Source',
+            snippet: doc.text || '',
+            text: doc.text || '',
+          })),
           images: visionImages,
         }
 
-        logger.info('Vision request prepared', {
-          mediaType: imageMediaType,
-          dataLength: imageBase64?.length || 0,
-          dataUrlPrefix: fullDataUrl ? fullDataUrl.slice(0, 30) : '',
-          model: COHERE_VISION_MODEL,
-          imagesAttached: visionImages.length,
-        })
-
-        return withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
-      }
-
-      const attemptTextOnly = async () => {
-        const req = {
-          model: COHERE_TEXT_MODEL,
-          message: userMessage,
-          chatHistory: cohereChatHistory,
-          preamble,
-          documents: contextDocs,
-          images: [], // force no images
+        if (hasImage && fullDataUrl) {
+          logger.info('Vision request prepared', {
+            mediaType: imageMediaType,
+            dataLength: imageBase64?.length || 0,
+            dataUrlPrefix: fullDataUrl.slice(0, 30),
+            model,
+            imagesAttached: visionImages.length,
+          })
         }
-        return withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+
+        return requestPayload
       }
 
-      let answerResp = null
+      const req = buildCohereRequest(usedModel)
 
-      if (hasImage) {
-        try {
-          answerResp = await attemptVision()
-          usedModel = COHERE_VISION_MODEL
-        } catch (err) {
-          // If Aya vision rejects payload/model (400), fallback to text instead of crashing.
-          if (isCohereBadRequest(err)) {
-            visionFallbackUsed = true
-            logger.error('Vision generation rejected (400). Falling back to text-only.', {
-              model: COHERE_VISION_MODEL,
-              detail: safeErrorDetails(err),
-            })
-            answerResp = await attemptTextOnly()
-            usedModel = COHERE_TEXT_MODEL
-          } else {
-            throw err
-          }
+      // Try vision first; if Cohere rejects the vision request, fall back to text-only.
+      try {
+        const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+
+        billedUnits = answerResp?.billed_units || {}
+        tokenUsage = answerResp?.tokens || {}
+
+        modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
+        assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
+
+        if (hasImage) {
+          logger.info('Vision response received', {
+            model: usedModel,
+            responseLength: assistantMessage.length,
+            hasImage: true,
+            payloadFormat: answerResp?.__format || 'unknown',
+          })
         }
-      } else {
-        answerResp = await attemptTextOnly()
-        usedModel = COHERE_TEXT_MODEL
-      }
+      } catch (visionErr) {
+        // If vision fails with 400, fall back to text-only response (still grounded to docs)
+        const detail = safeErrorDetails(visionErr)
+        const is400 = String(detail).includes('400')
+        if (hasImage && is400) {
+          visionFallbackUsed = true
+          logger.warn('Vision generation rejected (400). Falling back to text-only.', { detail, model: usedModel })
 
-      billedUnits = answerResp?.billed_units || {}
-      tokenUsage = answerResp?.tokens || {}
+          usedModel = COHERE_TEXT_MODEL
+          const fallbackReq = buildCohereRequest(usedModel)
+          // remove images so legacy models don't choke
+          fallbackReq.images = []
 
-      modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
-      assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
+          const fallbackResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
-      if (hasImage) {
-        logger.info('Generation response received', {
-          model: usedModel,
-          responseLength: assistantMessage.length,
-          hasImage: true,
-          visionFallbackUsed,
-          payloadFormat: answerResp?.__format || 'unknown',
-        })
+          billedUnits = fallbackResp?.billed_units || {}
+          tokenUsage = fallbackResp?.tokens || {}
 
-        // Optional: make it explicit (but minimal) that image analysis wasn't available
-        if (visionFallbackUsed) {
+          modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
           assistantMessage = sanitizeOutput(
-            `Photo analysis is temporarily unavailable. Answering from the provided documents only.\n\n${assistantMessage}`
+            `Photo analysis is temporarily unavailable. Answering from the provided documents only.\n\n${modelText || 'Unable to process request. Please try again.'}`
           )
+        } else {
+          throw visionErr
         }
       }
     } catch (e) {
       const detail = safeErrorDetails(e)
-      logger.error('Generation failed', {
-        error: e?.message,
-        detail,
-        hasImage,
-        model: usedModel,
-      })
+      logger.error('Generation failed', { error: e?.message, detail, hasImage, model: usedModel })
       return NextResponse.json(
         { error: 'Generation failed', details: detail },
         { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
