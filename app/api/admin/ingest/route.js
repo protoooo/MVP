@@ -114,7 +114,8 @@ export async function POST() {
         const records = batch.map((text, idx) => ({
           content: text,
 
-          // ✅ WRITE TO v4 COLUMN
+          // ✅ Write to both legacy and v4 columns to satisfy NOT NULL constraint
+          embedding: embeddings[idx],
           embedding_v4: embeddings[idx],
 
           metadata: {
