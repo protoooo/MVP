@@ -2,7 +2,7 @@ import './globals.css'
 import { Outfit } from 'next/font/google'
 import SessionGuard from '@/components/SessionGuard'
 import CookieConsent from '@/components/CookieConsent'
-import bg from '@/app/assets/background/protocollm-bg.png'
+import bg from '@/app/assets/background/protocolLM-bg.png'
 
 const outfit = Outfit({ subsets: ['latin'] })
 
