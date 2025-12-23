@@ -10,6 +10,27 @@
   margin: 0;
 }
 
+input,
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
+  background-clip: padding-box;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a;
+  box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
+  transition: background-color 9999s ease-out 0s;
+  caret-color: #0f172a;
+  border-radius: inherit;
+}
+
 :root {
   color-scheme: dark;
 
