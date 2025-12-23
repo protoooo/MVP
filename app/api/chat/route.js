@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { CohereClient } from 'cohere-ai'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
@@ -15,16 +16,9 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-let openaiClient = null
 let searchDocuments = null
 
-async function getOpenAIClient() {
-  if (!openaiClient) {
-    const { OpenAI } = await import('openai')
-    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  }
-  return openaiClient
-}
+const cohereClient = new CohereClient({ token: process.env.COHERE_API_KEY })
 
 async function getSearchDocuments() {
   if (!searchDocuments) {
@@ -35,19 +29,22 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// MODEL CONFIGURATION - SINGLE MODEL FOR ALL USERS
+// MODEL CONFIGURATION - COHERE (Embed + Rerank + Command R)
 // ============================================================================
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-5-mini'
-const MODEL_LABEL = 'GPT-5-mini'
+const COHERE_EMBED_MODEL = 'embed-english-v3.0'
+const COHERE_RERANK_MODEL = 'rerank-english-v3.0'
+const COHERE_COMMAND_MODEL = process.env.COHERE_COMMAND_MODEL || 'command-r'
+const MODEL_LABEL = 'Cohere Command R'
 
 // Time budgets
-const VISION_TIMEOUT_MS = 20000
 const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
 
-// Retrieval config
-const TOPK_PER_QUERY = 25
-const MAX_DOCS_FOR_CONTEXT = 40
+// Retrieval + rerank config
+const TOPK_PER_QUERY = 20 // initial vector similarity candidates
+const MAX_DOCS_FOR_CONTEXT = 5 // after rerank, clamp to top 3-5
+const RERANK_TOP_N = 5
+const MIN_RERANK_DOCS = 3
 const PER_SOURCE_CAP = 4
 
 const ALLOWED_LIKELIHOOD = new Set(['Highly likely', 'Likely', 'Probable', 'Unlikely', 'Unclear'])
@@ -837,93 +834,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' }, { status: 401 })
     }
 
-    const openai = await getOpenAIClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // ========================================================================
-    // VISION SCAN (if image)
-    // ========================================================================
-
-    let vision = {
+    // Cohere pipeline does not currently process images; treat image uploads as supplemental but not machine-read
+    const vision = {
       summary: '',
       searchTerms: '',
       issues: [],
       facts: [],
-    }
-
-    if (hasImage && imageBase64) {
-      try {
-        const visionResp = await withTimeout(
-          openai.responses.create({
-            model: OPENAI_MODEL,
-            max_output_tokens: 750,
-            input: toResponseInput([
-              {
-                role: 'user',
-                content: [
-                  { type: 'text', text: `Scan this food service photo for potential compliance issues.
-
-CRITICAL: ONLY flag what you can CLEARLY see in the photo.
-- If you're not 100% certain about something, don't flag it
-- DO NOT assume items are missing just because you can't see them (soap, thermometers, towels, etc.)
-- Focus ONLY on what IS visible that MIGHT be wrong
-- Never say something is missing - only flag problems with what you CAN see
-
-Top violation categories to check (only if you see them):
-1. Temperature control equipment condition
-2. Cross contamination (raw/cooked separation)
-3. Visible hand hygiene issues (only if sink area is clearly visible)
-4. Food storage problems (floor clearance, uncovered food)
-5. Cleaning/sanitizing issues (visible dirt, grime)
-6. Pest evidence (droppings, insects)
-7. Equipment condition (rust, damage, broken seals)
-
-Return JSON only:
-{
-  "summary": "one sentence of what you see",
-  "search_terms": "keywords for regulation lookup",
-  "issues": [
-    {
-      "issue": "specific thing you SEE in the photo (not assumptions)",
-      "why": "why this visible thing MIGHT be a violation",
-      "confidence": "high|medium|low"
-    }
-  ],
-  "facts": ["observable details only - no assumptions"]
-}` },
-                  { type: 'image_url', image_url: { url: `data:${imageMediaType || 'image/jpeg'};base64,${imageBase64}` } },
-                ],
-              },
-            ]),
-          }),
-          VISION_TIMEOUT_MS,
-          'VISION_TIMEOUT'
-        )
-
-        const visionText = responseOutputToString(visionResp)
-
-        const parsedVision = extractJsonObject(visionText)
-        if (parsedVision) {
-          vision.summary = safeLine(parsedVision.summary || '')
-          vision.searchTerms = safeLine(parsedVision.search_terms || '')
-
-          if (Array.isArray(parsedVision.issues)) {
-            vision.issues = parsedVision.issues
-              .map((i) => ({ issue: safeLine(i?.issue || ''), why: safeLine(i?.why || '') }))
-              .filter((i) => i.issue)
-              .slice(0, 8)
-          }
-
-          if (Array.isArray(parsedVision.facts)) {
-            vision.facts = parsedVision.facts.map(safeLine).filter(Boolean).slice(0, 10)
-          }
-        }
-      } catch (e) {
-        logger.warn('Vision scan failed', { error: e?.message })
-        if (e?.message === 'VISION_TIMEOUT') {
-          return NextResponse.json({ error: getUserFriendlyErrorMessage('VISION_TIMEOUT') }, { status: 408 })
-        }
-      }
     }
 
     // ========================================================================
@@ -936,47 +854,73 @@ Return JSON only:
       .slice(0, 700)
 
     const userKeywords = extractSearchKeywords(effectivePrompt)
-    const visionKeywords = vision.issues.map((i) => i.issue).join(' ').slice(0, 200)
+    const searchQuery = [effectivePrompt, visionContext, userKeywords.slice(0, 5).join(' '), 'Washtenaw County Michigan food code']
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 900)
 
-    const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code'].filter(Boolean).join(' ').slice(0, 900)
-    const queryIssues = vision.issues.slice(0, 2).map((i) => i.issue).join(' ').slice(0, 400)
-
-  const queries = [
-    queryMain,
-    queryIssues,
-    `${effectivePrompt.slice(0, 300)} Washtenaw County Michigan regulations`,
-    `${visionContext.slice(0, 300)} food safety violations`,
-    userKeywords.slice(0, 5).join(' ') + ' Washtenaw County food code',
-    visionKeywords,
-    'Priority violations Michigan food code',
-  ]
-    .filter(Boolean)
-    .filter((q) => q.length > 10)
-    .slice(0, 3)
-
-    let allDocs = []
+    let rerankedDocs = []
     try {
-      const results = await Promise.all(
-        queries.map((q) =>
-          withTimeout(searchDocumentsFn(q, county, TOPK_PER_QUERY), RETRIEVAL_TIMEOUT_MS, 'RETRIEVAL_TIMEOUT').catch(() => [])
-        )
+      const initialDocs = await withTimeout(
+        searchDocumentsFn(searchQuery, county, TOPK_PER_QUERY),
+        RETRIEVAL_TIMEOUT_MS,
+        'RETRIEVAL_TIMEOUT'
       )
 
-      allDocs = dedupeByText(results.flat().filter(Boolean))
-      allDocs.sort(stableSortByScore)
-      allDocs = diversifyBySource(allDocs, { maxTotal: MAX_DOCS_FOR_CONTEXT, perSourceCap: PER_SOURCE_CAP })
+      const candidates = dedupeByText(initialDocs || [])
+      const limitedCandidates = candidates.slice(0, TOPK_PER_QUERY)
+
+      if (limitedCandidates.length === 0) {
+        logger.warn('No documents retrieved from vector search', { county, queryLength: searchQuery.length })
+      } else {
+        const rerankResponse = await cohereClient.rerank({
+          model: COHERE_RERANK_MODEL,
+          query: searchQuery,
+          documents: limitedCandidates.map((doc) => doc.text || ''),
+          topN: Math.min(RERANK_TOP_N, limitedCandidates.length),
+        })
+
+        rerankedDocs = (rerankResponse?.results || [])
+          .map((result, idx) => {
+            const sourceDoc = limitedCandidates[result.index]
+            return {
+              ...sourceDoc,
+              rerankScore: result.relevanceScore,
+              id: `DOC_${idx + 1}`,
+            }
+          })
+          .filter(Boolean)
+          .slice(0, RERANK_TOP_N)
+
+        if (rerankedDocs.length < MIN_RERANK_DOCS && limitedCandidates.length > 0) {
+          // Fallback: ensure a minimum number of context docs
+          const padding = limitedCandidates.slice(0, MIN_RERANK_DOCS - rerankedDocs.length).map((doc, idx) => ({
+            ...doc,
+            rerankScore: 0,
+            id: `DOC_${rerankedDocs.length + idx + 1}`,
+          }))
+          rerankedDocs = [...rerankedDocs, ...padding]
+        }
+      }
     } catch (e) {
-      logger.warn('Retrieval failed', { error: e?.message })
+      logger.warn('Retrieval or rerank failed', { error: e?.message })
       if (e?.message === 'RETRIEVAL_TIMEOUT') {
         return NextResponse.json({ error: getUserFriendlyErrorMessage('RETRIEVAL_TIMEOUT') }, { status: 408 })
       }
     }
 
-    const ctx = buildExcerptContext(allDocs, { prefix: 'DOC', maxChars: 34000, startAt: 1 })
-    const excerptIndex = [...ctx.excerptIndex]
+    const contextDocs = rerankedDocs.slice(0, MAX_DOCS_FOR_CONTEXT)
+    const excerptIndex = contextDocs.map((doc, idx) => doc.id || `DOC_${idx + 1}`)
 
-    const excerptBlock = `Reference documents (cite by ID):
-${ctx.contextText || 'No documents retrieved.'}`
+    const excerptBlock =
+      contextDocs.length === 0
+        ? 'No documents retrieved.'
+        : contextDocs
+            .map((doc, idx) => {
+              const id = doc.id || `DOC_${idx + 1}`
+              return `[${id}] Source: ${doc.source || 'Unknown'} (p.${doc.page || 'N/A'})\n${doc.text || ''}`
+            })
+            .join('\n\n')
 
     let memoryContext = ''
     try {
@@ -987,196 +931,61 @@ ${ctx.contextText || 'No documents retrieved.'}`
     // SYSTEM PROMPT
     // ========================================================================
 
-    const systemPrompt = `You are protocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
+    const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
 ${memoryContext ? `${memoryContext}\n\n` : ''}
+Use ONLY the provided documents to answer. If the documents do not support an answer, say you cannot answer from the provided materials.
 
-JURISDICTION CONTEXT:
-- You enforce the Michigan Modified Food Code as adopted by Washtenaw County
-- Washtenaw County Environmental Health Division performs inspections
-- Violations follow Michigan Administrative Procedures Act (3-strike process before license action)
+Strict rules:
+- Base every statement on the provided documents; do not speculate or use outside knowledge.
+- Cite the relevant document IDs (e.g., DOC_1) and, if present, regulation sections from the text.
+- Explain why a cited regulation applies or does not apply to the user's situation.
+- Avoid general food safety advice; stay anchored to the documents.
+- Be concise and factual; no fluff, no emojis, no markdown, no bullets unless needed for clarity.
+- If information is insufficient, explicitly say so and ask for precise missing details.`
 
-VIOLATION CLASSIFICATION (Washtenaw County):
-- P (Priority): Direct food safety hazard. Must fix IMMEDIATELY at inspection or within 10 days.
-  Examples: Improper food temps, no handwashing, cross contamination, pest presence
-- Pf (Priority Foundation): Supports priority items. Fix within 10 days.
-  Examples: No thermometer, missing sanitizer test strips, no soap at hand sink
-- C (Core): General sanitation/maintenance. Fix within 90 days.
-  Examples: Dirty floors, broken ceiling tiles, improper lighting
-
-ENFORCEMENT ESCALATION (per Washtenaw County):
-1. Routine inspection identifies violation → Opportunity #1 to fix
-2. Follow-up fails → Office Conference with health department
-3. Still not fixed → Informal Hearing
-4. Still not fixed → License limited/suspended/revoked + possible Formal Hearing appeal
-
-Your knowledge base is the provided reference excerpts. Do not assume anything outside those excerpts.
-
-RULES:
-1. Be concise. Short sentences. No fluff.
-2. No markdown formatting (no **, no #, no bullet lists).
-3. No emojis.
-4. Ground every finding in the reference excerpts. Every finding must include source_ids.
-5. If you can't support it from the excerpts, do not call it a violation.
-6. Use likelihood language only: "Highly likely", "Likely", "Probable", or "Unlikely" (no percentages, no scores).
-7. If the photo looks compliant, say: "No violations detected." and stop.
-8. Don't narrate the scene. Get to the point.
-9. Don't ask if this is residential/commercial. Assume food service.
-10. Prioritize Washtenaw County documents over general guidance.
-11. When findings exist, present them as: Possible violations (with likelihood), then remediation/steps, then timeframe and gentle penalties. Keep tone supportive, not alarming.
-12. Never mention fines/penalties unless the user asks. If not asked, omit them and focus on violation type, likelihood, and remediation.
-13. Avoid false positives. If uncertain, ask up to 2 brief clarifying questions instead of labeling a violation.
-14. Keep it concise and conversational. Use bullets only if the response would otherwise be hard to read.
-
-OUTPUT FORMAT (JSON only):
-
-For image analysis:
-{
-  "mode": "audit",
-  "status": "clear" | "findings",
-  "findings": [
-    {
-      "class": "P|Pf|C|Unclear",
-      "likelihood": "Highly likely|Likely|Probable|Unlikely|Unclear",
-
-      "observed": "What you see in the photo (one sentence, evidence only). Acknowledge what looks okay if relevant.",
-
-      "violation": "Possible violation you SEE (one sentence, requirement-focused).",
-      "violation_type": "Short category label (example: Chemical storage, Hand sink use, Date marking, Temperature control).",
-
-      "why": "Risk/impact in plain language, supported by excerpts.",
-      "fix": "Supportive remediation steps to correct the issue (concise).",
-      "deadline": "Immediately|Within 10 days|Within 90 days",
-      "if_not_fixed": "Soft, motivating note on likely enforcement/penalties if not resolved, based on excerpts.",
-
-      "source_ids": ["DOC_1"]
-    }
-  ],
-  "enforcement": "Only if user asked about fines/penalties/what happens if. Must be supported by excerpts.",
-  "questions": ["only if genuinely needed for clarification"]
-}
-
-For questions without images:
-{
-  "mode": "guidance",
-  "answer": "direct answer",
-  "steps": ["actionable steps if applicable"],
-  "questions": ["clarifying questions if needed"]
-}
-
-Max findings: ${maxFindings}`
-
-    const issueHints =
-      vision.issues.length > 0 ? `Scan detected:\n${vision.issues.map((i) => `- ${i.issue}`).join('\n')}` : ''
-
-    const questionBlock = `User: ${effectivePrompt || (hasImage ? 'Check this photo.' : '')}${
-      hasImage && issueHints ? `\n\n${issueHints}` : ''
-    }`
+    const questionBlock = `User request: ${effectivePrompt || (hasImage ? 'Image provided, no text.' : '')}`
 
     // ========================================================================
     // GENERATE RESPONSE
     // ========================================================================
 
     let modelText = ''
-    let parsed = null
-    let usageStats = null
+    let message = ''
+    let status = 'guidance'
 
     try {
-      const finalMessages = []
-
-      if (hasImage && imageBase64) {
-        finalMessages.push({
+      const finalMessages = [
+        { role: 'system', content: systemPrompt },
+        {
           role: 'user',
-          content: [
-            { type: 'text', text: excerptBlock },
-            { type: 'image_url', image_url: { url: `data:${imageMediaType || 'image/jpeg'};base64,${imageBase64}` } },
-            { type: 'text', text: questionBlock },
-          ],
-        })
-      } else {
-        finalMessages.push({
-          role: 'user',
-          content: [
-            { type: 'text', text: excerptBlock },
-            { type: 'text', text: questionBlock },
-          ],
-        })
-      }
+          content: `${excerptBlock}\n\n${questionBlock}\n\nCite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.`,
+        },
+      ]
 
       const answerResp = await withTimeout(
-        openai.responses.create({
-          model: OPENAI_MODEL,
-          max_output_tokens: fullAudit ? 1300 : 950,
-          input: toResponseInput([{ role: 'system', content: systemPrompt }, ...finalMessages]),
+        cohereClient.chat({
+          model: COHERE_COMMAND_MODEL,
+          messages: finalMessages,
+          documents: contextDocs.map((doc) => ({
+            id: doc.id,
+            title: doc.source || 'Source',
+            snippet: doc.text || '',
+            text: doc.text || '',
+          })),
         }),
         ANSWER_TIMEOUT_MS,
         'ANSWER_TIMEOUT'
       )
 
-      modelText = responseOutputToString(answerResp)
-
-      parsed = extractJsonObject(modelText)
-      usageStats = buildCacheStats(answerResp.usage)
-      if (usageStats) logger.info('Token stats', usageStats)
+      modelText = answerResp?.text || ''
+      message = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
       return NextResponse.json(
         { error: getUserFriendlyErrorMessage(e?.message) },
         { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
       )
-    }
-
-    // ========================================================================
-    // RENDER OUTPUT
-    // ========================================================================
-
-    let message = ''
-    let status = 'unknown'
-
-    if (parsed && parsed.mode === 'audit') {
-      const findingsRaw = Array.isArray(parsed.findings) ? parsed.findings : []
-      const questionsRaw = Array.isArray(parsed.questions) ? parsed.questions : []
-      const enforcementRaw = safeLine(parsed.enforcement || '')
-
-      const validFindings = []
-      for (const f of findingsRaw.slice(0, maxFindings)) {
-        const srcIds = Array.isArray(f?.source_ids) ? f.source_ids : []
-        const usable = pickSourcesFromIds(srcIds, excerptIndex)
-        if (usable.length === 0) continue
-
-        validFindings.push({
-          class: normalizeClass(f?.class),
-          likelihood: normalizeLikelihood(f?.likelihood),
-
-          observed: safeLine(f?.observed || f?.seeing || f?.evidence || ''),
-          violation: safeLine(f?.violation || f?.rule || f?.title || 'Possible violation'),
-          violation_type: safeLine(f?.violation_type || f?.type || ''),
-
-          why: safeLine(f?.why || ''),
-          fix: safeLine(f?.fix || ''),
-          deadline: safeLine(f?.deadline || ''),
-          if_not_fixed: safeLine(f?.if_not_fixed || f?.consequence || ''),
-
-          source_ids: normalizeSourceIds(srcIds),
-        })
-      }
-
-      status = validFindings.length > 0 ? 'findings' : 'clear'
-
-      message = renderAuditOutput(
-        { status, findings: validFindings, questions: questionsRaw, enforcement: enforcementRaw },
-        { maxItems: maxFindings, includeFines, fullAudit }
-      )
-    } else if (parsed && parsed.mode === 'guidance') {
-      status = 'guidance'
-      message = renderGuidanceOutput({
-        answer: parsed.answer || '',
-        steps: Array.isArray(parsed.steps) ? parsed.steps : [],
-        questions: Array.isArray(parsed.questions) ? parsed.questions : [],
-      })
-    } else {
-      status = hasImage ? 'unclear' : 'guidance'
-      message = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
     }
 
     // ========================================================================
@@ -1205,11 +1014,9 @@ Max findings: ${maxFindings}`
       hasImage,
       status,
       durationMs: Date.now() - startedAt,
-      docsRetrieved: allDocs.length,
-      queriesUsed: queries.length,
+      docsRetrieved: contextDocs.length,
       fullAudit,
       includeFines,
-      tokenStats: usageStats,
       model: MODEL_LABEL,
     })
 
@@ -1224,15 +1031,13 @@ Max findings: ${maxFindings}`
       {
         message,
         _meta: {
-          model: OPENAI_MODEL,
+          model: COHERE_COMMAND_MODEL,
           modelLabel: MODEL_LABEL,
           hasImage,
           status,
           fullAudit,
-          docsRetrieved: allDocs.length,
-          queriesUsed: queries.length,
+          docsRetrieved: contextDocs.length,
           durationMs: Date.now() - startedAt,
-          usage: usageStats || null,
         },
       },
       { status: 200 }
