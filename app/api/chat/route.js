@@ -955,18 +955,13 @@ Strict rules:
     let status = 'guidance'
 
     try {
-      const finalMessages = [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: `${excerptBlock}\n\n${questionBlock}\n\nCite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.`,
-        },
-      ]
+      const userMessage = `${excerptBlock}\n\n${questionBlock}\n\nCite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.`
 
       const answerResp = await withTimeout(
         cohereClient.chat({
           model: COHERE_COMMAND_MODEL,
-          messages: finalMessages,
+          message: userMessage,
+          preamble: systemPrompt,
           documents: contextDocs.map((doc) => ({
             id: doc.id,
             title: doc.source || 'Source',
