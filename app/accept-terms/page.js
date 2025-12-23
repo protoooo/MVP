@@ -12,6 +12,7 @@ export default function AcceptTermsPage() {
   const supabase = createClient()
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [agreePrivacy, setAgreePrivacy] = useState(false)
+  const [agreeLocation, setAgreeLocation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
@@ -20,6 +21,11 @@ export default function AcceptTermsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (isSubmitting) return
+
+    if (!agreeTerms || !agreePrivacy || !agreeLocation) {
+      setError('Please confirm all statements before continuing.')
+      return
+    }
 
     setIsSubmitting(true)
     setError('')
@@ -110,6 +116,25 @@ export default function AcceptTermsPage() {
     }
   }
 
+  const AgreementCard = ({ checked, onToggle, children }) => (
+    <button
+      type="button"
+      className="agreement-card"
+      data-selected={checked}
+      onClick={() => onToggle(!checked)}
+      role="checkbox"
+      aria-checked={checked}
+    >
+      <span className="agreement-status" aria-hidden="true">
+        {checked ? '✓' : ''}
+      </span>
+      <span className="agreement-text">{children}</span>
+      <span className="agreement-action">{checked ? 'Selected' : 'Tap to agree'}</span>
+    </button>
+  )
+
+  const canSubmit = agreeTerms && agreePrivacy && agreeLocation && !isSubmitting
+
   return (
     <InfoPageLayout
       title="Accept Updated Policies"
@@ -157,74 +182,21 @@ export default function AcceptTermsPage() {
         <h2 className="info-section-title">Confirm & Continue</h2>
 
         <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
-          <label style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px',
-            padding: '16px',
-            background: 'var(--bg-3)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '12px',
-            cursor: 'pointer'
-          }}>
-            <input
-              type="checkbox"
-              checked={agreeTerms}
-              onChange={(e) => setAgreeTerms(e.target.checked)}
-              style={{ marginTop: '2px', flexShrink: 0 }}
-            />
-            <span style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--ink-1)' }}>
-              I have read and agree to the Terms of Service, including the limits of LLM guidance and my 
-              responsibility for compliance decisions.
-            </span>
-          </label>
+          <div className="agreements-grid">
+            <AgreementCard checked={agreeTerms} onToggle={setAgreeTerms}>
+              I have read and agree to the Terms of Service, including the limits of LLM guidance and my responsibility 
+              for compliance decisions.
+            </AgreementCard>
 
-          <label style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px',
-            padding: '16px',
-            background: 'var(--bg-3)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '12px',
-            cursor: 'pointer'
-          }}>
-            <input
-              type="checkbox"
-              checked={agreePrivacy}
-              onChange={(e) => setAgreePrivacy(e.target.checked)}
-              style={{ marginTop: '2px', flexShrink: 0 }}
-            />
-            <span style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--ink-1)' }}>
+            <AgreementCard checked={agreePrivacy} onToggle={setAgreePrivacy}>
               I acknowledge the Privacy Policy describing data collection, retention, and protection practices.
-            </span>
-          </label>
+            </AgreementCard>
 
-          <label style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px',
-            padding: '16px',
-            background: 'var(--bg-3)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '20px',
-            opacity: (agreeTerms && agreePrivacy) ? 1 : 0.5,
-            cursor: 'not-allowed'
-          }}>
-            <input
-              type="checkbox"
-              checked={agreeTerms && agreePrivacy}
-              disabled
-              style={{ marginTop: '2px', flexShrink: 0 }}
-            />
-            <span style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--ink-1)' }}>
+            <AgreementCard checked={agreeLocation} onToggle={setAgreeLocation}>
               I understand this license is valid for <strong style={{ color: 'var(--ink-0)' }}>one physical location only</strong>. 
               Multiple locations require separate licenses.
-            </span>
-          </label>
+            </AgreementCard>
+          </div>
 
           {error && (
             <p style={{ 
@@ -254,18 +226,18 @@ export default function AcceptTermsPage() {
 
           <button
             type="submit"
-            disabled={!agreeTerms || !agreePrivacy || isSubmitting}
+            disabled={!canSubmit}
             style={{
               width: '100%',
               height: '44px',
-              background: (agreeTerms && agreePrivacy) ? 'var(--accent)' : 'var(--bg-3)',
+              background: canSubmit ? 'var(--accent)' : 'var(--bg-3)',
               color: '#fff',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
               fontSize: '14px',
               fontWeight: '600',
-              cursor: (agreeTerms && agreePrivacy && !isSubmitting) ? 'pointer' : 'not-allowed',
-              opacity: (agreeTerms && agreePrivacy && !isSubmitting) ? 1 : 0.5,
+              cursor: canSubmit ? 'pointer' : 'not-allowed',
+              opacity: canSubmit ? 1 : 0.5,
               transition: 'background 0.15s ease'
             }}
           >
@@ -285,6 +257,97 @@ export default function AcceptTermsPage() {
           </p>
         </form>
       </div>
+
+      <style jsx global>{`
+        .agreements-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+
+        .agreement-card {
+          width: 100%;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-3);
+          border-radius: var(--radius-sm);
+          padding: 14px 16px;
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          gap: 12px;
+          align-items: center;
+          text-align: left;
+          color: var(--ink-1);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+          cursor: pointer;
+        }
+
+        .agreement-card[data-selected="true"] {
+          border-color: var(--accent);
+          box-shadow: 0 12px 36px rgba(5, 7, 13, 0.32);
+          transform: translateY(-1px);
+        }
+
+        .agreement-card:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+        }
+
+        .agreement-status {
+          width: 26px;
+          height: 26px;
+          border-radius: 8px;
+          border: 2px solid var(--border-subtle);
+          background: rgba(255, 255, 255, 0.06);
+          color: var(--ink-0);
+          font-weight: 700;
+          font-size: 14px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .agreement-card[data-selected="true"] .agreement-status {
+          background: var(--accent);
+          border-color: var(--accent);
+        }
+
+        .agreement-text {
+          font-size: 14px;
+          line-height: 1.65;
+          color: var(--ink-1);
+        }
+
+        .agreement-action {
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--accent);
+          border: 1px solid var(--accent);
+          background: rgba(95, 168, 255, 0.14);
+          border-radius: 999px;
+          padding: 8px 12px;
+          transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .agreement-card[data-selected="true"] .agreement-action {
+          background: rgba(95, 168, 255, 0.24);
+          color: var(--ink-0);
+          border-color: var(--accent);
+        }
+
+        @media (max-width: 640px) {
+          .agreement-card {
+            grid-template-columns: auto 1fr;
+            grid-template-rows: auto auto;
+          }
+
+          .agreement-action {
+            grid-column: 2 / 3;
+            justify-self: start;
+          }
+        }
+      `}</style>
     </InfoPageLayout>
   )
 }
