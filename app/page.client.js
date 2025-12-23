@@ -1423,6 +1423,18 @@ export default function Page() {
           padding: 28px;
         }
 
+        .modal-header {
+          margin-bottom: 18px;
+        }
+
+        .modal-title {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: var(--ink-0);
+        }
+
         .modal-close {
           position: absolute;
           top: 16px;
@@ -1441,6 +1453,171 @@ export default function Page() {
         }
 
         .modal-close:hover {
+          color: var(--ink-0);
+        }
+
+        .modal-form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .form-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--ink-2);
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
+        }
+
+        .form-input-wrap {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: var(--bg-0);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
+          padding: 0 10px;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-input-wrap:focus-within {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .form-input {
+          width: 100%;
+          height: 44px;
+          background: transparent;
+          border: none;
+          color: var(--ink-0);
+          font-size: 14px;
+          font-weight: 500;
+          font-family: inherit;
+          padding: 0 2px;
+        }
+
+        .form-input::placeholder {
+          color: var(--ink-3);
+        }
+
+        .form-input:focus {
+          outline: none;
+        }
+
+        .form-toggle-vis {
+          background: none;
+          border: none;
+          color: var(--ink-1);
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          padding: 6px;
+          margin-right: -6px;
+        }
+
+        .form-toggle-vis:hover {
+          color: var(--accent);
+        }
+
+        .btn-submit {
+          margin-top: 4px;
+          height: 46px;
+          width: 100%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: var(--accent);
+          color: #fff;
+          border: none;
+          border-radius: var(--radius-sm);
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          box-shadow: 0 12px 30px rgba(59, 130, 246, 0.18);
+          transition: background 0.15s ease, transform 0.1s ease;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+          background: var(--accent-hover);
+          transform: translateY(-1px);
+        }
+
+        .btn-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid var(--border-subtle);
+          border-top-color: var(--accent);
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        .modal-message {
+          margin-top: 12px;
+          padding: 10px 12px;
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          line-height: 1.4;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-0);
+          color: var(--ink-1);
+        }
+
+        .modal-message.ok {
+          color: #34d399;
+          border-color: rgba(52, 211, 153, 0.35);
+          background: rgba(52, 211, 153, 0.08);
+        }
+
+        .modal-message.err {
+          color: #f87171;
+          border-color: rgba(248, 113, 113, 0.35);
+          background: rgba(248, 113, 113, 0.08);
+        }
+
+        .modal-footer {
+          margin-top: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: flex-start;
+        }
+
+        .modal-link {
+          background: none;
+          border: none;
+          color: var(--accent);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          padding: 0;
+          text-decoration: none;
+        }
+
+        .modal-link:hover {
+          color: var(--accent-hover);
+        }
+
+        .modal-footer .modal-link {
+          color: var(--ink-1);
+          font-weight: 600;
+        }
+
+        .modal-footer .modal-link:hover {
           color: var(--ink-0);
         }
 
