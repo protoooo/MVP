@@ -33,7 +33,7 @@ npm run dev
 | Component | Service | Purpose |
 |-----------|---------|---------|
 | Chat | OpenAI GPT-5.2 | Generate compliance answers + vision |
-| Embeddings | Cohere (`embed-english-v3.0`) | Document search (1024 dims) |
+| Embeddings | Cohere (`embed-english-v3.0`) | Document search (1536 dims) |
 | Database | Supabase (pgvector) | Vector storage + auth |
 | Hosting | Railway | App deployment |
 | Payments | Stripe | Subscriptions |
@@ -128,14 +128,14 @@ See [.env.local.example](./.env.local.example) for complete list.
 CREATE TABLE documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content TEXT NOT NULL,
-  embedding VECTOR(1024),  -- Cohere uses 1024 dims (NOT 1536!)
+  embedding VECTOR(1536),  -- Embedding model uses 1536 dims by default
   metadata JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create vector similarity function
 CREATE OR REPLACE FUNCTION match_documents(
-  query_embedding VECTOR(1024),
+  query_embedding VECTOR(1536),
   match_threshold FLOAT,
   match_count INT,
   filter_county TEXT
@@ -232,7 +232,7 @@ npm run ingest
 This will:
 1. Extract text from PDFs
 2. Split into 1000-character chunks
-3. Generate embeddings with Cohere (1024 dims)
+3. Generate embeddings with Cohere (1536 dims)
 4. Store in Supabase with metadata
 
 See [DOCUMENT_INGESTION.md](./DOCUMENT_INGESTION.md) for details.
@@ -314,17 +314,17 @@ SELECT COUNT(*) FROM documents;
 
 -- Check embedding dimensions
 SELECT vector_dims(embedding) FROM documents LIMIT 1;
--- Should return 1024 (NOT 1536!)
+-- Should return 1536
 
 -- Re-run ingestion if needed
 npm run ingest
 ```
 
-### "Expected 1536 dimensions, got 1024"
+### "Expected 1024 dimensions, got 1536"
 **Fix:**
 ```sql
 ALTER TABLE documents DROP COLUMN embedding;
-ALTER TABLE documents ADD COLUMN embedding VECTOR(1024);
+ALTER TABLE documents ADD COLUMN embedding VECTOR(1536);
 DROP INDEX IF EXISTS documents_embedding_idx;
 CREATE INDEX ON documents USING ivfflat (embedding vector_cosine_ops);
 npm run ingest  -- Re-ingest documents
