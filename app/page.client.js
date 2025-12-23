@@ -904,22 +904,22 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          --bg-0: #09090b;
-          --bg-1: #0c0c0e;
-          --bg-2: #131316;
-          --bg-3: #1a1a1f;
+          --bg-0: rgba(5, 7, 13, 0.72);
+          --bg-1: rgba(7, 10, 18, 0.78);
+          --bg-2: rgba(9, 13, 22, 0.82);
+          --bg-3: rgba(255, 255, 255, 0.1);
 
-          --ink-0: #fafafa;
-          --ink-1: #a0a0a8;
-          --ink-2: #636369;
-          --ink-3: #3f3f46;
+          --ink-0: #f6f9ff;
+          --ink-1: rgba(240, 244, 255, 0.86);
+          --ink-2: rgba(214, 222, 240, 0.76);
+          --ink-3: rgba(178, 190, 215, 0.6);
 
-          --accent: #3b82f6;
-          --accent-hover: #2563eb;
-          --accent-dim: rgba(59, 130, 246, 0.1);
+          --accent: #5fa8ff;
+          --accent-hover: #7bc2ff;
+          --accent-dim: rgba(95, 168, 255, 0.2);
 
-          --border-subtle: rgba(255, 255, 255, 0.05);
-          --border-default: rgba(255, 255, 255, 0.08);
+          --border-subtle: rgba(255, 255, 255, 0.18);
+          --border-default: rgba(255, 255, 255, 0.32);
 
           --radius-sm: 8px;
           --radius-md: 12px;
@@ -949,7 +949,12 @@ export default function Page() {
           content: '';
           position: fixed;
           inset: 0;
-          background: rgba(7, 10, 18, 0.45);
+          background:
+            radial-gradient(130% 90% at 18% 18%, rgba(255, 255, 255, 0.12), transparent 44%),
+            radial-gradient(120% 80% at 82% 0%, rgba(111, 186, 255, 0.16), transparent 46%),
+            linear-gradient(135deg, rgba(5, 7, 13, 0.78), rgba(5, 7, 13, 0.48));
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
           pointer-events: none;
           z-index: -1;
         }
@@ -1105,12 +1110,17 @@ export default function Page() {
           flex-direction: column;
           background: transparent;
           overflow: hidden;
+          isolation: isolate;
         }
 
         .landing-bg {
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 130, 246, 0.06), transparent 70%);
+          background:
+            radial-gradient(120% 70% at 18% 18%, rgba(255, 255, 255, 0.16), transparent 48%),
+            radial-gradient(110% 70% at 82% 6%, rgba(95, 168, 255, 0.2), transparent 52%),
+            radial-gradient(90% 60% at 40% 88%, rgba(255, 255, 255, 0.08), transparent 60%);
+          filter: saturate(130%);
           pointer-events: none;
         }
 
@@ -1136,6 +1146,13 @@ export default function Page() {
           gap: 12px;
           padding: 12px 16px;
           border-radius: 14px;
+          background: linear-gradient(120deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.26);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.45),
+            0 18px 48px rgba(5, 7, 13, 0.32);
+          backdrop-filter: blur(14px) saturate(120%);
+          -webkit-backdrop-filter: blur(14px) saturate(120%);
         }
 
         .landing-top-actions {
@@ -1207,6 +1224,13 @@ export default function Page() {
           max-width: 880px;
           margin: 0 auto;
           padding: 40px 48px;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.52),
+            0 32px 96px rgba(5, 7, 13, 0.45);
+          backdrop-filter: blur(20px) saturate(130%);
+          -webkit-backdrop-filter: blur(20px) saturate(130%);
         }
 
         .hero-content {
@@ -1231,7 +1255,7 @@ export default function Page() {
         .hero-title {
           font-size: clamp(28px, 5vw, 40px);
           font-weight: 800;
-          color: var(--ink-0);
+          color: #f8f9ff;
           letter-spacing: -0.03em;
           margin: 0;
         }
@@ -1240,7 +1264,7 @@ export default function Page() {
           margin: 0;
           font-size: 16px;
           line-height: 1.65;
-          color: var(--ink-2);
+          color: rgba(240, 244, 255, 0.75);
           max-width: 52ch;
         }
 
@@ -1292,7 +1316,7 @@ export default function Page() {
           font-size: 14px;
           border-radius: var(--radius-full);
           overflow: visible;
-          box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18);
+          box-shadow: 0 12px 30px rgba(95, 168, 255, 0.24);
         }
 
         /* Subtle tracing animation for Start trial button */
@@ -1403,8 +1427,12 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(4px);
+          background:
+            radial-gradient(120% 70% at 12% 10%, rgba(255, 255, 255, 0.08), transparent 50%),
+            radial-gradient(120% 70% at 88% 0%, rgba(95, 168, 255, 0.12), transparent 52%),
+            rgba(5, 7, 13, 0.7);
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1440,9 +1468,15 @@ export default function Page() {
 
         .modal-card {
           position: relative;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.28);
           border-radius: var(--radius-lg);
           padding: 28px;
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.46),
+            0 24px 72px rgba(5, 7, 13, 0.4);
+          backdrop-filter: blur(18px) saturate(125%);
+          -webkit-backdrop-filter: blur(18px) saturate(125%);
         }
 
         .modal-header {
@@ -1502,16 +1536,19 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: var(--bg-0);
-          border: 1px solid var(--border-subtle);
+          background: linear-gradient(120deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.28);
           border-radius: var(--radius-sm);
           padding: 0 10px;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
         }
 
         .form-input-wrap:focus-within {
           border-color: var(--accent);
-          box-shadow: 0 0 0 3px var(--accent-dim);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.6),
+            0 0 0 3px var(--accent-dim);
         }
 
         .form-input {
@@ -1527,11 +1564,19 @@ export default function Page() {
         }
 
         .form-input::placeholder {
-          color: var(--ink-3);
+          color: rgba(255, 255, 255, 0.6);
         }
 
         .form-input:focus {
           outline: none;
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+          -webkit-text-fill-color: var(--ink-0);
+          -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.1) inset;
+          transition: background-color 5000s ease-in-out 0s;
         }
 
         .form-toggle-vis {
@@ -1564,7 +1609,7 @@ export default function Page() {
           font-size: 14px;
           font-weight: 700;
           cursor: pointer;
-          box-shadow: 0 12px 30px rgba(59, 130, 246, 0.18);
+          box-shadow: 0 12px 30px rgba(95, 168, 255, 0.24);
           transition: background 0.15s ease, transform 0.1s ease;
         }
 
@@ -1594,9 +1639,9 @@ export default function Page() {
           border-radius: var(--radius-sm);
           font-size: 13px;
           line-height: 1.4;
-          border: 1px solid var(--border-subtle);
-          background: var(--bg-0);
-          color: var(--ink-1);
+          border: 1px solid rgba(255, 255, 255, 0.26);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+          color: var(--ink-0);
         }
 
         .modal-message.ok {
@@ -1732,11 +1777,13 @@ export default function Page() {
           top: calc(100% + 8px);
           right: 0;
           min-width: 180px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-default);
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.28);
           border-radius: var(--radius-md);
           padding: 8px;
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 16px 48px rgba(5, 7, 13, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          backdrop-filter: blur(14px) saturate(120%);
+          -webkit-backdrop-filter: blur(14px) saturate(120%);
           animation: dropdown-in 0.15s ease;
           z-index: 50;
         }
@@ -1857,8 +1904,8 @@ export default function Page() {
 
         .chat-input-area {
           flex-shrink: 0;
-          border-top: 1px solid var(--border-subtle);
-          background: transparent;
+          border-top: 1px solid rgba(255, 255, 255, 0.2);
+          background: linear-gradient(180deg, rgba(5, 7, 13, 0.32), rgba(5, 7, 13, 0.54));
         }
 
         .chat-input-inner {
@@ -1873,11 +1920,13 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           padding: 8px 12px;
-          background: var(--bg-2);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+          border: 1px solid rgba(255, 255, 255, 0.26);
           border-radius: var(--radius-sm);
           margin-bottom: 12px;
           font-size: 12px;
           color: var(--ink-1);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
 
         .chat-attachment-icon {
@@ -1914,7 +1963,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--bg-2);
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
           border: 1px solid var(--accent);
           border-radius: var(--radius-md);
           color: var(--accent);
@@ -1922,6 +1971,7 @@ export default function Page() {
           flex-shrink: 0;
           transition: border-color 0.15s ease, box-shadow 0.15s ease;
           overflow: visible;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 10px 26px rgba(5, 7, 13, 0.28);
         }
 
         .chat-camera-btn:hover {
@@ -1933,10 +1983,11 @@ export default function Page() {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+          border: 1px solid rgba(255, 255, 255, 0.28);
           border-radius: var(--radius-md);
-          transition: border-color 0.15s ease;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           min-width: 0;
         }
 
@@ -1960,7 +2011,7 @@ export default function Page() {
         }
 
         .chat-textarea::placeholder {
-          color: var(--ink-3);
+          color: rgba(240, 244, 255, 0.55);
         }
         .chat-textarea:focus {
           outline: none;
