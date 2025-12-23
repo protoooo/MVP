@@ -633,8 +633,8 @@ export async function POST(request) {
   try {
     logger.info('Chat request received')
 
-    if (!process.env.OPENAI_API_KEY) {
-      logger.error('OPENAI_API_KEY not configured')
+    if (!process.env.COHERE_API_KEY) {
+      logger.error('COHERE_API_KEY not configured')
       return NextResponse.json({ error: 'AI service not configured.' }, { status: 500 })
     }
 
