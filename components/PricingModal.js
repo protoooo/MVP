@@ -31,29 +31,10 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <Icons.X />
           </button>
 
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <div style={{ 
-              display: 'inline-block',
-              padding: '6px 12px',
-              background: 'rgba(59, 130, 246, 0.1)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              borderRadius: '6px',
-              fontSize: '11px',
-              fontWeight: '600',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              color: 'var(--accent)',
-              marginBottom: '16px'
-            }}>
-              Unlimited Usage
-            </div>
-            
-            <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px', color: 'var(--ink-0)' }}>
-              Professional Plan
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: 'var(--ink-0)' }}>
+              Unlimited Plan
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--ink-2)' }}>
-              GPT-5-mini • Unlimited questions & photo scans
-            </p>
           </div>
 
           {/* Single Plan Card */}
@@ -63,30 +44,10 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               border: '2px solid var(--accent)',
               borderRadius: 'var(--radius-md)',
               padding: '32px',
-              position: 'relative',
               color: 'white',
               marginBottom: '24px'
             }}
           >
-            <div
-              style={{
-                position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: 'var(--accent)',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                fontSize: '11px',
-                fontWeight: '700',
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Best Value
-            </div>
-
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
                 <span style={{ fontSize: '48px', fontWeight: '700' }}>$50</span>
@@ -133,10 +94,10 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               }}
             >
               {[
-                'Unlimited questions & photo scans',
-                'GPT-5-mini - fast, lower-cost reasoning',
+                'Unlimited questions and photo scans',
+                'Cohere-powered responses for maximum privacy and security',
                 'Full Washtenaw County database',
-                'Priority email support',
+                'Email support',
                 'One registered device per license'
               ].map((feature, idx) => (
                 <div key={idx} className="pricing-feature">
