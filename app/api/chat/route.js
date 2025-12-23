@@ -111,12 +111,7 @@ function validateImageData(imageInput) {
       return { valid: false, error: 'Cannot determine image type' }
     }
 
-    return {
-      valid: true,
-      base64Data,
-      mediaType,
-      dataUrl,
-    }
+    return { valid: true, base64Data, mediaType, dataUrl }
   } catch (error) {
     logger.error('Image validation failed', { error: error?.message })
     return { valid: false, error: 'Image validation error' }
@@ -155,9 +150,11 @@ const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() ===
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
 const COHERE_VISION_MODEL = 'c4ai-aya-vision-8b'
+
 const rawEmbedModel = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
 const COHERE_EMBED_MODEL = rawEmbedModel === 'embed-english-v4.0' ? 'embed-v4.0' : rawEmbedModel
 const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
+
 const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v3.5'
 const MODEL_LABEL = 'Cohere'
 
@@ -170,10 +167,6 @@ const TOPK_PER_QUERY = 20
 const MAX_DOCS_FOR_CONTEXT = 5
 const RERANK_TOP_N = 5
 const MIN_RERANK_DOCS = 3
-const PER_SOURCE_CAP = 4
-
-const ALLOWED_LIKELIHOOD = new Set(['Highly likely', 'Likely', 'Probable', 'Unlikely', 'Unclear'])
-const ALLOWED_CLASS = new Set(['P', 'Pf', 'C', 'Unclear'])
 
 // ============================================================================
 // TEXT UTILITIES
@@ -266,8 +259,7 @@ function cohereResponseToText(resp) {
 
 // ============================================================================
 // COHERE CHAT CALL
-// IMPORTANT: Aya Vision expects v2 "messages" with image_url parts (not legacy images)
-// See Cohere image inputs docs. :contentReference[oaicite:2]{index=2}
+// IMPORTANT: Aya Vision expects v2 "messages" with image_url parts
 // ============================================================================
 
 function isVisionModel(model) {
@@ -306,13 +298,15 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
       type: 'image_url',
       image_url: {
         url,
-        detail: 'auto', // you can set 'low' to cut cost/latency
+        detail: 'auto',
       },
     })
   }
 
-  // v2 expects content array for multimodal
-  messages.push({ role: 'user', content: parts.length ? parts : [{ type: 'text', text: 'Analyze the image.' }] })
+  messages.push({
+    role: 'user',
+    content: parts.length ? parts : [{ type: 'text', text: 'Analyze the image.' }],
+  })
 
   return { messages, normalizedImagesCount: normalizedImages.length }
 }
@@ -338,10 +332,17 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
       throw new Error('Image payload missing after normalization (v2)')
     }
 
+    logger.info('Sending vision request to Cohere', {
+      model,
+      messagesCount: messages.length,
+      imagesCount: normalizedImagesCount,
+      hasDocuments: docs.length > 0,
+    })
+
     const respV2 = await cohereClient.chat({
       model,
       messages,
-      // Some Cohere deployments still expect `message`; include for compatibility
+      // Compatibility: some deployments still accept message/preamble/chat_history
       message: safeText(message) || 'Analyze the attached image in context of the provided documents.',
       preamble,
       documents: docs,
@@ -364,7 +365,7 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
 
   const normalizedImages = normalizeImagesForCohere(images)
   if (normalizedImages.length) {
-    // Some text models may ignore images; we only attach here if provided
+    // Some text models may ignore images; attaching is harmless, but can be removed if needed.
     payloadLegacy.images = normalizedImages
   }
 
@@ -382,19 +383,12 @@ function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
   return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
 }
 
-function clampShort(s, max = 140) {
-  const x = safeLine(s || '')
-  if (!x) return ''
-  return x.length > max ? x.slice(0, max - 1).trimEnd() + '…' : x
-}
-
 // ============================================================================
 // KEYWORD EXTRACTION
 // ============================================================================
 
 function extractSearchKeywords(text) {
   const keywords = []
-
   const topics = [
     'temperature',
     'cooling',
@@ -437,31 +431,12 @@ function extractSearchKeywords(text) {
   topics.forEach((topic) => {
     if (lower.includes(topic)) keywords.push(topic)
   })
-
   return keywords
 }
 
 // ============================================================================
-// MESSAGE PARSING
+// MESSAGE PARSING HELPERS
 // ============================================================================
-
-function getLastUserText(messages) {
-  if (!Array.isArray(messages)) return ''
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const m = messages[i]
-    if (m?.role === 'user') {
-      if (typeof m.content === 'string') return safeLine(m.content)
-      if (Array.isArray(m.content)) {
-        const t = m.content
-          .map((c) => (typeof c === 'string' ? c : c?.text))
-          .filter(Boolean)
-          .join(' ')
-        return safeLine(t)
-      }
-    }
-  }
-  return ''
-}
 
 function wantsFullAudit(text) {
   const t = safeLine(text).toLowerCase()
@@ -483,7 +458,7 @@ function wantsFineInfo(text) {
 }
 
 // ============================================================================
-// DOCUMENT RETRIEVAL
+// DOCUMENT RETRIEVAL HELPERS
 // ============================================================================
 
 function dedupeByText(items) {
@@ -571,6 +546,10 @@ export async function POST(request) {
   try {
     logger.info('Chat request received')
 
+    if (!FEATURE_COHERE) {
+      return NextResponse.json({ error: 'AI service disabled.' }, { status: 503 })
+    }
+
     if (!process.env.COHERE_API_KEY) {
       logger.error('COHERE_API_KEY not configured')
       return NextResponse.json({ error: 'AI service not configured.' }, { status: 500 })
@@ -611,20 +590,19 @@ export async function POST(request) {
       imageMediaType = validation.mediaType
       fullDataUrl = validation.dataUrl
 
-      logger.info('Image validated', {
-        mediaType: imageMediaType,
-        dataLength: imageBase64.length,
-      })
+      logger.info('Image validated', { mediaType: imageMediaType, dataLength: imageBase64.length })
     }
 
+    // Find last user message index (so we don’t re-add it to history)
     const lastUserIndex = Array.isArray(messages)
       ? messages
           .slice()
           .reverse()
-          .findIndex((m) => m?.role === 'user' && typeof m?.content === 'string')
+          .findIndex((m) => m?.role === 'user' && (typeof m?.content === 'string' || messageContentToString(m?.content)))
       : -1
     const resolvedLastUserIndex = lastUserIndex === -1 ? -1 : messages.length - 1 - lastUserIndex
 
+    // Resolve userMessage from multiple shapes
     let userMessage =
       (typeof body.message === 'string' && body.message.trim()) ||
       (Array.isArray(body.messages)
@@ -644,7 +622,8 @@ export async function POST(request) {
     }
 
     if (!userMessage && hasImage) {
-      userMessage = 'Inspect the attached photo for potential food safety / sanitation issues that are covered by the provided county documents. Cite the relevant DOC IDs.'
+      userMessage =
+        'Inspect the attached photo for potential food safety / sanitation issues that are covered by the provided county documents. Cite the relevant DOC IDs.'
     }
 
     if (!userMessage) {
@@ -718,8 +697,8 @@ export async function POST(request) {
         if (rateLimitMap.size > 1000) {
           const currentMinute = Math.floor(Date.now() / 60000)
           for (const [key] of rateLimitMap.entries()) {
-            const keyMinute = parseInt(key.split('_').pop())
-            if (currentMinute - keyMinute > 5) rateLimitMap.delete(key)
+            const keyMinute = parseInt(key.split('_').pop(), 10)
+            if (Number.isFinite(keyMinute) && currentMinute - keyMinute > 5) rateLimitMap.delete(key)
           }
         }
       } catch (rateLimitError) {
@@ -729,7 +708,6 @@ export async function POST(request) {
       // Access check (trial + subscription)
       try {
         const accessCheck = await checkAccess(userId)
-
         if (!accessCheck?.valid) {
           logger.warn('Access denied - trial expired or no subscription', { userId })
           return NextResponse.json(
@@ -737,13 +715,6 @@ export async function POST(request) {
             { status: 402 }
           )
         }
-
-        logger.info('Access granted', {
-          userId,
-          status: accessCheck?.subscription?.status,
-          plan: accessCheck?.subscription?.plan,
-          gracePeriod: accessCheck?.gracePeriod || false,
-        })
       } catch (error) {
         logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
         return NextResponse.json(
@@ -754,20 +725,12 @@ export async function POST(request) {
 
       const sessionInfo = getSessionInfo(request)
 
-      logger.info('Validating license', {
-        userId,
-        ip: sessionInfo.ip.substring(0, 12) + '***',
-        userAgent: sessionInfo.userAgent.substring(0, 50),
-      })
-
       const deviceCheck = await validateDeviceLicense(userId, sessionInfo)
-
       if (!deviceCheck.valid) {
         logger.security('License validation failed', {
           userId,
           code: deviceCheck.code,
           error: deviceCheck.error,
-          ip: sessionInfo.ip.substring(0, 12) + '***',
         })
 
         return NextResponse.json(
@@ -783,12 +746,6 @@ export async function POST(request) {
         )
       }
 
-      logger.info('License validated', {
-        userId,
-        uniqueDevicesUsed: deviceCheck.uniqueDevicesUsed,
-        deviceFingerprint: deviceCheck.deviceFingerprint?.substring(0, 8) + '***',
-      })
-
       try {
         userMemory = await getUserMemory(userId)
       } catch (e) {
@@ -801,20 +758,12 @@ export async function POST(request) {
 
     const searchDocumentsFn = await getSearchDocuments()
 
-    // Placeholder for future image-derived search cues
-    const vision = { summary: '', searchTerms: '', issues: [], facts: [] }
-
     // ========================================================================
     // DOCUMENT RETRIEVAL
     // ========================================================================
 
-    const visionContext = [vision.searchTerms, ...vision.facts.slice(0, 6), ...vision.issues.map((i) => i.issue)]
-      .filter(Boolean)
-      .join(' ')
-      .slice(0, 700)
-
     const userKeywords = extractSearchKeywords(effectivePrompt)
-    const searchQuery = [effectivePrompt, visionContext, userKeywords.slice(0, 5).join(' '), 'Washtenaw County Michigan food code']
+    const searchQuery = [effectivePrompt, userKeywords.slice(0, 5).join(' '), 'Washtenaw County Michigan food code']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
@@ -895,8 +844,7 @@ export async function POST(request) {
 
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-${memoryContext ? `${memoryContext}\n\n` : ''}
-Use ONLY the provided documents to answer. If the documents do not support an answer, say you cannot answer from the provided materials.
+${memoryContext ? `${memoryContext}\n\n` : ''}Use ONLY the provided documents to answer. If the documents do not support an answer, say you cannot answer from the provided materials.
 
 Strict rules:
 - Base every statement on the provided documents; do not speculate or use outside knowledge.
@@ -957,7 +905,7 @@ Strict rules:
         // For vision we pass the data URL(s) into callCohereChat which will build v2 messages.
         const visionImages = hasImage && fullDataUrl ? [fullDataUrl] : []
 
-        const requestPayload = {
+        return {
           model,
           message: userMessage,
           chatHistory: cohereChatHistory,
@@ -970,18 +918,6 @@ Strict rules:
           })),
           images: visionImages,
         }
-
-        if (hasImage && fullDataUrl) {
-          logger.info('Vision request prepared', {
-            mediaType: imageMediaType,
-            dataLength: imageBase64?.length || 0,
-            dataUrlPrefix: fullDataUrl.slice(0, 30),
-            model,
-            imagesAttached: visionImages.length,
-          })
-        }
-
-        return requestPayload
       }
 
       const req = buildCohereRequest(usedModel)
@@ -995,26 +931,17 @@ Strict rules:
 
         modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
         assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
-
-        if (hasImage) {
-          logger.info('Vision response received', {
-            model: usedModel,
-            responseLength: assistantMessage.length,
-            hasImage: true,
-            payloadFormat: answerResp?.__format || 'unknown',
-          })
-        }
       } catch (visionErr) {
         // If vision fails with 400, fall back to text-only response (still grounded to docs)
         const detail = safeErrorDetails(visionErr)
         const is400 = String(detail).includes('400')
+
         if (hasImage && is400) {
           visionFallbackUsed = true
           logger.warn('Vision generation rejected (400). Falling back to text-only.', { detail, model: usedModel })
 
           usedModel = COHERE_TEXT_MODEL
           const fallbackReq = buildCohereRequest(usedModel)
-          // remove images so legacy models don't choke
           fallbackReq.images = []
 
           const fallbackResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
@@ -1070,6 +997,9 @@ Strict rules:
       includeFines,
       model: usedModel,
       visionFallbackUsed,
+      embedModel: COHERE_EMBED_MODEL,
+      embedDims: COHERE_EMBED_DIMS,
+      rerankUsed,
     })
 
     await logModelUsageDetail({
@@ -1101,6 +1031,7 @@ Strict rules:
           hasImage,
           status,
           fullAudit,
+          includeFines,
           docsRetrieved: contextDocs.length,
           durationMs: Date.now() - startedAt,
           visionFallbackUsed,
