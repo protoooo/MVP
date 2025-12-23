@@ -38,7 +38,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 const cohere = new CohereClient({ token: COHERE_KEY })
 const rawModel = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
 const COHERE_EMBED_MODEL = rawModel === 'embed-english-v4.0' ? 'embed-v4.0' : rawModel
-const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
+const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1024
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -72,8 +72,15 @@ async function getEmbeddings(texts, retries = 0) {
       embeddingTypes: ['float'],
       truncate: 'END',
     })
-    
-    return response.embeddings.float
+
+    const embeddings = response.embeddings.float
+    const dims = embeddings?.[0]?.length || 0
+
+    if (dims !== COHERE_EMBED_DIMS) {
+      throw new Error(`Embedding dimension mismatch (got ${dims}, expected ${COHERE_EMBED_DIMS}). Update COHERE_EMBED_MODEL/COHERE_EMBED_DIMS or align the documents table vector dimension.`)
+    }
+
+    return embeddings
   } catch (err) {
     if (err.status === 429 && retries < 5) {
       const wait = Math.pow(2, retries) * 1000
