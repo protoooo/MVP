@@ -18,9 +18,9 @@ const BATCH_SIZE = 96 // Cohere max batch size
 const rawModel = process.env.COHERE_EMBED_MODEL || "embed-v4.0"
 const COHERE_EMBED_MODEL = rawModel === "embed-english-v4.0" ? "embed-v4.0" : rawModel
 
-// ✅ Correct dimension for v4
+// ✅ Correct dimension for v4 (defaults to 1536 to match current embeddings)
 const COHERE_EMBED_DIMS =
-  Number(process.env.COHERE_EMBED_DIMS) || 1024
+  Number(process.env.COHERE_EMBED_DIMS) || 1536
 
 export async function POST() {
   try {
