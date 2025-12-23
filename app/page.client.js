@@ -109,35 +109,39 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       <div className="landing-bg" />
 
       <header className="landing-topbar">
-        <div className="plm-brand-wrap">
-          <BrandLink variant="landing" />
-        </div>
+        <div className="landing-topbar-card glass-surface">
+          <div className="plm-brand-wrap">
+            <BrandLink variant="landing" />
+          </div>
 
-        <nav className="landing-top-actions" aria-label="Top actions">
-          <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
-            Sign in
-          </button>
-        </nav>
+          <nav className="landing-top-actions" aria-label="Top actions">
+            <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
+              Sign in
+            </button>
+          </nav>
+        </div>
       </header>
 
       <main className="landing-hero">
-        <div className="hero-content">
-          <div className="hero-headings">
-            <h1 className="hero-title">Catch Violations, Not Fines.</h1>
-            <p className="hero-support">
-              Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
-              instant answers and guidance from Washtenaw County Food Safety Regulations.
-            </p>
-          </div>
-
-          <div className="hero-cta-row">
-            <div className="hero-arrow-text">Get started in minutes</div>
-            <div className="hero-arrow-icon">
-              <Icons.ArrowRight />
+        <div className="landing-hero-card glass-surface">
+          <div className="hero-content">
+            <div className="hero-headings">
+              <h1 className="hero-title">Catch Violations, Not Fines.</h1>
+              <p className="hero-support">
+                Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
+                instant answers and guidance from Washtenaw County Food Safety Regulations.
+              </p>
             </div>
-            <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
-              Start trial
-            </button>
+
+            <div className="hero-cta-row">
+              <div className="hero-arrow-text">Get started in minutes</div>
+              <div className="hero-arrow-icon">
+                <Icons.ArrowRight />
+              </div>
+              <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
+                Start trial
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -246,7 +250,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card ${ibmMono.className}`}>
+        <div className={`modal-card glass-surface ${ibmMono.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -933,8 +937,8 @@ export default function Page() {
         body {
           height: 100%;
           margin: 0;
-          background: var(--bg-0);
-          background-color: var(--bg-0);
+          background: transparent;
+          background-color: transparent;
           color: var(--ink-0);
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
@@ -945,7 +949,8 @@ export default function Page() {
           content: '';
           position: fixed;
           inset: 0;
-          background: var(--bg-0);
+          background: rgba(7, 10, 18, 0.45);
+          pointer-events: none;
           z-index: -1;
         }
 
@@ -1043,7 +1048,7 @@ export default function Page() {
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          background: var(--bg-0);
+          background: transparent;
         }
 
         /* Brand */
@@ -1098,7 +1103,7 @@ export default function Page() {
           min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          background: var(--bg-0);
+          background: transparent;
           overflow: hidden;
         }
 
@@ -1116,10 +1121,21 @@ export default function Page() {
           right: 0;
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: center;
           padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
             max(24px, env(safe-area-inset-left));
           z-index: 10;
+        }
+
+        .landing-topbar-card {
+          width: 100%;
+          max-width: 1080px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 14px;
         }
 
         .landing-top-actions {
@@ -1184,6 +1200,13 @@ export default function Page() {
           justify-content: center;
           padding: 0 24px;
           min-height: 0;
+        }
+
+        .landing-hero-card {
+          width: 100%;
+          max-width: 880px;
+          margin: 0 auto;
+          padding: 40px 48px;
         }
 
         .hero-content {
@@ -1417,8 +1440,7 @@ export default function Page() {
 
         .modal-card {
           position: relative;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: var(--radius-lg);
           padding: 28px;
         }
@@ -1651,7 +1673,6 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: var(--bg-0);
           height: 100dvh;
           overflow: hidden;
         }
@@ -1753,7 +1774,7 @@ export default function Page() {
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
           padding: 0 24px 32px;
-          background: var(--bg-0);
+          background: transparent;
         }
 
         .chat-messages.empty {
@@ -1837,7 +1858,7 @@ export default function Page() {
         .chat-input-area {
           flex-shrink: 0;
           border-top: 1px solid var(--border-subtle);
-          background: var(--bg-0);
+          background: transparent;
         }
 
         .chat-input-inner {
@@ -2038,6 +2059,10 @@ export default function Page() {
             gap: 14px;
           }
 
+          .landing-topbar-card {
+            padding: 10px 14px;
+          }
+
           .desktop-only {
             display: none !important;
           }
@@ -2047,6 +2072,10 @@ export default function Page() {
 
           .landing-hero {
             padding: 0 20px;
+          }
+
+          .landing-hero-card {
+            padding: 28px 24px;
           }
 
           .plm-brand-mark {
@@ -2142,7 +2171,7 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${ibmMono.className} chat-root`}>
+            <div className={`${ibmMono.className} chat-root glass-surface`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
