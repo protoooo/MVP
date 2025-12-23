@@ -270,7 +270,7 @@ function isVisionModel(model) {
 function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
   const messages = []
 
-  // system message replaces v1 preamble in v2
+  // v2 system message
   if (safeText(preamble)) {
     messages.push({ role: 'system', content: safeText(preamble) })
   }
@@ -288,7 +288,6 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
 
   // current user turn with image parts
   const parts = []
-
   const msgText = safeText(userMessage)
   if (msgText) parts.push({ type: 'text', text: msgText })
 
@@ -296,10 +295,7 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
   for (const url of normalizedImages) {
     parts.push({
       type: 'image_url',
-      image_url: {
-        url,
-        detail: 'auto',
-      },
+      image_url: { url, detail: 'auto' },
     })
   }
 
@@ -312,7 +308,8 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
 }
 
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
-  const docs = (documents || []).map((doc) => ({
+  // Legacy documents shape used only for legacy requests.
+  const docsLegacy = (documents || []).map((doc) => ({
     id: doc?.id || 'unknown',
     title: doc?.title || doc?.source || 'Source',
     snippet: doc?.snippet || doc?.text || '',
@@ -320,6 +317,8 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
   }))
 
   // ✅ Vision path (v2 messages with image_url)
+  // IMPORTANT FIX: do NOT send legacy `documents` objects on the v2 messages call
+  // (this is a very common source of 400 errors). Your excerpts are already in `preamble`.
   if (isVisionModel(model) && images) {
     const { messages, normalizedImagesCount } = buildV2Messages({
       preamble,
@@ -332,18 +331,17 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
       throw new Error('Image payload missing after normalization (v2)')
     }
 
-    logger.info('Sending vision request to Cohere', {
+    logger.info('Sending vision request to Cohere (v2)', {
       model,
       messagesCount: messages.length,
       imagesCount: normalizedImagesCount,
-      hasDocuments: docs.length > 0,
+      docsInPreamble: (docsLegacy?.length || 0) > 0,
     })
 
     const respV2 = await cohereClient.chat({
       model,
       messages,
-      // Keep documents in payload, but rely on v2 messages for all instruction text
-      documents: docs,
+      // DO NOT pass documents here (keep payload v2-clean)
     })
 
     respV2.__text = cohereResponseToText(respV2)
@@ -351,18 +349,18 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     return respV2
   }
 
-  // ✅ Text / legacy path (v1 style)
+  // ✅ Text / legacy path (v1-ish style supported by SDK)
   const payloadLegacy = {
     model,
     message,
     preamble,
     chat_history: chatHistory,
-    documents: docs,
+    documents: docsLegacy,
   }
 
   const normalizedImages = normalizeImagesForCohere(images)
   if (normalizedImages.length) {
-    // Some text models may ignore images; attaching is harmless, but can be removed if needed.
+    // Text models may ignore images; attaching is usually harmless.
     payloadLegacy.images = normalizedImages
   }
 
@@ -496,6 +494,9 @@ function safeErrorDetails(err) {
     const parts = []
     const msg = safeLine(err?.message || '')
     if (msg) parts.push(msg)
+
+    const status = err?.status || err?.response?.status
+    if (status) parts.push(`status:${status}`)
 
     const responseData = err?.response?.body ?? err?.response?.data ?? err?.body ?? err?.data
     if (typeof responseData === 'string') {
@@ -899,20 +900,13 @@ Strict rules:
 
     try {
       const buildCohereRequest = (model) => {
-        // For vision we pass the data URL(s) into callCohereChat which will build v2 messages.
         const visionImages = hasImage && fullDataUrl ? [fullDataUrl] : []
-
         return {
           model,
           message: userMessage,
           chatHistory: cohereChatHistory,
           preamble,
-          documents: contextDocs.map((doc) => ({
-            id: doc.id || 'unknown',
-            title: doc.source || 'Source',
-            snippet: doc.text || '',
-            text: doc.text || '',
-          })),
+          documents: contextDocs, // used only for legacy; v2 vision ignores docs in callCohereChat
           images: visionImages,
         }
       }
@@ -923,15 +917,15 @@ Strict rules:
       try {
         const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
-        billedUnits = answerResp?.billed_units || {}
-        tokenUsage = answerResp?.tokens || {}
+        billedUnits = answerResp?.usage?.billed_units || answerResp?.billed_units || {}
+        tokenUsage = answerResp?.usage?.tokens || answerResp?.tokens || {}
 
         modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
         assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
       } catch (visionErr) {
-        // If vision fails with 400, fall back to text-only response (still grounded to docs)
         const detail = safeErrorDetails(visionErr)
-        const is400 = String(detail).includes('400')
+        const statusCode = visionErr?.status || visionErr?.response?.status
+        const is400 = statusCode === 400 || String(detail).includes('status:400') || String(detail).includes(' 400')
 
         if (hasImage && is400) {
           visionFallbackUsed = true
@@ -943,8 +937,8 @@ Strict rules:
 
           const fallbackResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
-          billedUnits = fallbackResp?.billed_units || {}
-          tokenUsage = fallbackResp?.tokens || {}
+          billedUnits = fallbackResp?.usage?.billed_units || fallbackResp?.billed_units || {}
+          tokenUsage = fallbackResp?.usage?.tokens || fallbackResp?.tokens || {}
 
           modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
           assistantMessage = sanitizeOutput(
