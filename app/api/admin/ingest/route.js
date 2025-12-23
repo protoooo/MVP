@@ -20,7 +20,7 @@ const COHERE_EMBED_MODEL = rawModel === "embed-english-v4.0" ? "embed-v4.0" : ra
 
 // ✅ Correct dimension for v4
 const COHERE_EMBED_DIMS =
-  Number(process.env.COHERE_EMBED_DIMS) || 1536
+  Number(process.env.COHERE_EMBED_DIMS) || 1024
 
 export async function POST() {
   try {
@@ -110,6 +110,19 @@ export async function POST() {
         })
 
         const embeddings = embedRes.embeddings.float
+
+        // Guard against DB vector dimension mismatch before insert
+        const actualDims = embeddings?.[0]?.length || 0
+        if (actualDims !== COHERE_EMBED_DIMS) {
+          const message = `Embedding dimension mismatch (got ${actualDims}, expected ${COHERE_EMBED_DIMS}). Check COHERE_EMBED_MODEL/COHERE_EMBED_DIMS env vars and the documents.embedding column dimension.`
+          console.error(message, {
+            model: COHERE_EMBED_MODEL,
+          })
+          return NextResponse.json(
+            { ok: false, error: message },
+            { status: 500 }
+          )
+        }
 
         const records = batch.map((text, idx) => ({
           content: text,
