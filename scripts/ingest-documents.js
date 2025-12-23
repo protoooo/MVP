@@ -38,7 +38,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 const cohere = new CohereClient({ token: COHERE_KEY })
 const rawModel = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
 const COHERE_EMBED_MODEL = rawModel === 'embed-english-v4.0' ? 'embed-v4.0' : rawModel
-const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1024
+const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
