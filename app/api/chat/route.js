@@ -1,4 +1,4 @@
-// app/api/chat/route.js - Cohere text + Aya vision (v2 messages for vision)
+// app/api/chat/route.js - Cohere text + Cohere v2 vision via REST (messages + image_url)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 
 import { NextResponse } from 'next/server'
@@ -18,6 +18,7 @@ export const maxDuration = 60
 
 let searchDocuments = null
 
+// ✅ Keep SDK for v1 endpoints you already use (rerank + legacy chat)
 const cohereClient = new CohereClient({ token: process.env.COHERE_API_KEY })
 
 async function getSearchDocuments() {
@@ -145,11 +146,14 @@ function normalizeImagesForCohere(images) {
 // ============================================================================
 // MODEL CONFIGURATION - COHERE (Text + Vision + Embed + Rerank)
 // ============================================================================
+
 const FEATURE_COHERE = (process.env.FEATURE_COHERE ?? 'true').toLowerCase() !== 'false'
 const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() === 'true'
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
-const COHERE_VISION_MODEL = 'c4ai-aya-vision-8b'
+
+// ✅ Make vision model configurable (recommended)
+const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-8b'
 
 const rawEmbedModel = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
 const COHERE_EMBED_MODEL = rawEmbedModel === 'embed-english-v4.0' ? 'embed-v4.0' : rawEmbedModel
@@ -258,8 +262,46 @@ function cohereResponseToText(resp) {
 }
 
 // ============================================================================
+// COHERE v2 (REST) CHAT CALL FOR VISION
+// ============================================================================
+
+async function callCohereChatV2Rest({ model, messages }) {
+  const apiKey = process.env.COHERE_API_KEY
+  if (!apiKey) throw new Error('COHERE_API_KEY not configured')
+
+  const res = await fetch('https://api.cohere.com/v2/chat', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+    }),
+  })
+
+  const raw = await res.text().catch(() => '')
+  if (!res.ok) {
+    // include body for debugging (trimmed)
+    const snippet = safeLine(raw).slice(0, 900)
+    const err = new Error(`COHERE_V2_CHAT_${res.status}: ${snippet || 'Request failed'}`)
+    err.status = res.status
+    err.body = raw
+    throw err
+  }
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    throw new Error('COHERE_V2_CHAT_BAD_JSON')
+  }
+}
+
+// ============================================================================
 // COHERE CHAT CALL
-// IMPORTANT: Aya Vision expects v2 "messages" with image_url parts
+// - Vision uses v2 REST (messages + image_url)
+// - Text uses SDK legacy (message + preamble + chat_history)
 // ============================================================================
 
 function isVisionModel(model) {
@@ -275,18 +317,16 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
     messages.push({ role: 'system', content: safeText(preamble) })
   }
 
-  // convert v1-ish chatHistory into v2 messages
+  // carry over previous turns (text-only history)
   const hist = Array.isArray(chatHistory) ? chatHistory : []
   for (const h of hist) {
     const roleRaw = String(h?.role || '').toUpperCase()
     const text = safeText(h?.message || '')
     if (!text) continue
-
     if (roleRaw === 'USER') messages.push({ role: 'user', content: text })
     else if (roleRaw === 'CHATBOT' || roleRaw === 'ASSISTANT') messages.push({ role: 'assistant', content: text })
   }
 
-  // current user turn with image parts
   const parts = []
   const msgText = safeText(userMessage)
   if (msgText) parts.push({ type: 'text', text: msgText })
@@ -295,7 +335,7 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
   for (const url of normalizedImages) {
     parts.push({
       type: 'image_url',
-      image_url: { url, detail: 'auto' },
+      image_url: { url },
     })
   }
 
@@ -308,17 +348,15 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
 }
 
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
-  // Legacy documents shape used only for legacy requests.
-  const docsLegacy = (documents || []).map((doc) => ({
+  // build docs payload for legacy SDK calls (optional)
+  const docs = (documents || []).map((doc) => ({
     id: doc?.id || 'unknown',
     title: doc?.title || doc?.source || 'Source',
     snippet: doc?.snippet || doc?.text || '',
     text: doc?.text || '',
   }))
 
-  // ✅ Vision path (v2 messages with image_url)
-  // IMPORTANT FIX: do NOT send legacy `documents` objects on the v2 messages call
-  // (this is a very common source of 400 errors). Your excerpts are already in `preamble`.
+  // ✅ Vision path: Cohere v2 REST only
   if (isVisionModel(model) && images) {
     const { messages, normalizedImagesCount } = buildV2Messages({
       preamble,
@@ -331,36 +369,31 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
       throw new Error('Image payload missing after normalization (v2)')
     }
 
-    logger.info('Sending vision request to Cohere (v2)', {
+    logger.info('Sending vision request to Cohere (v2 REST)', {
       model,
       messagesCount: messages.length,
       imagesCount: normalizedImagesCount,
-      docsInPreamble: (docsLegacy?.length || 0) > 0,
+      hasDocumentsInPreamble: Boolean(safeText(preamble)),
+      docsProvidedToLegacySdk: docs.length,
     })
 
-    const respV2 = await cohereClient.chat({
-      model,
-      messages,
-      // DO NOT pass documents here (keep payload v2-clean)
-    })
-
+    const respV2 = await callCohereChatV2Rest({ model, messages })
     respV2.__text = cohereResponseToText(respV2)
-    respV2.__format = 'v2_messages'
+    respV2.__format = 'v2_rest'
     return respV2
   }
 
-  // ✅ Text / legacy path (v1-ish style supported by SDK)
+  // ✅ Text path (legacy SDK / v1 style)
   const payloadLegacy = {
     model,
     message,
     preamble,
     chat_history: chatHistory,
-    documents: docsLegacy,
+    documents: docs,
   }
 
   const normalizedImages = normalizeImagesForCohere(images)
   if (normalizedImages.length) {
-    // Text models may ignore images; attaching is usually harmless.
     payloadLegacy.images = normalizedImages
   }
 
@@ -370,7 +403,7 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
 
   const respLegacy = await cohereClient.chat(payloadLegacy)
   respLegacy.__text = cohereResponseToText(respLegacy)
-  respLegacy.__format = 'legacy'
+  respLegacy.__format = 'legacy_sdk'
   return respLegacy
 }
 
@@ -495,9 +528,6 @@ function safeErrorDetails(err) {
     const msg = safeLine(err?.message || '')
     if (msg) parts.push(msg)
 
-    const status = err?.status || err?.response?.status
-    if (status) parts.push(`status:${status}`)
-
     const responseData = err?.response?.body ?? err?.response?.data ?? err?.body ?? err?.data
     if (typeof responseData === 'string') {
       parts.push(responseData)
@@ -508,7 +538,7 @@ function safeErrorDetails(err) {
     }
 
     const text = parts.filter(Boolean).join(' | ')
-    return safeLine(text).slice(0, 400) || 'Unknown error'
+    return safeLine(text).slice(0, 600) || 'Unknown error'
   } catch {
     return 'Unknown error'
   }
@@ -906,30 +936,35 @@ Strict rules:
           message: userMessage,
           chatHistory: cohereChatHistory,
           preamble,
-          documents: contextDocs, // used only for legacy; v2 vision ignores docs in callCohereChat
+          documents: contextDocs.map((doc) => ({
+            id: doc.id || 'unknown',
+            title: doc.source || 'Source',
+            snippet: doc.text || '',
+            text: doc.text || '',
+          })),
           images: visionImages,
         }
       }
 
       const req = buildCohereRequest(usedModel)
 
-      // Try vision first; if Cohere rejects the vision request, fall back to text-only.
       try {
         const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
-        billedUnits = answerResp?.usage?.billed_units || answerResp?.billed_units || {}
-        tokenUsage = answerResp?.usage?.tokens || answerResp?.tokens || {}
+        // ✅ v2 REST returns meta.tokens + meta.billed_units
+        billedUnits = answerResp?.meta?.billed_units || answerResp?.billed_units || {}
+        tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
 
         modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
         assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
       } catch (visionErr) {
         const detail = safeErrorDetails(visionErr)
-        const statusCode = visionErr?.status || visionErr?.response?.status
-        const is400 = statusCode === 400 || String(detail).includes('status:400') || String(detail).includes(' 400')
+        const isLikelyBadRequest =
+          detail.includes('COHERE_V2_CHAT_4') || detail.includes('COHERE_V2_CHAT_400') || detail.includes('COHERE_V2_CHAT_422')
 
-        if (hasImage && is400) {
+        if (hasImage && isLikelyBadRequest) {
           visionFallbackUsed = true
-          logger.warn('Vision generation rejected (400). Falling back to text-only.', { detail, model: usedModel })
+          logger.warn('Vision generation rejected. Falling back to text-only.', { detail, model: usedModel })
 
           usedModel = COHERE_TEXT_MODEL
           const fallbackReq = buildCohereRequest(usedModel)
@@ -937,8 +972,8 @@ Strict rules:
 
           const fallbackResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
-          billedUnits = fallbackResp?.usage?.billed_units || fallbackResp?.billed_units || {}
-          tokenUsage = fallbackResp?.usage?.tokens || fallbackResp?.tokens || {}
+          billedUnits = fallbackResp?.meta?.billed_units || fallbackResp?.billed_units || {}
+          tokenUsage = fallbackResp?.meta?.tokens || fallbackResp?.tokens || {}
 
           modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
           assistantMessage = sanitizeOutput(
