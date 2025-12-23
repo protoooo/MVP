@@ -29,49 +29,86 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// IMAGE VALIDATION (NEW)
+// IMAGE VALIDATION (UPDATED FOR COHERE: ALWAYS PRODUCE A DATA URL)
 // ============================================================================
 
-function validateImageData(imageDataUrl) {
-  if (!imageDataUrl) return { valid: false, error: 'No image data' }
+function isBase64Like(s) {
+  if (!s || typeof s !== 'string') return false
+  const trimmed = s.trim()
+  if (trimmed.length < 100) return false
+  const normalized = trimmed.replace(/\s+/g, '')
+  // Accept standard base64 chars (and urlsafe variants just in case)
+  return /^[A-Za-z0-9+/=_-]+$/.test(normalized)
+}
+
+function extractMediaTypeFromHeader(header) {
+  if (!header || typeof header !== 'string') return null
+  return header.match(/data:(image\/[^;]+);/i)?.[1] || null
+}
+
+function normalizeToDataUrl(input) {
+  // Already a data URL
+  if (typeof input === 'string' && input.trim().startsWith('data:image/')) {
+    const trimmed = input.trim()
+    const parts = trimmed.split(',')
+    if (parts.length !== 2) return null
+    const header = parts[0]
+    const base64Raw = parts[1] || ''
+    const mediaType = extractMediaTypeFromHeader(header)
+    const base64Data = base64Raw.trim().replace(/\s+/g, '')
+    if (!mediaType) return null
+    if (!isBase64Like(base64Data)) return null
+    return { mediaType, base64Data, dataUrl: `data:${mediaType};base64,${base64Data}` }
+  }
+
+  // Object format: { data, media_type }
+  if (input && typeof input === 'object') {
+    const data = input.data
+    const mediaType = input.media_type || input.mediaType
+    if (typeof data === 'string' && typeof mediaType === 'string' && mediaType.startsWith('image/')) {
+      const base64Data = data.trim().replace(/\s+/g, '')
+      if (!isBase64Like(base64Data)) return null
+      return { mediaType, base64Data, dataUrl: `data:${mediaType};base64,${base64Data}` }
+    }
+  }
+
+  // Raw base64 (assume jpeg)
+  if (typeof input === 'string' && isBase64Like(input)) {
+    const base64Data = input.trim().replace(/\s+/g, '')
+    const mediaType = 'image/jpeg'
+    return { mediaType, base64Data, dataUrl: `data:${mediaType};base64,${base64Data}` }
+  }
+
+  return null
+}
+
+function validateImageData(imageInput) {
+  if (!imageInput) return { valid: false, error: 'No image data' }
 
   try {
-    if (typeof imageDataUrl !== 'string') {
-      return { valid: false, error: 'Invalid image payload' }
+    const normalized = normalizeToDataUrl(imageInput)
+    if (!normalized) {
+      return {
+        valid: false,
+        error: 'Invalid image payload. Expected a data URL, raw base64 string, or {data, media_type}.',
+      }
     }
 
-    const trimmed = imageDataUrl.trim()
-    if (!trimmed.startsWith('data:image/')) {
-      return { valid: false, error: 'Invalid image format' }
-    }
-
-    const parts = trimmed.split(',')
-    if (parts.length !== 2) {
-      return { valid: false, error: 'Malformed image data' }
-    }
-
-    const [header, base64DataRaw] = parts
-    const base64Data = (base64DataRaw || '').trim()
+    const { mediaType, base64Data, dataUrl } = normalized
 
     if (!base64Data || base64Data.length < 100) {
       return { valid: false, error: 'Image data too small' }
     }
 
-    const mediaType = header.match(/data:(image\/[^;]+);/i)?.[1]
-    if (!mediaType) {
+    if (!mediaType || !mediaType.startsWith('image/')) {
       return { valid: false, error: 'Cannot determine image type' }
-    }
-
-    // lightweight base64 sanity check
-    const normalized = base64Data.replace(/\s+/g, '')
-    if (!/^[A-Za-z0-9+/=_-]+$/.test(normalized)) {
-      return { valid: false, error: 'Invalid base64 image data' }
     }
 
     return {
       valid: true,
-      base64Data: normalized,
+      base64Data,
       mediaType,
+      dataUrl,
     }
   } catch (error) {
     logger.error('Image validation failed', { error: error?.message })
@@ -236,6 +273,17 @@ function isModelAccessError(err) {
   return err?.status === 403 || msg.includes('not enabled') || msg.includes('access') || msg.includes('permission')
 }
 
+function normalizeImagesForCohere(images) {
+  if (!images || !Array.isArray(images) || images.length === 0) return []
+
+  const out = []
+  for (const img of images) {
+    const normalized = normalizeToDataUrl(img)
+    if (normalized?.dataUrl) out.push(normalized.dataUrl)
+  }
+  return out
+}
+
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
   const payload = {
     model,
@@ -250,8 +298,10 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     })),
   }
 
-  if (images && images.length > 0) {
-    payload.images = images
+  // ✅ COHERE FIX: images must be DATA URL strings
+  const normalizedImages = normalizeImagesForCohere(images)
+  if (normalizedImages.length > 0) {
+    payload.images = normalizedImages
   }
 
   return cohereClient.chat(payload)
@@ -321,29 +371,6 @@ function extractSearchKeywords(text) {
 }
 
 // ============================================================================
-// IMAGE HELPERS (legacy; kept for compatibility)
-// ============================================================================
-
-function extractBase64FromDataUrl(dataUrl) {
-  if (!dataUrl || typeof dataUrl !== 'string') return null
-  const s = dataUrl.trim()
-  if (!s) return null
-  if (s.startsWith('data:image/')) {
-    const parts = s.split(',')
-    return parts[1] || null
-  }
-  return s
-}
-
-function getMediaTypeFromDataUrl(dataUrl) {
-  if (!dataUrl || typeof dataUrl !== 'string') return 'image/jpeg'
-  if (dataUrl.includes('data:image/png')) return 'image/png'
-  if (dataUrl.includes('data:image/gif')) return 'image/gif'
-  if (dataUrl.includes('data:image/webp')) return 'image/webp'
-  return 'image/jpeg'
-}
-
-// ============================================================================
 // MESSAGE PARSING
 // ============================================================================
 
@@ -401,258 +428,6 @@ function dedupeByText(items) {
   return out
 }
 
-function stableSortByScore(a, b) {
-  const sa = Number(a?.score || 0)
-  const sb = Number(b?.score || 0)
-  if (sb !== sa) return sb - sa
-
-  const srcA = safeLine(a?.source || '')
-  const srcB = safeLine(b?.source || '')
-  if (srcA !== srcB) return srcA.localeCompare(srcB)
-
-  const pa = Number(a?.page || 0)
-  const pb = Number(b?.page || 0)
-  return pa - pb
-}
-
-function diversifyBySource(docs, { maxTotal = 40, perSourceCap = 4 } = {}) {
-  const bySource = new Map()
-
-  for (const d of docs || []) {
-    const src = safeLine(d?.source || 'Unknown') || 'Unknown'
-    if (!bySource.has(src)) bySource.set(src, [])
-    bySource.get(src).push(d)
-  }
-
-  for (const [src, arr] of bySource.entries()) {
-    arr.sort(stableSortByScore)
-    bySource.set(src, arr)
-  }
-
-  const sources = Array.from(bySource.keys()).sort((a, b) => a.localeCompare(b))
-  const picked = []
-  const pickedCount = new Map(sources.map((s) => [s, 0]))
-
-  let progressed = true
-  while (picked.length < maxTotal && progressed) {
-    progressed = false
-    for (const src of sources) {
-      if (picked.length >= maxTotal) break
-      const used = pickedCount.get(src) || 0
-      if (used >= perSourceCap) continue
-
-      const arr = bySource.get(src) || []
-      if (arr.length === 0) continue
-
-      const next = arr.shift()
-      if (!next) continue
-
-      picked.push(next)
-      pickedCount.set(src, used + 1)
-      progressed = true
-    }
-  }
-
-  return picked
-}
-
-function buildExcerptContext(docs, opts = {}) {
-  const prefix = opts.prefix || 'DOC'
-  const MAX_CHARS = opts.maxChars || 34000
-  const startAt = opts.startAt || 1
-
-  const excerpts = []
-  let buf = ''
-  let n = startAt
-
-  for (const d of docs || []) {
-    const source = safeLine(d?.source || 'Unknown')
-    const page = d?.page ? ` (p.${d.page})` : ''
-    const text = safeText(d?.text || '')
-    if (!text) continue
-
-    const id = `${prefix}_${n}`
-    const header = `[${id}] ${source}${page}\n`
-    const chunk = `${header}${text}\n\n`
-
-    if (buf.length + chunk.length > MAX_CHARS) break
-
-    excerpts.push({ id, source, page: d?.page || null })
-    buf += chunk
-    n++
-  }
-
-  return { excerptIndex: excerpts, contextText: buf.trim() }
-}
-
-// ============================================================================
-// JSON EXTRACTION
-// ============================================================================
-
-function extractJsonObject(text) {
-  const raw = safeText(text || '')
-  if (!raw) return null
-  const unfenced = raw.replace(/```json/gi, '```').replace(/```/g, '')
-  const first = unfenced.indexOf('{')
-  const last = unfenced.lastIndexOf('}')
-  if (first === -1 || last === -1 || last <= first) return null
-  const candidate = unfenced.slice(first, last + 1)
-  try {
-    return JSON.parse(candidate)
-  } catch {
-    return null
-  }
-}
-
-// ============================================================================
-// VIOLATION CLASSIFICATION
-// ============================================================================
-
-function normalizeLikelihood(x) {
-  const v = safeLine(x)
-  if (ALLOWED_LIKELIHOOD.has(v)) return v
-  return 'Unclear'
-}
-
-function normalizeClass(x) {
-  const v = safeLine(x)
-  if (ALLOWED_CLASS.has(v)) return v
-  return 'Unclear'
-}
-
-function classLabel(cls) {
-  if (cls === 'P') return 'Priority'
-  if (cls === 'Pf') return 'Priority Foundation'
-  if (cls === 'C') return 'Core'
-  return 'Unclear'
-}
-
-function deadlineByClass(cls) {
-  if (cls === 'P') return 'Immediately'
-  if (cls === 'Pf') return 'Within 10 days'
-  if (cls === 'C') return 'Within 90 days'
-  return 'Check with inspector'
-}
-
-function pickSourcesFromIds(sourceIds, excerptIndex) {
-  const map = new Map((excerptIndex || []).map((e) => [e.id, e]))
-  const used = []
-  for (const sid of sourceIds || []) {
-    const id = safeLine(sid)
-    if (!id) continue
-    const ex = map.get(id)
-    if (ex) used.push(ex)
-  }
-  return used
-}
-
-function normalizeSourceIds(x) {
-  if (!Array.isArray(x)) return []
-  return x.map(safeLine).filter(Boolean).slice(0, 6)
-}
-
-// ============================================================================
-// OUTPUT RENDERING
-// ============================================================================
-
-function renderAuditOutput(payload, opts = {}) {
-  const { maxItems = 4, includeFines = false, fullAudit = false } = opts
-  const status = safeLine(payload?.status || 'unknown')
-  const findings = Array.isArray(payload?.findings) ? payload.findings : []
-  const questions = Array.isArray(payload?.questions) ? payload.questions : []
-  const enforcement = safeLine(payload?.enforcement || '')
-
-  if (status === 'clear' || findings.length === 0) {
-    const base = 'No violations detected.'
-    if (questions.length > 0 && fullAudit) {
-      const qs = questions
-        .slice(0, 2)
-        .map((q, i) => `To confirm (${i + 1}): ${clampShort(q, 160)}`)
-        .join('\n')
-      return sanitizeOutput(`${base}\n\n${qs}`)
-    }
-    return sanitizeOutput(base)
-  }
-
-  const lines = ['Potential issues found:', '']
-
-  findings.slice(0, maxItems).forEach((f, idx) => {
-    const cls = normalizeClass(f?.class)
-    const likelihood = normalizeLikelihood(f?.likelihood)
-
-    const observed = clampShort(f?.observed || f?.seeing || f?.evidence || '', 240)
-    const violation = clampShort(f?.violation || f?.rule || f?.title || 'Possible violation', 240)
-    const vtype = clampShort(f?.violation_type || f?.type || '', 160)
-
-    const why = clampShort(f?.why || '', 240)
-    const fix = clampShort(f?.fix || '', 240)
-    const deadline = safeLine(f?.deadline) || deadlineByClass(cls)
-    const ifNotFixed = clampShort(f?.if_not_fixed || f?.consequence || '', 240)
-
-    const title = vtype || clampShort(violation, 70) || 'Compliance issue'
-
-    const metaBits = [`${classLabel(cls)}`, `Fix by: ${deadline}`]
-    if (likelihood !== 'Unclear') metaBits.push(`Confidence: ${likelihood}`)
-
-    lines.push(`Issue ${idx + 1} — ${title}`)
-    lines.push(metaBits.join(' • '))
-
-    if (observed) lines.push(`Observed: ${observed}`)
-    if (violation) lines.push(`Violation: ${violation}`)
-
-    if (why) lines.push(`Why it matters: ${why}`)
-    if (fix) lines.push(`Remediation: ${fix}`)
-    if (ifNotFixed) lines.push(`If not fixed: ${ifNotFixed}`)
-
-    lines.push('')
-  })
-
-  if (includeFines && enforcement) {
-    lines.push('If not corrected:')
-    lines.push(enforcement)
-    lines.push('')
-  }
-
-  if (questions.length > 0 && fullAudit) {
-    for (const q of questions.slice(0, 2)) {
-      const qq = clampShort(q, 180)
-      if (qq) lines.push(`To clarify: ${qq}`)
-    }
-  }
-
-  return sanitizeOutput(lines.join('\n'))
-}
-
-function renderGuidanceOutput(payload) {
-  const answer = safeLine(payload?.answer || '')
-  const steps = Array.isArray(payload?.steps) ? payload.steps : []
-  const questions = Array.isArray(payload?.questions) ? payload.questions : []
-
-  const lines = []
-
-  if (answer) lines.push(answer)
-
-  if (steps.length > 0) {
-    lines.push('')
-    lines.push('Recommended steps:')
-    steps.slice(0, 6).forEach((s, i) => {
-      const step = clampShort(s, 200)
-      if (step) lines.push(`${i + 1}) ${step}`)
-    })
-  }
-
-  if (questions.length > 0) {
-    lines.push('')
-    lines.push('Clarifying questions:')
-    questions.slice(0, 2).forEach((q, i) => {
-      const qq = clampShort(q, 200)
-      if (qq) lines.push(`${i + 1}) ${qq}`)
-    })
-  }
-
-  return sanitizeOutput(lines.join('\n'))
-}
-
 // ============================================================================
 // USER-FRIENDLY ERROR MESSAGES
 // ============================================================================
@@ -708,21 +483,6 @@ async function safeLogUsage(payload) {
   }
 }
 
-function buildCacheStats(usage) {
-  if (!usage) return null
-  const promptTokens = usage.prompt_tokens ?? usage.input_tokens ?? 0
-  const completionTokens = usage.completion_tokens ?? usage.output_tokens ?? 0
-  const totalTokens =
-    usage.total_tokens ??
-    (typeof promptTokens === 'number' && typeof completionTokens === 'number' ? promptTokens + completionTokens : null)
-
-  return {
-    prompt_tokens: promptTokens,
-    completion_tokens: completionTokens,
-    total_tokens: totalTokens ?? 0,
-  }
-}
-
 function getSessionInfo(request) {
   const forwarded = request.headers.get('x-forwarded-for')
   const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown'
@@ -759,15 +519,17 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const messages = Array.isArray(body?.messages) ? body.messages : []
 
-    const imageDataUrl = body?.image || body?.imageBase64 || body?.image_url
-    const hasImage = Boolean(imageDataUrl)
+    // Accept multiple possible shapes
+    const imageInput = body?.image || body?.imageBase64 || body?.image_url || body?.imageDataUrl || body?.image_data
+    const hasImage = Boolean(imageInput)
 
-    // ✅ FIXED: Validate image before processing
+    // ✅ FIXED: Validate/normalize image before processing
     let imageBase64 = null
     let imageMediaType = null
+    let fullDataUrl = null
 
     if (hasImage) {
-      const validation = validateImageData(imageDataUrl)
+      const validation = validateImageData(imageInput)
 
       if (!validation.valid) {
         logger.warn('Invalid image data', { error: validation.error })
@@ -776,6 +538,7 @@ export async function POST(request) {
 
       imageBase64 = validation.base64Data
       imageMediaType = validation.mediaType
+      fullDataUrl = validation.dataUrl
 
       logger.info('Image validated', {
         mediaType: imageMediaType,
@@ -794,7 +557,11 @@ export async function POST(request) {
     let userMessage =
       (typeof body.message === 'string' && body.message.trim()) ||
       (Array.isArray(body.messages)
-        ? (body.messages.slice().reverse().find((m) => m?.role === 'user' && typeof m?.content === 'string')?.content || '').trim()
+        ? (body.messages
+            .slice()
+            .reverse()
+            .find((m) => m?.role === 'user' && typeof m?.content === 'string')?.content || ''
+          ).trim()
         : '')
 
     if (!userMessage && Array.isArray(messages)) {
@@ -987,7 +754,7 @@ export async function POST(request) {
 
     const searchDocumentsFn = await getSearchDocuments()
 
-    // Placeholder for future image-derived search cues (Command-A-Vision output can be plumbed here)
+    // Placeholder for future image-derived search cues
     const vision = {
       summary: '',
       searchTerms: '',
@@ -1013,6 +780,7 @@ export async function POST(request) {
     let rerankedDocs = []
     let rerankUsed = false
     let rerankCandidates = 0
+
     try {
       const initialDocs = await withTimeout(
         searchDocumentsFn(searchQuery, county, TOPK_PER_QUERY),
@@ -1067,7 +835,6 @@ export async function POST(request) {
     }
 
     const contextDocs = rerankedDocs.slice(0, MAX_DOCS_FOR_CONTEXT)
-    const excerptIndex = contextDocs.map((doc, idx) => doc.id || `DOC_${idx + 1}`)
 
     const excerptBlock =
       contextDocs.length === 0
@@ -1136,7 +903,7 @@ Strict rules:
     const preamble = preambleParts.join('\n\n')
 
     // ========================================================================
-    // GENERATE RESPONSE (FIXED IMAGE PASS-THROUGH)
+    // GENERATE RESPONSE (FIXED IMAGE PASS-THROUGH FOR COHERE)
     // ========================================================================
 
     let modelText = ''
@@ -1148,7 +915,7 @@ Strict rules:
 
     try {
       const buildCohereRequest = (model) => {
-        const request = {
+        const requestPayload = {
           model,
           message: userMessage,
           chatHistory: cohereChatHistory,
@@ -1161,27 +928,23 @@ Strict rules:
           })),
         }
 
-        // ✅ FIXED: Only add images if we have valid base64 data
-        if (hasImage && imageBase64 && imageMediaType) {
-          request.images = [
-            {
-              data: imageBase64,
-              media_type: imageMediaType,
-            },
-          ]
+        // ✅ COHERE FIX: pass image as DATA URL string(s)
+        if (hasImage && fullDataUrl) {
+          requestPayload.images = [fullDataUrl]
 
-          logger.info('Vision request with image', {
+          logger.info('Vision request with image (data URL)', {
             mediaType: imageMediaType,
-            dataLength: imageBase64.length,
+            dataLength: imageBase64?.length || 0,
+            dataUrlPrefix: fullDataUrl.slice(0, 30),
           })
         }
 
-        return request
+        return requestPayload
       }
 
       const invokePrimary = () => {
-        const request = buildCohereRequest(usedModel)
-        return withTimeout(callCohereChat(request), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+        const req = buildCohereRequest(usedModel)
+        return withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
       }
 
       let answerResp
@@ -1191,8 +954,8 @@ Strict rules:
         if (hasImage && isModelAccessError(err)) {
           logger.warn('Cohere vision access failed, attempting Aya Vision fallback', { error: err?.message })
           usedModel = 'c4ai-aya-vision-8b'
-          const fallbackRequest = buildCohereRequest(usedModel)
-          answerResp = await withTimeout(callCohereChat(fallbackRequest), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+          const fallbackReq = buildCohereRequest(usedModel)
+          answerResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
         } else {
           throw err
         }
@@ -1204,7 +967,6 @@ Strict rules:
       modelText = answerResp?.text || responseOutputToString(answerResp) || ''
       assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
 
-      // ✅ ADDED: Log successful vision response
       if (hasImage) {
         logger.info('Vision response received', {
           model: usedModel,
