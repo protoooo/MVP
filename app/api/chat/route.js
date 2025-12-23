@@ -342,11 +342,8 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     const respV2 = await cohereClient.chat({
       model,
       messages,
-      // Compatibility: some deployments still accept message/preamble/chat_history
-      message: safeText(message) || 'Analyze the attached image in context of the provided documents.',
-      preamble,
+      // Keep documents in payload, but rely on v2 messages for all instruction text
       documents: docs,
-      chat_history: chatHistory,
     })
 
     respV2.__text = cohereResponseToText(respV2)
