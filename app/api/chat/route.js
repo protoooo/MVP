@@ -37,7 +37,6 @@ function isBase64Like(s) {
   const trimmed = s.trim()
   if (trimmed.length < 100) return false
   const normalized = trimmed.replace(/\s+/g, '')
-  // Accept standard base64 chars (and urlsafe variants just in case)
   return /^[A-Za-z0-9+/=_-]+$/.test(normalized)
 }
 
@@ -127,24 +126,20 @@ function validateImageData(imageInput) {
 function normalizeImagesForCohere(images) {
   if (!images) return []
 
-  // Accept either a single image OR an array
   const arr = Array.isArray(images) ? images : [images]
   const out = []
 
   for (const img of arr) {
-    // If it's already a data URL string, keep it
     if (typeof img === 'string' && img.startsWith('data:image/')) {
       out.push(img)
       continue
     }
 
-    // If it's object with dataUrl, keep it
     if (img?.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.startsWith('data:image/')) {
       out.push(img.dataUrl)
       continue
     }
 
-    // Otherwise normalize via helper
     const normalized = normalizeToDataUrl(img)
     if (normalized?.dataUrl) out.push(normalized.dataUrl)
   }
@@ -170,8 +165,8 @@ const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
 
 // Retrieval + rerank config
-const TOPK_PER_QUERY = 20 // initial vector similarity candidates
-const MAX_DOCS_FOR_CONTEXT = 5 // after rerank, clamp to top 3-5
+const TOPK_PER_QUERY = 20
+const MAX_DOCS_FOR_CONTEXT = 5
 const RERANK_TOP_N = 5
 const MIN_RERANK_DOCS = 3
 const PER_SOURCE_CAP = 4
@@ -310,30 +305,125 @@ function isModelAccessError(err) {
 }
 
 // ============================================================================
-// COHERE CHAT CALL (FIXED: VISION EXPECTS images AS DATA URL STRINGS)
+// COHERE CHAT CALL
+// FIX: Vision models expect the image in messages[].content[] (type: image_url)
+// We attempt v2 "messages" format first, then fall back to legacy "message/chat_history/images".
 // ============================================================================
 
+function cohereChatHistoryToMessages(chatHistory = []) {
+  const out = []
+  for (const h of chatHistory || []) {
+    const text = safeText(h?.message || '')
+    if (!text) continue
+
+    out.push({
+      role: h.role === 'CHATBOT' ? 'assistant' : 'user',
+      content: [{ type: 'text', text }],
+    })
+  }
+  return out
+}
+
+function buildUserContentParts(message, images) {
+  const parts = []
+  const text = safeText(message || '')
+  if (text) parts.push({ type: 'text', text })
+
+  const normalizedImages = normalizeImagesForCohere(images)
+  for (const url of normalizedImages) {
+    parts.push({
+      type: 'image_url',
+      image_url: { url }, // data:image/...;base64,...
+      detail: 'auto',
+    })
+  }
+
+  // IMPORTANT: If there’s no text but there is an image, keep a minimal text part
+  // so the model always has an instruction.
+  if (parts.length > 0 && parts[0]?.type !== 'text') {
+    parts.unshift({ type: 'text', text: 'Inspect the attached image.' })
+  }
+
+  return parts
+}
+
+function cohereResponseToText(resp) {
+  // v2 shape: resp.message.content = [{type:'text', text:'...'}]
+  const msg = resp?.message
+  const content = Array.isArray(msg?.content) ? msg.content : []
+  for (const c of content) {
+    if (typeof c?.text === 'string' && c.text.trim()) return c.text
+  }
+
+  // legacy shapes
+  if (typeof resp?.text === 'string' && resp.text.trim()) return resp.text
+  if (typeof resp?.output_text === 'string' && resp.output_text.trim()) return resp.output_text
+
+  // extra fallbacks
+  const alt = responseOutputToString(resp)
+  if (alt && alt.trim()) return alt
+
+  return ''
+}
+
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
-  const payload = {
+  const docs = (documents || []).map((doc) => ({
+    id: doc?.id || 'unknown',
+    title: doc?.title || doc?.source || 'Source',
+    snippet: doc?.snippet || doc?.text || '',
+    text: doc?.text || '',
+  }))
+
+  const normalizedImages = normalizeImagesForCohere(images)
+  const wantsVision = normalizedImages.length > 0
+
+  // --- Try v2 messages format (required for many vision chat models) ---
+  try {
+    const historyMsgs = cohereChatHistoryToMessages(chatHistory)
+    const userMsg = {
+      role: 'user',
+      content: buildUserContentParts(message, normalizedImages),
+    }
+
+    const payloadV2 = {
+      model,
+      preamble,
+      messages: [...historyMsgs, userMsg],
+      documents: docs,
+    }
+
+    const resp = await cohereClient.chat(payloadV2)
+    resp.__text = cohereResponseToText(resp)
+    resp.__format = 'v2_messages'
+    return resp
+  } catch (err) {
+    // If messages format isn't supported by the SDK/version/model, fall back.
+    logger.warn('Cohere v2 messages payload failed, falling back to legacy chat payload', {
+      error: err?.message,
+      model,
+      hasImages: wantsVision,
+    })
+  }
+
+  // --- Legacy payload fallback ---
+  const payloadLegacy = {
     model,
     message,
     preamble,
     chat_history: chatHistory,
-    documents: (documents || []).map((doc) => ({
-      id: doc?.id || 'unknown',
-      title: doc?.title || doc?.source || 'Source',
-      snippet: doc?.snippet || doc?.text || '',
-      text: doc?.text || '',
-    })),
+    documents: docs,
   }
 
-  // ✅ COHERE FIX: images must be DATA URL strings
-  const normalizedImages = normalizeImagesForCohere(images)
-  if (normalizedImages.length > 0) {
-    payload.images = normalizedImages
+  // Some SDK/model combos accept legacy `images` as data URL strings,
+  // but if they ignore it, v2_messages above is what fixes vision behavior.
+  if (wantsVision) {
+    payloadLegacy.images = normalizedImages
   }
 
-  return cohereClient.chat(payload)
+  const respLegacy = await cohereClient.chat(payloadLegacy)
+  respLegacy.__text = cohereResponseToText(respLegacy)
+  respLegacy.__format = 'legacy'
+  return respLegacy
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
@@ -931,7 +1021,7 @@ Strict rules:
     const preamble = preambleParts.join('\n\n')
 
     // ========================================================================
-    // GENERATE RESPONSE (FIXED IMAGE PASS-THROUGH FOR COHERE)
+    // GENERATE RESPONSE (FIXED IMAGE PASS-THROUGH FOR COHERE VISION)
     // ========================================================================
 
     let modelText = ''
@@ -954,16 +1044,15 @@ Strict rules:
             snippet: doc.text || '',
             text: doc.text || '',
           })),
+          images: hasImage && fullDataUrl ? [fullDataUrl] : [],
         }
 
-        // ✅ COHERE FIX: pass image as DATA URL string(s)
         if (hasImage && fullDataUrl) {
-          requestPayload.images = [fullDataUrl]
-
-          logger.info('Vision request with image (data URL)', {
+          logger.info('Vision request prepared', {
             mediaType: imageMediaType,
             dataLength: imageBase64?.length || 0,
             dataUrlPrefix: fullDataUrl.slice(0, 30),
+            model,
           })
         }
 
@@ -992,7 +1081,7 @@ Strict rules:
       billedUnits = answerResp?.billed_units || {}
       tokenUsage = answerResp?.tokens || {}
 
-      modelText = answerResp?.text || responseOutputToString(answerResp) || ''
+      modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
       assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
 
       if (hasImage) {
@@ -1000,6 +1089,7 @@ Strict rules:
           model: usedModel,
           responseLength: assistantMessage.length,
           hasImage: true,
+          payloadFormat: answerResp?.__format || 'unknown',
         })
       }
     } catch (e) {
