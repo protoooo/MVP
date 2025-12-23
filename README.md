@@ -91,7 +91,6 @@ protocollm/
 
 ```bash
 # AI Services
-OPENAI_API_KEY=sk-openai-...
 COHERE_API_KEY=...
 
 # Database & Auth
@@ -280,7 +279,6 @@ Expected response:
     "db": true,
     "env": true,
     "stripe": true,
-    "openai": true,
     "cohere": true
   }
 }
@@ -308,12 +306,6 @@ npm install
 npm run build
 ```
 
-### "OpenAI is not defined" error
-**Fix:**
-- Ensure `OPENAI_API_KEY` is set in your environment
-- Run `npm install` to confirm the `openai` SDK is available
-- Restart the dev server after updating env vars
-
 ### Vector search returns no results
 **Fix:**
 ```sql
@@ -329,7 +321,6 @@ npm run ingest
 ```
 
 ### "Expected 1536 dimensions, got 1024"
-**Cause:** Database configured for OpenAI embeddings  
 **Fix:**
 ```sql
 ALTER TABLE documents DROP COLUMN embedding;
@@ -430,7 +421,6 @@ git push origin feature/your-feature
 
 ## 📚 Additional Resources
 
-- [OpenAI Platform Docs](https://platform.openai.com/docs)
 - [Cohere Embeddings Guide](https://docs.cohere.com/docs/embeddings)
 - [Supabase pgvector Guide](https://supabase.com/docs/guides/ai/vector-columns)
 - [Railway Deployment Docs](https://docs.railway.app)
