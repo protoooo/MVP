@@ -36,6 +36,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: false }
 })
 const cohere = new CohereClient({ token: COHERE_KEY })
+const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
+const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -64,9 +66,10 @@ async function getEmbeddings(texts, retries = 0) {
   try {
     const response = await cohere.embed({
       texts: texts,
-      model: 'embed-english-v3.0',
+      model: COHERE_EMBED_MODEL,
       inputType: 'search_document',
-      embeddingTypes: ['float']
+      embeddingTypes: ['float'],
+      truncate: 'END',
     })
     
     return response.embeddings.float
@@ -99,7 +102,7 @@ async function testSupabase() {
     
     const testDoc = {
       content: "TEST_DOCUMENT_DELETE_ME",
-      embedding: new Array(1024).fill(0), // Cohere embed-english-v3.0 = 1024 dims
+      embedding: new Array(COHERE_EMBED_DIMS).fill(0), // Cohere embed-v4.0 dims from env
       metadata: { test: true }
     }
     
@@ -139,9 +142,10 @@ async function testCohere() {
   try {
     const response = await cohere.embed({
       texts: ["test connection"],
-      model: 'embed-english-v3.0',
+      model: COHERE_EMBED_MODEL,
       inputType: 'search_document',
-      embeddingTypes: ['float']
+      embeddingTypes: ['float'],
+      truncate: 'END',
     })
     
     const embedding = response.embeddings.float[0]
