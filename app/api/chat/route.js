@@ -2,11 +2,10 @@
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 //
 // ✅ Updates in this version:
-// - Removes all DOC_ IDs / citations / “Reference documents” blocks from the prompt & output
-// - Keeps retrieval grounding, but treats docs as INTERNAL context only
+// - Actionable violation output: Type + Issue + Remediation (no “confidence” anywhere)
+// - Response starts with “No violations observed.” OR “Violations observed:” OR “Need a quick clarification:”
+// - Keeps retrieval grounding INTERNAL ONLY (no citations, no DOC IDs, no page refs in output)
 // - Vision calls Cohere v2 REST correctly (messages + image_url blocks)
-// - Fixes the “Cite DOC IDs” default image-only userMessage
-// - Adds a final safety scrub to remove any stray DOC_# strings from responses
 // - Keeps your auth/license/memory/usage plumbing intact
 
 import { NextResponse } from 'next/server'
@@ -198,12 +197,26 @@ function stripDocIds(text) {
     .replace(/\bDOCS?[_\s-]*\d+\b/gi, '')
 }
 
+function stripPageLikeRefs(text) {
+  // extra safety: remove leaked page-style refs if the model parrots them
+  if (!text) return ''
+  return String(text)
+    .replace(/\(p\.\s*\d+\)/gi, '')
+    .replace(/\bp\.\s*\d+\b/gi, '')
+}
+
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
-  // Remove markdown-ish tokens and doc labels if they sneak in
-  out = out.replace(/[`#*]/g, '')
+  // Remove codefences / headings if they sneak in, but KEEP markdown asterisks
+  out = out.replace(/```/g, '')
+  out = out.replace(/^\s*#{1,6}\s+/gm, '')
+
+  // Remove doc labels / ids / page-ish refs
   out = stripDocIds(out)
+  out = stripPageLikeRefs(out)
+
+  // Normalize spacing
   out = out.replace(/\n{3,}/g, '\n\n')
 
   // Remove emojis
@@ -211,6 +224,11 @@ function sanitizeOutput(text) {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
+
+  // Hard remove “confidence” anywhere (requirement)
+  out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
+  out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
+  out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
   const HARD_LIMIT = 2400
   if (out.length > HARD_LIMIT) {
@@ -275,6 +293,132 @@ function cohereResponseToText(resp) {
   if (alt && alt.trim()) return alt
 
   return ''
+}
+
+// ============================================================================
+// VIOLATION TYPE HEURISTIC + OUTPUT ENFORCEMENT (NO CONFIDENCE)
+// ============================================================================
+
+function determineViolationType(issue) {
+  const typeMap = {
+    temperature: 'Temperature Control',
+    cooling: 'Temperature Control',
+    reheating: 'Temperature Control',
+    refrigeration: 'Temperature Control',
+    'hot holding': 'Temperature Control',
+    'cold holding': 'Temperature Control',
+
+    storage: 'Food Storage',
+    'date marking': 'Labeling',
+    labels: 'Labeling',
+    labeling: 'Labeling',
+
+    'cross contamination': 'Cross-Contamination',
+    contamination: 'Cross-Contamination',
+    'raw meat': 'Food Handling',
+    'ready to eat': 'Food Handling',
+    thawing: 'Food Preparation',
+    cooking: 'Food Preparation',
+
+    'hand washing': 'Sanitation',
+    gloves: 'Personal Hygiene',
+    sanitizer: 'Sanitation',
+    cleaning: 'Sanitation',
+    surfaces: 'Sanitation',
+    utensils: 'Sanitation',
+
+    equipment: 'Equipment Maintenance',
+    thermometer: 'Equipment Maintenance',
+
+    pest: 'Pest Control',
+    chemicals: 'Chemical Handling',
+    toxic: 'Chemical Handling',
+    allergen: 'Allergen Control',
+    'employee health': 'Employee Health',
+
+    sink: 'Plumbing',
+    drainage: 'Plumbing',
+    ventilation: 'Facility Maintenance',
+    permit: 'Licensing',
+    inspection: 'Compliance',
+  }
+
+  const lowerIssue = String(issue || '').toLowerCase()
+  for (const keyword in typeMap) {
+    if (lowerIssue.includes(keyword)) return typeMap[keyword]
+  }
+  return 'General Compliance'
+}
+
+function enforceViolationFormat(text) {
+  let out = safeText(text || '')
+
+  // Normalize the three allowed lead-ins
+  out = out.replace(/^No clear violations observed\./i, 'No violations observed.')
+  out = out.replace(/^No violations found\./i, 'No violations observed.')
+  out = out.replace(/^Potential issues observed:/i, 'Violations observed:')
+  out = out.replace(/^Issues observed:/i, 'Violations observed:')
+
+  // Remove any lingering “confidence” language
+  out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
+  out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
+  out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
+
+  // If the model used "- X. Fix: Y." style bullets, convert to Type/Issue/Remediation
+  if (/^Violations observed:/i.test(out) && !/\bType\s*:\s*/i.test(out)) {
+    out = out.replace(
+      /-\s*(.*?)\s*\.?\s*(?:Fix|Remediation)\s*:\s*(.*?)(?=\n-\s|\n{2,}|$)/gis,
+      (match, issueRaw, remRaw) => {
+        const issue = safeLine(issueRaw)
+        const remediation = safeLine(remRaw)
+        if (!issue || !remediation) return match
+        const violationType = determineViolationType(issue)
+        return `- **Type**: ${violationType}\n  **Issue**: ${issue}\n  **Remediation**: ${remediation}`
+      }
+    )
+  }
+
+  // If it still starts with Violations observed but lacks any Type blocks, do a light best-effort conversion
+  if (/^Violations observed:/i.test(out) && !/\bType\s*:\s*/i.test(out)) {
+    const lines = out.split('\n')
+    const rebuilt = []
+    let i = 0
+    while (i < lines.length) {
+      const line = lines[i]
+      if (i === 0) {
+        rebuilt.push('Violations observed:')
+        i++
+        continue
+      }
+
+      const bulletMatch = line.match(/^\s*[-•]\s+(.*)$/)
+      if (!bulletMatch) {
+        rebuilt.push(line)
+        i++
+        continue
+      }
+
+      const bulletText = safeText(bulletMatch[1])
+      const split = bulletText.match(/^(.*?)(?:\s*(?:Fix|Remediation|Action)\s*[:\-]\s*)(.*)$/i)
+
+      if (split) {
+        const issue = safeLine(split[1])
+        const remediation = safeLine(split[2])
+        const violationType = determineViolationType(issue)
+        rebuilt.push(`- **Type**: ${violationType}`)
+        rebuilt.push(`  **Issue**: ${issue}`)
+        rebuilt.push(`  **Remediation**: ${remediation}`)
+      } else {
+        // Keep as-is (better than fabricating remediation)
+        rebuilt.push(`- ${bulletText}`)
+      }
+
+      i++
+    }
+    out = rebuilt.join('\n')
+  }
+
+  return out.trim()
 }
 
 // ============================================================================
@@ -664,10 +808,10 @@ export async function POST(request) {
       userMessage = safeLine(messageContentToString(fallback?.content))
     }
 
-    // ✅ If image-only, do NOT include citations language
+    // ✅ If image-only: ask for violations + remediation + type; ask clarifying instead of guessing
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for potential food safety or sanitation issues. If the image is unclear, ask up to three short clarifying questions instead of guessing.'
+        'Review the photo for food safety / sanitation violations. For each violation, provide the violation type, what is wrong, and clear remediation steps. If the image is unclear or key details are missing, ask up to three short clarification questions instead of guessing.'
     }
 
     if (!userMessage) {
@@ -872,7 +1016,6 @@ export async function POST(request) {
     const contextDocs = rerankedDocs.slice(0, MAX_DOCS_FOR_CONTEXT)
 
     // ✅ Internal-only excerpt block (no IDs, no “Reference documents” label)
-    // Keep short to reduce verbosity + reduce model urge to “quote sources”
     const excerptBlock =
       contextDocs.length === 0
         ? ''
@@ -892,7 +1035,7 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // SYSTEM PROMPT (concise, no citations, low false positives)
+    // SYSTEM PROMPT (concise, no citations, actionable violations)
     // ========================================================================
 
     const systemPrompt = `You are ProtocolLM — a Washtenaw County, Michigan food service compliance assistant.
@@ -901,19 +1044,23 @@ You may receive a user question and sometimes one or more photos. You also recei
 Do NOT mention, cite, or reference any documents, excerpts, page numbers, IDs, or sources in your response.
 
 Goals:
-- Be concise and practical.
-- Avoid false positives. Do not claim a violation with 100% certainty unless it is clearly visible and unambiguous.
-- If the photo is unclear or key details are missing (temps, labels, sanitizer concentration, dates, etc.), ask up to 3 short clarifying questions instead of guessing.
-- No emojis. No citations.
+- Identify specific violations based on observed conditions or user descriptions.
+- Provide clear, actionable remediation steps for each violation.
+- Specify the type of violation (e.g., "Food Storage," "Sanitation," "Temperature Control").
+- Avoid false positives. If unsure, ask clarifying questions instead of guessing.
+- No emojis. No citations. Do not mention confidence.
 
 Output format:
 If no issues are visible:
-- Start with: "No clear violations observed."
+- Start with: "No violations observed."
 - Add 1 short sentence.
 
-If issues may exist:
-- Start with: "Potential issues observed:"
-- Use short bullets. Each bullet: what you see + confidence (high/medium/low) + fix.
+If issues are observed:
+- Start with: "Violations observed:"
+- For each violation:
+  - **Type**: [Violation type]
+  - **Issue**: [Description of the violation]
+  - **Remediation**: [Actionable steps to fix the violation]
 
 If you need clarification:
 - Start with: "Need a quick clarification:"
@@ -1034,8 +1181,9 @@ If you need clarification:
       )
     }
 
-    // Final hard safety scrub for any leaked doc labels
+    // Final hard safety scrub + enforce the violation formatting contract
     assistantMessage = sanitizeOutput(stripDocIds(assistantMessage))
+    assistantMessage = sanitizeOutput(enforceViolationFormat(assistantMessage))
 
     // ========================================================================
     // UPDATE MEMORY
