@@ -1,15 +1,13 @@
-// app/api/chat/route.js - Cohere text + Cohere v2 vision via REST (messages + image_url)
+// app/api/chat/route.js
+// Cohere text + Cohere v2 vision via REST (messages + image_url)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 //
-// ✅ This version adds “pinned policy retrieval” so Priority / Pf / Core + enforcement
-//   is grounded from your CORPUS (Violation Types, Enforcement Action, MI Food Code, MCL Act).
-//   If those docs aren’t in the vector DB yet, it falls back to a small static policy block.
-//
-// ✅ Output guarantees (post-processor backstop):
-// - Response starts with: “No violations observed.” OR “Violations observed:” OR “Need a quick clarification:”
+// Output guarantees (post-processor backstop):
+// - Response starts with: "No violations observed." OR "Violations observed:" OR "Need a quick clarification:"
 // - Each violation includes: Type + Category (Priority/Pf/Core) + Issue + Remediation + Correction + If not corrected
-// - No “confidence” anywhere
+// - No "confidence" anywhere
 // - No citations, no doc/page/source mentions in the user-facing output
+// - No asterisks (*) and no hashtags (#) in the user-facing output
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -28,7 +26,6 @@ export const maxDuration = 60
 
 let searchDocuments = null
 
-// ✅ Keep SDK for v1 endpoints you already use (rerank + legacy chat)
 const cohereClient = new CohereClient({ token: process.env.COHERE_API_KEY })
 
 async function getSearchDocuments() {
@@ -182,8 +179,7 @@ const MIN_RERANK_DOCS = 3
 
 // Context sizing (reserve slots for pinned policy)
 const MAX_CONTEXT_DOCS = 7
-const PINNED_POLICY_TARGET = 3 // try to include 3 policy chunks (Washtenaw + MI)
-// user docs = MAX_CONTEXT_DOCS - pinnedCount
+const PINNED_POLICY_TARGET = 3
 
 // ============================================================================
 // TEXT UTILITIES
@@ -213,7 +209,6 @@ function stripPageLikeRefs(text) {
 }
 
 function stripSourceLikeRefs(text) {
-  // prevent leaking file titles in output if the model parrots them
   if (!text) return ''
   return String(text)
     .replace(/\bViolation Types\s*\|\s*Washtenaw County.*?\b/gi, '')
@@ -222,9 +217,16 @@ function stripSourceLikeRefs(text) {
     .replace(/\bAct\s*92\s*of\s*2000\b/gi, '')
 }
 
+// Removes asterisks and hashtags from user-facing output, no matter what
+function stripStarsAndHashes(text) {
+  if (!text) return ''
+  return String(text).replace(/[*#]/g, '')
+}
+
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
+  // Remove code fences / headings
   out = out.replace(/```/g, '')
   out = out.replace(/^\s*#{1,6}\s+/gm, '')
 
@@ -234,11 +236,13 @@ function sanitizeOutput(text) {
 
   out = out.replace(/\n{3,}/g, '\n\n')
 
+  // Remove emojis
   try {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
+  // Hard remove confidence language
   out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
@@ -246,8 +250,12 @@ function sanitizeOutput(text) {
   const HARD_LIMIT = 3000
   if (out.length > HARD_LIMIT) {
     out = out.slice(0, HARD_LIMIT).trimEnd()
-    out += '\n\n[Response trimmed. Ask a follow-up for more detail.]'
+    out += '\n\nResponse trimmed. Ask a follow-up for more detail.'
   }
+
+  // Final: no stars, no hashes in user-facing output
+  out = stripStarsAndHashes(out)
+
   return out.trim()
 }
 
@@ -265,9 +273,7 @@ function messageContentToString(content) {
       .filter(Boolean)
       .join('')
   }
-  if (content && typeof content === 'object' && typeof content.text === 'string') {
-    return content.text
-  }
+  if (content && typeof content === 'object' && typeof content.text === 'string') return content.text
   return ''
 }
 
@@ -311,21 +317,17 @@ function cohereResponseToText(resp) {
 // ============================================================================
 
 const PINNED_POLICY_QUERIES = [
-  // Washtenaw - categories + correction timelines
   'Washtenaw County violation types Priority Priority Foundation Core correct within 10 days 90 days follow-up inspection',
-  // Washtenaw - enforcement steps + imminent hazard closure
   'Washtenaw County enforcement action imminent health hazard closure office conference informal hearing formal hearing license suspension revocation',
-  // Michigan Food Code - priority/pf definitions + correction expectations
   'Michigan Modified Food Code Priority item Priority Foundation item correct within 10 days Core within 90 days',
-  // MCL Act - definitions
   'MCL Act 92 of 2000 Priority Item Priority Foundation Item definition',
 ]
 
 const WASHTENAW_POLICY_FALLBACK = `WASHTENAW COUNTY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
 - Categories: Priority (P), Priority Foundation (Pf), Core.
-- Typical correction: P/Pf corrected at inspection or within 10 days; Core corrected by a specified date (typically ≤90 days).
-- If imminent health hazard exists (e.g., no water/power, sewage backup, severe pest infestation, fire/flood, outbreak), the county may order immediate closure; reopen only after correction/approval.
-- Otherwise: progressive enforcement can escalate (follow-up → Office Conference → Informal Hearing → license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
+- Typical correction: P and Pf corrected at inspection or within 10 days; Core corrected by a specified date (typically within 90 days).
+- If imminent health hazard exists (no water, no power, sewage backup, severe pests, fire, flood, outbreak), the county may order immediate closure; reopen only after correction and approval.
+- Otherwise: progressive enforcement can escalate (follow-up inspection, Office Conference, Informal Hearing, license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
 
 function normalizeSourceLabel(src) {
   const s = String(src || '').toLowerCase()
@@ -364,7 +366,6 @@ async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
 
     const results = await Promise.all(tasks)
 
-    // pick one “best” from each query result first
     const picked = []
     const addUnique = (doc) => {
       if (!doc?.text) return
@@ -377,7 +378,6 @@ async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
       if (Array.isArray(arr) && arr.length) addUnique(arr[0])
     }
 
-    // fill remaining slots with next best across all results
     const flattened = dedupeByText(results.flat().filter(Boolean))
     for (const d of flattened) {
       if (picked.length >= PINNED_POLICY_TARGET) break
@@ -471,7 +471,7 @@ function determineViolationCategory(issue, remediation = '', type = '') {
   if (isImminentHazardText(hay)) {
     return {
       category: 'Priority (P)',
-      correction: 'Correct immediately; operations may be ordered closed until corrected/approved.',
+      correction: 'Correct immediately; operations may be ordered closed until corrected and approved.',
       ifNotCorrected:
         'Imminent health hazard: the county may order immediate closure; reopening only after violations are corrected and approval is given.',
     }
@@ -498,7 +498,7 @@ function determineViolationCategory(issue, remediation = '', type = '') {
       category: 'Priority (P)',
       correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
       ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference → Informal Hearing → license limitation/suspension/revocation).',
+        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference, Informal Hearing, license limitation/suspension/revocation).',
     }
   }
 
@@ -515,20 +515,20 @@ function determineViolationCategory(issue, remediation = '', type = '') {
       category: 'Priority Foundation (Pf)',
       correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
       ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference → Informal Hearing → license limitation/suspension/revocation).',
+        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference, Informal Hearing, license limitation/suspension/revocation).',
     }
   }
 
   return {
     category: 'Core',
-    correction: 'Correct by an agreed/specified date, typically no later than 90 days after inspection.',
+    correction: 'Correct by an agreed or specified date, typically no later than 90 days after inspection.',
     ifNotCorrected:
-      'Unresolved or repeat core issues can still lead to enforcement—often after opportunities to correct during inspection/follow-up and subsequent progressive steps.',
+      'Unresolved or repeat core issues can still lead to enforcement after opportunities to correct during inspection and follow-up.',
   }
 }
 
 // ============================================================================
-// OUTPUT ENFORCEMENT (ADD Category/Correction/If-not-corrected IF MISSING)
+// OUTPUT ENFORCEMENT (PLAIN TEXT, NO MARKDOWN)
 // ============================================================================
 
 function enforceViolationFormat(text) {
@@ -543,7 +543,7 @@ function enforceViolationFormat(text) {
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
-  // If the model used "- X. Fix: Y." bullets, convert into the required schema
+  // Convert "- X. Fix: Y." style bullets into required schema (plain text labels)
   if (/^Violations observed:/i.test(out) && !/\bType\s*:\s*/i.test(out)) {
     out = out.replace(
       /-\s*(.*?)\s*\.?\s*(?:Fix|Remediation|Action)\s*:\s*(.*?)(?=\n-\s|\n{2,}|$)/gis,
@@ -554,12 +554,12 @@ function enforceViolationFormat(text) {
         const violationType = determineViolationType(issue)
         const catInfo = determineViolationCategory(issue, remediation, violationType)
 
-        return `- **Type**: ${violationType}
-  **Category**: ${catInfo.category}
-  **Issue**: ${issue}
-  **Remediation**: ${remediation}
-  **Correction**: ${catInfo.correction}
-  **If not corrected**: ${catInfo.ifNotCorrected}`
+        return `- Type: ${violationType}
+  Category: ${catInfo.category}
+  Issue: ${issue}
+  Remediation: ${remediation}
+  Correction: ${catInfo.correction}
+  If not corrected: ${catInfo.ifNotCorrected}`
       }
     )
   }
@@ -571,10 +571,10 @@ function enrichViolationsIfMissingFields(text) {
   const out = safeText(text || '')
   if (!/^Violations observed:/i.test(out)) return out
 
-  // already has everything?
-  if (/\*\*Category\*\*:/i.test(out) && /\*\*Correction\*\*:/i.test(out) && /\*\*If not corrected\*\*:/i.test(out)) {
-    return out
-  }
+  const hasCategory = /\bCategory\s*:\s*/i.test(out)
+  const hasCorrection = /\bCorrection\s*:\s*/i.test(out)
+  const hasIfNot = /\bIf not corrected\s*:\s*/i.test(out)
+  if (hasCategory && hasCorrection && hasIfNot) return out
 
   const lines = out.split('\n')
   const rebuilt = []
@@ -596,19 +596,19 @@ function enrichViolationsIfMissingFields(text) {
 
     const catInfo = determineViolationCategory(issue, remediation, type)
 
-    rebuilt.push(`- **Type**: ${type}`)
-    rebuilt.push(`  **Category**: ${catInfo.category}`)
-    rebuilt.push(`  **Issue**: ${issue}`)
-    rebuilt.push(`  **Remediation**: ${remediation}`)
-    rebuilt.push(`  **Correction**: ${catInfo.correction}`)
-    rebuilt.push(`  **If not corrected**: ${catInfo.ifNotCorrected}`)
+    rebuilt.push(`- Type: ${type}`)
+    rebuilt.push(`  Category: ${catInfo.category}`)
+    rebuilt.push(`  Issue: ${issue}`)
+    rebuilt.push(`  Remediation: ${remediation}`)
+    rebuilt.push(`  Correction: ${catInfo.correction}`)
+    rebuilt.push(`  If not corrected: ${catInfo.ifNotCorrected}`)
     current = null
   }
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i]
 
-    const typeMatch = line.match(/^\s*-\s*\*\*Type\*\*:\s*(.+)\s*$/i)
+    const typeMatch = line.match(/^\s*-\s*Type\s*:\s*(.+)\s*$/i)
     if (typeMatch) {
       flush()
       current = { type: typeMatch[1], issue: '', remediation: '', raw: [line] }
@@ -617,9 +617,10 @@ function enrichViolationsIfMissingFields(text) {
 
     if (current) {
       current.raw.push(line)
-      const issueMatch = line.match(/^\s*\*\*Issue\*\*:\s*(.+)\s*$/i)
+      const issueMatch = line.match(/^\s*Issue\s*:\s*(.+)\s*$/i) || line.match(/^\s*\s*Issue\s*:\s*(.+)\s*$/i)
       if (issueMatch) current.issue = issueMatch[1]
-      const remMatch = line.match(/^\s*\*\*Remediation\*\*:\s*(.+)\s*$/i)
+      const remMatch =
+        line.match(/^\s*Remediation\s*:\s*(.+)\s*$/i) || line.match(/^\s*\s*Remediation\s*:\s*(.+)\s*$/i)
       if (remMatch) current.remediation = remMatch[1]
       continue
     }
@@ -679,9 +680,7 @@ function isVisionModel(model) {
 function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
   const messages = []
 
-  if (safeText(preamble)) {
-    messages.push({ role: 'system', content: safeText(preamble) })
-  }
+  if (safeText(preamble)) messages.push({ role: 'system', content: safeText(preamble) })
 
   const hist = Array.isArray(chatHistory) ? chatHistory : []
   for (const h of hist) {
@@ -725,9 +724,7 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
       images,
     })
 
-    if (normalizedImagesCount === 0) {
-      throw new Error('Image payload missing after normalization (v2)')
-    }
+    if (normalizedImagesCount === 0) throw new Error('Image payload missing after normalization (v2)')
 
     const respV2 = await callCohereChatV2Rest({ model, messages })
     respV2.__text = cohereResponseToText(respV2)
@@ -803,7 +800,6 @@ function extractSearchKeywords(text) {
     'sink',
     'drainage',
     'ventilation',
-    // enforcement / category retrieval helpers
     'priority',
     'priority foundation',
     'core',
@@ -853,7 +849,7 @@ function wantsFineInfo(text) {
 function getUserFriendlyErrorMessage(errorMessage) {
   if (errorMessage === 'VISION_TIMEOUT') return 'Photo analysis took too long. Try a smaller image or wait 10 seconds and try again.'
   if (errorMessage === 'RETRIEVAL_TIMEOUT') return 'Document search timed out. Please try again.'
-  if (errorMessage === 'ANSWER_TIMEOUT') return 'Response generation timed out. System may be busy - try again in 10 seconds.'
+  if (errorMessage === 'ANSWER_TIMEOUT') return 'Response generation timed out. System may be busy. Try again in 10 seconds.'
   if (errorMessage === 'EMBEDDING_TIMEOUT') return 'Search processing timed out. Please try again.'
   return 'Unable to process request. Please try again.'
 }
@@ -930,23 +926,16 @@ export async function POST(request) {
     const imageInput = body?.image || body?.imageBase64 || body?.image_url || body?.imageDataUrl || body?.image_data
     const hasImage = Boolean(imageInput)
 
-    let imageBase64 = null
-    let imageMediaType = null
     let fullDataUrl = null
-
     if (hasImage) {
       const validation = validateImageData(imageInput)
       if (!validation.valid) {
         logger.warn('Invalid image data', { error: validation.error })
         return NextResponse.json({ error: `Image validation failed: ${validation.error}` }, { status: 400 })
       }
-      imageBase64 = validation.base64Data
-      imageMediaType = validation.mediaType
       fullDataUrl = validation.dataUrl
-      logger.info('Image validated', { mediaType: imageMediaType, dataLength: imageBase64.length })
     }
 
-    // Find last user message index (so we don’t re-add it to history)
     const lastUserIndex = Array.isArray(messages)
       ? messages
           .slice()
@@ -955,7 +944,6 @@ export async function POST(request) {
       : -1
     const resolvedLastUserIndex = lastUserIndex === -1 ? -1 : messages.length - 1 - lastUserIndex
 
-    // Resolve userMessage
     let userMessage =
       (typeof body.message === 'string' && body.message.trim()) ||
       (Array.isArray(body.messages)
@@ -976,7 +964,7 @@ export async function POST(request) {
 
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for food safety / sanitation violations. For each violation, provide the violation type, the violation category (Priority/Priority Foundation/Core), what is wrong, clear remediation steps, correction time frame, and what typically happens if it is not corrected. If the image is unclear or key details are missing, ask up to three short clarification questions instead of guessing.'
+        'Review the photo for food safety and sanitation violations. For each violation: provide Type, Category (Priority, Priority Foundation, or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected. If the image is unclear, ask up to three short clarification questions instead of guessing.'
     }
 
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
@@ -1027,7 +1015,6 @@ export async function POST(request) {
         )
       }
 
-      // Rate limiting
       const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}`
       const MAX_REQUESTS_PER_MINUTE = 20
 
@@ -1056,7 +1043,6 @@ export async function POST(request) {
         logger.warn('Rate limit check failed', { error: rateLimitError?.message })
       }
 
-      // Access check (trial + subscription)
       try {
         const accessCheck = await checkAccess(userId)
         if (!accessCheck?.valid) {
@@ -1104,7 +1090,10 @@ export async function POST(request) {
       }
     } catch (e) {
       logger.error('Auth/license check failed', { error: e?.message })
-      return NextResponse.json({ error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' },
+        { status: 401 }
+      )
     }
 
     const searchDocumentsFn = await getSearchDocuments()
@@ -1119,7 +1108,6 @@ export async function POST(request) {
       .join(' ')
       .slice(0, 900)
 
-    // 🔒 Pinned policy docs retrieved in parallel (from corpus)
     const pinnedPolicyDocsPromise = fetchPinnedPolicyDocs(searchDocumentsFn, county)
 
     let userDocs = []
@@ -1164,14 +1152,12 @@ export async function POST(request) {
 
     const pinnedPolicyDocs = await pinnedPolicyDocsPromise.catch(() => [])
 
-    // Reserve slots: pinned first, then user docs
     const userSlots = Math.max(1, MAX_CONTEXT_DOCS - (pinnedPolicyDocs?.length || 0))
     const contextDocs = dedupeByText([...(pinnedPolicyDocs || []), ...(userDocs || []).slice(0, userSlots)]).slice(
       0,
       MAX_CONTEXT_DOCS
     )
 
-    // Build excerpt block (internal only). Avoid page refs and real file names.
     const excerptBlock =
       contextDocs.length === 0
         ? ''
@@ -1179,7 +1165,7 @@ export async function POST(request) {
             .map((doc) => {
               const label = normalizeSourceLabel(doc.source || doc.title || 'Policy')
               const text = docTextForExcerpt(doc, 1400)
-              return `INTERNAL POLICY EXCERPT — ${label}\n${text}`
+              return `INTERNAL POLICY EXCERPT - ${label}\n${text}`
             })
             .join('\n\n')
 
@@ -1189,40 +1175,40 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // SYSTEM PROMPT
+    // SYSTEM PROMPT (PLAIN TEXT FORMAT, NO MARKDOWN)
     // ========================================================================
 
-    const systemPrompt = `You are ProtocolLM — a Washtenaw County, Michigan food service compliance assistant.
+    const systemPrompt = `You are ProtocolLM - a Washtenaw County, Michigan food service compliance assistant.
 
 You may receive a user question and sometimes one or more photos. You also receive internal policy excerpts for grounding.
-Do NOT mention, cite, or reference any documents, excerpts, page numbers, IDs, filenames, or sources in your response.
+Do not mention, cite, or reference any documents, excerpts, page numbers, ids, filenames, or sources in your response.
 
 Goals:
 - Identify specific violations based on observed conditions or user descriptions.
 - Provide clear, actionable remediation steps for each violation.
-- Specify the violation TYPE (e.g., "Food Storage," "Sanitation," "Temperature Control").
-- Classify each issue as a violation CATEGORY: Priority (P), Priority Foundation (Pf), or Core, using the internal policy excerpts.
-- For each violation, include correction time frame and what typically happens if it is not corrected (follow-up / enforcement / closure for imminent hazards).
+- Specify the violation Type (example: Food Storage, Sanitation, Temperature Control).
+- Classify each issue as Category: Priority (P), Priority Foundation (Pf), or Core.
+- For each violation, include Correction time frame and what typically happens if not corrected (follow-up, enforcement, closure for imminent hazards).
 - Avoid false positives. If unsure, ask clarifying questions instead of guessing.
 - No emojis. No citations. Do not mention confidence.
 
 Output format:
 If no issues are visible:
-- Start with: "No violations observed."
+- Start with: No violations observed.
 - Add 1 short sentence.
 
 If issues are observed:
-- Start with: "Violations observed:"
-- For each violation:
-  - **Type**: [Violation type]
-  - **Category**: [Priority (P) | Priority Foundation (Pf) | Core]
-  - **Issue**: [Description]
-  - **Remediation**: [Steps]
-  - **Correction**: [Time frame or closure condition]
-  - **If not corrected**: [Follow-up / enforcement / closure]
+- Start with: Violations observed:
+- For each violation, use this exact structure:
+  - Type: ...
+    Category: ...
+    Issue: ...
+    Remediation: ...
+    Correction: ...
+    If not corrected: ...
 
 If you need clarification:
-- Start with: "Need a quick clarification:"
+- Start with: Need a quick clarification:
 - Ask up to 3 questions.`
 
     const historySystemMessages = []
@@ -1251,8 +1237,6 @@ If you need clarification:
     }
 
     const systemHistoryPreamble = historySystemMessages.filter(Boolean).join('\n\n')
-
-    // If pinned docs didn't come back (not ingested yet), include fallback
     const fallbackBlock = pinnedPolicyDocs.length ? '' : WASHTENAW_POLICY_FALLBACK
 
     const preambleParts = [
@@ -1339,10 +1323,11 @@ If you need clarification:
       )
     }
 
-    // Final safety scrub + format enforcement
+    // Final safety scrub + format enforcement + no stars/hashes
     assistantMessage = sanitizeOutput(stripDocIds(assistantMessage))
     assistantMessage = sanitizeOutput(enforceViolationFormat(assistantMessage))
     assistantMessage = sanitizeOutput(enrichViolationsIfMissingFields(assistantMessage))
+    assistantMessage = sanitizeOutput(stripStarsAndHashes(assistantMessage))
 
     // ========================================================================
     // UPDATE MEMORY
