@@ -8,6 +8,7 @@
 // - No "confidence" anywhere
 // - No citations, no doc/page/source mentions in the user-facing output
 // - No asterisks (*) and no hashtags (#) in the user-facing output
+// - No assumptions: do not claim missing facilities, temperatures, or time-based storage unless clearly visible
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -465,6 +466,17 @@ function isImminentHazardText(text) {
   return patterns.some((p) => p.test(t))
 }
 
+function normalizeCategoryLabel(raw) {
+  const r = String(raw || '').toLowerCase().trim()
+
+  if (!r) return ''
+  if (r.includes('priority foundation') || r === 'pf' || r.includes('(pf)')) return 'Priority Foundation (Pf)'
+  if (r === 'p' || r.includes('priority') || r.includes('(p)')) return 'Priority (P)'
+  if (r.includes('core')) return 'Core'
+
+  return raw.trim()
+}
+
 function determineViolationCategory(issue, remediation = '', type = '') {
   const hay = `${issue || ''} ${remediation || ''} ${type || ''}`.toLowerCase()
 
@@ -631,6 +643,224 @@ function enrichViolationsIfMissingFields(text) {
   flush()
 
   return rebuilt.join('\n').trim()
+}
+
+function normalizeCategoryLines(text) {
+  const out = safeText(text || '')
+  if (!out) return out
+  return out.replace(/(\bCategory\s*:\s*)(.+)\s*$/gim, (m, prefix, value) => {
+    return `${prefix}${normalizeCategoryLabel(value)}`
+  })
+}
+
+// ============================================================================
+// ASSUMPTION GUARD (IMAGE MODE) - DROP NON-VISIBLE CLAIMS
+// ============================================================================
+
+function parseViolationBlocks(text) {
+  const out = safeText(text || '')
+  const lines = out.split('\n').filter((l) => l.trim().length > 0)
+  if (!lines.length) return { header: '', blocks: [], tail: [] }
+
+  const header = lines[0].trim()
+  const body = lines.slice(1)
+
+  const starts = []
+  for (let i = 0; i < body.length; i++) {
+    if (/^\s*-\s*Type\s*:\s*/i.test(body[i])) starts.push(i)
+  }
+
+  // If no structured blocks, treat as tail-only
+  if (!starts.length) return { header, blocks: [], tail: body }
+
+  const blocks = []
+  for (let si = 0; si < starts.length; si++) {
+    const start = starts[si]
+    const end = si + 1 < starts.length ? starts[si + 1] : body.length
+    const chunk = body.slice(start, end)
+    const joined = chunk.join('\n')
+
+    const type = safeLine(joined.match(/-\s*Type\s*:\s*(.+)\s*$/im)?.[1] || '')
+    const category = safeLine(joined.match(/^\s*Category\s*:\s*(.+)\s*$/im)?.[1] || '')
+    const issue = safeLine(joined.match(/^\s*Issue\s*:\s*(.+)\s*$/im)?.[1] || '')
+    const remediation = safeLine(joined.match(/^\s*Remediation\s*:\s*(.+)\s*$/im)?.[1] || '')
+    const correction = safeLine(joined.match(/^\s*Correction\s*:\s*(.+)\s*$/im)?.[1] || '')
+    const ifNotCorrected = safeLine(joined.match(/^\s*If not corrected\s*:\s*(.+)\s*$/im)?.[1] || '')
+
+    blocks.push({
+      type,
+      category,
+      issue,
+      remediation,
+      correction,
+      ifNotCorrected,
+      rawLines: chunk,
+      rawText: joined,
+    })
+  }
+
+  return { header, blocks, tail: [] }
+}
+
+function looksLikeNonVisualAssumption(issue, remediation, type) {
+  const t = `${issue || ''} ${remediation || ''} ${type || ''}`.toLowerCase()
+
+  // Absence / "missing" claims that are commonly NOT confirmable unless the photo is specifically of that station
+  const absenceFacility = [
+    /no\s+hand\s*wash/i,
+    /no\s+handwashing/i,
+    /lack\s+of\s+hand/i,
+    /missing\s+hand/i,
+    /lack\s+of\s+soap/i,
+    /missing\s+soap/i,
+    /no\s+soap/i,
+    /lack\s+of\s+paper\s*towel/i,
+    /missing\s+paper\s*towel/i,
+    /no\s+paper\s*towel/i,
+    /no\s+thermometer/i,
+    /missing\s+thermometer/i,
+    /lack\s+of\s+thermometer/i,
+    /no\s+test\s*strips/i,
+    /missing\s+test\s*strips/i,
+  ]
+
+  // Time/temperature/storage-status assertions often NOT confirmable from a photo
+  const timeTempInference = [
+    /\bleftover\b/i,
+    /\bstored\s+at\s+room\s+temperature\b/i,
+    /\bat\s+room\s+temperature\b/i,
+    /\bheld\s+at\s+room\s+temperature\b/i,
+    /\bimproperly\s+cooled\b/i,
+    /\bnot\s+(?:cooled|reheated|held)\b/i,
+    /\btime\s+in\s+temperature\s+danger\s+zone\b/i,
+  ]
+
+  return absenceFacility.some((p) => p.test(t)) || timeTempInference.some((p) => p.test(t))
+}
+
+function buildClarificationQuestionsFromDropped(droppedBlocks) {
+  const qs = []
+  const add = (q) => {
+    if (!q) return
+    if (qs.includes(q)) return
+    if (qs.length >= 3) return
+    qs.push(q)
+  }
+
+  for (const b of droppedBlocks || []) {
+    const t = `${b?.issue || ''} ${b?.type || ''}`.toLowerCase()
+
+    if (t.includes('hand') && (t.includes('wash') || t.includes('handwash'))) {
+      add('Is there a designated handwashing sink available, and is it stocked with soap and paper towels?')
+      continue
+    }
+
+    if (t.includes('thermometer') || t.includes('test strips') || t.includes('sanitizer')) {
+      add('Do you have a thermometer or test-strip reading you can share (or a photo of the gauge/label)?')
+      continue
+    }
+
+    if (t.includes('room temperature') || t.includes('leftover') || t.includes('stored')) {
+      add('Was the food in the photo being actively cooked/served, or was it being cooled/held for storage?')
+      continue
+    }
+
+    // generic fallback
+    add('Can you share one more photo that shows the specific area being referenced more clearly?')
+  }
+
+  if (!qs.length) {
+    add('Can you share a clearer photo or one more angle of the area you want reviewed?')
+  }
+
+  return qs.slice(0, 3)
+}
+
+function rebuildResponseFromBlocks(header, blocks, clarificationQuestions) {
+  const h = header && header.trim() ? header.trim() : 'Violations observed:'
+  const parts = [h]
+
+  for (const b of blocks || []) {
+    const type = safeLine(b.type || '')
+    const issue = safeLine(b.issue || '')
+    const remediation = safeLine(b.remediation || '')
+    const cat = normalizeCategoryLabel(b.category || '')
+    const category = cat || determineViolationCategory(issue, remediation, type).category
+    const catInfo = determineViolationCategory(issue, remediation, type)
+
+    parts.push(`- Type: ${type || determineViolationType(issue)}`)
+    parts.push(`  Category: ${normalizeCategoryLabel(category)}`)
+    parts.push(`  Issue: ${issue}`)
+    parts.push(`  Remediation: ${remediation}`)
+    parts.push(`  Correction: ${safeLine(b.correction || catInfo.correction)}`)
+    parts.push(`  If not corrected: ${safeLine(b.ifNotCorrected || catInfo.ifNotCorrected)}`)
+  }
+
+  if (clarificationQuestions && clarificationQuestions.length) {
+    parts.push('')
+    parts.push('Need a quick clarification:')
+    for (const q of clarificationQuestions.slice(0, 3)) {
+      parts.push(`- ${safeLine(q)}`)
+    }
+  }
+
+  return parts.join('\n').trim()
+}
+
+function applyNoAssumptionsGuard(text, hasImage) {
+  if (!hasImage) return { text, dropped: 0 }
+
+  const out = safeText(text || '')
+  if (!/^Violations observed:/i.test(out)) return { text: out, dropped: 0 }
+
+  const parsed = parseViolationBlocks(out)
+  if (!parsed.blocks.length) return { text: out, dropped: 0 }
+
+  const keep = []
+  const drop = []
+
+  for (const b of parsed.blocks) {
+    const issue = safeLine(b.issue || '')
+    const remediation = safeLine(b.remediation || '')
+    const type = safeLine(b.type || '')
+    if (looksLikeNonVisualAssumption(issue, remediation, type)) drop.push(b)
+    else keep.push(b)
+  }
+
+  if (!drop.length) return { text: out, dropped: 0 }
+
+  const questions = buildClarificationQuestionsFromDropped(drop)
+
+  // If everything was assumption-based, return clarification-only
+  if (!keep.length) {
+    const parts = ['Need a quick clarification:']
+    for (const q of questions) parts.push(`- ${safeLine(q)}`)
+    return { text: parts.join('\n').trim(), dropped: drop.length }
+  }
+
+  const rebuilt = rebuildResponseFromBlocks('Violations observed:', keep, questions)
+  return { text: rebuilt, dropped: drop.length }
+}
+
+function ensureAllowedHeader(text) {
+  const out = safeText(text || '')
+  if (!out) return 'Need a quick clarification:\n- Can you re-send your question or upload a photo?'
+
+  const firstLine = out.split('\n').find((l) => l.trim().length > 0)?.trim() || ''
+
+  const ok =
+    /^No violations observed\./i.test(firstLine) ||
+    /^Violations observed:/i.test(firstLine) ||
+    /^Need a quick clarification:/i.test(firstLine)
+
+  if (ok) return out
+
+  // Heuristic fallback
+  if (/\bNeed a quick clarification\b/i.test(out) || /\?\s*$/.test(out)) {
+    return `Need a quick clarification:\n- ${safeLine(out).slice(0, 220)}`
+  }
+  if (/\bType\s*:\s*/i.test(out) || /-\s*Type\s*:\s*/i.test(out)) return `Violations observed:\n${out}`
+  return `No violations observed.\n${safeLine(out).slice(0, 180)}`
 }
 
 // ============================================================================
@@ -898,6 +1128,27 @@ function getSessionInfo(request) {
 }
 
 // ============================================================================
+// FINALIZE USER-FACING OUTPUT (HARD VALIDATOR PIPELINE)
+// ============================================================================
+
+function finalizeUserFacingText(raw, hasImage) {
+  let out = sanitizeOutput(raw || '')
+
+  out = sanitizeOutput(enforceViolationFormat(out))
+  out = sanitizeOutput(enrichViolationsIfMissingFields(out))
+  out = sanitizeOutput(normalizeCategoryLines(out))
+
+  // No-assumptions guard (image mode)
+  const guarded = applyNoAssumptionsGuard(out, hasImage)
+  out = sanitizeOutput(guarded.text)
+
+  out = sanitizeOutput(ensureAllowedHeader(out))
+  out = sanitizeOutput(stripStarsAndHashes(out))
+
+  return out.trim()
+}
+
+// ============================================================================
 // MAIN HANDLER
 // ============================================================================
 
@@ -964,7 +1215,7 @@ export async function POST(request) {
 
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for food safety and sanitation violations. For each violation: provide Type, Category (Priority, Priority Foundation, or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected. If the image is unclear, ask up to three short clarification questions instead of guessing.'
+        'Review the photo for food safety and sanitation issues. Only report violations you can directly see in the photo. Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, or "leftovers" unless clearly visible. If you cannot confirm, ask up to three short clarification questions instead of guessing. For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
     }
 
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
@@ -1183,6 +1434,11 @@ export async function POST(request) {
 You may receive a user question and sometimes one or more photos. You also receive internal policy excerpts for grounding.
 Do not mention, cite, or reference any documents, excerpts, page numbers, ids, filenames, or sources in your response.
 
+Critical rule for photos:
+- Only report violations you can directly see in the photo.
+- Do not assume missing sinks, missing soap/towels, temperatures, time out of temperature control, "leftovers," or storage duration unless clearly visible (labels, gauges, timestamps, thermometer readings).
+- If you cannot confirm, ask up to three short clarification questions instead of guessing.
+
 Goals:
 - Identify specific violations based on observed conditions or user descriptions.
 - Provide clear, actionable remediation steps for each violation.
@@ -1287,7 +1543,7 @@ If you need clarification:
         billedUnits = answerResp?.meta?.billed_units || answerResp?.billed_units || {}
         tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
         modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
-        assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
+        assistantMessage = finalizeUserFacingText(modelText || 'Unable to process request. Please try again.', hasImage)
       } catch (visionErr) {
         const detail = safeErrorDetails(visionErr)
         const isLikelyBadRequest =
@@ -1307,8 +1563,9 @@ If you need clarification:
           billedUnits = fallbackResp?.meta?.billed_units || fallbackResp?.billed_units || {}
           tokenUsage = fallbackResp?.meta?.tokens || fallbackResp?.tokens || {}
           modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
-          assistantMessage = sanitizeOutput(
-            `Photo analysis is temporarily unavailable. Answering based on the request text.\n\n${modelText || 'Unable to process request. Please try again.'}`
+          assistantMessage = finalizeUserFacingText(
+            `Photo analysis is temporarily unavailable. Answering based on the request text.\n\n${modelText || 'Unable to process request. Please try again.'}`,
+            false
           )
         } else {
           throw visionErr
@@ -1322,12 +1579,6 @@ If you need clarification:
         { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
       )
     }
-
-    // Final safety scrub + format enforcement + no stars/hashes
-    assistantMessage = sanitizeOutput(stripDocIds(assistantMessage))
-    assistantMessage = sanitizeOutput(enforceViolationFormat(assistantMessage))
-    assistantMessage = sanitizeOutput(enrichViolationsIfMissingFields(assistantMessage))
-    assistantMessage = sanitizeOutput(stripStarsAndHashes(assistantMessage))
 
     // ========================================================================
     // UPDATE MEMORY
