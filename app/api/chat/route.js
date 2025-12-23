@@ -1,12 +1,15 @@
 // app/api/chat/route.js - Cohere text + Cohere v2 vision via REST (messages + image_url)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 //
-// ✅ Updates in this version:
-// - Actionable violation output: Type + Category (P/Pf/Core) + Issue + Remediation + Correction + If-not-corrected
-// - Response starts with “No violations observed.” OR “Violations observed:” OR “Need a quick clarification:”
-// - Keeps retrieval grounding INTERNAL ONLY (no citations, no DOC IDs, no page refs in output)
-// - Vision calls Cohere v2 REST correctly (messages + image_url blocks)
-// - Keeps your auth/license/memory/usage plumbing intact
+// ✅ This version adds “pinned policy retrieval” so Priority / Pf / Core + enforcement
+//   is grounded from your CORPUS (Violation Types, Enforcement Action, MI Food Code, MCL Act).
+//   If those docs aren’t in the vector DB yet, it falls back to a small static policy block.
+//
+// ✅ Output guarantees (post-processor backstop):
+// - Response starts with: “No violations observed.” OR “Violations observed:” OR “Need a quick clarification:”
+// - Each violation includes: Type + Category (Priority/Pf/Core) + Issue + Remediation + Correction + If not corrected
+// - No “confidence” anywhere
+// - No citations, no doc/page/source mentions in the user-facing output
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -170,12 +173,17 @@ const MODEL_LABEL = 'Cohere'
 // Time budgets
 const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
+const PINNED_RETRIEVAL_TIMEOUT_MS = 3200
 
 // Retrieval + rerank config
 const TOPK_PER_QUERY = 20
-const MAX_DOCS_FOR_CONTEXT = 5
 const RERANK_TOP_N = 5
 const MIN_RERANK_DOCS = 3
+
+// Context sizing (reserve slots for pinned policy)
+const MAX_CONTEXT_DOCS = 7
+const PINNED_POLICY_TARGET = 3 // try to include 3 policy chunks (Washtenaw + MI)
+// user docs = MAX_CONTEXT_DOCS - pinnedCount
 
 // ============================================================================
 // TEXT UTILITIES
@@ -198,39 +206,44 @@ function stripDocIds(text) {
 }
 
 function stripPageLikeRefs(text) {
-  // extra safety: remove leaked page-style refs if the model parrots them
   if (!text) return ''
   return String(text)
     .replace(/\(p\.\s*\d+\)/gi, '')
     .replace(/\bp\.\s*\d+\b/gi, '')
 }
 
+function stripSourceLikeRefs(text) {
+  // prevent leaking file titles in output if the model parrots them
+  if (!text) return ''
+  return String(text)
+    .replace(/\bViolation Types\s*\|\s*Washtenaw County.*?\b/gi, '')
+    .replace(/\bEnforcement Action\s*\|\s*Washtenaw County.*?\b/gi, '')
+    .replace(/\bMichigan Modified Food Code\b/gi, '')
+    .replace(/\bAct\s*92\s*of\s*2000\b/gi, '')
+}
+
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
-  // Remove codefences / headings if they sneak in, but KEEP markdown asterisks
   out = out.replace(/```/g, '')
   out = out.replace(/^\s*#{1,6}\s+/gm, '')
 
-  // Remove doc labels / ids / page-ish refs
   out = stripDocIds(out)
   out = stripPageLikeRefs(out)
+  out = stripSourceLikeRefs(out)
 
-  // Normalize spacing
   out = out.replace(/\n{3,}/g, '\n\n')
 
-  // Remove emojis
   try {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
-  // Hard remove “confidence” anywhere (requirement)
   out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
-  const HARD_LIMIT = 2600
+  const HARD_LIMIT = 3000
   if (out.length > HARD_LIMIT) {
     out = out.slice(0, HARD_LIMIT).trimEnd()
     out += '\n\n[Response trimmed. Ask a follow-up for more detail.]'
@@ -278,14 +291,12 @@ function responseOutputToString(resp) {
 // ============================================================================
 
 function cohereResponseToText(resp) {
-  // v2 shape: resp.message.content = [{type:'text', text:'...'}]
   const msg = resp?.message
   const content = Array.isArray(msg?.content) ? msg.content : []
   for (const c of content) {
     if (typeof c?.text === 'string' && c.text.trim()) return c.text
   }
 
-  // legacy shapes
   if (typeof resp?.text === 'string' && resp.text.trim()) return resp.text
   if (typeof resp?.output_text === 'string' && resp.output_text.trim()) return resp.output_text
 
@@ -296,113 +307,92 @@ function cohereResponseToText(resp) {
 }
 
 // ============================================================================
-// WASHTENAW CATEGORY + ENFORCEMENT (STATIC POLICY BLOCK + HEURISTICS)
+// PINNED POLICY RETRIEVAL (CORPUS-BASED) + FALLBACK BLOCK
 // ============================================================================
 
-const WASHTENAW_POLICY_BLOCK = `WASHTENAW COUNTY VIOLATION CATEGORIES + ENFORCEMENT (INTERNAL RULES)
+const PINNED_POLICY_QUERIES = [
+  // Washtenaw - categories + correction timelines
+  'Washtenaw County violation types Priority Priority Foundation Core correct within 10 days 90 days follow-up inspection',
+  // Washtenaw - enforcement steps + imminent hazard closure
+  'Washtenaw County enforcement action imminent health hazard closure office conference informal hearing formal hearing license suspension revocation',
+  // Michigan Food Code - priority/pf definitions + correction expectations
+  'Michigan Modified Food Code Priority item Priority Foundation item correct within 10 days Core within 90 days',
+  // MCL Act - definitions
+  'MCL Act 92 of 2000 Priority Item Priority Foundation Item definition',
+]
+
+const WASHTENAW_POLICY_FALLBACK = `WASHTENAW COUNTY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
 - Categories: Priority (P), Priority Foundation (Pf), Core.
-  - Priority (P): directly reduces foodborne illness hazards (e.g., improper temperatures, no handwashing).
-  - Priority Foundation (Pf): supports Priority control (e.g., missing thermometer, missing sanitizer test strips, missing soap/paper towels at hand sink).
-  - Core: general sanitation / facility maintenance (e.g., dirty floors, lighting, disrepair).
+- Typical correction: P/Pf corrected at inspection or within 10 days; Core corrected by a specified date (typically ≤90 days).
+- If imminent health hazard exists (e.g., no water/power, sewage backup, severe pest infestation, fire/flood, outbreak), the county may order immediate closure; reopen only after correction/approval.
+- Otherwise: progressive enforcement can escalate (follow-up → Office Conference → Informal Hearing → license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
 
-- Correction time frames (typical):
-  - Priority (P) and Priority Foundation (Pf): correct at inspection or within 10 calendar days. If not permanently corrected at inspection, a follow-up inspection may occur.
-  - Core: correct by a date agreed/specified, typically no later than 90 days.
-
-- County action if not corrected:
-  - If an IMMINENT HEALTH HAZARD exists (e.g., no water/power, sewage backup, severe pest infestation, fire/flood, outbreak), the health department can order immediate closure; reopen only after correction/approval.
-  - Otherwise (non-imminent): progressive enforcement typically follows three opportunities:
-    1) routine + follow-up inspection process (then Office Conference if unresolved)
-    2) immediate correction after Office Conference (then Informal Hearing if unresolved)
-    3) immediate correction after Informal Hearing (then license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
-
-function isImminentHazardText(text) {
-  const t = String(text || '').toLowerCase()
-  if (!t) return false
-  const patterns = [
-    /lack of water|no water|water service (?:outage|interruption)/i,
-    /lack of (?:electrical )?power|no power|electrical power/i,
-    /sewage\s*(?:back[- ]?up|backup)|back[- ]?up of sewage/i,
-    /fire\b/i,
-    /flood\b/i,
-    /uncontained.*outbreak|foodborne.*outbreak/i,
-    /severe\s+pest\s+infestation/i,
-  ]
-  return patterns.some((p) => p.test(t))
+function normalizeSourceLabel(src) {
+  const s = String(src || '').toLowerCase()
+  if (s.includes('violation types')) return 'Washtenaw Violation Categories'
+  if (s.includes('enforcement action')) return 'Washtenaw Enforcement Process'
+  if (s.includes('modified food code')) return 'Michigan Modified Food Code'
+  if (s.includes('act 92')) return 'Michigan Food Law (Act 92)'
+  return safeLine(src || 'Policy')
 }
 
-function determineViolationCategory(issue, remediation = '', type = '') {
-  const hay = `${issue || ''} ${remediation || ''} ${type || ''}`.toLowerCase()
+function docTextForExcerpt(doc, maxChars = 1400) {
+  const t = safeText(doc?.text || '')
+  if (!t) return ''
+  if (t.length <= maxChars) return t
+  return t.slice(0, maxChars).trimEnd() + '…'
+}
 
-  // Imminent hazard is handled separately (but category should still be Priority)
-  if (isImminentHazardText(hay)) {
-    return {
-      category: 'Priority (P)',
-      correction: 'Correct immediately; operations may be ordered closed until corrected/approved.',
-      ifNotCorrected:
-        'Imminent health hazard: the county may order immediate closure; reopening only after violations are corrected and approval is given.',
-      imminentHazard: true,
-    }
+function dedupeByText(items) {
+  const seen = new Set()
+  const out = []
+  for (const it of items || []) {
+    const key = (it?.text || '').slice(0, 1600)
+    if (!key) continue
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(it)
   }
+  return out
+}
 
-  // Priority (P) - direct hazard control
-  const priorityPatterns = [
-    /hand\s*wash|handwashing|wash(?:ing)? hands/i,
-    /bare\s*hand|no\s*bare\s*hand/i,
-    /time\/temperature|tcs\b|potentially hazardous/i,
-    /hot\s*hold|cold\s*hold|holding/i,
-    /\b41\s*°?\s*f\b|\b41f\b|\b41°F\b/i,
-    /\b135\s*°?\s*f\b|\b135f\b|\b135°F\b/i,
-    /cool(?:ing)?|rapid(?:ly)? cool/i,
-    /reheat(?:ing)?|rapid(?:ly)? reheat/i,
-    /cook(?:ing)? .* (?:temp|temperature)|undercook/i,
-    /cross\s*contaminat|raw .* ready[- ]?to[- ]?eat|rte/i,
-    /ill\s*employee|vomit|diarrhea|exclude|restrict/i,
-    /sanitize|sanitiz(?:e|ing) (?:food|utensil|equipment)|food[- ]?contact.*sanit/i,
-    /\bpest\b|rodent|roach|flies/i,
-    /toxic|poison|chemical.*(label|store)|cleaner.*(label|store)/i,
-  ]
-  if (priorityPatterns.some((p) => p.test(hay))) {
-    return {
-      category: 'Priority (P)',
-      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
-      ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate to progressive enforcement (Office Conference → Informal Hearing → license limitation/suspension/revocation).',
-      imminentHazard: false,
+async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
+  try {
+    const tasks = PINNED_POLICY_QUERIES.map((q) =>
+      withTimeout(searchDocumentsFn(q, county, 6), PINNED_RETRIEVAL_TIMEOUT_MS, 'PINNED_TIMEOUT').catch(() => [])
+    )
+
+    const results = await Promise.all(tasks)
+
+    // pick one “best” from each query result first
+    const picked = []
+    const addUnique = (doc) => {
+      if (!doc?.text) return
+      const key = doc.text.slice(0, 1600)
+      if (picked.some((d) => (d?.text || '').slice(0, 1600) === key)) return
+      picked.push(doc)
     }
-  }
 
-  // Priority Foundation (Pf) - supports Priority control
-  const pfPatterns = [
-    /thermometer|probe\s*therm/i,
-    /test\s*strip|sanitizer\s*test/i,
-    /soap|paper\s*towel|hand\s*sink.*(soap|towel)/i,
-    /calibrat(?:e|ion)/i,
-    /haccp|plan|critical\s*limit/i,
-    /training|policy|procedure|documentation|record[- ]?keeping/i,
-  ]
-  if (pfPatterns.some((p) => p.test(hay))) {
-    return {
-      category: 'Priority Foundation (Pf)',
-      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
-      ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate to progressive enforcement (Office Conference → Informal Hearing → license limitation/suspension/revocation).',
-      imminentHazard: false,
+    for (const arr of results) {
+      if (Array.isArray(arr) && arr.length) addUnique(arr[0])
     }
-  }
 
-  // Core - general sanitation / facility / maintenance
-  return {
-    category: 'Core',
-    correction: 'Correct by an agreed/specified date, typically no later than 90 days after inspection.',
-    ifNotCorrected:
-      'Unresolved or repeat core issues can still lead to enforcement—often after opportunities to correct during inspection/follow-up and subsequent progressive steps.',
-    imminentHazard: false,
+    // fill remaining slots with next best across all results
+    const flattened = dedupeByText(results.flat().filter(Boolean))
+    for (const d of flattened) {
+      if (picked.length >= PINNED_POLICY_TARGET) break
+      addUnique(d)
+    }
+
+    return picked.slice(0, PINNED_POLICY_TARGET)
+  } catch (e) {
+    logger.warn('Pinned policy retrieval failed', { error: e?.message })
+    return []
   }
 }
 
 // ============================================================================
-// VIOLATION TYPE HEURISTIC + OUTPUT ENFORCEMENT (NO CONFIDENCE)
+// VIOLATION TYPE + CATEGORY (P/Pf/Core) HEURISTICS (BACKSTOP)
 // ============================================================================
 
 function determineViolationType(issue) {
@@ -460,21 +450,100 @@ function determineViolationType(issue) {
   return 'General Compliance'
 }
 
+function isImminentHazardText(text) {
+  const t = String(text || '').toLowerCase()
+  if (!t) return false
+  const patterns = [
+    /lack of water|no water|water service (?:outage|interruption)/i,
+    /lack of (?:electrical )?power|no power|electrical power/i,
+    /sewage\s*(?:back[- ]?up|backup)|back[- ]?up of sewage/i,
+    /fire\b/i,
+    /flood\b/i,
+    /uncontained.*outbreak|foodborne.*outbreak/i,
+    /severe\s+pest\s+infestation/i,
+  ]
+  return patterns.some((p) => p.test(t))
+}
+
+function determineViolationCategory(issue, remediation = '', type = '') {
+  const hay = `${issue || ''} ${remediation || ''} ${type || ''}`.toLowerCase()
+
+  if (isImminentHazardText(hay)) {
+    return {
+      category: 'Priority (P)',
+      correction: 'Correct immediately; operations may be ordered closed until corrected/approved.',
+      ifNotCorrected:
+        'Imminent health hazard: the county may order immediate closure; reopening only after violations are corrected and approval is given.',
+    }
+  }
+
+  const priorityPatterns = [
+    /hand\s*wash|handwashing|wash(?:ing)? hands/i,
+    /bare\s*hand/i,
+    /time\/temperature|tcs\b|potentially hazardous/i,
+    /hot\s*hold|cold\s*hold/i,
+    /\b41\s*°?\s*f\b|\b41f\b|\b41°F\b/i,
+    /\b135\s*°?\s*f\b|\b135f\b|\b135°F\b/i,
+    /cool(?:ing)?|rapid(?:ly)? cool/i,
+    /reheat(?:ing)?|rapid(?:ly)? reheat/i,
+    /cook(?:ing)? .* (?:temp|temperature)|undercook/i,
+    /cross\s*contaminat|raw .* ready[- ]?to[- ]?eat|rte/i,
+    /ill\s*employee|vomit|diarrhea|exclude|restrict/i,
+    /sanitize|sanitiz(?:e|ing) (?:food|utensil|equipment)|food[- ]?contact.*sanit/i,
+    /\bpest\b|rodent|roach|flies/i,
+    /toxic|poison|chemical.*(label|store)|cleaner.*(label|store)/i,
+  ]
+  if (priorityPatterns.some((p) => p.test(hay))) {
+    return {
+      category: 'Priority (P)',
+      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
+      ifNotCorrected:
+        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference → Informal Hearing → license limitation/suspension/revocation).',
+    }
+  }
+
+  const pfPatterns = [
+    /thermometer|probe\s*therm/i,
+    /test\s*strip|sanitizer\s*test/i,
+    /soap|paper\s*towel|hand\s*sink.*(soap|towel)/i,
+    /calibrat(?:e|ion)/i,
+    /haccp|plan|critical\s*limit/i,
+    /training|policy|procedure|documentation|record[- ]?keeping/i,
+  ]
+  if (pfPatterns.some((p) => p.test(hay))) {
+    return {
+      category: 'Priority Foundation (Pf)',
+      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
+      ifNotCorrected:
+        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference → Informal Hearing → license limitation/suspension/revocation).',
+    }
+  }
+
+  return {
+    category: 'Core',
+    correction: 'Correct by an agreed/specified date, typically no later than 90 days after inspection.',
+    ifNotCorrected:
+      'Unresolved or repeat core issues can still lead to enforcement—often after opportunities to correct during inspection/follow-up and subsequent progressive steps.',
+  }
+}
+
+// ============================================================================
+// OUTPUT ENFORCEMENT (ADD Category/Correction/If-not-corrected IF MISSING)
+// ============================================================================
+
 function enforceViolationFormat(text) {
   let out = safeText(text || '')
 
-  // Normalize the three allowed lead-ins
   out = out.replace(/^No clear violations observed\./i, 'No violations observed.')
   out = out.replace(/^No violations found\./i, 'No violations observed.')
   out = out.replace(/^Potential issues observed:/i, 'Violations observed:')
   out = out.replace(/^Issues observed:/i, 'Violations observed:')
 
-  // Remove any lingering “confidence” language
   out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
-  // If the model used "- X. Fix: Y." style bullets, convert to full schema including Category + Enforcement
+  // If the model used "- X. Fix: Y." bullets, convert into the required schema
   if (/^Violations observed:/i.test(out) && !/\bType\s*:\s*/i.test(out)) {
     out = out.replace(
       /-\s*(.*?)\s*\.?\s*(?:Fix|Remediation|Action)\s*:\s*(.*?)(?=\n-\s|\n{2,}|$)/gis,
@@ -495,51 +564,6 @@ function enforceViolationFormat(text) {
     )
   }
 
-  // If it starts with Violations observed but lacks Type blocks, do a light best-effort conversion
-  if (/^Violations observed:/i.test(out) && !/\bType\s*:\s*/i.test(out)) {
-    const lines = out.split('\n')
-    const rebuilt = []
-    let i = 0
-    while (i < lines.length) {
-      const line = lines[i]
-      if (i === 0) {
-        rebuilt.push('Violations observed:')
-        i++
-        continue
-      }
-
-      const bulletMatch = line.match(/^\s*[-•]\s+(.*)$/)
-      if (!bulletMatch) {
-        rebuilt.push(line)
-        i++
-        continue
-      }
-
-      const bulletText = safeText(bulletMatch[1])
-      const split = bulletText.match(/^(.*?)(?:\s*(?:Fix|Remediation|Action)\s*[:\-]\s*)(.*)$/i)
-
-      if (split) {
-        const issue = safeLine(split[1])
-        const remediation = safeLine(split[2])
-        const violationType = determineViolationType(issue)
-        const catInfo = determineViolationCategory(issue, remediation, violationType)
-
-        rebuilt.push(`- **Type**: ${violationType}`)
-        rebuilt.push(`  **Category**: ${catInfo.category}`)
-        rebuilt.push(`  **Issue**: ${issue}`)
-        rebuilt.push(`  **Remediation**: ${remediation}`)
-        rebuilt.push(`  **Correction**: ${catInfo.correction}`)
-        rebuilt.push(`  **If not corrected**: ${catInfo.ifNotCorrected}`)
-      } else {
-        // Keep as-is (better than fabricating remediation)
-        rebuilt.push(`- ${bulletText}`)
-      }
-
-      i++
-    }
-    out = rebuilt.join('\n')
-  }
-
   return out.trim()
 }
 
@@ -547,29 +571,26 @@ function enrichViolationsIfMissingFields(text) {
   const out = safeText(text || '')
   if (!/^Violations observed:/i.test(out)) return out
 
-  // Already rich enough?
-  if (/\*\*Category\*\*:/i.test(out) && /\*\*If not corrected\*\*:/i.test(out) && /\*\*Correction\*\*:/i.test(out)) {
+  // already has everything?
+  if (/\*\*Category\*\*:/i.test(out) && /\*\*Correction\*\*:/i.test(out) && /\*\*If not corrected\*\*:/i.test(out)) {
     return out
   }
 
   const lines = out.split('\n')
   const rebuilt = []
-  let i = 0
-
-  // keep header line
   rebuilt.push(lines[0])
-  i = 1
 
-  let currentBlock = null
+  let current = null
 
-  function flushBlock() {
-    if (!currentBlock) return
-    const { type, issue, remediation } = currentBlock
+  function flush() {
+    if (!current) return
+    const type = safeLine(current.type || '')
+    const issue = safeLine(current.issue || '')
+    const remediation = safeLine(current.remediation || '')
 
-    // If we can’t extract basics, keep raw lines
     if (!type || !issue || !remediation) {
-      rebuilt.push(...(currentBlock.rawLines || []))
-      currentBlock = null
+      rebuilt.push(...(current.raw || []))
+      current = null
       return
     }
 
@@ -581,40 +602,32 @@ function enrichViolationsIfMissingFields(text) {
     rebuilt.push(`  **Remediation**: ${remediation}`)
     rebuilt.push(`  **Correction**: ${catInfo.correction}`)
     rebuilt.push(`  **If not corrected**: ${catInfo.ifNotCorrected}`)
-    currentBlock = null
+    current = null
   }
 
-  while (i < lines.length) {
+  for (let i = 1; i < lines.length; i++) {
     const line = lines[i]
 
     const typeMatch = line.match(/^\s*-\s*\*\*Type\*\*:\s*(.+)\s*$/i)
     if (typeMatch) {
-      flushBlock()
-      currentBlock = { type: safeLine(typeMatch[1]), issue: '', remediation: '', rawLines: [line] }
-      i++
+      flush()
+      current = { type: typeMatch[1], issue: '', remediation: '', raw: [line] }
       continue
     }
 
-    if (currentBlock) {
-      currentBlock.rawLines.push(line)
-
-      const issueMatch = line.match(/^\s*\*\*Issue\*\*:\s*(.+)\s*$/i) || line.match(/^\s*\*\*Issue\*\*\s*:\s*(.+)\s*$/i)
-      if (issueMatch) currentBlock.issue = safeLine(issueMatch[1])
-
-      const remMatch =
-        line.match(/^\s*\*\*Remediation\*\*:\s*(.+)\s*$/i) || line.match(/^\s*\*\*Remediation\*\*\s*:\s*(.+)\s*$/i)
-      if (remMatch) currentBlock.remediation = safeLine(remMatch[1])
-
-      i++
+    if (current) {
+      current.raw.push(line)
+      const issueMatch = line.match(/^\s*\*\*Issue\*\*:\s*(.+)\s*$/i)
+      if (issueMatch) current.issue = issueMatch[1]
+      const remMatch = line.match(/^\s*\*\*Remediation\*\*:\s*(.+)\s*$/i)
+      if (remMatch) current.remediation = remMatch[1]
       continue
     }
 
-    // no active block, just passthrough
     rebuilt.push(line)
-    i++
   }
 
-  flushBlock()
+  flush()
 
   return rebuilt.join('\n').trim()
 }
@@ -633,10 +646,7 @@ async function callCohereChatV2Rest({ model, messages }) {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model,
-      messages,
-    }),
+    body: JSON.stringify({ model, messages }),
   })
 
   const raw = await res.text().catch(() => '')
@@ -669,12 +679,10 @@ function isVisionModel(model) {
 function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
   const messages = []
 
-  // system message (string is OK; user payload uses content blocks)
   if (safeText(preamble)) {
     messages.push({ role: 'system', content: safeText(preamble) })
   }
 
-  // carry over previous turns (text-only history)
   const hist = Array.isArray(chatHistory) ? chatHistory : []
   for (const h of hist) {
     const roleRaw = String(h?.role || '').toUpperCase()
@@ -690,10 +698,7 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
 
   const normalizedImages = normalizeImagesForCohere(images)
   for (const url of normalizedImages) {
-    parts.push({
-      type: 'image_url',
-      image_url: { url },
-    })
+    parts.push({ type: 'image_url', image_url: { url } })
   }
 
   messages.push({
@@ -705,15 +710,13 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
 }
 
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
-  // build docs payload for legacy SDK calls (optional)
   const docs = (documents || []).map((doc) => ({
-    id: doc?.id || 'unknown',
-    title: doc?.title || doc?.source || 'Source',
+    id: doc?.id || 'internal',
+    title: doc?.title || doc?.source || 'Policy',
     snippet: doc?.snippet || doc?.text || '',
     text: doc?.text || '',
   }))
 
-  // ✅ Vision path: Cohere v2 REST only
   if (isVisionModel(model) && images) {
     const { messages, normalizedImagesCount } = buildV2Messages({
       preamble,
@@ -726,21 +729,12 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
       throw new Error('Image payload missing after normalization (v2)')
     }
 
-    logger.info('Sending vision request to Cohere (v2 REST)', {
-      model,
-      messagesCount: messages.length,
-      imagesCount: normalizedImagesCount,
-      hasPreamble: Boolean(safeText(preamble)),
-      legacyDocsCount: docs.length,
-    })
-
     const respV2 = await callCohereChatV2Rest({ model, messages })
     respV2.__text = cohereResponseToText(respV2)
     respV2.__format = 'v2_rest'
     return respV2
   }
 
-  // ✅ Text path (legacy SDK / v1 style)
   const payloadLegacy = {
     model,
     message,
@@ -750,9 +744,7 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
   }
 
   const normalizedImages = normalizeImagesForCohere(images)
-  if (normalizedImages.length) {
-    payloadLegacy.images = normalizedImages
-  }
+  if (normalizedImages.length) payloadLegacy.images = normalizedImages
 
   if (!safeText(message) && !payloadLegacy.images?.length) {
     throw new Error('Missing message content for Cohere chat')
@@ -811,7 +803,7 @@ function extractSearchKeywords(text) {
     'sink',
     'drainage',
     'ventilation',
-    // Washtenaw enforcement keywords (helps retrieval pick up your enforcement docs when asked)
+    // enforcement / category retrieval helpers
     'priority',
     'priority foundation',
     'core',
@@ -820,6 +812,8 @@ function extractSearchKeywords(text) {
     'formal hearing',
     'enforcement action',
     'imminent health hazard',
+    'closure',
+    'license suspension',
   ]
 
   const lower = (text || '').toLowerCase()
@@ -853,36 +847,14 @@ function wantsFineInfo(text) {
 }
 
 // ============================================================================
-// DOCUMENT RETRIEVAL HELPERS
-// ============================================================================
-
-function dedupeByText(items) {
-  const seen = new Set()
-  const out = []
-  for (const it of items || []) {
-    const key = (it?.text || '').slice(0, 1600)
-    if (!key) continue
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push(it)
-  }
-  return out
-}
-
-// ============================================================================
 // USER-FRIENDLY ERROR MESSAGES
 // ============================================================================
 
 function getUserFriendlyErrorMessage(errorMessage) {
-  if (errorMessage === 'VISION_TIMEOUT') {
-    return 'Photo analysis took too long. Try a smaller image or wait 10 seconds and try again.'
-  } else if (errorMessage === 'RETRIEVAL_TIMEOUT') {
-    return 'Document search timed out. Please try again.'
-  } else if (errorMessage === 'ANSWER_TIMEOUT') {
-    return 'Response generation timed out. System may be busy - try again in 10 seconds.'
-  } else if (errorMessage === 'EMBEDDING_TIMEOUT') {
-    return 'Search processing timed out. Please try again.'
-  }
+  if (errorMessage === 'VISION_TIMEOUT') return 'Photo analysis took too long. Try a smaller image or wait 10 seconds and try again.'
+  if (errorMessage === 'RETRIEVAL_TIMEOUT') return 'Document search timed out. Please try again.'
+  if (errorMessage === 'ANSWER_TIMEOUT') return 'Response generation timed out. System may be busy - try again in 10 seconds.'
+  if (errorMessage === 'EMBEDDING_TIMEOUT') return 'Search processing timed out. Please try again.'
   return 'Unable to process request. Please try again.'
 }
 
@@ -896,16 +868,14 @@ function safeErrorDetails(err) {
     if (msg) parts.push(msg)
 
     const responseData = err?.response?.body ?? err?.response?.data ?? err?.body ?? err?.data
-    if (typeof responseData === 'string') {
-      parts.push(responseData)
-    } else if (responseData && typeof responseData === 'object') {
+    if (typeof responseData === 'string') parts.push(responseData)
+    else if (responseData && typeof responseData === 'object') {
       try {
         parts.push(JSON.stringify(responseData))
       } catch {}
     }
 
-    const text = parts.filter(Boolean).join(' | ')
-    return safeLine(text).slice(0, 600) || 'Unknown error'
+    return safeLine(parts.filter(Boolean).join(' | ')).slice(0, 600) || 'Unknown error'
   } catch {
     return 'Unknown error'
   }
@@ -941,15 +911,8 @@ export async function POST(request) {
   try {
     logger.info('Chat request received')
 
-    if (!FEATURE_COHERE) {
-      return NextResponse.json({ error: 'AI service disabled.' }, { status: 503 })
-    }
-
-    if (!process.env.COHERE_API_KEY) {
-      logger.error('COHERE_API_KEY not configured')
-      return NextResponse.json({ error: 'AI service not configured.' }, { status: 500 })
-    }
-
+    if (!FEATURE_COHERE) return NextResponse.json({ error: 'AI service disabled.' }, { status: 503 })
+    if (!process.env.COHERE_API_KEY) return NextResponse.json({ error: 'AI service not configured.' }, { status: 500 })
     if (!isServiceEnabled()) {
       return NextResponse.json({ error: getMaintenanceMessage() || 'Service temporarily unavailable.' }, { status: 503 })
     }
@@ -964,27 +927,22 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const messages = Array.isArray(body?.messages) ? body.messages : []
 
-    // Accept multiple possible shapes
     const imageInput = body?.image || body?.imageBase64 || body?.image_url || body?.imageDataUrl || body?.image_data
     const hasImage = Boolean(imageInput)
 
-    // ✅ Validate/normalize image before processing
     let imageBase64 = null
     let imageMediaType = null
     let fullDataUrl = null
 
     if (hasImage) {
       const validation = validateImageData(imageInput)
-
       if (!validation.valid) {
         logger.warn('Invalid image data', { error: validation.error })
         return NextResponse.json({ error: `Image validation failed: ${validation.error}` }, { status: 400 })
       }
-
       imageBase64 = validation.base64Data
       imageMediaType = validation.mediaType
       fullDataUrl = validation.dataUrl
-
       logger.info('Image validated', { mediaType: imageMediaType, dataLength: imageBase64.length })
     }
 
@@ -997,7 +955,7 @@ export async function POST(request) {
       : -1
     const resolvedLastUserIndex = lastUserIndex === -1 ? -1 : messages.length - 1 - lastUserIndex
 
-    // Resolve userMessage from multiple shapes
+    // Resolve userMessage
     let userMessage =
       (typeof body.message === 'string' && body.message.trim()) ||
       (Array.isArray(body.messages)
@@ -1016,15 +974,12 @@ export async function POST(request) {
       userMessage = safeLine(messageContentToString(fallback?.content))
     }
 
-    // ✅ If image-only: ask for violations + remediation + category/enforcement; ask clarifying instead of guessing
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for food safety / sanitation violations. For each violation, provide the violation type, the violation category (Priority/Priority Foundation/Core), what is wrong, clear remediation steps, and what typically happens if it is not corrected. If the image is unclear or key details are missing, ask up to three short clarification questions instead of guessing.'
+        'Review the photo for food safety / sanitation violations. For each violation, provide the violation type, the violation category (Priority/Priority Foundation/Core), what is wrong, clear remediation steps, correction time frame, and what typically happens if it is not corrected. If the image is unclear or key details are missing, ask up to three short clarification questions instead of guessing.'
     }
 
-    if (!userMessage) {
-      return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
-    }
+    if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
 
     const county = safeLine(body?.county || 'washtenaw') || 'washtenaw'
     const effectivePrompt = userMessage
@@ -1149,26 +1104,25 @@ export async function POST(request) {
       }
     } catch (e) {
       logger.error('Auth/license check failed', { error: e?.message })
-      return NextResponse.json(
-        { error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' }, { status: 401 })
     }
 
     const searchDocumentsFn = await getSearchDocuments()
 
     // ========================================================================
-    // DOCUMENT RETRIEVAL
+    // DOCUMENT RETRIEVAL (USER QUERY + PINNED POLICY)
     // ========================================================================
 
     const userKeywords = extractSearchKeywords(effectivePrompt)
-
     const searchQuery = [effectivePrompt, userKeywords.slice(0, 7).join(' '), 'Washtenaw County Michigan food code']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
 
-    let rerankedDocs = []
+    // 🔒 Pinned policy docs retrieved in parallel (from corpus)
+    const pinnedPolicyDocsPromise = fetchPinnedPolicyDocs(searchDocumentsFn, county)
+
+    let userDocs = []
     let rerankUsed = false
     let rerankCandidates = 0
 
@@ -1178,42 +1132,28 @@ export async function POST(request) {
         RETRIEVAL_TIMEOUT_MS,
         'RETRIEVAL_TIMEOUT'
       )
+      userDocs = dedupeByText(initialDocs || []).slice(0, TOPK_PER_QUERY)
+      rerankCandidates = userDocs.length
 
-      const candidates = dedupeByText(initialDocs || [])
-      const limitedCandidates = candidates.slice(0, TOPK_PER_QUERY)
-      rerankCandidates = limitedCandidates.length
-
-      if (limitedCandidates.length === 0) {
-        logger.warn('No documents retrieved from vector search', { county, queryLength: searchQuery.length })
-      } else if (FEATURE_RERANK) {
+      if (FEATURE_RERANK && userDocs.length) {
         const rerankResponse = await cohereClient.rerank({
           model: COHERE_RERANK_MODEL,
           query: searchQuery,
-          documents: limitedCandidates.map((doc) => doc.text || ''),
-          topN: Math.min(RERANK_TOP_N, limitedCandidates.length),
+          documents: userDocs.map((doc) => doc.text || ''),
+          topN: Math.min(RERANK_TOP_N, userDocs.length),
         })
 
         rerankUsed = true
-
-        // ✅ NO DOC_ IDs
-        rerankedDocs = (rerankResponse?.results || [])
-          .map((result) => {
-            const sourceDoc = limitedCandidates[result.index]
-            return { ...sourceDoc, rerankScore: result.relevanceScore }
-          })
+        userDocs = (rerankResponse?.results || [])
+          .map((r) => ({ ...userDocs[r.index], rerankScore: r.relevanceScore }))
           .filter(Boolean)
-          .slice(0, RERANK_TOP_N)
 
-        if (rerankedDocs.length < MIN_RERANK_DOCS && limitedCandidates.length > 0) {
-          const padding = limitedCandidates.slice(0, MIN_RERANK_DOCS - rerankedDocs.length).map((doc) => ({
-            ...doc,
-            rerankScore: 0,
-          }))
-          rerankedDocs = [...rerankedDocs, ...padding]
+        if (userDocs.length < MIN_RERANK_DOCS) {
+          const pad = dedupeByText(initialDocs || []).slice(0, MIN_RERANK_DOCS - userDocs.length)
+          userDocs = [...userDocs, ...pad]
         }
       } else {
-        // ✅ NO DOC_ IDs
-        rerankedDocs = limitedCandidates.map((doc) => ({ ...doc })).slice(0, RERANK_TOP_N)
+        userDocs = userDocs.slice(0, RERANK_TOP_N)
       }
     } catch (e) {
       logger.warn('Retrieval or rerank failed', { error: e?.message })
@@ -1222,19 +1162,24 @@ export async function POST(request) {
       }
     }
 
-    const contextDocs = rerankedDocs.slice(0, MAX_DOCS_FOR_CONTEXT)
+    const pinnedPolicyDocs = await pinnedPolicyDocsPromise.catch(() => [])
 
-    // ✅ Internal-only excerpt block (no IDs, no “Reference documents” label)
+    // Reserve slots: pinned first, then user docs
+    const userSlots = Math.max(1, MAX_CONTEXT_DOCS - (pinnedPolicyDocs?.length || 0))
+    const contextDocs = dedupeByText([...(pinnedPolicyDocs || []), ...(userDocs || []).slice(0, userSlots)]).slice(
+      0,
+      MAX_CONTEXT_DOCS
+    )
+
+    // Build excerpt block (internal only). Avoid page refs and real file names.
     const excerptBlock =
       contextDocs.length === 0
         ? ''
         : contextDocs
             .map((doc) => {
-              const src = safeLine(doc.source || 'Source')
-              const page = safeLine(String(doc.page || ''))
-              const header = page ? `${src} (p.${page})` : src
-              const text = safeText(doc.text || '')
-              return `INTERNAL POLICY EXCERPT — ${header}\n${text}`
+              const label = normalizeSourceLabel(doc.source || doc.title || 'Policy')
+              const text = docTextForExcerpt(doc, 1400)
+              return `INTERNAL POLICY EXCERPT — ${label}\n${text}`
             })
             .join('\n\n')
 
@@ -1244,20 +1189,20 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // SYSTEM PROMPT (concise, no citations, actionable violations)
+    // SYSTEM PROMPT
     // ========================================================================
 
     const systemPrompt = `You are ProtocolLM — a Washtenaw County, Michigan food service compliance assistant.
 
 You may receive a user question and sometimes one or more photos. You also receive internal policy excerpts for grounding.
-Do NOT mention, cite, or reference any documents, excerpts, page numbers, IDs, or sources in your response.
+Do NOT mention, cite, or reference any documents, excerpts, page numbers, IDs, filenames, or sources in your response.
 
 Goals:
 - Identify specific violations based on observed conditions or user descriptions.
 - Provide clear, actionable remediation steps for each violation.
 - Specify the violation TYPE (e.g., "Food Storage," "Sanitation," "Temperature Control").
-- Classify each issue as a Washtenaw County violation CATEGORY: Priority (P), Priority Foundation (Pf), or Core.
-- For each violation, include: correction time frame and what typically happens if it is not corrected (follow-up / progressive enforcement / closure for imminent hazards).
+- Classify each issue as a violation CATEGORY: Priority (P), Priority Foundation (Pf), or Core, using the internal policy excerpts.
+- For each violation, include correction time frame and what typically happens if it is not corrected (follow-up / enforcement / closure for imminent hazards).
 - Avoid false positives. If unsure, ask clarifying questions instead of guessing.
 - No emojis. No citations. Do not mention confidence.
 
@@ -1271,10 +1216,10 @@ If issues are observed:
 - For each violation:
   - **Type**: [Violation type]
   - **Category**: [Priority (P) | Priority Foundation (Pf) | Core]
-  - **Issue**: [Description of the violation]
-  - **Remediation**: [Actionable steps to fix the violation]
-  - **Correction**: [Immediate/≤10 days for P/Pf, ≤90 days for Core, or immediate closure conditions]
-  - **If not corrected**: [Follow-up inspection and/or progressive enforcement steps; closure for imminent hazards]
+  - **Issue**: [Description]
+  - **Remediation**: [Steps]
+  - **Correction**: [Time frame or closure condition]
+  - **If not corrected**: [Follow-up / enforcement / closure]
 
 If you need clarification:
 - Start with: "Need a quick clarification:"
@@ -1307,13 +1252,14 @@ If you need clarification:
 
     const systemHistoryPreamble = historySystemMessages.filter(Boolean).join('\n\n')
 
-    // ✅ Preamble includes internal excerpts + a static Washtenaw enforcement block,
-    // but explicitly bans mentioning them.
+    // If pinned docs didn't come back (not ingested yet), include fallback
+    const fallbackBlock = pinnedPolicyDocs.length ? '' : WASHTENAW_POLICY_FALLBACK
+
     const preambleParts = [
       systemPrompt,
-      memoryContext ? `${memoryContext}` : '',
+      memoryContext || '',
       systemHistoryPreamble,
-      WASHTENAW_POLICY_BLOCK,
+      fallbackBlock,
       excerptBlock ? `\n\n${excerptBlock}` : '',
       'Reminder: Do not mention or cite any internal documents or excerpts.',
     ].filter(Boolean)
@@ -1341,10 +1287,10 @@ If you need clarification:
           chatHistory: cohereChatHistory,
           preamble,
           documents: contextDocs.map((doc) => ({
-            id: 'internal', // ✅ never DOC_#
-            title: doc.source || 'Source',
-            snippet: doc.text || '',
-            text: doc.text || '',
+            id: 'internal',
+            title: normalizeSourceLabel(doc.source || doc.title || 'Policy'),
+            snippet: docTextForExcerpt(doc, 900),
+            text: docTextForExcerpt(doc, 1400),
           })),
           images: visionImages,
         }
@@ -1354,10 +1300,8 @@ If you need clarification:
 
       try {
         const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
-
         billedUnits = answerResp?.meta?.billed_units || answerResp?.billed_units || {}
         tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
-
         modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
         assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
       } catch (visionErr) {
@@ -1369,17 +1313,15 @@ If you need clarification:
 
         if (hasImage && isLikelyBadRequest) {
           visionFallbackUsed = true
-          logger.warn('Vision generation rejected. Falling back to text-only.', { detail, model: usedModel })
+          logger.warn('Vision rejected; falling back to text-only.', { detail, model: usedModel })
 
           usedModel = COHERE_TEXT_MODEL
           const fallbackReq = buildCohereRequest(usedModel)
           fallbackReq.images = []
 
           const fallbackResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
-
           billedUnits = fallbackResp?.meta?.billed_units || fallbackResp?.billed_units || {}
           tokenUsage = fallbackResp?.meta?.tokens || fallbackResp?.tokens || {}
-
           modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
           assistantMessage = sanitizeOutput(
             `Photo analysis is temporarily unavailable. Answering based on the request text.\n\n${modelText || 'Unable to process request. Please try again.'}`
@@ -1397,7 +1339,7 @@ If you need clarification:
       )
     }
 
-    // Final hard safety scrub + enforce the violation formatting contract
+    // Final safety scrub + format enforcement
     assistantMessage = sanitizeOutput(stripDocIds(assistantMessage))
     assistantMessage = sanitizeOutput(enforceViolationFormat(assistantMessage))
     assistantMessage = sanitizeOutput(enrichViolationsIfMissingFields(assistantMessage))
@@ -1429,6 +1371,7 @@ If you need clarification:
       status,
       durationMs: Date.now() - startedAt,
       docsRetrieved: contextDocs.length,
+      pinnedPolicyDocs: pinnedPolicyDocs.length,
       fullAudit,
       includeFines,
       model: usedModel,
@@ -1469,6 +1412,7 @@ If you need clarification:
           fullAudit,
           includeFines,
           docsRetrieved: contextDocs.length,
+          pinnedPolicyDocs: pinnedPolicyDocs.length,
           durationMs: Date.now() - startedAt,
           visionFallbackUsed,
         },
