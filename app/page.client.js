@@ -1,7 +1,7 @@
 // app/page.client.js
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -47,7 +47,7 @@ const Icons = {
   ),
   X: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="18" y1="6" x2="6" y1="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
@@ -73,13 +73,14 @@ const Icons = {
 }
 
 function BrandLink({ variant = 'landing' }) {
+  const isChat = variant === 'chat'
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
           <Image src={appleIcon} alt="" width={69} height={69} priority />
         </span>
-        <span className="plm-brand-text">protocolLM</span>
+        {!isChat && <span className="plm-brand-text">protocolLM</span>}
       </span>
     </Link>
   )
@@ -124,7 +125,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <div className="landing-hero-card glass-surface">
           <div className="hero-content">
             <div className="hero-headings">
-              <h1 className="hero-title">Catch Violations, Not Fines.</h1>
+              <h1 className={`hero-title ${outfit.className}`}>Catch Violations, Not Fines.</h1>
               <p className="hero-support">
                 Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
                 instant answers and guidance from Washtenaw County Food Safety Regulations.
@@ -776,7 +777,6 @@ export default function Page() {
 
   // ✅ UPDATED: ensures we send the image data URL at top-level `image`,
   // and also include it inside the latest user message object.
-  // Also avoids any weirdness with stale `messages` by capturing `baseMessages` once.
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
@@ -789,7 +789,6 @@ export default function Page() {
 
     const newUserMessage = { role: 'user', content: question, image }
 
-    // capture current messages snapshot for request payload
     const baseMessages = messages
     const outgoingMessages = [...baseMessages, newUserMessage]
 
@@ -830,7 +829,7 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: outgoingMessages,
-          image, // ✅ top-level image field (data URL)
+          image,
           chatId: activeChatId,
         }),
       })
@@ -879,7 +878,7 @@ export default function Page() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      const compressed = await compressImage(file) // should return a data URL string
+      const compressed = await compressImage(file)
       setSelectedImage(compressed)
     } catch (error) {
       console.error('Image compression error', error)
@@ -1083,6 +1082,15 @@ export default function Page() {
           text-overflow: ellipsis;
         }
 
+        /* Chat brand: logo only (no text) + tighter sizing */
+        .plm-brand.chat .plm-brand-inner {
+          gap: 0;
+        }
+        .plm-brand.chat .plm-brand-mark {
+          width: 56px;
+          height: 56px;
+        }
+
         .desktop-only {
           display: flex;
         }
@@ -1128,12 +1136,6 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 8px;
-        }
-
-        .landing-top-actions-desktop {
-          display: flex;
-          align-items: center;
-          gap: 4px;
         }
 
         .btn-nav {
@@ -1195,9 +1197,7 @@ export default function Page() {
           padding: 40px 48px;
           background: linear-gradient(145deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.08));
           border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.52),
-            0 32px 96px rgba(5, 7, 13, 0.45);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), 0 32px 96px rgba(5, 7, 13, 0.45);
           backdrop-filter: blur(20px) saturate(130%);
           -webkit-backdrop-filter: blur(20px) saturate(130%);
         }
@@ -1221,10 +1221,11 @@ export default function Page() {
           gap: 14px;
         }
 
+        /* NEW: header font via Outfit + darker legible color */
         .hero-title {
-          font-size: clamp(28px, 5vw, 40px);
+          font-size: clamp(28px, 5vw, 42px);
           font-weight: 800;
-          color: rgba(15, 23, 42, 0.88);
+          color: rgba(15, 23, 42, 0.92);
           letter-spacing: -0.03em;
           margin: 0;
         }
@@ -1233,7 +1234,7 @@ export default function Page() {
           margin: 0;
           font-size: 16px;
           line-height: 1.65;
-          color: rgba(30, 41, 59, 0.72);
+          color: rgba(30, 41, 59, 0.74);
           max-width: 52ch;
         }
 
@@ -1247,32 +1248,45 @@ export default function Page() {
           margin-top: 8px;
         }
 
+        /* FIX: this was too light on the light hero card */
         .hero-arrow-text {
           white-space: nowrap;
-          color: var(--ink-1);
+          color: rgba(15, 23, 42, 0.82);
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
 
         .hero-arrow-icon {
-          display: flex;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: var(--ink-2);
-          flex-shrink: 0;
-          animation: arrow-pulse 2s ease-in-out infinite;
+          width: 34px;
+          height: 34px;
+          color: rgba(15, 23, 42, 0.72);
+          border-radius: 9999px;
+          border: 1px solid rgba(15, 23, 42, 0.18);
+          background: rgba(255, 255, 255, 0.22);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 10px 26px rgba(5, 7, 13, 0.18);
+          animation: arrow-pulse-alt 1.6s ease-in-out infinite;
         }
 
-        @keyframes arrow-pulse {
+        @keyframes arrow-pulse-alt {
           0%,
           100% {
-            opacity: 0.6;
             transform: translateX(0);
+            opacity: 0.65;
           }
           50% {
-            opacity: 1;
             transform: translateX(3px);
+            opacity: 1;
           }
+        }
+
+        .hero-arrow-icon svg {
+          width: 16px;
+          height: 16px;
+          stroke-width: 2.4;
         }
 
         .hero-cta {
@@ -1286,9 +1300,9 @@ export default function Page() {
           border-radius: var(--radius-full);
           overflow: visible;
           box-shadow: 0 12px 30px rgba(95, 168, 255, 0.24);
+          transition: transform 0.12s ease;
         }
 
-        /* Subtle tracing animation for Start trial button */
         .hero-cta-trace {
           position: relative;
         }
@@ -1326,110 +1340,17 @@ export default function Page() {
           pointer-events: none;
         }
 
-        /* CTA text sizing */
         .hero-cta span {
-          font-weight: 700;
+          font-weight: 800;
           letter-spacing: 0.01em;
         }
 
-        /* CTA hover */
         .hero-cta:hover {
           transform: translateY(-1px);
         }
 
         .hero-cta:active {
           transform: translateY(0);
-        }
-
-        /* Hero badge */
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 14px;
-          border-radius: 9999px;
-          background: rgba(255, 255, 255, 0.1);
-          color: var(--ink-0);
-          font-size: 13px;
-          letter-spacing: 0.02em;
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        }
-
-        .hero-badge .sparkle {
-          display: inline-flex;
-          align-items: center;
-          color: #fff;
-          background: linear-gradient(135deg, #6ee7b7, #7c3aed, #60a5fa);
-          -webkit-background-clip: text;
-          color: transparent;
-        }
-
-        /* CTA subtext */
-        .hero-subtext {
-          font-size: 14px;
-          color: var(--ink-2);
-          letter-spacing: 0.01em;
-        }
-
-        /* CTA arrow text */
-        .hero-arrow-text {
-          white-space: nowrap;
-        }
-
-        /* CTA arrow icon */
-        .hero-arrow-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          color: var(--ink-2);
-          border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.24);
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.4),
-            0 10px 26px rgba(5, 7, 13, 0.28);
-        }
-
-        @keyframes arrow-pulse-alt {
-          0%,
-          100% {
-            transform: translateX(0);
-            opacity: 0.6;
-          }
-          50% {
-            transform: translateX(3px);
-            opacity: 1;
-          }
-        }
-
-        .hero-arrow-icon svg {
-          width: 16px;
-          height: 16px;
-          stroke-width: 2.4;
-        }
-
-        .hero-arrow-icon {
-          animation: arrow-pulse-alt 1.6s ease-in-out infinite;
-        }
-
-        /* CTA vertical layout (mobile) */
-        .mobile-start {
-          display: none;
-          flex-direction: column;
-          align-items: center;
-          gap: 12px;
-          width: 100%;
-        }
-
-        .mobile-start .btn-primary {
-          width: 100%;
-          justify-content: center;
-          height: 46px;
-          font-size: 15px;
-          border-radius: var(--radius-full);
         }
 
         /* Footer links */
@@ -1466,8 +1387,7 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background:
-            radial-gradient(120% 70% at 12% 10%, rgba(255, 255, 255, 0.08), transparent 50%),
+          background: radial-gradient(120% 70% at 12% 10%, rgba(255, 255, 255, 0.08), transparent 50%),
             radial-gradient(120% 70% at 88% 0%, rgba(95, 168, 255, 0.12), transparent 52%),
             rgba(5, 7, 13, 0.7);
           backdrop-filter: blur(12px) saturate(120%);
@@ -1511,9 +1431,7 @@ export default function Page() {
           border-radius: var(--radius-lg);
           padding: 28px;
           background: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.46),
-            0 24px 72px rgba(5, 7, 13, 0.4);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 24px 72px rgba(5, 7, 13, 0.4);
           backdrop-filter: blur(18px) saturate(125%);
           -webkit-backdrop-filter: blur(18px) saturate(125%);
         }
@@ -1586,9 +1504,7 @@ export default function Page() {
 
         .form-input-wrap:focus-within {
           border-color: var(--accent);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.6),
-            0 0 0 3px var(--accent-dim);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 3px var(--accent-dim);
         }
 
         .form-input {
@@ -1731,62 +1647,43 @@ export default function Page() {
           color: var(--ink-0);
         }
 
-        .pricing-modal .pricing-feature {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          color: #e5e7eb;
-          font-size: 14px;
-          line-height: 1.6;
-        }
-
-        .pricing-modal .pricing-feature-check {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 18px;
-          color: #34d399;
-          flex-shrink: 0;
-        }
-
-        .pricing-modal .pricing-feature-text {
-          flex: 1;
-          letter-spacing: 0.01em;
-        }
-
         /* Chat */
         .chat-root {
+          position: relative;
           flex: 1;
           display: flex;
           flex-direction: column;
+          height: 100dvh;
           min-height: 100dvh;
-          height: auto;
           overflow: hidden;
         }
 
         @supports (-webkit-touch-callout: none) {
           .chat-root {
+            height: -webkit-fill-available;
             min-height: -webkit-fill-available;
           }
         }
 
+        /* TOP BAR: remove the black strip entirely (logo + gear float on background) */
         .chat-topbar {
-          position: sticky;
+          position: absolute;
           top: 0;
+          left: 0;
+          right: 0;
           z-index: 20;
           width: 100%;
           max-width: 880px;
           margin: 0 auto;
-          padding: 16px 24px;
-          padding-left: max(24px, env(safe-area-inset-left));
-          padding-right: max(24px, env(safe-area-inset-right));
+          padding: max(14px, env(safe-area-inset-top) + 8px) max(18px, env(safe-area-inset-right) + 12px) 0
+            max(18px, env(safe-area-inset-left) + 12px);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-shrink: 0;
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          background: linear-gradient(180deg, rgba(5, 7, 13, 0.6), rgba(5, 7, 13, 0.08));
+          gap: 10px;
+          background: transparent;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
         }
 
         .chat-top-actions {
@@ -1802,22 +1699,25 @@ export default function Page() {
         }
 
         .chat-settings-btn {
-          width: 36px;
-          height: 36px;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          border: none;
-          border-radius: var(--radius-sm);
-          color: var(--ink-1);
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: 12px;
+          color: var(--ink-0);
           cursor: pointer;
-          transition: color 0.15s ease, background 0.15s ease;
+          transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+          backdrop-filter: blur(14px) saturate(120%);
+          -webkit-backdrop-filter: blur(14px) saturate(120%);
         }
 
         .chat-settings-btn:hover {
-          color: var(--ink-0);
-          background: rgba(255, 255, 255, 0.04);
+          transform: translateY(-1px);
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.24);
         }
 
         .chat-settings-menu {
@@ -1861,6 +1761,7 @@ export default function Page() {
           margin: 6px 2px;
         }
 
+        /* Messages fill the screen; offset top so content doesn't sit under logo */
         .chat-messages {
           flex: 1;
           min-height: 0;
@@ -1868,7 +1769,7 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
-          padding: 8px 24px 12px;
+          padding: calc(max(76px, env(safe-area-inset-top) + 76px)) 24px 12px;
           background: transparent;
         }
 
@@ -1880,10 +1781,16 @@ export default function Page() {
 
         .chat-empty-text {
           font-size: 14px;
-          color: var(--ink-2);
+          color: rgba(15, 23, 42, 0.7);
           line-height: 1.6;
           margin: 0;
           text-align: center;
+          background: rgba(255, 255, 255, 0.18);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          padding: 12px 14px;
+          border-radius: 14px;
+          backdrop-filter: blur(16px) saturate(120%);
+          -webkit-backdrop-filter: blur(16px) saturate(120%);
         }
 
         .chat-history {
@@ -1920,7 +1827,7 @@ export default function Page() {
           color: var(--ink-0);
         }
         .chat-bubble-assistant {
-          color: var(--ink-1);
+          color: rgba(15, 23, 42, 0.86);
         }
 
         .chat-bubble-image {
@@ -1946,26 +1853,24 @@ export default function Page() {
 
         .chat-thinking {
           display: block;
-          color: var(--ink-2);
+          color: rgba(15, 23, 42, 0.7);
           font-style: italic;
         }
 
+        /* BOTTOM BAR: remove the black strip; keep ONLY the glass dock */
         .chat-input-area {
           flex-shrink: 0;
-          position: sticky;
-          bottom: 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.2);
-          background: linear-gradient(180deg, rgba(5, 7, 13, 0.4), rgba(5, 7, 13, 0.2));
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          position: relative;
+          background: transparent;
+          border-top: none;
         }
 
         .chat-input-inner {
           max-width: 760px;
           margin: 0 auto;
-          padding: 12px 24px;
-          padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
           width: 100%;
+          padding: 12px 24px;
+          padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
         }
 
         .chat-dock {
@@ -1987,7 +1892,7 @@ export default function Page() {
           border-radius: var(--radius-sm);
           margin-bottom: 12px;
           font-size: 12px;
-          color: var(--ink-1);
+          color: rgba(15, 23, 42, 0.86);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
 
@@ -2004,12 +1909,12 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--ink-2);
+          color: rgba(15, 23, 42, 0.72);
           cursor: pointer;
         }
 
         .chat-attachment-remove:hover {
-          color: var(--ink-0);
+          color: rgba(15, 23, 42, 0.9);
         }
 
         .chat-input-row {
@@ -2033,7 +1938,9 @@ export default function Page() {
           flex-shrink: 0;
           transition: border-color 0.15s ease, box-shadow 0.15s ease;
           overflow: visible;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 10px 26px rgba(5, 7, 13, 0.28);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 10px 26px rgba(5, 7, 13, 0.18);
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
         }
 
         .chat-camera-btn:hover {
@@ -2051,6 +1958,8 @@ export default function Page() {
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
           transition: border-color 0.15s ease, box-shadow 0.15s ease;
           min-width: 0;
+          backdrop-filter: blur(14px) saturate(120%);
+          -webkit-backdrop-filter: blur(14px) saturate(120%);
         }
 
         .chat-input-wrapper:focus-within {
@@ -2064,7 +1973,7 @@ export default function Page() {
           padding: 12px 14px;
           background: transparent;
           border: none;
-          color: var(--ink-0);
+          color: rgba(15, 23, 42, 0.92);
           font-size: 16px;
           line-height: 1.4;
           resize: none;
@@ -2073,7 +1982,7 @@ export default function Page() {
         }
 
         .chat-textarea::placeholder {
-          color: rgba(240, 244, 255, 0.55);
+          color: rgba(15, 23, 42, 0.55);
         }
         .chat-textarea:focus {
           outline: none;
@@ -2087,7 +1996,7 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: none;
-          color: var(--ink-2);
+          color: rgba(15, 23, 42, 0.6);
           cursor: pointer;
           flex-shrink: 0;
           transition: color 0.15s ease;
@@ -2119,7 +2028,7 @@ export default function Page() {
         .chat-disclaimer {
           text-align: center;
           font-size: 11px;
-          color: var(--ink-3);
+          color: rgba(15, 23, 42, 0.6);
           margin-top: 8px;
         }
 
@@ -2149,38 +2058,32 @@ export default function Page() {
             height: 18px;
           }
 
-          @keyframes arrow-pulse {
-            0%,
-            100% {
-              opacity: 0.6;
-              transform: rotate(90deg) translateX(0);
-            }
-            50% {
-              opacity: 1;
-              transform: rotate(90deg) translateX(3px);
-            }
+          .chat-topbar {
+            padding: max(12px, env(safe-area-inset-top) + 8px) max(14px, env(safe-area-inset-right) + 10px) 0
+              max(14px, env(safe-area-inset-left) + 10px);
           }
 
-          .hero-cta {
-            order: 2;
-            margin-top: 10px;
+          .chat-messages {
+            padding: calc(max(70px, env(safe-area-inset-top) + 70px)) 16px 10px;
+          }
+
+          .chat-input-inner {
+            padding: 10px 16px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+          }
+
+          .chat-bubble {
+            max-width: 85%;
+          }
+
+          .chat-empty-text {
+            font-size: 13px;
           }
 
           .landing-topbar {
             padding: max(14px, env(safe-area-inset-top) + 6px) max(14px, env(safe-area-inset-right) + 6px) 0
               max(14px, env(safe-area-inset-left) + 6px);
             gap: 10px;
-          }
-
-          .landing-topbar-inner {
-            gap: 10px;
-          }
-
-          .desktop-only {
-            display: none !important;
-          }
-          .mobile-only {
-            display: flex;
           }
 
           .landing-hero {
@@ -2209,30 +2112,6 @@ export default function Page() {
             letter-spacing: 0.04em !important;
             line-height: 1 !important;
           }
-
-          .chat-topbar {
-            padding: 12px 16px;
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
-            padding-top: max(12px, env(safe-area-inset-top));
-          }
-
-          .chat-messages {
-            padding: 6px 16px 10px;
-          }
-
-          .chat-input-inner {
-            padding: 10px 16px 14px;
-            padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
-          }
-
-          .chat-bubble {
-            max-width: 85%;
-          }
-
-          .chat-empty-text {
-            font-size: 13px;
-          }
         }
 
         @media (max-width: 480px) {
@@ -2246,6 +2125,11 @@ export default function Page() {
           }
           .plm-brand-text {
             font-size: 18px;
+          }
+
+          .plm-brand.chat .plm-brand-mark {
+            width: 54px;
+            height: 54px;
           }
         }
 
@@ -2266,12 +2150,7 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2289,30 +2168,7 @@ export default function Page() {
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
-                  {session && subscription && (
-                    <div
-                      style={{
-                        marginRight: '12px',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        letterSpacing: '0.02em',
-                        textTransform: 'uppercase',
-                        background:
-                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                        color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
-                        border: `1px solid ${
-                          subscription.status === 'trialing'
-                            ? 'rgba(59, 130, 246, 0.3)'
-                            : 'rgba(34, 197, 94, 0.3)'
-                        }`,
-                      }}
-                    >
-                      {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
-                    </div>
-                  )}
-
+                  {/* Removed the Pro/Trial pill entirely */}
                   <div className="chat-settings-wrap" ref={settingsRef}>
                     <button
                       type="button"
@@ -2361,11 +2217,7 @@ export default function Page() {
                 </nav>
               </header>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
+              <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
                     <p className="chat-empty-text">Upload a photo or ask a question about Washtenaw County food safety regulations.</p>
@@ -2373,10 +2225,7 @@ export default function Page() {
                 ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
-                      >
+                      <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
@@ -2407,32 +2256,16 @@ export default function Page() {
                           <Icons.Camera />
                         </span>
                         <span>Image attached</span>
-                        <button
-                          onClick={() => setSelectedImage(null)}
-                          className="chat-attachment-remove"
-                          aria-label="Remove"
-                          type="button"
-                        >
+                        <button onClick={() => setSelectedImage(null)} className="chat-attachment-remove" aria-label="Remove" type="button">
                           <Icons.X />
                         </button>
                       </div>
                     )}
 
                     <div className="chat-input-row">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={handleImageChange}
-                      />
+                      <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="chat-camera-btn"
-                        aria-label="Upload photo"
-                        type="button"
-                      >
+                      <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
                         <Icons.Camera />
                       </button>
 
@@ -2470,9 +2303,7 @@ export default function Page() {
                       </div>
                     </div>
 
-                    <p className="chat-disclaimer">
-                      protocolLM may make mistakes. Verify critical decisions with official regulations.
-                    </p>
+                    <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
                   </div>
                 </div>
               </div>
