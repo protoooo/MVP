@@ -50,10 +50,6 @@ export default function PrivacyPolicy() {
             compliance-related responses. Data is transmitted using industry-standard encryption (TLS 1.2+).
           </li>
           <li>
-            <strong>OpenAI API:</strong> Generates answers and vision analysis with GPT-5.2. Data is used only to process your
-            requests and is handled under OpenAI&apos;s privacy policy.
-          </li>
-          <li>
             <strong>Cohere API:</strong> Creates embeddings from your queries to search our Washtenaw County food code
             database. Enables fast, relevant document retrieval.
           </li>
@@ -64,11 +60,7 @@ export default function PrivacyPolicy() {
             specified in each provider's data retention policy.
           </li>
           <li>
-            <strong>Vendor Policies:</strong> For details on how these providers handle data, see{' '}
-            <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener noreferrer">
-              OpenAI Privacy Policy
-            </a>{' '}
-            and{' '}
+            <strong>Vendor Policies:</strong> For details on how Cohere handles data, see{' '}
             <a href="https://cohere.com/privacy" target="_blank" rel="noopener noreferrer">
               Cohere Privacy Policy
             </a>.
