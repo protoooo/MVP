@@ -185,40 +185,25 @@ function isModelAccessError(err) {
   return err?.status === 403 || msg.includes('not enabled') || msg.includes('access') || msg.includes('permission')
 }
 
-function buildCohereMessages(systemPrompt, userMessage, imageUrl) {
-  const messages = [
-    {
-      role: 'system',
-      content: [{ type: 'text', text: systemPrompt }],
-    },
-    {
-      role: 'user',
-      content: [{ type: 'text', text: userMessage }],
-    },
-  ]
-
-  if (imageUrl) {
-    messages[1].content.push({
-      type: 'image_url',
-      image_url: { url: imageUrl },
-    })
-  }
-
-  return messages
-}
-
-async function callCohereChat(model, systemPrompt, userMessage, imageUrl, documents) {
-  const messages = buildCohereMessages(systemPrompt, userMessage, imageUrl)
-  return cohereClient.chat({
+async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
+  const payload = {
     model,
-    messages,
+    message,
+    preamble,
+    chat_history: chatHistory,
     documents: documents.map((doc) => ({
       id: doc.id,
       title: doc.source || 'Source',
       snippet: doc.text || '',
       text: doc.text || '',
     })),
-  })
+  }
+
+  if (images && images.length > 0) {
+    payload.images = images
+  }
+
+  return cohereClient.chat(payload)
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
@@ -634,6 +619,31 @@ function getUserFriendlyErrorMessage(errorMessage) {
   return 'Unable to process request. Please try again.'
 }
 
+function safeErrorDetails(err) {
+  try {
+    if (!err) return 'Unknown error'
+    if (typeof err === 'string') return safeLine(err).slice(0, 400) || 'Unknown error'
+
+    const parts = []
+    const msg = safeLine(err?.message || '')
+    if (msg) parts.push(msg)
+
+    const responseData = err?.response?.body ?? err?.response?.data ?? err?.body ?? err?.data
+    if (typeof responseData === 'string') {
+      parts.push(responseData)
+    } else if (responseData && typeof responseData === 'object') {
+      try {
+        parts.push(JSON.stringify(responseData))
+      } catch {}
+    }
+
+    const text = parts.filter(Boolean).join(' | ')
+    return safeLine(text).slice(0, 400) || 'Unknown error'
+  } catch {
+    return 'Unknown error'
+  }
+}
+
 // ============================================================================
 // LOGGING
 // ============================================================================
@@ -697,6 +707,33 @@ export async function POST(request) {
 
     const body = await request.json().catch(() => ({}))
     const messages = Array.isArray(body?.messages) ? body.messages : []
+
+    const lastUserIndex = Array.isArray(messages)
+      ? messages
+          .slice()
+          .reverse()
+          .findIndex((m) => m?.role === 'user' && typeof m?.content === 'string')
+      : -1
+    const resolvedLastUserIndex = lastUserIndex === -1 ? -1 : messages.length - 1 - lastUserIndex
+
+    let userMessage =
+      (typeof body.message === 'string' && body.message.trim()) ||
+      (Array.isArray(body.messages)
+        ? (body.messages.slice().reverse().find((m) => m?.role === 'user' && typeof m?.content === 'string')?.content || '').trim()
+        : '')
+
+    if (!userMessage && Array.isArray(messages)) {
+      const fallback = messages
+        .slice()
+        .reverse()
+        .find((m) => m?.role === 'user' && messageContentToString(m?.content))
+      userMessage = safeLine(messageContentToString(fallback?.content))
+    }
+
+    if (!userMessage) {
+      return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
+    }
+
     const county = safeLine(body?.county || 'washtenaw') || 'washtenaw'
 
     const imageDataUrl = body?.image || body?.imageBase64 || body?.image_url
@@ -704,12 +741,7 @@ export async function POST(request) {
     const imageBase64 = hasImage ? extractBase64FromDataUrl(imageDataUrl) : null
     const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
 
-    const lastUserText = getLastUserText(messages)
-    const effectivePrompt = lastUserText || (hasImage ? 'Check this photo for compliance issues.' : '')
-
-    if (!effectivePrompt && !hasImage) {
-      return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
-    }
+    const effectivePrompt = userMessage
 
     const fullAudit = wantsFullAudit(effectivePrompt) || Boolean(body?.fullAudit)
     const includeFines = wantsFineInfo(effectivePrompt) || Boolean(body?.includeFines)
@@ -997,24 +1029,63 @@ Strict rules:
 - Be concise and factual; no fluff, no emojis, no markdown, no bullets unless needed for clarity.
 - If information is insufficient, explicitly say so and ask for precise missing details.`
 
-    const questionBlock = `User request: ${effectivePrompt || (hasImage ? 'Image provided, no text.' : '')}`
+    const historySystemMessages = []
+    const cohereChatHistory = []
+
+    if (Array.isArray(messages)) {
+      messages.forEach((msg, idx) => {
+        if (idx === resolvedLastUserIndex) return
+        const text = safeLine(messageContentToString(msg?.content))
+        if (!text) return
+
+        if (msg?.role === 'system' || msg?.role === 'developer') {
+          historySystemMessages.push(text)
+          return
+        }
+
+        if (msg?.role === 'assistant') {
+          cohereChatHistory.push({ role: 'CHATBOT', message: text })
+          return
+        }
+
+        if (msg?.role === 'user') {
+          cohereChatHistory.push({ role: 'USER', message: text })
+        }
+      })
+    }
+
+    const systemHistoryPreamble = historySystemMessages.filter(Boolean).join('\n\n')
+    const preambleParts = [
+      systemPrompt,
+      systemHistoryPreamble,
+      excerptBlock ? `Reference documents:\n${excerptBlock}` : '',
+      'Cite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.',
+    ].filter(Boolean)
+    const preamble = preambleParts.join('\n\n')
+    const cohereImages = hasImage && imageBase64 ? [{ data: imageBase64, media_type: imageMediaType }] : undefined
 
     // ========================================================================
     // GENERATE RESPONSE
     // ========================================================================
 
     let modelText = ''
-    let message = ''
+    let assistantMessage = ''
     let status = 'guidance'
     let usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
     let billedUnits = {}
     let tokenUsage = {}
 
-    const userMessage = `${excerptBlock}\n\n${questionBlock}\n\nCite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.`
-
     try {
-      const invokePrimary = () =>
-        withTimeout(callCohereChat(usedModel, systemPrompt, userMessage, hasImage ? imageDataUrl : null, contextDocs), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+      const buildCohereRequest = (model) => ({
+        model,
+        message: userMessage,
+        chatHistory: cohereChatHistory,
+        preamble,
+        documents: contextDocs,
+        images: cohereImages,
+      })
+
+      const invokePrimary = () => withTimeout(callCohereChat(buildCohereRequest(usedModel)), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
       let answerResp
       try {
@@ -1023,11 +1094,7 @@ Strict rules:
         if (hasImage && isModelAccessError(err)) {
           logger.warn('Cohere vision access failed, attempting Aya Vision fallback', { error: err?.message })
           usedModel = 'c4ai-aya-vision-8b'
-          answerResp = await withTimeout(
-            callCohereChat(usedModel, systemPrompt, userMessage, hasImage ? imageDataUrl : null, contextDocs),
-            ANSWER_TIMEOUT_MS,
-            'ANSWER_TIMEOUT'
-          )
+          answerResp = await withTimeout(callCohereChat(buildCohereRequest(usedModel)), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
         } else {
           throw err
         }
@@ -1037,11 +1104,12 @@ Strict rules:
       tokenUsage = answerResp?.tokens || {}
 
       modelText = answerResp?.text || responseOutputToString(answerResp) || ''
-      message = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
+      assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
     } catch (e) {
-      logger.error('Generation failed', { error: e?.message })
+      const detail = safeErrorDetails(e)
+      logger.error('Generation failed', { error: e?.message, detail })
       return NextResponse.json(
-        { error: getUserFriendlyErrorMessage(e?.message) },
+        { error: 'Generation failed', details: detail },
         { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
       )
     }
@@ -1054,7 +1122,7 @@ Strict rules:
       try {
         await updateMemory(userId, {
           userMessage: effectivePrompt,
-          assistantResponse: message,
+          assistantResponse: assistantMessage,
           mode: hasImage ? 'vision' : 'text',
           meta: { firstUseComplete: true },
           firstUseComplete: true,
@@ -1100,7 +1168,7 @@ Strict rules:
 
     return NextResponse.json(
       {
-        message,
+        message: assistantMessage,
         _meta: {
           model: usedModel,
           modelLabel: MODEL_LABEL,
