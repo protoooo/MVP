@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@500;600;700;800&display=swap');
 
 * {
@@ -11,26 +12,31 @@
 
 :root {
   color-scheme: dark;
+
   --paper: #05070d;
   --surface: rgba(255, 255, 255, 0.08);
   --clay: rgba(255, 255, 255, 0.14);
   --accent: #5fa8ff;
+
   --ink: #f6f9ff;
   --ink-80: rgba(246, 249, 255, 0.8);
   --ink-60: rgba(246, 249, 255, 0.6);
+
   --border: rgba(255, 255, 255, 0.2);
   --border-strong: rgba(255, 255, 255, 0.32);
+
   --focus: var(--accent);
 }
 
+/* ✅ Apple-like glass (use on CARDS only, never on full-screen wrappers) */
 .glass-surface {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(18px) saturate(125%);
-  -webkit-backdrop-filter: blur(18px) saturate(125%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.26);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.48),
-    0 25px 70px rgba(5, 7, 13, 0.4);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 18px 55px rgba(5, 7, 13, 0.28);
   border-radius: 18px;
   overflow: hidden;
 }
@@ -44,13 +50,17 @@ body {
   min-height: 100%;
   width: 100%;
   height: 100%;
-  background-color: var(--paper);
+
+  /* ✅ IMPORTANT: no page-wide background/tint here */
+  background: transparent;
+  background-color: transparent;
+
   color: var(--ink);
-  background-attachment: fixed;
 }
 
 html[data-view='chat'] body,
 html[data-view='landing'] body {
+  background: transparent !important;
   background-color: transparent !important;
   color: var(--ink);
 }
@@ -59,6 +69,7 @@ body {
   position: relative;
   z-index: 0;
   isolation: isolate;
+  background: transparent;
 
   font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -69,11 +80,44 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* App router doesn't rely on #__next, but harmless */
+/* ✅ App router doesn't rely on #__next, but harmless */
 #__next {
   min-height: 100%;
   width: 100%;
   background: transparent;
+}
+
+/* ✅ Fixed background layer (set in layout) */
+.plm-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--paper); /* fallback */
+}
+
+.plm-bg-img {
+  object-fit: cover;
+  transform: translateZ(0);
+}
+
+/* ✅ VERY subtle vignette for readability (not a gray film) */
+.plm-bg-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 20% 20%, rgba(255,255,255,0.08), transparent 55%),
+    radial-gradient(120% 80% at 80% 10%, rgba(95,168,255,0.08), transparent 60%),
+    radial-gradient(140% 100% at 50% 100%, rgba(0,0,0,0.10), transparent 55%);
+}
+
+/* ✅ Content wrapper above background */
+.plm-app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -83,9 +127,9 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--ink);
 }
 
-/* ✅ Optional veil for chat view only */
+/* ✅ Remove the “veil” tint unless you intentionally use it on a small element */
 html[data-view='chat'] .ui-appveil {
-  background: radial-gradient(circle at 50% 30%, transparent 0%, rgba(87, 142, 126, 0.12) 70%, rgba(61, 61, 61, 0.14) 100%);
+  background: none;
 }
 
 @keyframes content-fade-in {
