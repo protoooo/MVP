@@ -106,8 +106,6 @@ function FooterLinks() {
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
     <div className={`${ibmMono.className} landing-root`}>
-      <div className="landing-bg" />
-
       <header className="landing-topbar">
         <div className="landing-topbar-card glass-surface">
           <div className="plm-brand-wrap">
@@ -945,20 +943,6 @@ export default function Page() {
           overscroll-behavior-y: none;
         }
 
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(130% 90% at 18% 18%, rgba(255, 255, 255, 0.12), transparent 44%),
-            radial-gradient(120% 80% at 82% 0%, rgba(111, 186, 255, 0.16), transparent 46%),
-            linear-gradient(135deg, rgba(5, 7, 13, 0.78), rgba(5, 7, 13, 0.48));
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-          pointer-events: none;
-          z-index: -1;
-        }
-
         @supports (-webkit-touch-callout: none) {
           html {
             height: -webkit-fill-available;
@@ -1087,11 +1071,17 @@ export default function Page() {
           object-fit: contain;
         }
 
+        .plm-brand-wrap {
+          min-width: 0;
+        }
+
         .plm-brand-text {
           font-size: 21px;
           font-weight: 600;
           letter-spacing: -0.02em;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .desktop-only {
@@ -1113,17 +1103,6 @@ export default function Page() {
           isolation: isolate;
         }
 
-        .landing-bg {
-          position: absolute;
-          inset: 0;
-          background:
-            radial-gradient(120% 70% at 18% 18%, rgba(255, 255, 255, 0.16), transparent 48%),
-            radial-gradient(110% 70% at 82% 6%, rgba(95, 168, 255, 0.2), transparent 52%),
-            radial-gradient(90% 60% at 40% 88%, rgba(255, 255, 255, 0.08), transparent 60%);
-          filter: saturate(130%);
-          pointer-events: none;
-        }
-
         .landing-topbar {
           position: absolute;
           top: 0;
@@ -1138,21 +1117,16 @@ export default function Page() {
         }
 
         .landing-topbar-card {
-          width: 100%;
+          width: calc(100% - 32px);
           max-width: 1080px;
+          align-self: center;
+          box-sizing: border-box;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 12px;
           padding: 12px 16px;
           border-radius: 14px;
-          background: linear-gradient(120deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.26);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.45),
-            0 18px 48px rgba(5, 7, 13, 0.32);
-          backdrop-filter: blur(14px) saturate(120%);
-          -webkit-backdrop-filter: blur(14px) saturate(120%);
         }
 
         .landing-top-actions {
@@ -1905,7 +1879,7 @@ export default function Page() {
         .chat-input-area {
           flex-shrink: 0;
           border-top: 1px solid rgba(255, 255, 255, 0.2);
-          background: linear-gradient(180deg, rgba(5, 7, 13, 0.32), rgba(5, 7, 13, 0.54));
+          background: transparent;
         }
 
         .chat-input-inner {
@@ -1913,6 +1887,16 @@ export default function Page() {
           margin: 0 auto;
           padding: 16px 24px 24px;
           padding-bottom: max(24px, env(safe-area-inset-bottom));
+          width: 100%;
+        }
+
+        .chat-dock {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: var(--radius-lg);
         }
 
         .chat-attachment {
@@ -2135,6 +2119,7 @@ export default function Page() {
           }
           .plm-brand-text {
             font-size: 19px;
+            max-width: 220px;
           }
 
           .landing-signin-btn {
@@ -2222,7 +2207,7 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${ibmMono.className} chat-root glass-surface`}>
+            <div className={`${ibmMono.className} chat-root`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
@@ -2335,78 +2320,82 @@ export default function Page() {
 
               <div className="chat-input-area">
                 <div className="chat-input-inner">
-                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+                  <div className="chat-dock glass-surface">
+                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                  {selectedImage && (
-                    <div className="chat-attachment">
-                      <span className="chat-attachment-icon">
-                        <Icons.Camera />
-                      </span>
-                      <span>Image attached</span>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="chat-attachment-remove"
-                        aria-label="Remove"
-                        type="button"
-                      >
-                        <Icons.X />
-                      </button>
-                    </div>
-                  )}
+                    {selectedImage && (
+                      <div className="chat-attachment">
+                        <span className="chat-attachment-icon">
+                          <Icons.Camera />
+                        </span>
+                        <span>Image attached</span>
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="chat-attachment-remove"
+                          aria-label="Remove"
+                          type="button"
+                        >
+                          <Icons.X />
+                        </button>
+                      </div>
+                    )}
 
-                  <div className="chat-input-row">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleImageChange}
-                    />
-
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="chat-camera-btn"
-                      aria-label="Upload photo"
-                      type="button"
-                    >
-                      <Icons.Camera />
-                    </button>
-
-                    <div className="chat-input-wrapper">
-                      <textarea
-                        ref={textAreaRef}
-                        value={input}
-                        onChange={(e) => {
-                          setInput(e.target.value)
-                          if (textAreaRef.current) {
-                            textAreaRef.current.style.height = 'auto'
-                            textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                          }
-                        }}
-                        placeholder="Ask a question…"
-                        rows={1}
-                        className="chat-textarea"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSend(e)
-                          }
-                        }}
+                    <div className="chat-input-row">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleImageChange}
                       />
 
                       <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="chat-camera-btn"
+                        aria-label="Upload photo"
                         type="button"
-                        onClick={handleSend}
-                        disabled={(!input.trim() && !selectedImage) || isSending}
-                        className="chat-send-btn"
-                        aria-label="Send"
                       >
-                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                        <Icons.Camera />
                       </button>
-                    </div>
-                  </div>
 
-                  <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
+                      <div className="chat-input-wrapper">
+                        <textarea
+                          ref={textAreaRef}
+                          value={input}
+                          onChange={(e) => {
+                            setInput(e.target.value)
+                            if (textAreaRef.current) {
+                              textAreaRef.current.style.height = 'auto'
+                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
+                            }
+                          }}
+                          placeholder="Ask a question…"
+                          rows={1}
+                          className="chat-textarea"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault()
+                              handleSend(e)
+                            }
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={handleSend}
+                          disabled={(!input.trim() && !selectedImage) || isSending}
+                          className="chat-send-btn"
+                          aria-label="Send"
+                        >
+                          {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="chat-disclaimer">
+                      protocolLM may make mistakes. Verify critical decisions with official regulations.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
