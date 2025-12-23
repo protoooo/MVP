@@ -12,7 +12,7 @@ export const maxDuration = 300 // 5 minutes for ingestion
 const CHUNK_SIZE = 1000
 const CHUNK_OVERLAP = 150
 const BATCH_SIZE = 96 // Cohere's max batch size
-const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v3.0"
+const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v4.0"
 const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1024
 
 export async function POST() {
