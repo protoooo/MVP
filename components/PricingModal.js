@@ -26,7 +26,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         style={{ maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`modal-card pricing-modal ${ibmMono.className}`} style={{ padding: '32px' }}>
+        <div className={`modal-card pricing-modal glass-surface ${ibmMono.className}`} style={{ padding: '32px' }}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
