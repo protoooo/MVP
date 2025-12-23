@@ -1,5 +1,13 @@
 // app/api/chat/route.js - Cohere text + Cohere v2 vision via REST (messages + image_url)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
+//
+// ✅ Updates in this version:
+// - Removes all DOC_ IDs / citations / “Reference documents” blocks from the prompt & output
+// - Keeps retrieval grounding, but treats docs as INTERNAL context only
+// - Vision calls Cohere v2 REST correctly (messages + image_url blocks)
+// - Fixes the “Cite DOC IDs” default image-only userMessage
+// - Adds a final safety scrub to remove any stray DOC_# strings from responses
+// - Keeps your auth/license/memory/usage plumbing intact
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -151,8 +159,6 @@ const FEATURE_COHERE = (process.env.FEATURE_COHERE ?? 'true').toLowerCase() !== 
 const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() === 'true'
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
-
-// ✅ Make vision model configurable (recommended)
 const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-8b'
 
 const rawEmbedModel = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
@@ -185,12 +191,22 @@ function safeLine(x) {
   return safeText(x).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim()
 }
 
+function stripDocIds(text) {
+  if (!text) return ''
+  return String(text)
+    .replace(/\bDOC[_\s-]*\d+\b[:\-]?\s*/gi, '')
+    .replace(/\bDOCS?[_\s-]*\d+\b/gi, '')
+}
+
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
+  // Remove markdown-ish tokens and doc labels if they sneak in
   out = out.replace(/[`#*]/g, '')
+  out = stripDocIds(out)
   out = out.replace(/\n{3,}/g, '\n\n')
 
+  // Remove emojis
   try {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
     out = out.replace(/\uFE0F/gu, '')
@@ -283,7 +299,6 @@ async function callCohereChatV2Rest({ model, messages }) {
 
   const raw = await res.text().catch(() => '')
   if (!res.ok) {
-    // include body for debugging (trimmed)
     const snippet = safeLine(raw).slice(0, 900)
     const err = new Error(`COHERE_V2_CHAT_${res.status}: ${snippet || 'Request failed'}`)
     err.status = res.status
@@ -306,13 +321,13 @@ async function callCohereChatV2Rest({ model, messages }) {
 
 function isVisionModel(model) {
   const m = String(model || '').toLowerCase()
-  return m.includes('vision') || m.includes('aya-vision')
+  return m.includes('vision') || m.includes('aya-vision') || m.includes('command-a-vision')
 }
 
 function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
   const messages = []
 
-  // v2 system message
+  // system message (string is OK; user payload uses content blocks)
   if (safeText(preamble)) {
     messages.push({ role: 'system', content: safeText(preamble) })
   }
@@ -373,8 +388,8 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
       model,
       messagesCount: messages.length,
       imagesCount: normalizedImagesCount,
-      hasDocumentsInPreamble: Boolean(safeText(preamble)),
-      docsProvidedToLegacySdk: docs.length,
+      hasPreamble: Boolean(safeText(preamble)),
+      legacyDocsCount: docs.length,
     })
 
     const respV2 = await callCohereChatV2Rest({ model, messages })
@@ -649,9 +664,10 @@ export async function POST(request) {
       userMessage = safeLine(messageContentToString(fallback?.content))
     }
 
+    // ✅ If image-only, do NOT include citations language
     if (!userMessage && hasImage) {
       userMessage =
-        'Inspect the attached photo for potential food safety / sanitation issues that are covered by the provided county documents. Cite the relevant DOC IDs.'
+        'Review the photo for potential food safety or sanitation issues. If the image is unclear, ask up to three short clarifying questions instead of guessing.'
     }
 
     if (!userMessage) {
@@ -781,7 +797,10 @@ export async function POST(request) {
       }
     } catch (e) {
       logger.error('Auth/license check failed', { error: e?.message })
-      return NextResponse.json({ error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' },
+        { status: 401 }
+      )
     }
 
     const searchDocumentsFn = await getSearchDocuments()
@@ -823,24 +842,25 @@ export async function POST(request) {
 
         rerankUsed = true
 
+        // ✅ NO DOC_ IDs
         rerankedDocs = (rerankResponse?.results || [])
-          .map((result, idx) => {
+          .map((result) => {
             const sourceDoc = limitedCandidates[result.index]
-            return { ...sourceDoc, rerankScore: result.relevanceScore, id: `DOC_${idx + 1}` }
+            return { ...sourceDoc, rerankScore: result.relevanceScore }
           })
           .filter(Boolean)
           .slice(0, RERANK_TOP_N)
 
         if (rerankedDocs.length < MIN_RERANK_DOCS && limitedCandidates.length > 0) {
-          const padding = limitedCandidates.slice(0, MIN_RERANK_DOCS - rerankedDocs.length).map((doc, idx) => ({
+          const padding = limitedCandidates.slice(0, MIN_RERANK_DOCS - rerankedDocs.length).map((doc) => ({
             ...doc,
             rerankScore: 0,
-            id: `DOC_${rerankedDocs.length + idx + 1}`,
           }))
           rerankedDocs = [...rerankedDocs, ...padding]
         }
       } else {
-        rerankedDocs = limitedCandidates.map((doc, idx) => ({ ...doc, id: `DOC_${idx + 1}` })).slice(0, RERANK_TOP_N)
+        // ✅ NO DOC_ IDs
+        rerankedDocs = limitedCandidates.map((doc) => ({ ...doc })).slice(0, RERANK_TOP_N)
       }
     } catch (e) {
       logger.warn('Retrieval or rerank failed', { error: e?.message })
@@ -851,13 +871,18 @@ export async function POST(request) {
 
     const contextDocs = rerankedDocs.slice(0, MAX_DOCS_FOR_CONTEXT)
 
+    // ✅ Internal-only excerpt block (no IDs, no “Reference documents” label)
+    // Keep short to reduce verbosity + reduce model urge to “quote sources”
     const excerptBlock =
       contextDocs.length === 0
-        ? 'No documents retrieved.'
+        ? ''
         : contextDocs
-            .map((doc, idx) => {
-              const id = doc.id || `DOC_${idx + 1}`
-              return `[${id}] Source: ${doc.source || 'Unknown'} (p.${doc.page || 'N/A'})\n${doc.text || ''}`
+            .map((doc) => {
+              const src = safeLine(doc.source || 'Source')
+              const page = safeLine(String(doc.page || ''))
+              const header = page ? `${src} (p.${page})` : src
+              const text = safeText(doc.text || '')
+              return `INTERNAL POLICY EXCERPT — ${header}\n${text}`
             })
             .join('\n\n')
 
@@ -867,20 +892,32 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // SYSTEM PROMPT
+    // SYSTEM PROMPT (concise, no citations, low false positives)
     // ========================================================================
 
-    const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
+    const systemPrompt = `You are ProtocolLM — a Washtenaw County, Michigan food service compliance assistant.
 
-${memoryContext ? `${memoryContext}\n\n` : ''}Use ONLY the provided documents to answer. If the documents do not support an answer, say you cannot answer from the provided materials.
+You may receive a user question and sometimes one or more photos. You also receive internal policy excerpts for grounding.
+Do NOT mention, cite, or reference any documents, excerpts, page numbers, IDs, or sources in your response.
 
-Strict rules:
-- Base every statement on the provided documents; do not speculate or use outside knowledge.
-- Cite the relevant document IDs (e.g., DOC_1) and, if present, regulation sections from the text.
-- Explain why a cited regulation applies or does not apply to the user's situation.
-- Avoid general food safety advice; stay anchored to the documents.
-- Be concise and factual; no fluff, no emojis, no markdown, no bullets unless needed for clarity.
-- If information is insufficient, explicitly say so and ask for precise missing details.`
+Goals:
+- Be concise and practical.
+- Avoid false positives. Do not claim a violation with 100% certainty unless it is clearly visible and unambiguous.
+- If the photo is unclear or key details are missing (temps, labels, sanitizer concentration, dates, etc.), ask up to 3 short clarifying questions instead of guessing.
+- No emojis. No citations.
+
+Output format:
+If no issues are visible:
+- Start with: "No clear violations observed."
+- Add 1 short sentence.
+
+If issues may exist:
+- Start with: "Potential issues observed:"
+- Use short bullets. Each bullet: what you see + confidence (high/medium/low) + fix.
+
+If you need clarification:
+- Start with: "Need a quick clarification:"
+- Ask up to 3 questions.`
 
     const historySystemMessages = []
     const cohereChatHistory = []
@@ -908,12 +945,16 @@ Strict rules:
     }
 
     const systemHistoryPreamble = historySystemMessages.filter(Boolean).join('\n\n')
+
+    // ✅ Preamble includes internal excerpts, but explicitly bans mentioning them
     const preambleParts = [
       systemPrompt,
+      memoryContext ? `${memoryContext}` : '',
       systemHistoryPreamble,
-      excerptBlock ? `Reference documents:\n${excerptBlock}` : '',
-      'Cite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.',
+      excerptBlock ? `\n\n${excerptBlock}` : '',
+      'Reminder: Do not mention or cite any internal documents or excerpts.',
     ].filter(Boolean)
+
     const preamble = preambleParts.join('\n\n')
 
     // ========================================================================
@@ -937,7 +978,7 @@ Strict rules:
           chatHistory: cohereChatHistory,
           preamble,
           documents: contextDocs.map((doc) => ({
-            id: doc.id || 'unknown',
+            id: 'internal', // ✅ never DOC_#
             title: doc.source || 'Source',
             snippet: doc.text || '',
             text: doc.text || '',
@@ -951,7 +992,6 @@ Strict rules:
       try {
         const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
-        // ✅ v2 REST returns meta.tokens + meta.billed_units
         billedUnits = answerResp?.meta?.billed_units || answerResp?.billed_units || {}
         tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
 
@@ -960,7 +1000,9 @@ Strict rules:
       } catch (visionErr) {
         const detail = safeErrorDetails(visionErr)
         const isLikelyBadRequest =
-          detail.includes('COHERE_V2_CHAT_4') || detail.includes('COHERE_V2_CHAT_400') || detail.includes('COHERE_V2_CHAT_422')
+          detail.includes('COHERE_V2_CHAT_4') ||
+          detail.includes('COHERE_V2_CHAT_400') ||
+          detail.includes('COHERE_V2_CHAT_422')
 
         if (hasImage && isLikelyBadRequest) {
           visionFallbackUsed = true
@@ -977,7 +1019,7 @@ Strict rules:
 
           modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
           assistantMessage = sanitizeOutput(
-            `Photo analysis is temporarily unavailable. Answering from the provided documents only.\n\n${modelText || 'Unable to process request. Please try again.'}`
+            `Photo analysis is temporarily unavailable. Answering based on the request text.\n\n${modelText || 'Unable to process request. Please try again.'}`
           )
         } else {
           throw visionErr
@@ -991,6 +1033,9 @@ Strict rules:
         { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
       )
     }
+
+    // Final hard safety scrub for any leaked doc labels
+    assistantMessage = sanitizeOutput(stripDocIds(assistantMessage))
 
     // ========================================================================
     // UPDATE MEMORY
