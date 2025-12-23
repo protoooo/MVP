@@ -70,55 +70,6 @@ const Icons = {
       />
     </svg>
   ),
-  Search: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <circle cx="11" cy="11" r="8" />
-      <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
-    </svg>
-  ),
-  Shield: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  CheckCircle: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M22 4L12 14.01l-3-3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  AlertTriangle: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" />
-      <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" />
-    </svg>
-  ),
-  FileText: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinecap="round" strokeLinejoin="round" />
-      <polyline points="14,2 14,8 20,8" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="16" y1="13" x2="8" y2="13" strokeLinecap="round" />
-      <line x1="16" y1="17" x2="8" y2="17" strokeLinecap="round" />
-      <line x1="10" y1="9" x2="8" y2="9" strokeLinecap="round" />
-    </svg>
-  ),
-  Upload: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeLinecap="round" strokeLinejoin="round" />
-      <polyline points="17,8 12,3 7,8" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="12" y1="3" x2="12" y2="15" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  Scan: () => (
-    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-      <path d="M3 7V5a2 2 0 0 1 2-2h2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M17 3h2a2 2 0 0 1 2 2v2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M21 17v2a2 2 0 0 1-2 2h-2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7 21H5a2 2 0 0 1-2-2v-2" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="7" y1="12" x2="17" y2="12" strokeLinecap="round" />
-    </svg>
-  ),
 }
 
 function BrandLink({ variant = 'landing' }) {
@@ -922,57 +873,6 @@ export default function Page() {
     }
   }
 
-  // Parse response into structured sections for tool-like display
-  const parseResponse = (content) => {
-    if (!content) return null
-    
-    const sections = []
-    const lines = content.split('\n')
-    let currentSection = { type: 'text', content: [] }
-    
-    lines.forEach((line) => {
-      const trimmed = line.trim()
-      
-      // Detect violation patterns
-      if (trimmed.match(/^(violation|issue|problem|finding|concern)/i) || trimmed.match(/^[\d]+\.\s*(violation|issue)/i)) {
-        if (currentSection.content.length > 0) {
-          sections.push(currentSection)
-        }
-        currentSection = { type: 'violation', content: [trimmed] }
-      }
-      // Detect compliance/good patterns
-      else if (trimmed.match(/^(compliant|correct|good|proper|acceptable)/i) || trimmed.match(/✓|✔|✅/)) {
-        if (currentSection.content.length > 0) {
-          sections.push(currentSection)
-        }
-        currentSection = { type: 'compliant', content: [trimmed] }
-      }
-      // Detect recommendation patterns
-      else if (trimmed.match(/^(recommend|suggestion|action|fix|correct this by)/i)) {
-        if (currentSection.content.length > 0) {
-          sections.push(currentSection)
-        }
-        currentSection = { type: 'recommendation', content: [trimmed] }
-      }
-      // Detect code/regulation references
-      else if (trimmed.match(/^(section|code|regulation|§|\d+\.\d+)/i)) {
-        if (currentSection.content.length > 0) {
-          sections.push(currentSection)
-        }
-        currentSection = { type: 'reference', content: [trimmed] }
-      }
-      else if (trimmed) {
-        currentSection.content.push(trimmed)
-      }
-    })
-    
-    if (currentSection.content.length > 0) {
-      sections.push(currentSection)
-    }
-    
-    return sections.length > 0 ? sections : null
-  }
-
   if (isLoading) {
     return (
       <div className={`loading-screen ${ibmMono.className}`}>
@@ -996,7 +896,6 @@ export default function Page() {
           --bg-1: #0c0c0e;
           --bg-2: #131316;
           --bg-3: #1a1a1f;
-          --bg-4: #222228;
 
           --ink-0: #fafafa;
           --ink-1: #a0a0a8;
@@ -1006,17 +905,9 @@ export default function Page() {
           --accent: #3b82f6;
           --accent-hover: #2563eb;
           --accent-dim: rgba(59, 130, 246, 0.1);
-          
-          --success: #22c55e;
-          --success-dim: rgba(34, 197, 94, 0.1);
-          --warning: #f59e0b;
-          --warning-dim: rgba(245, 158, 11, 0.1);
-          --error: #ef4444;
-          --error-dim: rgba(239, 68, 68, 0.1);
 
           --border-subtle: rgba(255, 255, 255, 0.05);
           --border-default: rgba(255, 255, 255, 0.08);
-          --border-strong: rgba(255, 255, 255, 0.12);
 
           --radius-sm: 8px;
           --radius-md: 12px;
@@ -1183,16 +1074,6 @@ export default function Page() {
           font-weight: 600;
           letter-spacing: -0.02em;
           white-space: nowrap;
-        }
-        
-        /* Chat brand - smaller */
-        .chat-brand .plm-brand-mark {
-          width: 36px;
-          height: 36px;
-        }
-        
-        .chat-brand .plm-brand-text {
-          font-size: 16px;
         }
 
         .desktop-only {
@@ -1925,12 +1806,11 @@ export default function Page() {
           min-width: 0;
         }
 
-        /* ===== TOOL/UTILITY CHAT INTERFACE ===== */
-        
+        /* Chat */
         .chat-root {
           flex: 1;
-          display: grid;
-          grid-template-rows: auto 1fr auto;
+          display: flex;
+          flex-direction: column;
           min-height: 0;
           background: var(--bg-0);
           height: 100dvh;
@@ -1943,120 +1823,51 @@ export default function Page() {
           }
         }
 
-        /* Tool header */
-        .tool-header {
+        .chat-topbar {
+          width: 100%;
+          max-width: 880px;
+          margin: 0 auto;
+          padding: 16px 24px;
+          padding-left: max(24px, env(safe-area-inset-left));
+          padding-right: max(24px, env(safe-area-inset-right));
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 12px 20px;
-          padding-left: max(20px, env(safe-area-inset-left));
-          padding-right: max(20px, env(safe-area-inset-right));
-          padding-top: max(12px, env(safe-area-inset-top));
-          background: var(--bg-1);
-          border-bottom: 1px solid var(--border-subtle);
           flex-shrink: 0;
         }
-        
-        .tool-header-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        
-        .tool-title {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        
-        .tool-title-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          background: var(--accent-dim);
-          border-radius: var(--radius-sm);
-          color: var(--accent);
-        }
-        
-        .tool-title-text {
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--ink-0);
-          letter-spacing: -0.01em;
-        }
-        
-        .tool-status-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 10px;
-          border-radius: var(--radius-full);
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.02em;
-          text-transform: uppercase;
-        }
-        
-        .tool-status-badge.trial {
-          background: var(--accent-dim);
-          color: var(--accent);
-          border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        
-        .tool-status-badge.pro {
-          background: var(--success-dim);
-          color: var(--success);
-          border: 1px solid rgba(34, 197, 94, 0.2);
-        }
-        
-        .tool-status-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          animation: pulse-dot 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
 
-        .tool-header-actions {
+        .chat-top-actions {
           display: flex;
           align-items: center;
           gap: 4px;
         }
 
-        .tool-settings-wrap {
+        .chat-settings-wrap {
           position: relative;
           display: flex;
           align-items: center;
         }
 
-        .tool-icon-btn {
+        .chat-settings-btn {
           width: 36px;
           height: 36px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: transparent;
-          border: 1px solid transparent;
+          border: none;
           border-radius: var(--radius-sm);
-          color: var(--ink-2);
+          color: var(--ink-1);
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: color 0.15s ease, background 0.15s ease;
         }
 
-        .tool-icon-btn:hover {
+        .chat-settings-btn:hover {
           color: var(--ink-0);
-          background: var(--bg-2);
-          border-color: var(--border-subtle);
+          background: rgba(255, 255, 255, 0.04);
         }
 
-        .tool-settings-menu {
+        .chat-settings-menu {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
@@ -2064,419 +1875,157 @@ export default function Page() {
           background: var(--bg-2);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
-          padding: 6px;
+          padding: 8px;
           box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
           animation: dropdown-in 0.15s ease;
           z-index: 50;
         }
-        
-        @keyframes dropdown-in {
-          from {
-            opacity: 0;
-            transform: translateY(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
 
-        .tool-settings-item {
+        .chat-settings-item {
           width: 100%;
           text-align: left;
-          padding: 10px 12px;
+          padding: 10px 10px;
           background: transparent;
           border: none;
           border-radius: var(--radius-sm);
-          color: var(--ink-1);
+          color: var(--ink-0);
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           font-family: inherit;
-          transition: all 0.15s ease;
+          transition: background 0.15s ease;
         }
 
-        .tool-settings-item:hover {
+        .chat-settings-item:hover {
           background: rgba(255, 255, 255, 0.05);
-          color: var(--ink-0);
         }
 
-        .tool-settings-sep {
+        .chat-settings-sep {
           height: 1px;
           background: var(--border-subtle);
-          margin: 4px 6px;
+          margin: 6px 2px;
         }
 
-        /* Main content area */
-        .tool-main {
+        .chat-messages {
           flex: 1;
           min-height: 0;
           overflow-y: auto;
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
+          padding: 0 24px 32px;
           background: var(--bg-0);
         }
 
-        .tool-main.empty {
+        .chat-messages.empty {
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        
-        /* Empty state - tool welcome */
-        .tool-welcome {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 40px 24px;
-          max-width: 480px;
-          margin: 0 auto;
+
+        .chat-empty-text {
+          font-size: 14px;
+          color: var(--ink-2);
+          line-height: 1.6;
+          margin: 0;
           text-align: center;
         }
-        
-        .tool-welcome-icon {
-          width: 64px;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          color: var(--accent);
-          margin-bottom: 20px;
-        }
-        
-        .tool-welcome-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: var(--ink-0);
-          margin: 0 0 8px;
-        }
-        
-        .tool-welcome-desc {
-          font-size: 14px;
-          color: var(--ink-2);
-          line-height: 1.6;
-          margin: 0 0 24px;
-        }
-        
-        .tool-welcome-actions {
+
+        .chat-history {
+          max-width: 760px;
+          margin: 0 auto;
+          width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          width: 100%;
-          max-width: 280px;
-        }
-        
-        .tool-action-card {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 14px 16px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          cursor: pointer;
-          transition: all 0.15s ease;
-          text-align: left;
-        }
-        
-        .tool-action-card:hover {
-          border-color: var(--accent);
-          background: var(--bg-3);
-        }
-        
-        .tool-action-icon {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--accent-dim);
-          border-radius: var(--radius-sm);
-          color: var(--accent);
-          flex-shrink: 0;
-        }
-        
-        .tool-action-content {
-          flex: 1;
-          min-width: 0;
-        }
-        
-        .tool-action-title {
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--ink-0);
-          margin: 0 0 2px;
-        }
-        
-        .tool-action-desc {
-          font-size: 12px;
-          color: var(--ink-2);
-          margin: 0;
+          gap: 32px;
+          padding-top: 16px;
+          padding-bottom: 6px;
         }
 
-        /* Results/Analysis area */
-        .tool-results {
-          max-width: 800px;
-          margin: 0 auto;
+        .chat-message {
+          display: flex;
           width: 100%;
-          padding: 20px 24px 32px;
+          align-items: flex-start;
         }
-        
-        /* Analysis card (user submission) */
-        .analysis-request {
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
+        .chat-message-user {
+          justify-content: flex-end;
+        }
+        .chat-message-assistant {
+          justify-content: flex-start;
+        }
+
+        .chat-bubble {
+          max-width: 75%;
+          font-size: 15px;
+          line-height: 1.7;
+          display: block;
+        }
+
+        .chat-bubble-user {
+          color: var(--ink-0);
+        }
+        .chat-bubble-assistant {
+          color: var(--ink-1);
+        }
+
+        .chat-bubble-image {
           border-radius: var(--radius-md);
-          padding: 16px;
-          margin-bottom: 16px;
-        }
-        
-        .analysis-request-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 12px;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          color: var(--ink-2);
-        }
-        
-        .analysis-request-icon {
-          display: flex;
-          align-items: center;
-          color: var(--accent);
-        }
-        
-        .analysis-request-image {
-          border-radius: var(--radius-sm);
           overflow: hidden;
           margin-bottom: 12px;
-          background: var(--bg-3);
+          display: inline-block;
         }
-        
-        .analysis-request-image img {
+
+        .chat-bubble-image img {
           display: block;
           max-width: 100%;
-          max-height: 200px;
+          max-height: 280px;
           object-fit: contain;
         }
-        
-        .analysis-request-text {
-          font-size: 14px;
-          color: var(--ink-0);
-          line-height: 1.5;
-        }
-        
-        /* Analysis result card */
-        .analysis-result {
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          overflow: hidden;
-        }
-        
-        .analysis-result-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 14px 16px;
-          background: var(--bg-2);
-          border-bottom: 1px solid var(--border-subtle);
-        }
-        
-        .analysis-result-title {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          color: var(--ink-1);
-        }
-        
-        .analysis-result-icon {
-          display: flex;
-          align-items: center;
-          color: var(--accent);
-        }
-        
-        .analysis-result-timestamp {
-          font-size: 11px;
-          color: var(--ink-3);
-        }
-        
-        .analysis-result-body {
-          padding: 16px;
-        }
-        
-        /* Structured result sections */
-        .result-section {
-          padding: 12px 14px;
-          border-radius: var(--radius-sm);
-          margin-bottom: 12px;
-        }
-        
-        .result-section:last-child {
-          margin-bottom: 0;
-        }
-        
-        .result-section.violation {
-          background: var(--error-dim);
-          border-left: 3px solid var(--error);
-        }
-        
-        .result-section.compliant {
-          background: var(--success-dim);
-          border-left: 3px solid var(--success);
-        }
-        
-        .result-section.recommendation {
-          background: var(--warning-dim);
-          border-left: 3px solid var(--warning);
-        }
-        
-        .result-section.reference {
-          background: var(--bg-3);
-          border-left: 3px solid var(--ink-3);
-        }
-        
-        .result-section.text {
-          background: transparent;
-          padding: 0;
-          border: none;
-        }
-        
-        .result-section-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 8px;
-        }
-        
-        .result-section-icon {
-          display: flex;
-          align-items: center;
-        }
-        
-        .result-section.violation .result-section-icon {
-          color: var(--error);
-        }
-        
-        .result-section.compliant .result-section-icon {
-          color: var(--success);
-        }
-        
-        .result-section.recommendation .result-section-icon {
-          color: var(--warning);
-        }
-        
-        .result-section-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-        }
-        
-        .result-section.violation .result-section-label {
-          color: var(--error);
-        }
-        
-        .result-section.compliant .result-section-label {
-          color: var(--success);
-        }
-        
-        .result-section.recommendation .result-section-label {
-          color: var(--warning);
-        }
-        
-        .result-section.reference .result-section-label {
-          color: var(--ink-2);
-        }
-        
-        .result-section-content {
-          font-size: 14px;
-          line-height: 1.6;
-          color: var(--ink-1);
-        }
-        
-        .result-section.violation .result-section-content,
-        .result-section.compliant .result-section-content,
-        .result-section.recommendation .result-section-content {
-          color: var(--ink-0);
-        }
-        
-        /* Plain text result (fallback) */
-        .result-text-plain {
-          font-size: 14px;
-          line-height: 1.7;
-          color: var(--ink-1);
+
+        .chat-content {
+          display: block;
           white-space: pre-wrap;
           overflow-wrap: anywhere;
-        }
-        
-        /* Loading state */
-        .analysis-loading {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 20px 16px;
-        }
-        
-        .analysis-loading-spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid var(--border-subtle);
-          border-top-color: var(--accent);
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-        
-        .analysis-loading-text {
-          font-size: 13px;
-          color: var(--ink-2);
+          word-break: break-word;
         }
 
-        /* Input area */
-        .tool-input-area {
+        .chat-thinking {
+          display: block;
+          color: var(--ink-2);
+          font-style: italic;
+        }
+
+        .chat-input-area {
           flex-shrink: 0;
           border-top: 1px solid var(--border-subtle);
-          background: var(--bg-1);
+          background: var(--bg-0);
         }
 
-        .tool-input-inner {
-          max-width: 800px;
+        .chat-input-inner {
+          max-width: 760px;
           margin: 0 auto;
-          padding: 16px 24px 20px;
-          padding-bottom: max(20px, env(safe-area-inset-bottom));
+          padding: 16px 24px 24px;
+          padding-bottom: max(24px, env(safe-area-inset-bottom));
         }
 
-        .tool-attachment {
+        .chat-attachment {
           display: inline-flex;
           align-items: center;
           gap: 10px;
           padding: 8px 12px;
           background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
           border-radius: var(--radius-sm);
           margin-bottom: 12px;
           font-size: 12px;
           color: var(--ink-1);
         }
 
-        .tool-attachment-icon {
+        .chat-attachment-icon {
           color: var(--accent);
           display: flex;
         }
 
-        .tool-attachment-remove {
+        .chat-attachment-remove {
           width: 24px;
           height: 24px;
           display: flex;
@@ -2486,42 +2035,103 @@ export default function Page() {
           border: none;
           color: var(--ink-2);
           cursor: pointer;
-          border-radius: var(--radius-sm);
-          transition: all 0.15s ease;
         }
 
-        .tool-attachment-remove:hover {
+        .chat-attachment-remove:hover {
           color: var(--ink-0);
-          background: var(--bg-3);
         }
 
-        .tool-input-row {
+        .chat-input-row {
           display: flex;
           align-items: flex-end;
           gap: 10px;
         }
 
-        .tool-upload-btn {
-          width: 48px;
-          height: 48px;
+        .chat-camera-btn {
+          position: relative;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--accent-dim);
+          background: var(--bg-2);
           border: 1px solid var(--accent);
           border-radius: var(--radius-md);
           color: var(--accent);
           cursor: pointer;
           flex-shrink: 0;
-          transition: all 0.15s ease;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          overflow: visible;
         }
 
-        .tool-upload-btn:hover {
-          background: var(--accent);
-          color: white;
+        .chat-camera-btn:hover {
+          border-color: var(--accent-hover);
+          box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
-        .tool-input-wrapper {
+        /* Subtle tracing animation for camera button */
+        .chat-camera-btn::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          border-radius: var(--radius-md);
+          padding: 1px;
+          background: conic-gradient(
+            from var(--camera-trace-angle, 0deg),
+            transparent 0deg,
+            transparent 30deg,
+            rgba(59, 130, 246, 0.5) 60deg,
+            rgba(59, 130, 246, 0.2) 90deg,
+            transparent 120deg,
+            transparent 360deg
+          );
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          pointer-events: none;
+          animation: camera-trace-rotate 3s linear infinite;
+        }
+
+        @property --camera-trace-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+
+        @keyframes camera-trace-rotate {
+          0% {
+            --camera-trace-angle: 0deg;
+          }
+          100% {
+            --camera-trace-angle: 360deg;
+          }
+        }
+
+        /* Fallback for browsers that don't support @property */
+        @supports not (background: conic-gradient(from var(--camera-trace-angle, 0deg), red, blue)) {
+          .chat-camera-btn::before {
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(59, 130, 246, 0.4),
+              transparent
+            );
+            background-size: 200% 100%;
+            animation: camera-trace-slide 2s linear infinite;
+          }
+          
+          @keyframes camera-trace-slide {
+            0% {
+              background-position: -100% 0;
+            }
+            100% {
+              background-position: 100% 0;
+            }
+          }
+        }
+
+        .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
@@ -2532,70 +2142,68 @@ export default function Page() {
           min-width: 0;
         }
 
-        .tool-input-wrapper:focus-within {
+        .chat-input-wrapper:focus-within {
           border-color: var(--accent);
         }
 
-        .tool-textarea {
+        .chat-textarea {
           flex: 1;
-          min-height: 48px;
+          min-height: 44px;
           max-height: 160px;
-          padding: 14px 16px;
+          padding: 12px 14px;
           background: transparent;
           border: none;
           color: var(--ink-0);
-          font-size: 14px;
+          font-size: 16px;
           line-height: 1.4;
           resize: none;
           font-family: inherit;
           min-width: 0;
         }
 
-        .tool-textarea::placeholder {
+        .chat-textarea::placeholder {
           color: var(--ink-3);
         }
-        .tool-textarea:focus {
+        .chat-textarea:focus {
           outline: none;
         }
 
-        .tool-submit-btn {
-          width: 48px;
-          height: 48px;
+        .chat-send-btn {
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--accent);
+          background: transparent;
           border: none;
-          border-radius: var(--radius-md);
-          color: white;
+          color: var(--ink-2);
           cursor: pointer;
           flex-shrink: 0;
-          transition: all 0.15s ease;
+          transition: color 0.15s ease;
         }
 
-        .tool-submit-btn:hover:not(:disabled) {
-          background: var(--accent-hover);
+        .chat-send-btn:hover:not(:disabled) {
+          color: var(--accent);
         }
-        
-        .tool-submit-btn:disabled {
-          opacity: 0.4;
+        .chat-send-btn:disabled {
+          opacity: 0.3;
           cursor: not-allowed;
         }
 
-        .tool-submit-spinner {
-          width: 18px;
-          height: 18px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
-          border-radius: 50%;
+        .chat-send-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid var(--border-subtle);
+          border-top-color: var(--accent);
+          border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
 
-        .tool-disclaimer {
+        .chat-disclaimer {
           text-align: center;
           font-size: 11px;
           color: var(--ink-3);
-          margin-top: 12px;
+          margin-top: 14px;
         }
 
         /* Responsive */
@@ -2694,44 +2302,28 @@ export default function Page() {
             display: flex;
           }
 
-          .tool-header {
-            padding: 10px 16px;
-            padding-top: max(10px, env(safe-area-inset-top));
+          .chat-topbar {
+            padding: 12px 16px;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-top: max(12px, env(safe-area-inset-top));
           }
-          
-          .tool-title-text {
+
+          .chat-messages {
+            padding: 0 16px calc(24px + env(safe-area-inset-bottom));
+          }
+
+          .chat-input-inner {
+            padding: 12px 16px 18px;
+            padding-bottom: max(18px, env(safe-area-inset-bottom));
+          }
+
+          .chat-bubble {
+            max-width: 85%;
+          }
+
+          .chat-empty-text {
             font-size: 13px;
-          }
-          
-          .tool-title-icon {
-            width: 28px;
-            height: 28px;
-          }
-
-          .tool-results {
-            padding: 16px;
-          }
-
-          .tool-input-inner {
-            padding: 12px 16px 16px;
-            padding-bottom: max(16px, env(safe-area-inset-bottom));
-          }
-          
-          .tool-welcome {
-            padding: 32px 20px;
-          }
-          
-          .tool-welcome-icon {
-            width: 56px;
-            height: 56px;
-          }
-          
-          .tool-welcome-title {
-            font-size: 16px;
-          }
-          
-          .tool-action-card {
-            padding: 12px 14px;
           }
         }
 
@@ -2746,15 +2338,6 @@ export default function Page() {
           }
           .plm-brand-text {
             font-size: 18px;
-          }
-          
-          .chat-brand .plm-brand-mark {
-            width: 32px;
-            height: 32px;
-          }
-          
-          .chat-brand .plm-brand-text {
-            font-size: 14px;
           }
         }
 
@@ -2795,29 +2378,35 @@ export default function Page() {
             />
           ) : (
             <div className={`${ibmMono.className} chat-root`}>
-              {/* Tool Header */}
-              <header className="tool-header">
-                <div className="tool-header-left">
-                  <div className="tool-title">
-                    <div className="tool-title-icon">
-                      <Icons.Shield />
-                    </div>
-                    <span className="tool-title-text">Compliance Scanner</span>
-                  </div>
-                  
+              <header className="chat-topbar">
+                <BrandLink variant="chat" />
+                <nav className="chat-top-actions" aria-label="Chat actions">
                   {session && subscription && (
-                    <div className={`tool-status-badge ${subscription.status === 'trialing' ? 'trial' : 'pro'}`}>
-                      <span className="tool-status-dot" />
+                    <div
+                      style={{
+                        marginRight: '12px',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        letterSpacing: '0.02em',
+                        textTransform: 'uppercase',
+                        background:
+                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                        color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
+                        border: `1px solid ${
+                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'
+                        }`,
+                      }}
+                    >
                       {subscription.status === 'trialing' ? 'Trial' : 'Pro'}
                     </div>
                   )}
-                </div>
-                
-                <nav className="tool-header-actions" aria-label="Tool actions">
-                  <div className="tool-settings-wrap" ref={settingsRef}>
+
+                  <div className="chat-settings-wrap" ref={settingsRef}>
                     <button
                       type="button"
-                      className="tool-icon-btn"
+                      className="chat-settings-btn"
                       onClick={() => setShowSettingsMenu((v) => !v)}
                       aria-expanded={showSettingsMenu}
                       aria-label="Settings"
@@ -2826,10 +2415,10 @@ export default function Page() {
                     </button>
 
                     {showSettingsMenu && (
-                      <div className="tool-settings-menu" role="menu" aria-label="Settings menu">
+                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
                         <button
                           type="button"
-                          className="tool-settings-item"
+                          className="chat-settings-item"
                           role="menuitem"
                           onClick={() => {
                             setShowSettingsMenu(false)
@@ -2840,21 +2429,21 @@ export default function Page() {
                             }
                           }}
                         >
-                          {hasActiveSubscription ? 'Manage Billing' : 'Upgrade Plan'}
+                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
                         </button>
 
-                        <div className="tool-settings-sep" />
+                        <div className="chat-settings-sep" />
 
                         <button
                           type="button"
-                          className="tool-settings-item"
+                          className="chat-settings-item"
                           role="menuitem"
                           onClick={() => {
                             setShowSettingsMenu(false)
                             handleSignOut()
                           }}
                         >
-                          Sign Out
+                          Log out
                         </button>
                       </div>
                     )}
@@ -2862,148 +2451,56 @@ export default function Page() {
                 </nav>
               </header>
 
-              {/* Main Content */}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
-                className={`tool-main ${messages.length === 0 ? 'empty' : ''}`}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
               >
                 {messages.length === 0 ? (
-                  <div className="tool-welcome">
-                    <div className="tool-welcome-icon">
-                      <Icons.Scan />
-                    </div>
-                    <h2 className="tool-welcome-title">Food Safety Compliance Scanner</h2>
-                    <p className="tool-welcome-desc">
-                      Analyze photos or ask questions about Washtenaw County food safety regulations. Get instant compliance feedback.
+                  <div className="chat-empty-state">
+                    <p className="chat-empty-text">
+                      Upload a photo or ask a question about Washtenaw County food safety regulations.
                     </p>
-                    <div className="tool-welcome-actions">
-                      <div 
-                        className="tool-action-card"
-                        onClick={() => fileInputRef.current?.click()}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <div className="tool-action-icon">
-                          <Icons.Upload />
-                        </div>
-                        <div className="tool-action-content">
-                          <p className="tool-action-title">Upload Photo</p>
-                          <p className="tool-action-desc">Scan for violations</p>
-                        </div>
-                      </div>
-                      <div 
-                        className="tool-action-card"
-                        onClick={() => textAreaRef.current?.focus()}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <div className="tool-action-icon">
-                          <Icons.FileText />
-                        </div>
-                        <div className="tool-action-content">
-                          <p className="tool-action-title">Ask a Question</p>
-                          <p className="tool-action-desc">Query regulations</p>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 ) : (
-                  <div className="tool-results">
-                    {messages.map((msg, idx) => {
-                      if (msg.role === 'user') {
-                        return (
-                          <div key={idx} className="analysis-request">
-                            <div className="analysis-request-header">
-                              <span className="analysis-request-icon">
-                                <Icons.Search />
-                              </span>
-                              <span>{msg.image ? 'Photo Analysis Request' : 'Regulation Query'}</span>
+                  <div className="chat-history">
+                    {messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                      >
+                        <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+                          {msg.image && (
+                            <div className="chat-bubble-image">
+                              <img src={msg.image} alt="Uploaded" />
                             </div>
-                            
-                            {msg.image && (
-                              <div className="analysis-request-image">
-                                <img src={msg.image} alt="Submitted for analysis" />
-                              </div>
-                            )}
-                            
-                            {msg.content && (
-                              <div className="analysis-request-text">{msg.content}</div>
-                            )}
-                          </div>
-                        )
-                      }
-                      
-                      // Assistant response
-                      const isLoading = msg.content === '' && isSending && idx === messages.length - 1
-                      const sections = parseResponse(msg.content)
-                      
-                      return (
-                        <div key={idx} className="analysis-result">
-                          <div className="analysis-result-header">
-                            <div className="analysis-result-title">
-                              <span className="analysis-result-icon">
-                                <Icons.FileText />
-                              </span>
-                              <span>Analysis Results</span>
-                            </div>
-                          </div>
-                          
-                          <div className="analysis-result-body">
-                            {isLoading ? (
-                              <div className="analysis-loading">
-                                <div className="analysis-loading-spinner" />
-                                <span className="analysis-loading-text">Analyzing submission...</span>
-                              </div>
-                            ) : sections ? (
-                              sections.map((section, sIdx) => (
-                                <div key={sIdx} className={`result-section ${section.type}`}>
-                                  {section.type !== 'text' && (
-                                    <div className="result-section-header">
-                                      <span className="result-section-icon">
-                                        {section.type === 'violation' && <Icons.AlertTriangle />}
-                                        {section.type === 'compliant' && <Icons.CheckCircle />}
-                                        {section.type === 'recommendation' && <Icons.Sparkle />}
-                                        {section.type === 'reference' && <Icons.FileText />}
-                                      </span>
-                                      <span className="result-section-label">
-                                        {section.type === 'violation' && 'Violation Found'}
-                                        {section.type === 'compliant' && 'Compliant'}
-                                        {section.type === 'recommendation' && 'Recommendation'}
-                                        {section.type === 'reference' && 'Regulation Reference'}
-                                      </span>
-                                    </div>
-                                  )}
-                                  <div className="result-section-content">
-                                    {section.content.join('\n')}
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="result-text-plain">{msg.content}</div>
-                            )}
-                          </div>
+                          )}
+
+                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                            <div className="chat-thinking">Analyzing…</div>
+                          ) : (
+                            <div className="chat-content">{msg.content}</div>
+                          )}
                         </div>
-                      )
-                    })}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Input Area */}
-              <div className="tool-input-area">
-                <div className="tool-input-inner">
+              <div className="chat-input-area">
+                <div className="chat-input-inner">
                   <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                   {selectedImage && (
-                    <div className="tool-attachment">
-                      <span className="tool-attachment-icon">
+                    <div className="chat-attachment">
+                      <span className="chat-attachment-icon">
                         <Icons.Camera />
                       </span>
-                      <span>Photo ready for analysis</span>
+                      <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
-                        className="tool-attachment-remove"
+                        className="chat-attachment-remove"
                         aria-label="Remove"
                         type="button"
                       >
@@ -3012,7 +2509,7 @@ export default function Page() {
                     </div>
                   )}
 
-                  <div className="tool-input-row">
+                  <div className="chat-input-row">
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -3023,14 +2520,14 @@ export default function Page() {
 
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="tool-upload-btn"
-                      aria-label="Upload photo for analysis"
+                      className="chat-camera-btn"
+                      aria-label="Upload photo"
                       type="button"
                     >
-                      <Icons.Upload />
+                      <Icons.Camera />
                     </button>
 
-                    <div className="tool-input-wrapper">
+                    <div className="chat-input-wrapper">
                       <textarea
                         ref={textAreaRef}
                         value={input}
@@ -3041,9 +2538,9 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder="Describe what you want to check or ask a question..."
+                        placeholder="Ask a question…"
                         rows={1}
-                        className="tool-textarea"
+                        className="chat-textarea"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -3051,21 +2548,21 @@ export default function Page() {
                           }
                         }}
                       />
-                    </div>
 
-                    <button
-                      type="button"
-                      onClick={handleSend}
-                      disabled={(!input.trim() && !selectedImage) || isSending}
-                      className="tool-submit-btn"
-                      aria-label="Submit for analysis"
-                    >
-                      {isSending ? <div className="tool-submit-spinner" /> : <Icons.ArrowUp />}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={handleSend}
+                        disabled={(!input.trim() && !selectedImage) || isSending}
+                        className="chat-send-btn"
+                        aria-label="Send"
+                      >
+                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                      </button>
+                    </div>
                   </div>
 
-                  <p className="tool-disclaimer">
-                    Results are AI-generated. Always verify with official Washtenaw County regulations.
+                  <p className="chat-disclaimer">
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
                   </p>
                 </div>
               </div>
