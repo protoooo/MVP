@@ -1,4 +1,4 @@
-// app/api/chat/route.js - SINGLE PLAN VERSION (OpenAI GPT-5.2 for all users)
+// app/api/chat/route.js - Cohere-first pipeline with vision fallback
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 
 import { NextResponse } from 'next/server'
@@ -8,7 +8,7 @@ import { CohereClient } from 'cohere-ai'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
-import { logUsageForAnalytics, checkAccess } from '@/lib/usage'
+import { logUsageForAnalytics, checkAccess, logModelUsageDetail } from '@/lib/usage'
 import { validateDeviceLicense } from '@/lib/licenseValidation'
 import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
 
@@ -29,12 +29,17 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// MODEL CONFIGURATION - COHERE (Embed + Rerank + Command R)
+// MODEL CONFIGURATION - COHERE (Text + Vision + Embed + Rerank)
 // ============================================================================
-const COHERE_EMBED_MODEL = 'embed-english-v3.0'
-const COHERE_RERANK_MODEL = 'rerank-english-v3.0'
-const COHERE_COMMAND_MODEL = process.env.COHERE_COMMAND_MODEL || 'command-r'
-const MODEL_LABEL = 'Cohere Command R'
+const FEATURE_COHERE = (process.env.FEATURE_COHERE ?? 'true').toLowerCase() !== 'false'
+const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() === 'true'
+
+const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
+const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'command-a-vision-07-2025'
+const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
+const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
+const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v3.5'
+const MODEL_LABEL = 'Cohere'
 
 // Time budgets
 const ANSWER_TIMEOUT_MS = 35000
@@ -173,6 +178,47 @@ function responseOutputToString(resp) {
     }
   }
   return ''
+}
+
+function isModelAccessError(err) {
+  const msg = err?.message?.toLowerCase?.() || ''
+  return err?.status === 403 || msg.includes('not enabled') || msg.includes('access') || msg.includes('permission')
+}
+
+function buildCohereMessages(systemPrompt, userMessage, imageUrl) {
+  const messages = [
+    {
+      role: 'system',
+      content: [{ type: 'text', text: systemPrompt }],
+    },
+    {
+      role: 'user',
+      content: [{ type: 'text', text: userMessage }],
+    },
+  ]
+
+  if (imageUrl) {
+    messages[1].content.push({
+      type: 'image_url',
+      image_url: { url: imageUrl },
+    })
+  }
+
+  return messages
+}
+
+async function callCohereChat(model, systemPrompt, userMessage, imageUrl, documents) {
+  const messages = buildCohereMessages(systemPrompt, userMessage, imageUrl)
+  return cohereClient.chat({
+    model,
+    messages,
+    documents: documents.map((doc) => ({
+      id: doc.id,
+      title: doc.source || 'Source',
+      snippet: doc.text || '',
+      text: doc.text || '',
+    })),
+  })
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
@@ -836,7 +882,7 @@ export async function POST(request) {
 
     const searchDocumentsFn = await getSearchDocuments()
 
-    // Cohere pipeline does not currently process images; treat image uploads as supplemental but not machine-read
+    // Placeholder for future image-derived search cues (Command-A-Vision output can be plumbed here)
     const vision = {
       summary: '',
       searchTerms: '',
@@ -860,6 +906,8 @@ export async function POST(request) {
       .slice(0, 900)
 
     let rerankedDocs = []
+    let rerankUsed = false
+    let rerankCandidates = 0
     try {
       const initialDocs = await withTimeout(
         searchDocumentsFn(searchQuery, county, TOPK_PER_QUERY),
@@ -869,16 +917,19 @@ export async function POST(request) {
 
       const candidates = dedupeByText(initialDocs || [])
       const limitedCandidates = candidates.slice(0, TOPK_PER_QUERY)
+      rerankCandidates = limitedCandidates.length
 
       if (limitedCandidates.length === 0) {
         logger.warn('No documents retrieved from vector search', { county, queryLength: searchQuery.length })
-      } else {
+      } else if (FEATURE_RERANK) {
         const rerankResponse = await cohereClient.rerank({
           model: COHERE_RERANK_MODEL,
           query: searchQuery,
           documents: limitedCandidates.map((doc) => doc.text || ''),
           topN: Math.min(RERANK_TOP_N, limitedCandidates.length),
         })
+
+        rerankUsed = true
 
         rerankedDocs = (rerankResponse?.results || [])
           .map((result, idx) => {
@@ -901,6 +952,8 @@ export async function POST(request) {
           }))
           rerankedDocs = [...rerankedDocs, ...padding]
         }
+      } else {
+        rerankedDocs = limitedCandidates.map((doc, idx) => ({ ...doc, id: `DOC_${idx + 1}` })).slice(0, RERANK_TOP_N)
       }
     } catch (e) {
       logger.warn('Retrieval or rerank failed', { error: e?.message })
@@ -953,27 +1006,37 @@ Strict rules:
     let modelText = ''
     let message = ''
     let status = 'guidance'
+    let usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
+    let billedUnits = {}
+    let tokenUsage = {}
+
+    const userMessage = `${excerptBlock}\n\n${questionBlock}\n\nCite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.`
 
     try {
-      const userMessage = `${excerptBlock}\n\n${questionBlock}\n\nCite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.`
+      const invokePrimary = () =>
+        withTimeout(callCohereChat(usedModel, systemPrompt, userMessage, hasImage ? imageDataUrl : null, contextDocs), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
-      const answerResp = await withTimeout(
-        cohereClient.chat({
-          model: COHERE_COMMAND_MODEL,
-          message: userMessage,
-          preamble: systemPrompt,
-          documents: contextDocs.map((doc) => ({
-            id: doc.id,
-            title: doc.source || 'Source',
-            snippet: doc.text || '',
-            text: doc.text || '',
-          })),
-        }),
-        ANSWER_TIMEOUT_MS,
-        'ANSWER_TIMEOUT'
-      )
+      let answerResp
+      try {
+        answerResp = await invokePrimary()
+      } catch (err) {
+        if (hasImage && isModelAccessError(err)) {
+          logger.warn('Cohere vision access failed, attempting Aya Vision fallback', { error: err?.message })
+          usedModel = 'c4ai-aya-vision-8b'
+          answerResp = await withTimeout(
+            callCohereChat(usedModel, systemPrompt, userMessage, hasImage ? imageDataUrl : null, contextDocs),
+            ANSWER_TIMEOUT_MS,
+            'ANSWER_TIMEOUT'
+          )
+        } else {
+          throw err
+        }
+      }
 
-      modelText = answerResp?.text || ''
+      billedUnits = answerResp?.billed_units || {}
+      tokenUsage = answerResp?.tokens || {}
+
+      modelText = answerResp?.text || responseOutputToString(answerResp) || ''
       message = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
@@ -1012,7 +1075,20 @@ Strict rules:
       docsRetrieved: contextDocs.length,
       fullAudit,
       includeFines,
-      model: MODEL_LABEL,
+      model: usedModel,
+    })
+
+    await logModelUsageDetail({
+      userId,
+      provider: 'cohere',
+      model: usedModel,
+      mode: hasImage ? 'vision' : 'text',
+      inputTokens: tokenUsage.input_tokens ?? tokenUsage.prompt_tokens,
+      outputTokens: tokenUsage.output_tokens ?? tokenUsage.completion_tokens,
+      billedInputTokens: billedUnits.input_tokens,
+      billedOutputTokens: billedUnits.output_tokens,
+      rerankUsed,
+      rerankCandidates,
     })
 
     await safeLogUsage({
@@ -1026,7 +1102,7 @@ Strict rules:
       {
         message,
         _meta: {
-          model: COHERE_COMMAND_MODEL,
+          model: usedModel,
           modelLabel: MODEL_LABEL,
           hasImage,
           status,
