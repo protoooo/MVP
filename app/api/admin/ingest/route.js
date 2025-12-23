@@ -12,6 +12,8 @@ export const maxDuration = 300 // 5 minutes for ingestion
 const CHUNK_SIZE = 1000
 const CHUNK_OVERLAP = 150
 const BATCH_SIZE = 96 // Cohere's max batch size
+const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-v4.0"
+const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
 
 export async function POST() {
   try {
@@ -78,9 +80,10 @@ export async function POST() {
         // Get embeddings for entire batch
         const embedRes = await cohere.embed({
           texts: batch,
-          model: "embed-english-v3.0",
+          model: COHERE_EMBED_MODEL,
           inputType: "search_document",
           embeddingTypes: ["float"],
+          truncate: "END",
         })
 
         const embeddings = embedRes.embeddings.float
