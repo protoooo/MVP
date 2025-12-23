@@ -19,7 +19,6 @@
     "cleanup-webhooks": "node scripts/cleanup-webhook-events.js"
   },
   "dependencies": {
-    "openai": "^4.76.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "~2.87.0",
     "autoprefixer": "^10.4.19",
