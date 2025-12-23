@@ -29,6 +29,57 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
+// IMAGE VALIDATION (NEW)
+// ============================================================================
+
+function validateImageData(imageDataUrl) {
+  if (!imageDataUrl) return { valid: false, error: 'No image data' }
+
+  try {
+    if (typeof imageDataUrl !== 'string') {
+      return { valid: false, error: 'Invalid image payload' }
+    }
+
+    const trimmed = imageDataUrl.trim()
+    if (!trimmed.startsWith('data:image/')) {
+      return { valid: false, error: 'Invalid image format' }
+    }
+
+    const parts = trimmed.split(',')
+    if (parts.length !== 2) {
+      return { valid: false, error: 'Malformed image data' }
+    }
+
+    const [header, base64DataRaw] = parts
+    const base64Data = (base64DataRaw || '').trim()
+
+    if (!base64Data || base64Data.length < 100) {
+      return { valid: false, error: 'Image data too small' }
+    }
+
+    const mediaType = header.match(/data:(image\/[^;]+);/i)?.[1]
+    if (!mediaType) {
+      return { valid: false, error: 'Cannot determine image type' }
+    }
+
+    // lightweight base64 sanity check
+    const normalized = base64Data.replace(/\s+/g, '')
+    if (!/^[A-Za-z0-9+/=_-]+$/.test(normalized)) {
+      return { valid: false, error: 'Invalid base64 image data' }
+    }
+
+    return {
+      valid: true,
+      base64Data: normalized,
+      mediaType,
+    }
+  } catch (error) {
+    logger.error('Image validation failed', { error: error?.message })
+    return { valid: false, error: 'Image validation error' }
+  }
+}
+
+// ============================================================================
 // MODEL CONFIGURATION - COHERE (Text + Vision + Embed + Rerank)
 // ============================================================================
 const FEATURE_COHERE = (process.env.FEATURE_COHERE ?? 'true').toLowerCase() !== 'false'
@@ -191,11 +242,11 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     message,
     preamble,
     chat_history: chatHistory,
-    documents: documents.map((doc) => ({
-      id: doc.id,
-      title: doc.source || 'Source',
-      snippet: doc.text || '',
-      text: doc.text || '',
+    documents: (documents || []).map((doc) => ({
+      id: doc?.id || 'unknown',
+      title: doc?.title || doc?.source || 'Source',
+      snippet: doc?.snippet || doc?.text || '',
+      text: doc?.text || '',
     })),
   }
 
@@ -270,7 +321,7 @@ function extractSearchKeywords(text) {
 }
 
 // ============================================================================
-// IMAGE HELPERS
+// IMAGE HELPERS (legacy; kept for compatibility)
 // ============================================================================
 
 function extractBase64FromDataUrl(dataUrl) {
@@ -710,8 +761,27 @@ export async function POST(request) {
 
     const imageDataUrl = body?.image || body?.imageBase64 || body?.image_url
     const hasImage = Boolean(imageDataUrl)
-    const imageBase64 = hasImage ? extractBase64FromDataUrl(imageDataUrl) : null
-    const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
+
+    // ✅ FIXED: Validate image before processing
+    let imageBase64 = null
+    let imageMediaType = null
+
+    if (hasImage) {
+      const validation = validateImageData(imageDataUrl)
+
+      if (!validation.valid) {
+        logger.warn('Invalid image data', { error: validation.error })
+        return NextResponse.json({ error: `Image validation failed: ${validation.error}` }, { status: 400 })
+      }
+
+      imageBase64 = validation.base64Data
+      imageMediaType = validation.mediaType
+
+      logger.info('Image validated', {
+        mediaType: imageMediaType,
+        dataLength: imageBase64.length,
+      })
+    }
 
     const lastUserIndex = Array.isArray(messages)
       ? messages
@@ -744,7 +814,6 @@ export async function POST(request) {
     }
 
     const county = safeLine(body?.county || 'washtenaw') || 'washtenaw'
-
     const effectivePrompt = userMessage
 
     const fullAudit = wantsFullAudit(effectivePrompt) || Boolean(body?.fullAudit)
@@ -980,7 +1049,6 @@ export async function POST(request) {
           .slice(0, RERANK_TOP_N)
 
         if (rerankedDocs.length < MIN_RERANK_DOCS && limitedCandidates.length > 0) {
-          // Fallback: ensure a minimum number of context docs
           const padding = limitedCandidates.slice(0, MIN_RERANK_DOCS - rerankedDocs.length).map((doc, idx) => ({
             ...doc,
             rerankScore: 0,
@@ -1066,10 +1134,9 @@ Strict rules:
       'Cite document IDs (e.g., DOC_1) and regulation sections from the text when applicable.',
     ].filter(Boolean)
     const preamble = preambleParts.join('\n\n')
-    const cohereImages = hasImage && imageBase64 ? [{ data: imageBase64, media_type: imageMediaType }] : undefined
 
     // ========================================================================
-    // GENERATE RESPONSE
+    // GENERATE RESPONSE (FIXED IMAGE PASS-THROUGH)
     // ========================================================================
 
     let modelText = ''
@@ -1080,16 +1147,42 @@ Strict rules:
     let tokenUsage = {}
 
     try {
-      const buildCohereRequest = (model) => ({
-        model,
-        message: userMessage,
-        chatHistory: cohereChatHistory,
-        preamble,
-        documents: contextDocs,
-        images: cohereImages,
-      })
+      const buildCohereRequest = (model) => {
+        const request = {
+          model,
+          message: userMessage,
+          chatHistory: cohereChatHistory,
+          preamble,
+          documents: contextDocs.map((doc) => ({
+            id: doc.id || 'unknown',
+            title: doc.source || 'Source',
+            snippet: doc.text || '',
+            text: doc.text || '',
+          })),
+        }
 
-      const invokePrimary = () => withTimeout(callCohereChat(buildCohereRequest(usedModel)), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+        // ✅ FIXED: Only add images if we have valid base64 data
+        if (hasImage && imageBase64 && imageMediaType) {
+          request.images = [
+            {
+              data: imageBase64,
+              media_type: imageMediaType,
+            },
+          ]
+
+          logger.info('Vision request with image', {
+            mediaType: imageMediaType,
+            dataLength: imageBase64.length,
+          })
+        }
+
+        return request
+      }
+
+      const invokePrimary = () => {
+        const request = buildCohereRequest(usedModel)
+        return withTimeout(callCohereChat(request), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+      }
 
       let answerResp
       try {
@@ -1098,7 +1191,8 @@ Strict rules:
         if (hasImage && isModelAccessError(err)) {
           logger.warn('Cohere vision access failed, attempting Aya Vision fallback', { error: err?.message })
           usedModel = 'c4ai-aya-vision-8b'
-          answerResp = await withTimeout(callCohereChat(buildCohereRequest(usedModel)), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+          const fallbackRequest = buildCohereRequest(usedModel)
+          answerResp = await withTimeout(callCohereChat(fallbackRequest), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
         } else {
           throw err
         }
@@ -1109,9 +1203,23 @@ Strict rules:
 
       modelText = answerResp?.text || responseOutputToString(answerResp) || ''
       assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
+
+      // ✅ ADDED: Log successful vision response
+      if (hasImage) {
+        logger.info('Vision response received', {
+          model: usedModel,
+          responseLength: assistantMessage.length,
+          hasImage: true,
+        })
+      }
     } catch (e) {
       const detail = safeErrorDetails(e)
-      logger.error('Generation failed', { error: e?.message, detail })
+      logger.error('Generation failed', {
+        error: e?.message,
+        detail,
+        hasImage,
+        model: usedModel,
+      })
       return NextResponse.json(
         { error: 'Generation failed', details: detail },
         { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
