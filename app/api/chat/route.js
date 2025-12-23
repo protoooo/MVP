@@ -8,7 +8,7 @@
 // - No "confidence" anywhere
 // - No citations, no doc/page/source mentions in the user-facing output
 // - No asterisks (*) and no hashtags (#) in the user-facing output
-// - No assumptions: do not claim missing facilities, temperatures, or time-based storage unless clearly visible
+// - No assumptions: do not claim missing facilities, temperatures, cooking status, or time-based storage unless clearly visible
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -654,7 +654,7 @@ function normalizeCategoryLines(text) {
 }
 
 // ============================================================================
-// ASSUMPTION GUARD (IMAGE MODE) - DROP NON-VISIBLE CLAIMS
+// ASSUMPTION GUARD (IMAGE MODE) - DROP NON-VISIBLE / OPERATIONAL CLAIMS
 // ============================================================================
 
 function parseViolationBlocks(text) {
@@ -735,7 +735,25 @@ function looksLikeNonVisualAssumption(issue, remediation, type) {
     /\btime\s+in\s+temperature\s+danger\s+zone\b/i,
   ]
 
-  return absenceFacility.some((p) => p.test(t)) || timeTempInference.some((p) => p.test(t))
+  // NEW: Operational/cooking-status inferences (not a food-code violation and usually not confirmable)
+  const operationalInference = [
+    /\bstove(top)?\s+(?:is|was)\s+on\b/i,
+    /\bburner(s)?\s+(?:is|are|was|were)\s+on\b/i,
+    /\bknob(s)?\s+(?:is|are)\s+set\b/i,
+    /\b(timer|cook\s*timer)\s+(?:is|was)\s+not\s+set\b/i,
+    /\bset\s+the\s+timer\b/i,
+    /\bleft\s+unattended\b/i,
+    /\bunattended\s+(?:cooking|heat|stove|burner)\b/i,
+    /\bactively\s+cook(?:ing)?\b/i,
+    /\bcooking\s+(?:in\s+progress|right\s+now|currently)\b/i,
+    /\bin\s+use\s+(?:right\s+now|currently)\b/i,
+  ]
+
+  return (
+    absenceFacility.some((p) => p.test(t)) ||
+    timeTempInference.some((p) => p.test(t)) ||
+    operationalInference.some((p) => p.test(t))
+  )
 }
 
 function buildClarificationQuestionsFromDropped(droppedBlocks) {
@@ -748,7 +766,7 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
   }
 
   for (const b of droppedBlocks || []) {
-    const t = `${b?.issue || ''} ${b?.type || ''}`.toLowerCase()
+    const t = `${b?.issue || ''} ${b?.type || ''} ${b?.remediation || ''}`.toLowerCase()
 
     if (t.includes('hand') && (t.includes('wash') || t.includes('handwash'))) {
       add('Is there a designated handwashing sink available, and is it stocked with soap and paper towels?')
@@ -762,6 +780,12 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
 
     if (t.includes('room temperature') || t.includes('leftover') || t.includes('stored')) {
       add('Was the food in the photo being actively cooked/served, or was it being cooled/held for storage?')
+      continue
+    }
+
+    // NEW: stove/burner/timer assumptions -> ask instead of claiming
+    if (t.includes('stove') || t.includes('stovetop') || t.includes('burner') || t.includes('timer') || t.includes('unattended')) {
+      add('Were any burners actually on at the time of the photo, or was the pot just sitting on the stovetop?')
       continue
     }
 
@@ -785,11 +809,10 @@ function rebuildResponseFromBlocks(header, blocks, clarificationQuestions) {
     const issue = safeLine(b.issue || '')
     const remediation = safeLine(b.remediation || '')
     const cat = normalizeCategoryLabel(b.category || '')
-    const category = cat || determineViolationCategory(issue, remediation, type).category
-    const catInfo = determineViolationCategory(issue, remediation, type)
+    const catInfo = determineViolationCategory(issue, remediation, type || determineViolationType(issue))
 
     parts.push(`- Type: ${type || determineViolationType(issue)}`)
-    parts.push(`  Category: ${normalizeCategoryLabel(category)}`)
+    parts.push(`  Category: ${normalizeCategoryLabel(cat || catInfo.category)}`)
     parts.push(`  Issue: ${issue}`)
     parts.push(`  Remediation: ${remediation}`)
     parts.push(`  Correction: ${safeLine(b.correction || catInfo.correction)}`)
@@ -1215,7 +1238,7 @@ export async function POST(request) {
 
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for food safety and sanitation issues. Only report violations you can directly see in the photo. Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, or "leftovers" unless clearly visible. If you cannot confirm, ask up to three short clarification questions instead of guessing. For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
+        'Review the photo for food safety and sanitation issues. Only report violations you can directly see in the photo. Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, storage duration, or that cooking is actively occurring unless clearly visible. Do not report cooking timers or generic "stove is on" operational warnings as violations. If you cannot confirm, ask up to three short clarification questions instead of guessing. For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
     }
 
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
@@ -1436,7 +1459,8 @@ Do not mention, cite, or reference any documents, excerpts, page numbers, ids, f
 
 Critical rule for photos:
 - Only report violations you can directly see in the photo.
-- Do not assume missing sinks, missing soap/towels, temperatures, time out of temperature control, "leftovers," or storage duration unless clearly visible (labels, gauges, timestamps, thermometer readings).
+- Do not assume missing sinks, missing soap/towels, temperatures, time out of temperature control, "leftovers," storage duration, or whether cooking is actively occurring unless clearly visible (labels, gauges, timestamps, thermometer readings, visible flame/glow/indicator).
+- Do NOT report cooking timers, “timer not set”, or generic “stove/burner is on” operational warnings as food-code violations.
 - If you cannot confirm, ask up to three short clarification questions instead of guessing.
 
 Goals:
