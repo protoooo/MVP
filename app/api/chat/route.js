@@ -708,6 +708,11 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const messages = Array.isArray(body?.messages) ? body.messages : []
 
+    const imageDataUrl = body?.image || body?.imageBase64 || body?.image_url
+    const hasImage = Boolean(imageDataUrl)
+    const imageBase64 = hasImage ? extractBase64FromDataUrl(imageDataUrl) : null
+    const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
+
     const lastUserIndex = Array.isArray(messages)
       ? messages
           .slice()
@@ -730,16 +735,15 @@ export async function POST(request) {
       userMessage = safeLine(messageContentToString(fallback?.content))
     }
 
+    if (!userMessage && hasImage) {
+      userMessage = 'Please inspect the attached image for potential food safety violations based on county regulations.'
+    }
+
     if (!userMessage) {
       return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
     }
 
     const county = safeLine(body?.county || 'washtenaw') || 'washtenaw'
-
-    const imageDataUrl = body?.image || body?.imageBase64 || body?.image_url
-    const hasImage = Boolean(imageDataUrl)
-    const imageBase64 = hasImage ? extractBase64FromDataUrl(imageDataUrl) : null
-    const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
 
     const effectivePrompt = userMessage
 
