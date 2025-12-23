@@ -1594,7 +1594,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 6px;
-          align-items: flex-start;
+          align-items: center;
+          text-align: center;
         }
 
         .modal-link {
@@ -1619,6 +1620,29 @@ export default function Page() {
 
         .modal-footer .modal-link:hover {
           color: var(--ink-0);
+        }
+
+        .pricing-modal .pricing-feature {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          color: #e5e7eb;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        .pricing-modal .pricing-feature-check {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          color: #34d399;
+          flex-shrink: 0;
+        }
+
+        .pricing-modal .pricing-feature-text {
+          flex: 1;
+          letter-spacing: 0.01em;
         }
 
         /* Chat */
