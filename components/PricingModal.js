@@ -40,11 +40,14 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           {/* Single Plan Card */}
           <div
             style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-              border: '2px solid var(--accent)',
+              background: 'linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08))',
+              border: '1px solid rgba(255, 255, 255, 0.28)',
+              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.48), 0 24px 72px rgba(5, 7, 13, 0.4)',
+              backdropFilter: 'blur(14px) saturate(125%)',
+              WebkitBackdropFilter: 'blur(14px) saturate(125%)',
               borderRadius: 'var(--radius-md)',
               padding: '32px',
-              color: 'white',
+              color: 'var(--ink-0)',
               marginBottom: '24px'
             }}
           >
@@ -68,16 +71,17 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                background: 'white',
-                color: 'var(--bg-1)',
-                border: 'none',
-                borderRadius: 'var(--radius-sm)',
+                background: 'linear-gradient(120deg, #7bc2ff, #5fa8ff)',
+                color: '#05070d',
+                border: '1px solid rgba(255, 255, 255, 0.45)',
+                borderRadius: '9999px',
                 fontSize: '15px',
                 fontWeight: '600',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.5 : 1,
                 marginBottom: '24px',
                 transition: 'all 0.15s ease',
+                boxShadow: '0 12px 36px rgba(95, 168, 255, 0.32)',
               }}
             >
               {loading === 'unlimited' && <span className="spinner" />}
@@ -110,8 +114,8 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           {/* Value Proposition */}
           <div style={{
-            background: 'var(--bg-3)',
-            border: '1px solid var(--border-subtle)',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08))',
+            border: '1px solid rgba(255, 255, 255, 0.26)',
             borderRadius: 'var(--radius-sm)',
             padding: '20px',
             marginBottom: '20px'

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { IBM_Plex_Mono } from 'next/font/google'
 import appleIcon from '@/app/apple-icon.png'
+import bg from '@/app/assets/background/protocolLM-bg.png'
 
 const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -18,29 +19,29 @@ export default function InfoPageLayout({
 }) {
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = 'chat'
+    document.documentElement.dataset.view = 'landing'
   }, [])
 
   return (
     <>
       <style jsx global>{`
         :root {
-          --bg-0: #09090b;
-          --bg-1: #0c0c0e;
-          --bg-2: #131316;
-          --bg-3: #1a1a1f;
+          --bg-0: rgba(5, 7, 13, 0.72);
+          --bg-1: rgba(7, 10, 18, 0.78);
+          --bg-2: rgba(9, 13, 22, 0.82);
+          --bg-3: rgba(255, 255, 255, 0.1);
 
-          --ink-0: #fafafa;
-          --ink-1: #a0a0a8;
-          --ink-2: #636369;
-          --ink-3: #3f3f46;
+          --ink-0: #f6f9ff;
+          --ink-1: rgba(240, 244, 255, 0.86);
+          --ink-2: rgba(214, 222, 240, 0.76);
+          --ink-3: rgba(178, 190, 215, 0.6);
 
-          --accent: #3b82f6;
-          --accent-hover: #2563eb;
-          --accent-dim: rgba(59, 130, 246, 0.1);
+          --accent: #5fa8ff;
+          --accent-hover: #7bc2ff;
+          --accent-dim: rgba(95, 168, 255, 0.2);
 
-          --border-subtle: rgba(255, 255, 255, 0.05);
-          --border-default: rgba(255, 255, 255, 0.08);
+          --border-subtle: rgba(255, 255, 255, 0.18);
+          --border-default: rgba(255, 255, 255, 0.32);
 
           --radius-sm: 8px;
           --radius-md: 12px;
@@ -50,14 +51,42 @@ export default function InfoPageLayout({
         html, body {
           height: 100%;
           margin: 0;
-          background: var(--bg-0);
+          background: transparent;
           color: var(--ink-0);
         }
 
         .info-page-root {
+          position: relative;
           min-height: 100vh;
           min-height: 100dvh;
-          background: var(--bg-0);
+          background: transparent;
+          isolation: isolate;
+        }
+
+        .info-page-root::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background:
+            radial-gradient(130% 80% at 18% 18%, rgba(255, 255, 255, 0.14), transparent 48%),
+            radial-gradient(120% 70% at 82% 6%, rgba(95, 168, 255, 0.18), transparent 52%),
+            linear-gradient(135deg, rgba(5, 7, 13, 0.74), rgba(5, 7, 13, 0.5)),
+            url(${bg.src});
+          background-size: 140% 140%, 140% 140%, cover, cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-attachment: fixed, fixed, fixed, fixed;
+          pointer-events: none;
+          z-index: 0;
+          filter: saturate(120%);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+        }
+
+        .info-content,
+        .info-topbar {
+          position: relative;
+          z-index: 1;
         }
 
         .info-topbar {
@@ -71,6 +100,14 @@ export default function InfoPageLayout({
           align-items: center;
           justify-content: space-between;
           flex-shrink: 0;
+          background: linear-gradient(120deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.26);
+          border-radius: 14px;
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.45),
+            0 18px 48px rgba(5, 7, 13, 0.32);
         }
 
         .info-brand {
@@ -128,8 +165,9 @@ export default function InfoPageLayout({
           font-size: 13px;
           font-weight: 600;
           color: var(--ink-0);
-          background: var(--bg-3);
-          border: 1px solid var(--border-subtle);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
           border-radius: 10px;
           padding: 8px 12px;
           cursor: pointer;
@@ -137,7 +175,7 @@ export default function InfoPageLayout({
         }
 
         .info-action-button:hover:not(:disabled) {
-          background: var(--bg-2);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.12));
           border-color: var(--border-default);
         }
 
@@ -184,8 +222,13 @@ export default function InfoPageLayout({
         }
 
         .info-section {
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.46),
+            0 26px 70px rgba(5, 7, 13, 0.4);
+          backdrop-filter: blur(14px) saturate(125%);
+          -webkit-backdrop-filter: blur(14px) saturate(125%);
           border-radius: var(--radius-md);
           padding: 24px;
           margin-bottom: 20px;
@@ -246,11 +289,13 @@ export default function InfoPageLayout({
         }
 
         .info-highlight {
-          background: var(--bg-3);
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.22);
           border-left: 3px solid var(--accent);
           border-radius: var(--radius-sm);
           padding: 16px;
           margin: 16px 0;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
         }
 
         .info-highlight-title {
