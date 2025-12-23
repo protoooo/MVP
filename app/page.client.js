@@ -125,7 +125,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-headings">
             <h1 className="hero-title">Catch Violations, Not Fines.</h1>
             <p className="hero-support">
-              Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get instant answers and guidance from Washtenaw County Food Safety Regulations.
+              Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
+              instant answers and guidance from Washtenaw County Food Safety Regulations.
             </p>
           </div>
 
@@ -562,10 +563,10 @@ export default function Page() {
           setSubscription(null)
           setHasActiveSubscription(false)
 
-        setIsLoading(false)
-        router.replace('/verify-email')
-        return
-      }
+          setIsLoading(false)
+          router.replace('/verify-email')
+          return
+        }
 
         const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
@@ -757,7 +758,6 @@ export default function Page() {
   const handleSignOut = async () => {
     try {
       setShowSettingsMenu(false)
-
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Sign out error', e)
@@ -768,17 +768,25 @@ export default function Page() {
     }
   }
 
+  // ✅ UPDATED: ensures we send the image data URL at top-level `image`,
+  // and also include it inside the latest user message object.
+  // Also avoids any weirdness with stale `messages` by capturing `baseMessages` once.
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
     const question = input.trim()
-    const image = selectedImage
+    const image = selectedImage || null
 
     setSendMode(image ? 'vision' : 'text')
     setSendKey((k) => k + 1)
 
     const newUserMessage = { role: 'user', content: question, image }
+
+    // capture current messages snapshot for request payload
+    const baseMessages = messages
+    const outgoingMessages = [...baseMessages, newUserMessage]
+
     setMessages((prev) => [...prev, newUserMessage, { role: 'assistant', content: '' }])
     setInput('')
     setSelectedImage(null)
@@ -815,8 +823,8 @@ export default function Page() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, newUserMessage],
-          image,
+          messages: outgoingMessages,
+          image, // ✅ top-level image field (data URL)
           chatId: activeChatId,
         }),
       })
@@ -865,7 +873,7 @@ export default function Page() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      const compressed = await compressImage(file)
+      const compressed = await compressImage(file) // should return a data URL string
       setSelectedImage(compressed)
     } catch (error) {
       console.error('Image compression error', error)
@@ -1240,7 +1248,8 @@ export default function Page() {
         }
 
         @keyframes arrow-pulse {
-          0%, 100% {
+          0%,
+          100% {
             opacity: 0.6;
             transform: translateX(0);
           }
@@ -1309,16 +1318,11 @@ export default function Page() {
         /* Fallback for browsers that don't support @property */
         @supports not (background: conic-gradient(from var(--trace-angle, 0deg), red, blue)) {
           .hero-cta-trace::before {
-            background: linear-gradient(
-              90deg,
-              transparent,
-              rgba(255, 255, 255, 0.3),
-              transparent
-            );
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             background-size: 200% 100%;
             animation: trace-slide 2s linear infinite;
           }
-          
+
           @keyframes trace-slide {
             0% {
               background-position: -100% 0;
@@ -1340,178 +1344,6 @@ export default function Page() {
           height: 46px;
           font-size: 15px;
           border-radius: var(--radius-full);
-        }
-
-        .terminal-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: var(--radius-full);
-        }
-
-        .terminal-dot.red {
-          background: #ff5f57;
-        }
-        .terminal-dot.yellow {
-          background: #febc2e;
-        }
-        .terminal-dot.green {
-          background: #28c840;
-        }
-
-        /* Landing demo window */
-        .landing-demo-window {
-          width: 100%;
-          background: var(--bg-1);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          box-shadow: 0 24px 90px rgba(0, 0, 0, 0.55);
-        }
-
-        .landing-demo-header {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 12px 14px;
-          background: var(--bg-2);
-          border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .landing-demo-body {
-          padding: 18px;
-        }
-
-        .landing-demo-messages {
-          height: 240px;
-          overflow-y: auto;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-          padding: 8px 6px 12px;
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          background: rgba(255, 255, 255, 0.02);
-        }
-
-        .landing-demo-messages::-webkit-scrollbar {
-          width: 0px;
-          height: 0px;
-        }
-
-        .landing-demo-row {
-          display: flex;
-          width: 100%;
-          margin: 10px 0;
-        }
-
-        .landing-demo-row.is-assistant {
-          justify-content: flex-start;
-        }
-
-        .landing-demo-row.is-user {
-          justify-content: flex-end;
-        }
-
-        .landing-demo-bubble {
-          max-width: min(560px, 82%);
-          padding: 0;
-          border: none;
-          border-radius: 0;
-          line-height: 1.55;
-          font-size: 14px;
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
-          word-break: break-word;
-          background: transparent;
-        }
-
-        .landing-demo-bubble.assistant {
-          background: transparent;
-          color: var(--ink-1);
-          border: none;
-        }
-
-        .landing-demo-bubble.user {
-          background: transparent;
-          color: var(--ink-0);
-          border: none;
-        }
-
-        .landing-demo-inputArea {
-          margin-top: 14px;
-        }
-
-        .landing-demo-inputWrap {
-          display: flex;
-          align-items: stretch;
-          gap: 10px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          padding: 10px 10px;
-        }
-
-        .landing-demo-inputWrap:focus-within {
-          border-color: var(--border-subtle);
-          box-shadow: none;
-        }
-
-        .landing-demo-textarea {
-          flex: 1;
-          min-height: 44px;
-          max-height: 120px;
-          padding: 10px 10px;
-          background: transparent;
-          border: none;
-          color: var(--ink-0);
-          font-size: 14px;
-          line-height: 1.4;
-          resize: none;
-          font-family: inherit;
-          min-width: 0;
-          outline: none;
-        }
-
-        .landing-demo-textarea:focus {
-          outline: none;
-        }
-
-        .landing-demo-send {
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 12px;
-          color: var(--ink-2);
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-        }
-
-        .landing-demo-send.active {
-          background: var(--accent);
-          border-color: rgba(59, 130, 246, 0.6);
-          color: white;
-        }
-
-        .landing-demo-send:hover {
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .landing-demo-send.active:hover {
-          background: var(--accent-hover);
-        }
-
-        .landing-demo-hint {
-          margin-top: 8px;
-          padding-left: 4px;
-          font-size: 11px;
-          color: var(--ink-3);
-          letter-spacing: 0.02em;
-          user-select: none;
         }
 
         /* Footer links */
@@ -1610,200 +1442,6 @@ export default function Page() {
 
         .modal-close:hover {
           color: var(--ink-0);
-        }
-
-        .modal-header {
-          margin-bottom: 24px;
-        }
-
-        .modal-title {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-          color: var(--ink-0);
-        }
-
-        .modal-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .form-label {
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          color: var(--ink-0);
-        }
-
-        .form-input {
-          width: 100%;
-          height: 42px;
-          padding: 0 12px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
-          color: var(--ink-0);
-          font-size: 14px;
-          font-family: inherit;
-          transition: border-color 0.15s ease;
-        }
-
-        .form-input::placeholder {
-          color: var(--ink-3);
-        }
-        .form-input:focus {
-          border-color: var(--accent);
-        }
-
-        .form-input-wrap {
-          position: relative;
-        }
-
-        .form-toggle-vis {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          color: var(--ink-2);
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          cursor: pointer;
-          font-family: inherit;
-        }
-
-        .form-toggle-vis:hover {
-          color: var(--ink-0);
-        }
-
-        .btn-submit {
-          width: 100%;
-          height: 42px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: inherit;
-          transition: background 0.15s ease;
-          margin-top: 8px;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          background: var(--accent-hover);
-        }
-        .btn-submit:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .spinner {
-          width: 14px;
-          height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #fff;
-          border-radius: var(--radius-full);
-          animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .modal-message {
-          padding: 10px 12px;
-          background: var(--bg-2);
-          border-radius: var(--radius-sm);
-          font-size: 13px;
-          color: var(--ink-1);
-          text-align: center;
-          margin-top: 16px;
-        }
-
-        .modal-message.ok {
-          color: #22c55e;
-        }
-        .modal-message.err {
-          color: #ef4444;
-        }
-
-        .modal-footer {
-          margin-top: 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .modal-link {
-          background: none;
-          border: none;
-          font-size: 13px;
-          color: var(--ink-0);
-          cursor: pointer;
-          font-family: inherit;
-          opacity: 0.92;
-        }
-
-        .modal-link:hover {
-          opacity: 1;
-        }
-
-        .modal-card .recaptcha-badge,
-        .modal-card .turnstile-badge,
-        .modal-card .captcha-badge,
-        .modal-card [data-turnstile-badge],
-        .modal-card [data-recaptcha-badge] {
-          font-size: 10px !important;
-          white-space: nowrap !important;
-          line-height: 1.2 !important;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100%;
-        }
-
-        .pricing-feature {
-          display: grid;
-          grid-template-columns: 16px 1fr;
-          column-gap: 10px;
-          align-items: start;
-          font-size: 13px;
-          line-height: 1.5;
-          opacity: 0.92;
-        }
-
-        .pricing-feature-check {
-          width: 16px;
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          line-height: 1;
-          margin-top: 2px;
-          font-size: 14px;
-        }
-
-        .pricing-feature-text {
-          display: block;
-          min-width: 0;
         }
 
         /* Chat */
@@ -2069,68 +1707,6 @@ export default function Page() {
           box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
-        /* Subtle tracing animation for camera button */
-        .chat-camera-btn::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          border-radius: var(--radius-md);
-          padding: 1px;
-          background: conic-gradient(
-            from var(--camera-trace-angle, 0deg),
-            transparent 0deg,
-            transparent 30deg,
-            rgba(59, 130, 246, 0.5) 60deg,
-            rgba(59, 130, 246, 0.2) 90deg,
-            transparent 120deg,
-            transparent 360deg
-          );
-          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          mask-composite: exclude;
-          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          pointer-events: none;
-          animation: camera-trace-rotate 3s linear infinite;
-        }
-
-        @property --camera-trace-angle {
-          syntax: '<angle>';
-          initial-value: 0deg;
-          inherits: false;
-        }
-
-        @keyframes camera-trace-rotate {
-          0% {
-            --camera-trace-angle: 0deg;
-          }
-          100% {
-            --camera-trace-angle: 360deg;
-          }
-        }
-
-        /* Fallback for browsers that don't support @property */
-        @supports not (background: conic-gradient(from var(--camera-trace-angle, 0deg), red, blue)) {
-          .chat-camera-btn::before {
-            background: linear-gradient(
-              90deg,
-              transparent,
-              rgba(59, 130, 246, 0.4),
-              transparent
-            );
-            background-size: 200% 100%;
-            animation: camera-trace-slide 2s linear infinite;
-          }
-          
-          @keyframes camera-trace-slide {
-            0% {
-              background-position: -100% 0;
-            }
-            100% {
-              background-position: 100% 0;
-            }
-          }
-        }
-
         .chat-input-wrapper {
           flex: 1;
           display: flex;
@@ -2199,6 +1775,12 @@ export default function Page() {
           animation: spin 0.6s linear infinite;
         }
 
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
         .chat-disclaimer {
           text-align: center;
           font-size: 11px;
@@ -2208,33 +1790,33 @@ export default function Page() {
 
         /* Responsive */
         @media (max-width: 768px) {
-          /* Mobile CTA row - equal spacing with centered arrow */
           .hero-cta-row {
             flex-direction: column;
             gap: 0;
             align-items: center;
             text-align: center;
           }
-          
+
           .hero-arrow-text {
             font-size: 13px;
             order: 0;
             margin-bottom: 10px;
           }
-          
+
           .hero-arrow-icon {
             order: 1;
             transform: rotate(90deg);
             margin: 6px 0;
           }
-          
+
           .hero-arrow-icon svg {
             width: 18px;
             height: 18px;
           }
-          
+
           @keyframes arrow-pulse {
-            0%, 100% {
+            0%,
+            100% {
               opacity: 0.6;
               transform: rotate(90deg) translateX(0);
             }
@@ -2243,15 +1825,10 @@ export default function Page() {
               transform: rotate(90deg) translateX(3px);
             }
           }
-          
+
           .hero-cta {
             order: 2;
             margin-top: 10px;
-          }
-
-          .hero-headings {
-            text-align: center;
-            align-items: center;
           }
 
           .landing-topbar {
@@ -2287,19 +1864,6 @@ export default function Page() {
             font-weight: 600 !important;
             letter-spacing: 0.04em !important;
             line-height: 1 !important;
-          }
-
-          .landing-demo-messages {
-            height: 220px;
-          }
-
-          .landing-demo-bubble {
-            font-size: 13px;
-            max-width: 86%;
-          }
-
-          .mobile-start {
-            display: flex;
           }
 
           .chat-topbar {
@@ -2395,7 +1959,9 @@ export default function Page() {
                           subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
                         color: subscription.status === 'trialing' ? '#3b82f6' : '#22c55e',
                         border: `1px solid ${
-                          subscription.status === 'trialing' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'
+                          subscription.status === 'trialing'
+                            ? 'rgba(59, 130, 246, 0.3)'
+                            : 'rgba(34, 197, 94, 0.3)'
                         }`,
                       }}
                     >
@@ -2458,9 +2024,7 @@ export default function Page() {
               >
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
-                    <p className="chat-empty-text">
-                      Upload a photo or ask a question about Washtenaw County food safety regulations.
-                    </p>
+                    <p className="chat-empty-text">Upload a photo or ask a question about Washtenaw County food safety regulations.</p>
                   </div>
                 ) : (
                   <div className="chat-history">
@@ -2561,17 +2125,13 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <p className="chat-disclaimer">
-                    protocolLM may make mistakes. Verify critical decisions with official regulations.
-                  </p>
+                  <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
                 </div>
               </div>
             </div>
           )}
         </main>
       </div>
-
-      
     </>
   )
 }
