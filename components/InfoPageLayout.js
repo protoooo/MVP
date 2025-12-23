@@ -84,30 +84,9 @@ export default function InfoPageLayout({
         }
 
         .info-content,
-        .info-topbar {
+        .info-hero-card {
           position: relative;
           z-index: 1;
-        }
-
-        .info-topbar {
-          width: 100%;
-          max-width: 880px;
-          margin: 0 auto;
-          padding: 16px 24px;
-          padding-left: max(24px, env(safe-area-inset-left));
-          padding-right: max(24px, env(safe-area-inset-right));
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-shrink: 0;
-          background: linear-gradient(120deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.26);
-          border-radius: 14px;
-          backdrop-filter: blur(12px) saturate(120%);
-          -webkit-backdrop-filter: blur(12px) saturate(120%);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.45),
-            0 18px 48px rgba(5, 7, 13, 0.32);
         }
 
         .info-brand {
@@ -187,11 +166,39 @@ export default function InfoPageLayout({
         .info-content {
           max-width: 760px;
           margin: 0 auto;
-          padding: 0 24px 80px;
+          padding: 32px 24px 80px;
+        }
+
+        .info-hero-card {
+          width: 100%;
+          margin-bottom: 24px;
+          padding: 20px;
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          border-radius: var(--radius-md);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.45),
+            0 18px 48px rgba(5, 7, 13, 0.32);
+          backdrop-filter: blur(14px) saturate(125%);
+          -webkit-backdrop-filter: blur(14px) saturate(125%);
+        }
+
+        .info-hero-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 12px;
+        }
+
+        .info-actions {
+          flex-wrap: wrap;
+          justify-content: flex-end;
         }
 
         .info-header {
-          margin-bottom: 40px;
+          margin: 0;
         }
 
         .info-eyebrow {
@@ -312,12 +319,8 @@ export default function InfoPageLayout({
         }
 
         @media (max-width: 768px) {
-          .info-topbar {
-            padding: 12px 16px;
-          }
-
           .info-content {
-            padding: 0 16px 60px;
+            padding: 20px 16px 60px;
           }
 
           .info-title {
@@ -340,28 +343,30 @@ export default function InfoPageLayout({
       `}</style>
 
       <div className={`${ibmMono.className} info-page-root`}>
-        <header className="info-topbar">
-          <Link href="/" className="info-brand">
-            <span className="info-brand-inner">
-              <span className="info-brand-mark">
-                <Image src={appleIcon} alt="" width={64} height={64} priority />
-              </span>
-              <span className="info-brand-text">protocolLM</span>
-            </span>
-          </Link>
-          <div className="info-actions">
-            <Link href={backHref} className="info-back-link">
-              ← Back
-            </Link>
-            {headerAction}
-          </div>
-        </header>
-
         <main className="info-content">
-          <div className="info-header">
-            {eyebrow && <div className="info-eyebrow">{eyebrow}</div>}
-            <h1 className="info-title">{title}</h1>
-            {subtitle && <p className="info-subtitle">{subtitle}</p>}
+          <div className="info-hero-card">
+            <div className="info-hero-top">
+              <Link href="/" className="info-brand">
+                <span className="info-brand-inner">
+                  <span className="info-brand-mark">
+                    <Image src={appleIcon} alt="" width={64} height={64} priority />
+                  </span>
+                  <span className="info-brand-text">protocolLM</span>
+                </span>
+              </Link>
+              <div className="info-actions">
+                <Link href={backHref} className="info-back-link">
+                  ← Back
+                </Link>
+                {headerAction}
+              </div>
+            </div>
+
+            <div className="info-header">
+              {eyebrow && <div className="info-eyebrow">{eyebrow}</div>}
+              <h1 className="info-title">{title}</h1>
+              {subtitle && <p className="info-subtitle">{subtitle}</p>}
+            </div>
           </div>
 
           {children}
