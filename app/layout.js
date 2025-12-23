@@ -17,11 +17,12 @@ export default function RootLayout({ children }) {
       <body
         className={outfit.className}
         style={{
-          backgroundImage: `url(${bg.src})`,
+          backgroundImage: `linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(7, 10, 18, 0.78)), url(${bg.src})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          backgroundColor: '#070A12',
+          backgroundAttachment: 'fixed',
+          backgroundColor: '#05070D',
           minHeight: '100vh',
         }}
       >
