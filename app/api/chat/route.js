@@ -29,7 +29,7 @@ async function getSearchDocuments() {
 }
 
 // ============================================================================
-// IMAGE VALIDATION (UPDATED FOR COHERE: ALWAYS PRODUCE A DATA URL)
+// IMAGE VALIDATION + NORMALIZATION (COHERE: ALWAYS PRODUCE A DATA URL)
 // ============================================================================
 
 function isBase64Like(s) {
@@ -47,21 +47,29 @@ function extractMediaTypeFromHeader(header) {
 }
 
 function normalizeToDataUrl(input) {
-  // Already a data URL
+  // 1) Already a data URL
   if (typeof input === 'string' && input.trim().startsWith('data:image/')) {
     const trimmed = input.trim()
     const parts = trimmed.split(',')
     if (parts.length !== 2) return null
+
     const header = parts[0]
     const base64Raw = parts[1] || ''
     const mediaType = extractMediaTypeFromHeader(header)
     const base64Data = base64Raw.trim().replace(/\s+/g, '')
+
     if (!mediaType) return null
     if (!isBase64Like(base64Data)) return null
+
     return { mediaType, base64Data, dataUrl: `data:${mediaType};base64,${base64Data}` }
   }
 
-  // Object format: { data, media_type }
+  // 2) Object with dataUrl
+  if (input && typeof input === 'object' && typeof input.dataUrl === 'string') {
+    return normalizeToDataUrl(input.dataUrl)
+  }
+
+  // 3) Object format: { data, media_type } or { data, mediaType }
   if (input && typeof input === 'object') {
     const data = input.data
     const mediaType = input.media_type || input.mediaType
@@ -72,7 +80,7 @@ function normalizeToDataUrl(input) {
     }
   }
 
-  // Raw base64 (assume jpeg)
+  // 4) Raw base64 (assume jpeg)
   if (typeof input === 'string' && isBase64Like(input)) {
     const base64Data = input.trim().replace(/\s+/g, '')
     const mediaType = 'image/jpeg'
@@ -114,6 +122,34 @@ function validateImageData(imageInput) {
     logger.error('Image validation failed', { error: error?.message })
     return { valid: false, error: 'Image validation error' }
   }
+}
+
+function normalizeImagesForCohere(images) {
+  if (!images) return []
+
+  // Accept either a single image OR an array
+  const arr = Array.isArray(images) ? images : [images]
+  const out = []
+
+  for (const img of arr) {
+    // If it's already a data URL string, keep it
+    if (typeof img === 'string' && img.startsWith('data:image/')) {
+      out.push(img)
+      continue
+    }
+
+    // If it's object with dataUrl, keep it
+    if (img?.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.startsWith('data:image/')) {
+      out.push(img.dataUrl)
+      continue
+    }
+
+    // Otherwise normalize via helper
+    const normalized = normalizeToDataUrl(img)
+    if (normalized?.dataUrl) out.push(normalized.dataUrl)
+  }
+
+  return out
 }
 
 // ============================================================================
@@ -273,16 +309,9 @@ function isModelAccessError(err) {
   return err?.status === 403 || msg.includes('not enabled') || msg.includes('access') || msg.includes('permission')
 }
 
-function normalizeImagesForCohere(images) {
-  if (!images || !Array.isArray(images) || images.length === 0) return []
-
-  const out = []
-  for (const img of images) {
-    const normalized = normalizeToDataUrl(img)
-    if (normalized?.dataUrl) out.push(normalized.dataUrl)
-  }
-  return out
-}
+// ============================================================================
+// COHERE CHAT CALL (FIXED: VISION EXPECTS images AS DATA URL STRINGS)
+// ============================================================================
 
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
   const payload = {
@@ -523,7 +552,7 @@ export async function POST(request) {
     const imageInput = body?.image || body?.imageBase64 || body?.image_url || body?.imageDataUrl || body?.image_data
     const hasImage = Boolean(imageInput)
 
-    // ✅ FIXED: Validate/normalize image before processing
+    // ✅ Validate/normalize image before processing
     let imageBase64 = null
     let imageMediaType = null
     let fullDataUrl = null
@@ -585,7 +614,6 @@ export async function POST(request) {
 
     const fullAudit = wantsFullAudit(effectivePrompt) || Boolean(body?.fullAudit)
     const includeFines = wantsFineInfo(effectivePrompt) || Boolean(body?.includeFines)
-    const maxFindings = fullAudit ? 8 : 4
 
     // ========================================================================
     // AUTH + LICENSE VALIDATION
