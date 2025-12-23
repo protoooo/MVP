@@ -33,7 +33,7 @@ npm run dev
 | Component | Service | Purpose |
 |-----------|---------|---------|
 | Chat | OpenAI GPT-5.2 | Generate compliance answers + vision |
-| Embeddings | Cohere (`embed-english-v3.0`) | Document search (1024 dims) |
+| Embeddings | Cohere (`embed-english-v4.0`) | Document search (1024 dims) |
 | Database | Supabase (pgvector) | Vector storage + auth |
 | Hosting | Railway | App deployment |
 | Payments | Stripe | Subscriptions |

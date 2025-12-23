@@ -1,4 +1,4 @@
-// app/api/chat/route.js - Cohere-first pipeline with vision fallback
+// app/api/chat/route.js - Cohere text + Aya vision (legacy payload only)
 // ProtocolLM - Washtenaw County Food Safety Compliance Engine
 
 import { NextResponse } from 'next/server'
@@ -154,8 +154,8 @@ const FEATURE_COHERE = (process.env.FEATURE_COHERE ?? 'true').toLowerCase() !== 
 const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() === 'true'
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
-const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'command-a-vision-07-2025'
-const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-english-v3.0'
+const COHERE_VISION_MODEL = 'c4ai-aya-vision-8b'
+const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-english-v4.0'
 const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1024
 const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v3.5'
 const MODEL_LABEL = 'Cohere'
@@ -226,64 +226,6 @@ function messageContentToString(content) {
   return ''
 }
 
-function mapMessageContentToResponseParts(content) {
-  if (!content) return []
-
-  const parts = []
-
-  if (!Array.isArray(content)) {
-    const text = messageContentToString(content)
-    if (text) parts.push({ type: 'input_text', text: safeText(text) })
-    return parts
-  }
-
-  for (const part of content) {
-    if (!part) continue
-
-    if (typeof part === 'string') {
-      const text = safeText(part)
-      if (text) parts.push({ type: 'input_text', text })
-      continue
-    }
-
-    if (part.type === 'text' && part.text) {
-      const text = safeText(part.text)
-      if (text) parts.push({ type: 'input_text', text })
-      continue
-    }
-
-    if (part.type === 'image_url' && part.image_url) {
-      const imageUrl = typeof part.image_url === 'string' ? part.image_url : part.image_url.url
-      if (imageUrl) {
-        parts.push({
-          type: 'input_image',
-          image_url: imageUrl,
-          detail: 'auto',
-        })
-      }
-    }
-  }
-
-  return parts
-}
-
-function toResponseInput(messages) {
-  if (!Array.isArray(messages)) return []
-
-  const out = []
-  for (const msg of messages) {
-    const contentParts = mapMessageContentToResponseParts(msg?.content)
-    if (contentParts.length === 0) continue
-
-    out.push({
-      type: 'message',
-      role: msg?.role === 'assistant' || msg?.role === 'system' || msg?.role === 'developer' ? msg.role : 'user',
-      content: contentParts,
-    })
-  }
-  return out
-}
-
 function responseOutputToString(resp) {
   if (!resp) return ''
   if (typeof resp.output_text === 'string') return resp.output_text
@@ -299,53 +241,10 @@ function responseOutputToString(resp) {
   return ''
 }
 
-function isModelAccessError(err) {
-  const msg = err?.message?.toLowerCase?.() || ''
-  return err?.status === 403 || msg.includes('not enabled') || msg.includes('access') || msg.includes('permission')
-}
-
 // ============================================================================
 // COHERE CHAT CALL
-// FIX: Vision models expect the image in messages[].content[] (type: image_url)
-// We attempt v2 "messages" format first, then fall back to legacy "message/chat_history/images".
+// Aya vision: legacy payload with explicit images, no v2 fallback.
 // ============================================================================
-
-function cohereChatHistoryToMessages(chatHistory = []) {
-  const out = []
-  for (const h of chatHistory || []) {
-    const text = safeText(h?.message || '')
-    if (!text) continue
-
-    out.push({
-      role: h.role === 'CHATBOT' ? 'assistant' : 'user',
-      content: [{ type: 'text', text }],
-    })
-  }
-  return out
-}
-
-function buildUserContentParts(message, images) {
-  const parts = []
-  const text = safeText(message || '')
-  if (text) parts.push({ type: 'text', text })
-
-  const normalizedImages = normalizeImagesForCohere(images)
-  for (const url of normalizedImages) {
-    parts.push({
-      type: 'image_url',
-      image_url: { url }, // data:image/...;base64,...
-      detail: 'auto',
-    })
-  }
-
-  // IMPORTANT: If there’s no text but there is an image, keep a minimal text part
-  // so the model always has an instruction.
-  if (parts.length > 0 && parts[0]?.type !== 'text') {
-    parts.unshift({ type: 'text', text: 'Inspect the attached image.' })
-  }
-
-  return parts
-}
 
 function cohereResponseToText(resp) {
   // v2 shape: resp.message.content = [{type:'text', text:'...'}]
@@ -374,38 +273,6 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     text: doc?.text || '',
   }))
 
-  const normalizedImages = normalizeImagesForCohere(images)
-  const wantsVision = normalizedImages.length > 0
-
-  // --- Try v2 messages format (required for many vision chat models) ---
-  try {
-    const historyMsgs = cohereChatHistoryToMessages(chatHistory)
-    const userMsg = {
-      role: 'user',
-      content: buildUserContentParts(message, normalizedImages),
-    }
-
-    const payloadV2 = {
-      model,
-      preamble,
-      messages: [...historyMsgs, userMsg],
-      documents: docs,
-    }
-
-    const resp = await cohereClient.chat(payloadV2)
-    resp.__text = cohereResponseToText(resp)
-    resp.__format = 'v2_messages'
-    return resp
-  } catch (err) {
-    // If messages format isn't supported by the SDK/version/model, fall back.
-    logger.warn('Cohere v2 messages payload failed, falling back to legacy chat payload', {
-      error: err?.message,
-      model,
-      hasImages: wantsVision,
-    })
-  }
-
-  // --- Legacy payload fallback ---
   const payloadLegacy = {
     model,
     message,
@@ -414,10 +281,13 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     documents: docs,
   }
 
-  // Some SDK/model combos accept legacy `images` as data URL strings,
-  // but if they ignore it, v2_messages above is what fixes vision behavior.
-  if (wantsVision) {
+  const normalizedImages = normalizeImagesForCohere(images)
+  if (normalizedImages.length) {
     payloadLegacy.images = normalizedImages
+  }
+
+  if (!safeText(message) && !payloadLegacy.images?.length) {
+    throw new Error('Missing message content for Cohere chat')
   }
 
   const respLegacy = await cohereClient.chat(payloadLegacy)
@@ -1033,6 +903,12 @@ Strict rules:
 
     try {
       const buildCohereRequest = (model) => {
+        const visionImages = hasImage && fullDataUrl ? [fullDataUrl] : []
+
+        if (hasImage && visionImages.length === 0) {
+          throw new Error('Image payload missing after validation')
+        }
+
         const requestPayload = {
           model,
           message: userMessage,
@@ -1044,7 +920,7 @@ Strict rules:
             snippet: doc.text || '',
             text: doc.text || '',
           })),
-          images: hasImage && fullDataUrl ? [fullDataUrl] : [],
+          images: visionImages,
         }
 
         if (hasImage && fullDataUrl) {
@@ -1053,30 +929,15 @@ Strict rules:
             dataLength: imageBase64?.length || 0,
             dataUrlPrefix: fullDataUrl.slice(0, 30),
             model,
+            imagesAttached: visionImages.length,
           })
         }
 
         return requestPayload
       }
 
-      const invokePrimary = () => {
-        const req = buildCohereRequest(usedModel)
-        return withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
-      }
-
-      let answerResp
-      try {
-        answerResp = await invokePrimary()
-      } catch (err) {
-        if (hasImage && isModelAccessError(err)) {
-          logger.warn('Cohere vision access failed, attempting Aya Vision fallback', { error: err?.message })
-          usedModel = 'c4ai-aya-vision-8b'
-          const fallbackReq = buildCohereRequest(usedModel)
-          answerResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
-        } else {
-          throw err
-        }
-      }
+      const req = buildCohereRequest(usedModel)
+      const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
 
       billedUnits = answerResp?.billed_units || {}
       tokenUsage = answerResp?.tokens || {}
