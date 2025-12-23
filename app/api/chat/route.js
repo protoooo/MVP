@@ -941,18 +941,18 @@ Return JSON only:
     const queryMain = [effectivePrompt, visionContext, 'Washtenaw County Michigan food code'].filter(Boolean).join(' ').slice(0, 900)
     const queryIssues = vision.issues.slice(0, 2).map((i) => i.issue).join(' ').slice(0, 400)
 
-    const queries = [
-      queryMain,
-      queryIssues,
-      `${effectivePrompt.slice(0, 300)} Washtenaw County Michigan regulations`,
-      `${visionContext.slice(0, 300)} food safety violations`,
-      userKeywords.slice(0, 5).join(' ') + ' Washtenaw County food code',
-      visionKeywords,
-      'Priority violations Michigan food code',
-    ]
-      .filter(Boolean)
-      .filter((q) => q.length > 10)
-      .slice(0, 5)
+  const queries = [
+    queryMain,
+    queryIssues,
+    `${effectivePrompt.slice(0, 300)} Washtenaw County Michigan regulations`,
+    `${visionContext.slice(0, 300)} food safety violations`,
+    userKeywords.slice(0, 5).join(' ') + ' Washtenaw County food code',
+    visionKeywords,
+    'Priority violations Michigan food code',
+  ]
+    .filter(Boolean)
+    .filter((q) => q.length > 10)
+    .slice(0, 3)
 
     let allDocs = []
     try {
