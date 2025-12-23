@@ -107,7 +107,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   return (
     <div className={`${ibmMono.className} landing-root`}>
       <header className="landing-topbar">
-        <div className="landing-topbar-card glass-surface">
+        <div className="landing-topbar-inner">
           <div className="plm-brand-wrap">
             <BrandLink variant="landing" />
           </div>
@@ -266,12 +266,15 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
               <label className="form-label">Email</label>
               <input
                 type="email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com"
                 required
                 className="form-input"
-                autoComplete="email"
+                autoComplete="username"
+                inputMode="email"
+                autoFocus
               />
             </div>
 
@@ -281,12 +284,13 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
                 <div className="form-input-wrap">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    name="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                     className="form-input"
-                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    autoComplete="current-password"
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="form-toggle-vis">
                     {showPassword ? 'Hide' : 'Show'}
@@ -1001,18 +1005,13 @@ export default function Page() {
           height: 69px;
         }
 
-        .loading-logo img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
         .loading-bar {
-          width: 100px;
-          height: 2px;
-          background: var(--bg-3);
-          border-radius: var(--radius-full);
+          width: 160px;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 9999px;
           overflow: hidden;
+          position: relative;
         }
 
         .loading-bar-fill {
@@ -1108,25 +1107,21 @@ export default function Page() {
           top: 0;
           left: 0;
           right: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: max(20px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 20px
-            max(24px, env(safe-area-inset-left));
           z-index: 10;
+          padding: max(18px, env(safe-area-inset-top) + 8px) max(22px, env(safe-area-inset-right) + 8px) 0
+            max(22px, env(safe-area-inset-left) + 8px);
         }
 
-        .landing-topbar-card {
-          width: calc(100% - 32px);
+        .landing-topbar-inner {
+          width: 100%;
           max-width: 1080px;
-          align-self: center;
-          box-sizing: border-box;
+          margin: 0 auto;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          padding: 12px 16px;
-          border-radius: 14px;
+          gap: 10px;
+          background: none;
+          padding: 0;
         }
 
         .landing-top-actions {
@@ -1229,7 +1224,7 @@ export default function Page() {
         .hero-title {
           font-size: clamp(28px, 5vw, 40px);
           font-weight: 800;
-          color: #f8f9ff;
+          color: rgba(15, 23, 42, 0.88);
           letter-spacing: -0.03em;
           margin: 0;
         }
@@ -1238,7 +1233,7 @@ export default function Page() {
           margin: 0;
           font-size: 16px;
           line-height: 1.65;
-          color: rgba(240, 244, 255, 0.75);
+          color: rgba(30, 41, 59, 0.72);
           max-width: 52ch;
         }
 
@@ -1318,45 +1313,115 @@ export default function Page() {
           -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           pointer-events: none;
-          animation: trace-rotate 3s linear infinite;
         }
 
-        @property --trace-angle {
-          syntax: '<angle>';
-          initial-value: 0deg;
-          inherits: false;
+        .hero-cta-trace::after {
+          content: '';
+          position: absolute;
+          inset: -6px;
+          border-radius: var(--radius-full);
+          background: radial-gradient(circle at 30% 30%, rgba(95, 168, 255, 0.25), transparent 40%);
+          opacity: 0.4;
+          filter: blur(12px);
+          pointer-events: none;
         }
 
-        @keyframes trace-rotate {
-          0% {
-            --trace-angle: 0deg;
-          }
+        /* CTA text sizing */
+        .hero-cta span {
+          font-weight: 700;
+          letter-spacing: 0.01em;
+        }
+
+        /* CTA hover */
+        .hero-cta:hover {
+          transform: translateY(-1px);
+        }
+
+        .hero-cta:active {
+          transform: translateY(0);
+        }
+
+        /* Hero badge */
+        .hero-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.1);
+          color: var(--ink-0);
+          font-size: 13px;
+          letter-spacing: 0.02em;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .hero-badge .sparkle {
+          display: inline-flex;
+          align-items: center;
+          color: #fff;
+          background: linear-gradient(135deg, #6ee7b7, #7c3aed, #60a5fa);
+          -webkit-background-clip: text;
+          color: transparent;
+        }
+
+        /* CTA subtext */
+        .hero-subtext {
+          font-size: 14px;
+          color: var(--ink-2);
+          letter-spacing: 0.01em;
+        }
+
+        /* CTA arrow text */
+        .hero-arrow-text {
+          white-space: nowrap;
+        }
+
+        /* CTA arrow icon */
+        .hero-arrow-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          color: var(--ink-2);
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            0 10px 26px rgba(5, 7, 13, 0.28);
+        }
+
+        @keyframes arrow-pulse-alt {
+          0%,
           100% {
-            --trace-angle: 360deg;
+            transform: translateX(0);
+            opacity: 0.6;
+          }
+          50% {
+            transform: translateX(3px);
+            opacity: 1;
           }
         }
 
-        /* Fallback for browsers that don't support @property */
-        @supports not (background: conic-gradient(from var(--trace-angle, 0deg), red, blue)) {
-          .hero-cta-trace::before {
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            background-size: 200% 100%;
-            animation: trace-slide 2s linear infinite;
-          }
-
-          @keyframes trace-slide {
-            0% {
-              background-position: -100% 0;
-            }
-            100% {
-              background-position: 100% 0;
-            }
-          }
+        .hero-arrow-icon svg {
+          width: 16px;
+          height: 16px;
+          stroke-width: 2.4;
         }
 
+        .hero-arrow-icon {
+          animation: arrow-pulse-alt 1.6s ease-in-out infinite;
+        }
+
+        /* CTA vertical layout (mobile) */
         .mobile-start {
-          width: 100%;
           display: none;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
         }
 
         .mobile-start .btn-primary {
@@ -1516,6 +1581,7 @@ export default function Page() {
           padding: 0 10px;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
           transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+          overflow: hidden;
         }
 
         .form-input-wrap:focus-within {
@@ -1548,9 +1614,11 @@ export default function Page() {
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus {
-          -webkit-text-fill-color: var(--ink-0);
-          -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.1) inset;
-          transition: background-color 5000s ease-in-out 0s;
+          -webkit-text-fill-color: #0f172a;
+          -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
+          box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
+          transition: background-color 9999s ease-out 0s;
+          caret-color: #0f172a;
         }
 
         .form-toggle-vis {
@@ -1691,18 +1759,21 @@ export default function Page() {
           flex: 1;
           display: flex;
           flex-direction: column;
-          min-height: 0;
-          height: 100dvh;
+          min-height: 100dvh;
+          height: auto;
           overflow: hidden;
         }
 
         @supports (-webkit-touch-callout: none) {
           .chat-root {
-            height: -webkit-fill-available;
+            min-height: -webkit-fill-available;
           }
         }
 
         .chat-topbar {
+          position: sticky;
+          top: 0;
+          z-index: 20;
           width: 100%;
           max-width: 880px;
           margin: 0 auto;
@@ -1713,6 +1784,9 @@ export default function Page() {
           align-items: center;
           justify-content: space-between;
           flex-shrink: 0;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          background: linear-gradient(180deg, rgba(5, 7, 13, 0.6), rgba(5, 7, 13, 0.08));
         }
 
         .chat-top-actions {
@@ -1794,7 +1868,7 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
-          padding: 0 24px 32px;
+          padding: 8px 24px 12px;
           background: transparent;
         }
 
@@ -1878,15 +1952,19 @@ export default function Page() {
 
         .chat-input-area {
           flex-shrink: 0;
+          position: sticky;
+          bottom: 0;
           border-top: 1px solid rgba(255, 255, 255, 0.2);
-          background: transparent;
+          background: linear-gradient(180deg, rgba(5, 7, 13, 0.4), rgba(5, 7, 13, 0.2));
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
 
         .chat-input-inner {
           max-width: 760px;
           margin: 0 auto;
-          padding: 16px 24px 24px;
-          padding-bottom: max(24px, env(safe-area-inset-bottom));
+          padding: 12px 24px;
+          padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
           width: 100%;
         }
 
@@ -2042,7 +2120,7 @@ export default function Page() {
           text-align: center;
           font-size: 11px;
           color: var(--ink-3);
-          margin-top: 14px;
+          margin-top: 8px;
         }
 
         /* Responsive */
@@ -2089,13 +2167,13 @@ export default function Page() {
           }
 
           .landing-topbar {
-            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px
-              max(16px, env(safe-area-inset-left));
-            gap: 14px;
+            padding: max(14px, env(safe-area-inset-top) + 6px) max(14px, env(safe-area-inset-right) + 6px) 0
+              max(14px, env(safe-area-inset-left) + 6px);
+            gap: 10px;
           }
 
-          .landing-topbar-card {
-            padding: 10px 14px;
+          .landing-topbar-inner {
+            gap: 10px;
           }
 
           .desktop-only {
@@ -2140,12 +2218,12 @@ export default function Page() {
           }
 
           .chat-messages {
-            padding: 0 16px calc(24px + env(safe-area-inset-bottom));
+            padding: 6px 16px 10px;
           }
 
           .chat-input-inner {
-            padding: 12px 16px 18px;
-            padding-bottom: max(18px, env(safe-area-inset-bottom));
+            padding: 10px 16px 14px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
           }
 
           .chat-bubble {
