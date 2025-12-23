@@ -282,6 +282,7 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     documents: docs,
   }
 
+  // Cohere vision expects images as an array of data URL strings
   const normalizedImages = normalizeImagesForCohere(images)
   if (normalizedImages.length) {
     payloadLegacy.images = normalizedImages
@@ -458,6 +459,25 @@ function safeErrorDetails(err) {
   } catch {
     return 'Unknown error'
   }
+}
+
+function getHttpStatusFromCohereError(err) {
+  const s =
+    err?.statusCode ??
+    err?.status ??
+    err?.response?.status ??
+    err?.response?.statusCode ??
+    err?.cause?.statusCode ??
+    null
+  return typeof s === 'number' ? s : null
+}
+
+function isCohereBadRequest(err) {
+  const status = getHttpStatusFromCohereError(err)
+  if (status === 400) return true
+  const msg = String(err?.message || '')
+  const detail = safeErrorDetails(err)
+  return msg.includes('BadRequest') || msg.includes('400') || detail.includes('BadRequest') || detail.includes('400')
 }
 
 // ============================================================================
@@ -892,7 +912,10 @@ Strict rules:
     const preamble = preambleParts.join('\n\n')
 
     // ========================================================================
-    // GENERATE RESPONSE (FIXED IMAGE PASS-THROUGH FOR COHERE VISION)
+    // GENERATE RESPONSE
+    // Fixes:
+    //  1) Always pass images as data URLs (already done via fullDataUrl)
+    //  2) If Aya vision returns 400 BadRequest, fall back to text model (no 500)
     // ========================================================================
 
     let modelText = ''
@@ -901,44 +924,73 @@ Strict rules:
     let usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
     let billedUnits = {}
     let tokenUsage = {}
+    let visionFallbackUsed = false
+
+    const visionImages = hasImage && fullDataUrl ? [fullDataUrl] : []
 
     try {
-      const buildCohereRequest = (model) => {
-        const visionImages = hasImage && fullDataUrl ? [fullDataUrl] : []
+      if (hasImage && visionImages.length === 0) {
+        throw new Error('Image payload missing after validation')
+      }
 
-        if (hasImage && visionImages.length === 0) {
-          throw new Error('Image payload missing after validation')
-        }
-
-        const requestPayload = {
-          model,
+      // Attempt vision first (if hasImage)
+      const attemptVision = async () => {
+        const req = {
+          model: COHERE_VISION_MODEL,
           message: userMessage,
           chatHistory: cohereChatHistory,
           preamble,
-          documents: contextDocs.map((doc) => ({
-            id: doc.id || 'unknown',
-            title: doc.source || 'Source',
-            snippet: doc.text || '',
-            text: doc.text || '',
-          })),
+          documents: contextDocs,
           images: visionImages,
         }
 
-        if (hasImage && fullDataUrl) {
-          logger.info('Vision request prepared', {
-            mediaType: imageMediaType,
-            dataLength: imageBase64?.length || 0,
-            dataUrlPrefix: fullDataUrl.slice(0, 30),
-            model,
-            imagesAttached: visionImages.length,
-          })
-        }
+        logger.info('Vision request prepared', {
+          mediaType: imageMediaType,
+          dataLength: imageBase64?.length || 0,
+          dataUrlPrefix: fullDataUrl ? fullDataUrl.slice(0, 30) : '',
+          model: COHERE_VISION_MODEL,
+          imagesAttached: visionImages.length,
+        })
 
-        return requestPayload
+        return withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
       }
 
-      const req = buildCohereRequest(usedModel)
-      const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+      const attemptTextOnly = async () => {
+        const req = {
+          model: COHERE_TEXT_MODEL,
+          message: userMessage,
+          chatHistory: cohereChatHistory,
+          preamble,
+          documents: contextDocs,
+          images: [], // force no images
+        }
+        return withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+      }
+
+      let answerResp = null
+
+      if (hasImage) {
+        try {
+          answerResp = await attemptVision()
+          usedModel = COHERE_VISION_MODEL
+        } catch (err) {
+          // If Aya vision rejects payload/model (400), fallback to text instead of crashing.
+          if (isCohereBadRequest(err)) {
+            visionFallbackUsed = true
+            logger.error('Vision generation rejected (400). Falling back to text-only.', {
+              model: COHERE_VISION_MODEL,
+              detail: safeErrorDetails(err),
+            })
+            answerResp = await attemptTextOnly()
+            usedModel = COHERE_TEXT_MODEL
+          } else {
+            throw err
+          }
+        }
+      } else {
+        answerResp = await attemptTextOnly()
+        usedModel = COHERE_TEXT_MODEL
+      }
 
       billedUnits = answerResp?.billed_units || {}
       tokenUsage = answerResp?.tokens || {}
@@ -947,12 +999,20 @@ Strict rules:
       assistantMessage = sanitizeOutput(modelText || 'Unable to process request. Please try again.')
 
       if (hasImage) {
-        logger.info('Vision response received', {
+        logger.info('Generation response received', {
           model: usedModel,
           responseLength: assistantMessage.length,
           hasImage: true,
+          visionFallbackUsed,
           payloadFormat: answerResp?.__format || 'unknown',
         })
+
+        // Optional: make it explicit (but minimal) that image analysis wasn't available
+        if (visionFallbackUsed) {
+          assistantMessage = sanitizeOutput(
+            `Photo analysis is temporarily unavailable. Answering from the provided documents only.\n\n${assistantMessage}`
+          )
+        }
       }
     } catch (e) {
       const detail = safeErrorDetails(e)
@@ -998,6 +1058,7 @@ Strict rules:
       fullAudit,
       includeFines,
       model: usedModel,
+      visionFallbackUsed,
     })
 
     await logModelUsageDetail({
@@ -1031,6 +1092,7 @@ Strict rules:
           fullAudit,
           docsRetrieved: contextDocs.length,
           durationMs: Date.now() - startedAt,
+          visionFallbackUsed,
         },
       },
       { status: 200 }
