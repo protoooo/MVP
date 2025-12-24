@@ -6,12 +6,12 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from '@/app/apple-icon.png'
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
 export default function SignupPage() {
   const searchParams = useSearchParams()
@@ -137,7 +137,7 @@ export default function SignupPage() {
 
   if (loading) {
     return (
-      <div className={`${ibmMono.className} min-h-[100dvh] bg-[#09090b] flex items-center justify-center`}>
+      <div className={`${plusJakarta.className} min-h-[100dvh] bg-[#09090b] flex items-center justify-center`}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <div className="text-white/70">Validating invite code...</div>
@@ -148,7 +148,7 @@ export default function SignupPage() {
 
   if (!inviteValid) {
     return (
-      <div className={`${ibmMono.className} min-h-[100dvh] bg-[#09090b] flex items-center justify-center px-4`}>
+      <div className={`${plusJakarta.className} min-h-[100dvh] bg-[#09090b] flex items-center justify-center px-4`}>
         <div className="max-w-md w-full bg-[#131316] border border-white/10 rounded-xl p-8 text-center">
           <div className="text-red-400 text-5xl mb-4">⚠️</div>
           <h1 className="text-xl font-bold text-white mb-3">Invalid Invite Code</h1>
@@ -167,7 +167,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className={`${ibmMono.className} min-h-[100dvh] bg-[#09090b]`}>
+    <div className={`${plusJakarta.className} min-h-[100dvh] bg-[#09090b]`}>
       {/* Header */}
       <header className="border-b border-white/10 bg-[#0c0c0e]">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
