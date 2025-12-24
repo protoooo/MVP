@@ -172,7 +172,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-/* AuthModal unchanged, but now rendered via Portal so it always overlays correctly */
+/* ✅ AuthModal now uses LiquidGlass so it matches landing + chat glass */
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -268,7 +268,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card auth-modal ${plusJakarta.className}`}>
+        <LiquidGlass variant="main" className={`modal-card glass-modal auth-modal ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -353,15 +353,14 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
           </div>
 
           <RecaptchaBadge />
-        </div>
+        </LiquidGlass>
       </div>
     </div>
   )
 }
 
 /**
- * ✅ New in-file Pricing Modal (matches your frosted/glass UI, always overlays correctly)
- * This replaces the broken “card-in-layout” behavior you’re seeing when clicking Start trial.
+ * ✅ Pricing modal now matches your LiquidGlass exactly (outer card AND inner plan card)
  */
 function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
@@ -372,7 +371,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Pricing">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card pricing-modal ${plusJakarta.className}`}>
+        <LiquidGlass variant="main" className={`modal-card glass-modal pricing-modal ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -389,7 +388,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
           </div>
 
           <div className="pricing-grid">
-            <div className="pricing-card">
+            <LiquidGlass variant="side" className="pricing-card">
               <div className="pricing-card-head">
                 <div className="pricing-plan">
                   <span className="pricing-plan-name">{planName}</span>
@@ -474,9 +473,9 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 </Link>
                 .
               </p>
-            </div>
+            </LiquidGlass>
           </div>
-        </div>
+        </LiquidGlass>
       </div>
     </div>
   )
@@ -570,6 +569,21 @@ export default function Page() {
       document.body.style.overflow = prevOverflow
     }
   }, [showAuthModal, showPricingModal])
+
+  // ✅ When authenticated: lock the page scroll so the chat input is ALWAYS reachable (no “scroll page to reach dock”)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const prev = document.body.style.overflow
+    const prevHtml = document.documentElement.style.overflow
+    if (isAuthenticated) {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prev
+        document.documentElement.style.overflow = prevHtml
+      }
+    }
+  }, [isAuthenticated])
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
@@ -1085,6 +1099,9 @@ export default function Page() {
           --radius-full: 9999px;
 
           --landing-topbar-h: 74px;
+
+          /* ✅ Chat dock sizing + safe room (prevents needing to scroll page to “reach” the dock) */
+          --chat-dock-room: 190px;
         }
 
         *,
@@ -1188,7 +1205,7 @@ export default function Page() {
           }
         }
 
-        /* ✅ Modal base (Auth + Pricing) - Light Glass */
+        /* ✅ Modal base */
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -1220,16 +1237,12 @@ export default function Page() {
           align-items: center;
         }
 
-        .modal-card {
+        /* ✅ Modal cards are now LiquidGlass components */
+        .glass-modal.modal-card {
           width: 100%;
           position: relative;
           border-radius: 18px;
           padding: 22px;
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88));
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          box-shadow: 0 26px 70px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(14px) saturate(125%);
-          -webkit-backdrop-filter: blur(14px) saturate(125%);
         }
 
         .modal-close {
@@ -1267,7 +1280,7 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.92);
         }
 
-        /* Auth form styling (light theme) */
+        /* Auth form styling (light glass) */
         .modal-form {
           display: flex;
           flex-direction: column;
@@ -1300,17 +1313,20 @@ export default function Page() {
           padding: 0 12px;
           border-radius: 12px;
           border: 1px solid rgba(15, 23, 42, 0.14);
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(255, 255, 255, 0.72);
           color: rgba(15, 23, 42, 0.92);
           font-size: 14px;
           font-weight: 600;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+          backdrop-filter: blur(10px) saturate(120%);
+          -webkit-backdrop-filter: blur(10px) saturate(120%);
         }
 
         .form-input:focus {
           outline: none;
           border-color: rgba(15, 23, 42, 0.28);
           box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+          background: rgba(255, 255, 255, 0.86);
         }
 
         .form-toggle-vis {
@@ -1320,7 +1336,7 @@ export default function Page() {
           padding: 0 10px;
           border-radius: 9999px;
           border: 1px solid rgba(15, 23, 42, 0.12);
-          background: rgba(255, 255, 255, 0.82);
+          background: rgba(255, 255, 255, 0.75);
           color: rgba(15, 23, 42, 0.82);
           cursor: pointer;
           font-weight: 700;
@@ -1381,17 +1397,19 @@ export default function Page() {
           padding: 10px 12px;
           border-radius: 12px;
           border: 1px solid rgba(15, 23, 42, 0.12);
-          background: rgba(255, 255, 255, 0.78);
+          background: rgba(255, 255, 255, 0.65);
           color: rgba(15, 23, 42, 0.86);
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
         }
         .modal-message.ok {
           border-color: rgba(34, 197, 94, 0.35);
-          background: rgba(34, 197, 94, 0.1);
+          background: rgba(34, 197, 94, 0.12);
           color: #16a34a;
         }
         .modal-message.err {
           border-color: rgba(239, 68, 68, 0.35);
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(239, 68, 68, 0.12);
           color: #dc2626;
         }
 
@@ -1416,7 +1434,7 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.92);
         }
 
-        /* ✅ Pricing modal styling (light theme) */
+        /* Pricing */
         .pricing-modal {
           padding: 24px;
         }
@@ -1432,11 +1450,13 @@ export default function Page() {
           padding: 6px 10px;
           border-radius: 9999px;
           border: 1px solid rgba(15, 23, 42, 0.12);
-          background: rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.58);
           color: rgba(15, 23, 42, 0.78);
           font-size: 12px;
           font-weight: 800;
           margin-bottom: 10px;
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
         }
 
         .pricing-pill-dot {
@@ -1463,13 +1483,9 @@ export default function Page() {
           margin-top: 12px;
         }
 
+        /* ✅ Inner pricing card is also LiquidGlass */
         .pricing-card {
           border-radius: 16px;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          background: rgba(255, 255, 255, 0.74);
-          box-shadow: 0 18px 46px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(14px) saturate(125%);
-          -webkit-backdrop-filter: blur(14px) saturate(125%);
           padding: 16px;
         }
 
@@ -1597,15 +1613,17 @@ export default function Page() {
           height: 42px;
           border-radius: 9999px;
           border: 1px solid rgba(15, 23, 42, 0.14);
-          background: rgba(255, 255, 255, 0.7);
+          background: rgba(255, 255, 255, 0.64);
           color: rgba(15, 23, 42, 0.86);
           font-weight: 900;
           cursor: pointer;
           transition: background 0.15s ease;
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
         }
 
         .pricing-secondary:hover {
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(255, 255, 255, 0.86);
         }
 
         .pricing-fineprint {
@@ -1625,11 +1643,12 @@ export default function Page() {
 
         /* App */
         .app-container {
-          min-height: 100vh;
-          min-height: 100dvh;
+          height: 100vh;
+          height: 100dvh;
           display: flex;
           flex-direction: column;
           background: transparent;
+          overflow: hidden; /* ✅ critical: prevents page scroll behind the chat */
         }
 
         /* Brand */
@@ -1712,13 +1731,6 @@ export default function Page() {
           position: relative;
           top: 0px;
           font-size: 17.5px;
-        }
-
-        .desktop-only {
-          display: flex;
-        }
-        .mobile-only {
-          display: none;
         }
 
         /* Shared icon button styling */
@@ -2023,11 +2035,6 @@ export default function Page() {
           pointer-events: none;
         }
 
-        .hero-cta span {
-          font-weight: 800;
-          letter-spacing: 0.01em;
-        }
-
         .hero-cta:hover {
           transform: translateY(-1px);
         }
@@ -2041,7 +2048,6 @@ export default function Page() {
           bottom: max(18px, env(safe-area-inset-bottom));
           left: 0;
           right: 0;
-          transform: none;
           width: 100%;
           display: flex;
           align-items: center;
@@ -2069,24 +2075,19 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.45);
         }
 
-        /* Chat (unchanged below) */
+        /* ✅ Chat: full-viewport, no page scroll, dock fixed to bottom */
         .chat-root {
-          position: relative;
-          flex: 1;
+          position: fixed; /* ✅ key fix: makes the whole chat a viewport app */
+          inset: 0;
           display: flex;
           flex-direction: column;
-          height: 100dvh;
-          height: 100svh;
-          min-height: 100dvh;
-          min-height: 100svh;
-          max-height: 100svh;
           overflow: hidden;
+          background: transparent;
         }
 
         @supports (-webkit-touch-callout: none) {
           .chat-root {
             height: -webkit-fill-available;
-            min-height: -webkit-fill-available;
           }
         }
 
@@ -2106,8 +2107,6 @@ export default function Page() {
           justify-content: space-between;
           gap: 10px;
           background: transparent;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
         }
 
         .chat-top-actions {
@@ -2164,13 +2163,19 @@ export default function Page() {
         }
 
         .chat-messages {
-          flex: 1;
-          min-height: 0;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
           overflow-y: auto;
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
-          padding: calc(max(98px, env(safe-area-inset-top) + 88px)) 24px 12px;
+
+          /* top padding clears topbar, bottom padding clears fixed dock */
+          padding: calc(max(98px, env(safe-area-inset-top) + 88px)) 24px
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room));
           background: transparent;
         }
 
@@ -2258,18 +2263,19 @@ export default function Page() {
           font-style: italic;
         }
 
+        /* ✅ Dock is fixed to viewport bottom (not sticky inside scroll) */
         .chat-input-area {
-          flex-shrink: 0;
-          position: sticky;
-          bottom: 0;
+          position: fixed;
           left: 0;
           right: 0;
+          bottom: 0;
+          z-index: 25;
           background: transparent;
-          border-top: none;
-          z-index: 15;
+          pointer-events: none; /* allows clicks only inside inner */
         }
 
         .chat-input-inner {
+          pointer-events: auto;
           max-width: 840px;
           width: min(100%, 920px);
           margin: 0 auto;
@@ -2277,6 +2283,7 @@ export default function Page() {
           padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
         }
 
+        /* ✅ REMOVE the old “white card” overrides so LiquidGlass shows */
         .chat-dock {
           width: 100%;
           display: flex;
@@ -2284,15 +2291,9 @@ export default function Page() {
           gap: 12px;
           padding: 14px 16px;
           border-radius: var(--radius-lg);
-          background: #ffffff;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          box-shadow: 0 20px 55px rgba(0, 0, 0, 0.12);
-        }
-
-        .chat-dock .glass__innerHighlight,
-        .chat-dock .glass__shine,
-        .chat-dock .glass__grain {
-          display: none;
+          background: transparent;
+          border: none;
+          box-shadow: none;
         }
 
         .chat-attachment {
@@ -2333,24 +2334,28 @@ export default function Page() {
           gap: 10px;
         }
 
+        /* ✅ Input wrapper now matches LiquidGlass style (no flat white) */
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: #ffffff;
-          border: 1px solid rgba(15, 23, 42, 0.12);
           border-radius: var(--radius-md);
-          box-shadow: none;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           min-width: 0;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
           min-height: 48px;
+
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.58));
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          box-shadow: 0 16px 44px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(14px) saturate(125%);
+          -webkit-backdrop-filter: blur(14px) saturate(125%);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
         }
 
         .chat-input-wrapper:focus-within {
-          border-color: rgba(15, 23, 42, 0.28);
-          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+          border-color: rgba(15, 23, 42, 0.26);
+          box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.16), 0 18px 48px rgba(5, 7, 13, 0.14),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.62));
         }
 
         .chat-textarea {
@@ -2395,6 +2400,7 @@ export default function Page() {
         @media (max-width: 768px) {
           :root {
             --landing-topbar-h: 68px;
+            --chat-dock-room: 200px; /* a touch more room on mobile */
           }
 
           .hero-break {
@@ -2428,7 +2434,8 @@ export default function Page() {
           }
 
           .chat-messages {
-            padding: calc(max(92px, env(safe-area-inset-top) + 84px)) 16px 10px;
+            padding: calc(max(92px, env(safe-area-inset-top) + 84px)) 16px
+              calc(env(safe-area-inset-bottom) + var(--chat-dock-room));
           }
 
           .chat-input-inner {
@@ -2509,6 +2516,7 @@ export default function Page() {
         @media (max-width: 480px) {
           :root {
             --landing-topbar-h: 64px;
+            --chat-dock-room: 210px;
           }
 
           .plm-brand-mark {
