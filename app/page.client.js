@@ -268,7 +268,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card auth-modal glass-surface ${plusJakarta.className}`}>
+        <div className={`modal-card auth-modal ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -372,7 +372,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Pricing">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <LiquidGlass variant="main" className={`modal-card pricing-modal ${plusJakarta.className}`}>
+        <div className={`modal-card pricing-modal ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -476,7 +476,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
               </p>
             </div>
           </div>
-        </LiquidGlass>
+        </div>
       </div>
     </div>
   )
@@ -1188,7 +1188,7 @@ export default function Page() {
           }
         }
 
-        /* ✅ Modal base (Auth + Pricing) */
+        /* ✅ Modal base (Auth + Pricing) - Light Glass */
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -1225,8 +1225,11 @@ export default function Page() {
           position: relative;
           border-radius: 18px;
           padding: 22px;
-          box-shadow: 0 26px 70px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88));
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          box-shadow: 0 26px 70px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(14px) saturate(125%);
+          -webkit-backdrop-filter: blur(14px) saturate(125%);
         }
 
         .modal-close {
@@ -1244,6 +1247,11 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          transition: background 0.15s ease;
+        }
+
+        .modal-close:hover {
+          background: rgba(255, 255, 255, 0.95);
         }
 
         .modal-header {
@@ -1259,7 +1267,7 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.92);
         }
 
-        /* Auth form minimal styling (safe defaults) */
+        /* Auth form styling (light theme) */
         .modal-form {
           display: flex;
           flex-direction: column;
@@ -1296,6 +1304,13 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.92);
           font-size: 14px;
           font-weight: 600;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: rgba(15, 23, 42, 0.28);
+          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
         }
 
         .form-toggle-vis {
@@ -1310,13 +1325,18 @@ export default function Page() {
           cursor: pointer;
           font-weight: 700;
           font-size: 12px;
+          transition: background 0.15s ease;
+        }
+
+        .form-toggle-vis:hover {
+          background: rgba(255, 255, 255, 0.95);
         }
 
         .btn-submit {
           height: 44px;
           border-radius: 9999px;
           border: none;
-          background: var(--accent);
+          background: rgba(15, 23, 42, 0.92);
           color: #fff;
           font-weight: 800;
           cursor: pointer;
@@ -1324,7 +1344,13 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 10px;
-          box-shadow: 0 14px 34px rgba(95, 168, 255, 0.24);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24);
+          transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+          background: rgba(15, 23, 42, 1);
+          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.28);
         }
 
         .btn-submit:disabled {
@@ -1360,9 +1386,13 @@ export default function Page() {
         }
         .modal-message.ok {
           border-color: rgba(34, 197, 94, 0.35);
+          background: rgba(34, 197, 94, 0.1);
+          color: #16a34a;
         }
         .modal-message.err {
           border-color: rgba(239, 68, 68, 0.35);
+          background: rgba(239, 68, 68, 0.1);
+          color: #dc2626;
         }
 
         .modal-footer {
@@ -1380,12 +1410,13 @@ export default function Page() {
           font-size: 12px;
           cursor: pointer;
           padding: 0;
+          transition: color 0.15s ease;
         }
         .modal-link:hover {
           color: rgba(15, 23, 42, 0.92);
         }
 
-        /* ✅ Pricing modal styling (matches your UI vibe) */
+        /* ✅ Pricing modal styling (light theme) */
         .pricing-modal {
           padding: 24px;
         }
@@ -1437,6 +1468,8 @@ export default function Page() {
           border: 1px solid rgba(15, 23, 42, 0.12);
           background: rgba(255, 255, 255, 0.74);
           box-shadow: 0 18px 46px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(14px) saturate(125%);
+          -webkit-backdrop-filter: blur(14px) saturate(125%);
           padding: 16px;
         }
 
@@ -1536,16 +1569,22 @@ export default function Page() {
           height: 46px;
           border-radius: 9999px;
           border: none;
-          background: var(--accent);
+          background: rgba(15, 23, 42, 0.92);
           color: #fff;
           font-weight: 950;
           cursor: pointer;
-          box-shadow: 0 16px 40px rgba(95, 168, 255, 0.26);
+          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.26);
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 10px;
           font-size: 14px;
+          transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .pricing-primary:hover:not(:disabled) {
+          background: rgba(15, 23, 42, 1);
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.32);
         }
 
         .pricing-primary:disabled {
@@ -1562,6 +1601,11 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.86);
           font-weight: 900;
           cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .pricing-secondary:hover {
+          background: rgba(255, 255, 255, 0.9);
         }
 
         .pricing-fineprint {
