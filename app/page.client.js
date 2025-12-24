@@ -1507,7 +1507,7 @@ export default function Page() {
           --landing-topbar-h: 74px;
 
           /* ✅ Chat dock sizing + safe room (prevents needing to scroll page to “reach” the dock) */
-          --chat-dock-room: 190px;
+          --chat-dock-room: 120px;
 
           /* ✅ Light “Apple frosted glass” tokens for modals + composer */
           --glass-ink: #0b1324;
@@ -2643,8 +2643,8 @@ export default function Page() {
           right: 0;
           z-index: 20;
           width: 100%;
-          padding: max(16px, env(safe-area-inset-top) + 16px) max(16px, env(safe-area-inset-right) + 16px) 0
-            max(16px, env(safe-area-inset-left) + 16px);
+          padding: max(18px, env(safe-area-inset-top) + 18px) max(22px, env(safe-area-inset-right) + 22px) 0
+            max(18px, env(safe-area-inset-left) + 18px);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -2721,7 +2721,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 24px);
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 12px);
           background: transparent;
         }
 
@@ -2747,7 +2747,7 @@ export default function Page() {
 
         /* ✅ Frosted glass card for chat conversation - fixed height, scrollable content */
         .chat-history-card {
-          max-width: calc(840px - 48px); /* Match chat-input-inner max-width minus padding */
+          max-width: 960px; /* Align with widened chat input */
           margin: 0 auto;
           width: 100%;
           flex: 1;
@@ -2781,7 +2781,7 @@ export default function Page() {
         }
 
         .chat-bubble {
-          max-width: 75%;
+          max-width: 70%;
           font-size: 15px;
           line-height: 1.7;
           display: block;
@@ -2873,11 +2873,11 @@ export default function Page() {
 
         .chat-input-inner {
           pointer-events: auto;
-          max-width: 840px;
-          width: min(100%, 920px);
+          max-width: 960px;
+          width: 100%;
           margin: 0 auto;
-          padding: 12px 24px;
-          padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
+          padding: 12px clamp(18px, 4vw, 28px);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
         }
 
         /* ✅ FIX: DO NOT override LiquidGlass with transparent/none (this was causing the “matte white” bar) */
@@ -3005,7 +3005,7 @@ export default function Page() {
         @media (max-width: 768px) {
           :root {
             --landing-topbar-h: 68px;
-            --chat-dock-room: 200px; /* a touch more room on mobile */
+            --chat-dock-room: 150px; /* a touch more room on mobile */
           }
 
           .hero-break {
@@ -3034,18 +3034,18 @@ export default function Page() {
           }
 
           .chat-topbar {
-            padding: max(16px, env(safe-area-inset-top) + 16px) max(16px, env(safe-area-inset-right) + 16px) 0
-              max(16px, env(safe-area-inset-left) + 16px);
+            padding: max(18px, env(safe-area-inset-top) + 18px) max(22px, env(safe-area-inset-right) + 22px) 0
+              max(18px, env(safe-area-inset-left) + 18px);
           }
 
           .chat-messages {
             padding: calc(max(120px, env(safe-area-inset-top) + 105px)) 16px
-              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 20px);
+              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 12px);
           }
 
           .chat-input-inner {
-            padding: 10px 14px;
-            padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+            padding: 10px clamp(14px, 5vw, 22px);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
           }
 
           .chat-dock {
@@ -3066,7 +3066,7 @@ export default function Page() {
           }
 
           .chat-bubble {
-            max-width: 85%;
+            max-width: 80%;
           }
 
           .chat-empty-text {
