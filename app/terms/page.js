@@ -87,7 +87,7 @@ export default function TermsOfService() {
         <ul>
           <li>
             <strong>Free Trial:</strong> A 7-day trial may be offered. Unless cancelled before the trial ends, your 
-            subscription will convert to a paid plan at $100/month.
+            subscription will convert to a paid plan at $50/month.
           </li>
           <li>
             <strong>Cancellation:</strong> You may cancel at any time via the self-service billing portal to stop future 
