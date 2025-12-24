@@ -494,6 +494,88 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
   )
 }
 
+/* -----------------------------------------------------------------------------
+ * ✅ API-compat helpers (matches stricter /api/chat route expectations)
+ * - Don’t send extra keys inside each message (route may validate schema)
+ * - Provide a default prompt if user only uploads an image
+ * - Support BOTH JSON and streaming responses (SSE/plain text)
+ * -------------------------------------------------------------------------- */
+
+function safeTrim(s) {
+  return String(s || '').trim()
+}
+
+function normalizeOutgoingMessages(msgs) {
+  // Keep only { role, content } for API safety
+  return (Array.isArray(msgs) ? msgs : [])
+    .filter((m) => m && (m.role === 'user' || m.role === 'assistant'))
+    .map((m) => ({
+      role: m.role,
+      content: String(m.content || ''),
+    }))
+}
+
+async function readAsJsonSafe(res) {
+  const text = await res.text().catch(() => '')
+  try {
+    return text ? JSON.parse(text) : {}
+  } catch {
+    // Some routes return plain text but still 200
+    return { _rawText: text }
+  }
+}
+
+async function streamToAssistantText(res, onDelta) {
+  const reader = res.body?.getReader()
+  if (!reader) return ''
+
+  const decoder = new TextDecoder('utf-8')
+  let full = ''
+
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    const chunk = decoder.decode(value, { stream: true })
+    if (!chunk) continue
+
+    full += chunk
+
+    // Handle SSE `data:` lines OR raw text streaming
+    // If it looks like SSE, extract data payloads; otherwise treat as raw text.
+    if (chunk.includes('\n') && full.includes('data:')) {
+      // parse only new lines, but simplest: parse entire full each time for deltas
+      // (safe enough for typical small responses)
+      const lines = full.split('\n')
+      let assembled = ''
+      for (const line of lines) {
+        const l = line.trim()
+        if (!l.startsWith('data:')) continue
+        const payload = l.slice(5).trim()
+        if (!payload) continue
+        if (payload === '[DONE]') continue
+        // try JSON payload first (common pattern)
+        try {
+          const obj = JSON.parse(payload)
+          const delta =
+            obj?.delta ||
+            obj?.text ||
+            obj?.message ||
+            obj?.content ||
+            (typeof obj === 'string' ? obj : '')
+          if (delta) assembled += String(delta)
+        } catch {
+          assembled += payload
+        }
+      }
+      if (assembled) onDelta(assembled)
+    } else {
+      onDelta(full)
+    }
+  }
+
+  return full
+}
+
 export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
@@ -532,6 +614,9 @@ export default function Page() {
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
+
+  // ✅ if you later add a Cancel button, this lets you abort streaming
+  const abortRef = useRef(null)
 
   useEffect(() => {
     const onDown = (e) => {
@@ -961,10 +1046,16 @@ export default function Page() {
 
   const handleSend = async (e) => {
     if (e) e.preventDefault()
-    if ((!input.trim() && !selectedImage) || isSending) return
+    if (isSending) return
 
-    const question = input.trim()
+    const rawQuestion = safeTrim(input)
     const image = selectedImage || null
+
+    // ✅ If user uploads an image only, give the API a sane default prompt
+    const question =
+      rawQuestion || (image ? 'Analyze this photo for any visible food safety violations.' : '')
+
+    if (!question && !image) return
 
     setSendMode(image ? 'vision' : 'text')
     setSendKey((k) => k + 1)
@@ -972,9 +1063,11 @@ export default function Page() {
     const newUserMessage = { role: 'user', content: question, image }
 
     const baseMessages = messages
-    const outgoingMessages = [...baseMessages, newUserMessage]
+    const outgoingLocalMessages = [...baseMessages, newUserMessage]
 
+    // UI optimistically adds assistant placeholder
     setMessages((prev) => [...prev, newUserMessage, { role: 'assistant', content: '' }])
+
     setInput('')
     setSelectedImage(null)
 
@@ -984,10 +1077,15 @@ export default function Page() {
 
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
-
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
+
+    // ✅ abort any prior streaming (if any)
+    try {
+      abortRef.current?.abort?.()
+    } catch {}
+    abortRef.current = new AbortController()
 
     try {
       if (session && !activeChatId) {
@@ -1006,12 +1104,16 @@ export default function Page() {
         }
       }
 
+      // ✅ Match /api/chat: send only role/content inside messages
+      const apiMessages = normalizeOutgoingMessages(outgoingLocalMessages)
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abortRef.current.signal,
         body: JSON.stringify({
-          messages: outgoingMessages,
-          image,
+          messages: apiMessages,
+          image, // keep separate so vision routes can accept it
           chatId: activeChatId,
         }),
       })
@@ -1022,33 +1124,75 @@ export default function Page() {
           throw new Error('Subscription required for additional questions.')
         }
         if (res.status === 429) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Rate limit exceeded.')
+          const data = await readAsJsonSafe(res)
+          throw new Error(data.error || data.message || 'Rate limit exceeded.')
         }
         if (res.status === 503) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Service temporarily unavailable.')
+          const data = await readAsJsonSafe(res)
+          throw new Error(data.error || data.message || 'Service temporarily unavailable.')
         }
-        throw new Error(`Server error (${res.status})`)
+        const data = await readAsJsonSafe(res)
+        throw new Error(data.error || data.message || `Server error (${res.status})`)
       }
 
-      const data = await res.json()
+      const ct = (res.headers.get('content-type') || '').toLowerCase()
+
+      // ✅ Streaming support (SSE or text streaming)
+      if ((ct.includes('text/event-stream') || ct.includes('text/plain')) && res.body) {
+        let last = ''
+        await streamToAssistantText(res, (accumulated) => {
+          last = accumulated
+          setMessages((prev) => {
+            const updated = [...prev]
+            updated[updated.length - 1] = { role: 'assistant', content: accumulated }
+            return updated
+          })
+        })
+
+        // If the stream ended but we didn’t get anything, show a fallback
+        if (!safeTrim(last)) {
+          setMessages((prev) => {
+            const updated = [...prev]
+            updated[updated.length - 1] = { role: 'assistant', content: 'No response.' }
+            return updated
+          })
+        }
+        return
+      }
+
+      // ✅ JSON response support (current route)
+      const data = await res.json().catch(() => ({}))
+
+      // Common shapes: { message }, { text }, { output }, { response }
+      const msg =
+        data?.message ||
+        data?.text ||
+        data?.output ||
+        data?.response ||
+        (typeof data === 'string' ? data : '') ||
+        'No response.'
+
+      // If route returns chatId, keep in sync
+      if (data?.chatId && !currentChatId) {
+        setCurrentChatId(data.chatId)
+      }
+
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
+        updated[updated.length - 1] = { role: 'assistant', content: String(msg) }
         return updated
       })
     } catch (error) {
       console.error('Chat error:', error)
 
       const msg = String(error?.message || '')
-      if (msg.includes('trial has ended') || msg.toLowerCase().includes('subscription')) {
+      if (msg.toLowerCase().includes('trial has ended') || msg.toLowerCase().includes('subscription')) {
         setShowPricingModal(true)
       }
 
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
+        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${msg || 'Unknown error'}` }
         return updated
       })
     } finally {
@@ -2889,7 +3033,7 @@ export default function Page() {
                         <button
                           type="button"
                           onClick={handleSend}
-                          disabled={(!input.trim() && !selectedImage) || isSending}
+                          disabled={(!safeTrim(input) && !selectedImage) || isSending}
                           className="plm-icon-btn primary chat-send-btn"
                           aria-label="Send"
                         >
