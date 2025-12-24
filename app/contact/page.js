@@ -60,7 +60,7 @@ export default function Contact() {
     >
       <div className="info-section">
         <h2 className="info-section-title">Get in Touch</h2>
-        <p>We're local to Washtenaw County and here to support operators.</p>
+        <p>Serving restaurants and food operators statewide..</p>
 
         <div style={{ display: 'grid', gap: '12px', marginTop: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
           <div style={{ 
