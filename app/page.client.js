@@ -1657,8 +1657,9 @@ export default function Page() {
           margin-right: 4px;
         }
 
+        /* ✅ UPDATED LOGO TRANSFORM (desktop) */
         .landing-topbar .plm-logo-img {
-          transform: translateY(4px) scale(1.22);
+          transform: translateY(2px) scale(1.12);
           transform-origin: center;
         }
 
@@ -2438,8 +2439,10 @@ export default function Page() {
             height: 62px;
             margin-right: 4px;
           }
+
+          /* ✅ UPDATED LOGO TRANSFORM (mobile) */
           .landing-topbar .plm-logo-img {
-            transform: translateY(3px) scale(1.18);
+            transform: translateY(2px) scale(1.1);
             transform-origin: center;
           }
 
@@ -2483,8 +2486,10 @@ export default function Page() {
             height: 58px;
             margin-right: 4px;
           }
+
+          /* ✅ UPDATED LOGO TRANSFORM (smallest mobile) */
           .landing-topbar .plm-logo-img {
-            transform: translateY(2px) scale(1.15);
+            transform: translateY(1px) scale(1.08);
             transform-origin: center;
           }
 
