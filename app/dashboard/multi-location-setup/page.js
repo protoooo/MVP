@@ -4,12 +4,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 import appleIcon from '@/app/apple-icon.png'
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
 export default function MultiLocationSetupPage() {
   const router = useRouter()
@@ -173,7 +173,7 @@ export default function MultiLocationSetupPage() {
         html, body { margin: 0; background: var(--bg-0); color: var(--ink-0); }
       `}</style>
 
-      <div className={`${ibmMono.className}`} style={{ minHeight: '100vh', background: 'var(--bg-0)' }}>
+      <div className={`${plusJakarta.className}`} style={{ minHeight: '100vh', background: 'var(--bg-0)' }}>
         <header style={{ width: '100%', maxWidth: '880px', margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none' }}>
             <Image src={appleIcon} alt="" width={48} height={48} priority />

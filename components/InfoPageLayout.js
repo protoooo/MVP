@@ -3,11 +3,11 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import appleIcon from '@/app/apple-icon.png'
 import bg from '@/app/assets/background/protocolLM-bg.png'
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
 export default function InfoPageLayout({ 
   title, 
@@ -342,7 +342,7 @@ export default function InfoPageLayout({
         }
       `}</style>
 
-      <div className={`${ibmMono.className} info-page-root`}>
+      <div className={`${plusJakarta.className} info-page-root`}>
         <main className="info-content">
           <div className="info-hero-card">
             <div className="info-hero-top">

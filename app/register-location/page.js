@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from '@/app/apple-icon.png'
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
 export default function RegisterLocationPage() {
   const router = useRouter()
@@ -125,7 +125,7 @@ export default function RegisterLocationPage() {
         html, body { height: 100%; margin: 0; background: var(--bg-0); color: var(--ink-0); }
       `}</style>
 
-      <div className={`${ibmMono.className}`} style={{ minHeight: '100vh', background: 'var(--bg-0)' }}>
+      <div className={`${plusJakarta.className}`} style={{ minHeight: '100vh', background: 'var(--bg-0)' }}>
         <header style={{ width: '100%', maxWidth: '880px', margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ color: 'var(--ink-0)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '14px' }}>
             <Image src={appleIcon} alt="" width={48} height={48} priority />

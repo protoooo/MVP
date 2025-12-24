@@ -8,15 +8,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import PricingModal from '@/components/PricingModal'
 import LiquidGlass from '@/components/ui/LiquidGlass'
 
-const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
@@ -89,7 +87,7 @@ function BrandLink({ variant = 'landing' }) {
 
 function FooterLinks() {
   return (
-    <div className={`plm-footer-links ${ibmMono.className}`}>
+    <div className={`plm-footer-links ${plusJakarta.className}`}>
       <Link className="plm-footer-link" href="/terms">
         Terms
       </Link>
@@ -107,7 +105,7 @@ function FooterLinks() {
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className={`${ibmMono.className} landing-root`}>
+    <div className={`${plusJakarta.className} landing-root`}>
       <header className="landing-topbar">
         <div className="landing-topbar-inner">
           <div className="plm-brand-wrap">
@@ -126,7 +124,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <LiquidGlass variant="main" className="landing-hero-card">
           <div className="hero-content">
             <div className="hero-headings">
-              <h1 className={`hero-title ${outfit.className}`}>Catch Violations, Not Fines.</h1>
+              <h1 className={`hero-title ${plusJakarta.className}`}>Catch Violations, Not Fines.</h1>
               <p className="hero-support">
                 Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
                 instant answers and guidance from Washtenaw County Food Safety Regulations.
@@ -250,7 +248,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card auth-modal glass-surface ${ibmMono.className}`}>
+        <div className={`modal-card auth-modal glass-surface ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -891,7 +889,7 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className={`loading-screen ${ibmMono.className}`}>
+      <div className={`loading-screen ${plusJakarta.className}`}>
         <div className="loading-content">
           <div className="loading-logo">
             <Image src={appleIcon} alt="protocolLM" width={69} height={69} priority />
@@ -1703,18 +1701,25 @@ export default function Page() {
           color: var(--ink-0);
         }
 
-        /* Pricing modal polish */
+        /* Pricing modal polish - align with info pages glass look */
         .pricing-modal {
           padding: 32px;
-          background: linear-gradient(160deg, rgba(8, 12, 22, 0.94), rgba(10, 18, 28, 0.9));
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+          border: 1px solid rgba(255, 255, 255, 0.22);
           border-radius: 22px;
           max-width: 540px;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.45),
+            0 24px 70px rgba(5, 7, 13, 0.34);
+          backdrop-filter: blur(16px) saturate(135%);
+          -webkit-backdrop-filter: blur(16px) saturate(135%);
         }
 
         .pricing-container {
           max-width: 540px;
           max-height: 90vh;
           overflow-y: auto;
+          padding: 6px;
         }
 
         .pricing-header {
@@ -1731,14 +1736,14 @@ export default function Page() {
         }
 
         .pricing-card-shell {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
-          border: 1px solid rgba(255, 255, 255, 0.26);
-          border-radius: 16px;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 18px;
           padding: 28px;
           color: var(--ink-0);
           box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.5),
-            0 24px 70px rgba(5, 7, 13, 0.45);
+            inset 0 1px 0 rgba(255, 255, 255, 0.48),
+            0 22px 60px rgba(5, 7, 13, 0.3);
         }
 
         .pricing-price-block {
@@ -1767,7 +1772,7 @@ export default function Page() {
 
         .pricing-subtitle {
           font-size: 13px;
-          color: rgba(246, 249, 255, 0.8);
+          color: rgba(246, 249, 255, 0.82);
         }
 
         .pricing-cta {
@@ -1813,8 +1818,8 @@ export default function Page() {
           align-items: flex-start;
           gap: 10px;
           font-size: 13px;
-          color: rgba(246, 249, 255, 0.86);
-          line-height: 1.5;
+          color: rgba(246, 249, 255, 0.88);
+          line-height: 1.6;
         }
 
         .pricing-feature-check {
@@ -1830,9 +1835,10 @@ export default function Page() {
         .pricing-note {
           margin-top: 18px;
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.24);
+          border: 1px solid rgba(255, 255, 255, 0.22);
           border-radius: 14px;
           padding: 16px;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .pricing-note-title {
@@ -2083,7 +2089,7 @@ export default function Page() {
           bottom: 0;
           left: 0;
           right: 0;
-          background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.32) 55%, rgba(5, 7, 13, 0.46) 100%);
+          background: transparent;
           border-top: none;
           z-index: 15;
         }
@@ -2419,7 +2425,7 @@ export default function Page() {
               }}
             />
           ) : (
-            <div className={`${ibmMono.className} chat-root`}>
+            <div className={`${plusJakarta.className} chat-root`}>
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
