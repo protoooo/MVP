@@ -1109,33 +1109,35 @@ export default function Page() {
           height: 110px;
         }
 
-        /* ✅ Landing header-specific tuning:
-           Keeps the bar compact while keeping your logo visually large,
-           and centers logo/text + button perfectly in the bar. */
+        /* ✅ Landing header-specific tuning (smaller logo + better spacing, no “jam”) */
         .landing-topbar .plm-brand-inner {
           align-items: center;
-          gap: 10px;
+          gap: 14px; /* more breathing room between logo + text */
         }
 
-        /* layout box stays small so it doesn't blow up the header height */
+        /* Keep the header compact, but reserve enough space for the logo */
         .landing-topbar .plm-brand-mark {
-          width: 74px;
-          height: 74px;
+          width: 66px;
+          height: 66px;
+          flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: center;
+
+          /* extra buffer so scaled logo never collides with text */
+          margin-right: 6px;
         }
 
-        /* visually enlarge the logo without affecting layout height */
+        /* Shrink ~24% from 1.6 → 1.22 and center the growth (prevents pushing into text) */
         .landing-topbar .plm-logo-img {
-          transform: translateY(12px) scale(1.6);
-          transform-origin: left center;
+          transform: translateY(4px) scale(1.22);
+          transform-origin: center;
         }
 
         .landing-topbar .plm-brand-text {
           line-height: 1;
           position: relative;
-          top: 1px;
+          top: 0px;
         }
 
         .desktop-only {
@@ -1917,11 +1919,13 @@ export default function Page() {
 
           /* landing header overrides for mobile */
           .landing-topbar .plm-brand-mark {
-            width: 70px;
-            height: 70px;
+            width: 62px;
+            height: 62px;
+            margin-right: 6px;
           }
           .landing-topbar .plm-logo-img {
-            transform: translateY(10px) scale(1.55);
+            transform: translateY(3px) scale(1.18);
+            transform-origin: center;
           }
 
           .plm-brand-text {
@@ -1961,11 +1965,13 @@ export default function Page() {
 
           /* landing header overrides for tiny screens */
           .landing-topbar .plm-brand-mark {
-            width: 66px;
-            height: 66px;
+            width: 58px;
+            height: 58px;
+            margin-right: 6px;
           }
           .landing-topbar .plm-logo-img {
-            transform: translateY(9px) scale(1.5);
+            transform: translateY(2px) scale(1.15);
+            transform-origin: center;
           }
 
           .chat-input-inner {
@@ -2198,9 +2204,7 @@ export default function Page() {
                       </div>
                     </div>
 
-                    <p className="chat-disclaimer">
-                      protocolLM may make mistakes. Verify critical decisions with official regulations.
-                    </p>
+                    <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
                   </LiquidGlass>
                 </div>
               </div>
