@@ -1112,7 +1112,7 @@ export default function Page() {
         /* ✅ Landing header-specific tuning (smaller logo + better spacing, no “jam”) */
         .landing-topbar .plm-brand-inner {
           align-items: center;
-          gap: 14px; /* more breathing room between logo + text */
+          gap: 10px; /* nudge text closer to the mark */
         }
 
         /* Keep the header compact, but reserve enough space for the logo */
@@ -1125,7 +1125,7 @@ export default function Page() {
           justify-content: center;
 
           /* extra buffer so scaled logo never collides with text */
-          margin-right: 6px;
+          margin-right: 4px;
         }
 
         /* Shrink ~24% from 1.6 → 1.22 and center the growth (prevents pushing into text) */
@@ -1138,6 +1138,7 @@ export default function Page() {
           line-height: 1;
           position: relative;
           top: 0px;
+          font-size: 17.5px;
         }
 
         .desktop-only {
@@ -1297,7 +1298,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 34px 24px 0;
+          padding: 34px 24px calc(env(safe-area-inset-bottom) + 28px);
           min-height: 0;
         }
 
@@ -1899,7 +1900,7 @@ export default function Page() {
           }
 
           .landing-hero {
-            padding: 0 20px;
+            padding: 0 20px calc(env(safe-area-inset-bottom) + 24px);
           }
 
           .landing-hero-card {
@@ -1921,7 +1922,7 @@ export default function Page() {
           .landing-topbar .plm-brand-mark {
             width: 62px;
             height: 62px;
-            margin-right: 6px;
+            margin-right: 4px;
           }
           .landing-topbar .plm-logo-img {
             transform: translateY(3px) scale(1.18);
@@ -1929,7 +1930,7 @@ export default function Page() {
           }
 
           .plm-brand-text {
-            font-size: 17px;
+            font-size: 16.5px;
             max-width: 220px;
           }
 
@@ -1955,7 +1956,7 @@ export default function Page() {
           }
 
           .plm-brand-text {
-            font-size: 16px;
+            font-size: 15.5px;
           }
 
           .plm-brand.chat .plm-brand-mark {
@@ -1967,7 +1968,7 @@ export default function Page() {
           .landing-topbar .plm-brand-mark {
             width: 58px;
             height: 58px;
-            margin-right: 6px;
+            margin-right: 4px;
           }
           .landing-topbar .plm-logo-img {
             transform: translateY(2px) scale(1.15);
