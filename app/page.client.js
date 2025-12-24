@@ -74,15 +74,14 @@ const Icons = {
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
 
-  // Landing logo stays large, but the *bar* no longer grows with it.
-  // (Slightly reduced from 140 -> 124, within your 10–15% allowance.)
-  const size = isChat ? 110 : 124
+  // keep your current sizing; landing header compaction is handled via CSS (scoped to .landing-topbar)
+  const size = isChat ? 110 : 140
 
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={size} height={size} priority />
+          <Image src={appleIcon} alt="" width={size} height={size} priority className="plm-logo-img" />
         </span>
         {!isChat && <span className="plm-brand-text">protocolLM</span>}
       </span>
@@ -916,6 +915,8 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
+          color-scheme: dark;
+
           --bg-0: rgba(5, 7, 13, 0.72);
           --bg-1: rgba(7, 10, 18, 0.78);
           --bg-2: rgba(9, 13, 22, 0.82);
@@ -937,6 +938,9 @@ export default function Page() {
           --radius-md: 12px;
           --radius-lg: 16px;
           --radius-full: 9999px;
+
+          /* ✅ compact landing header height (content area; safe-area is added separately) */
+          --landing-topbar-h: 74px;
         }
 
         *,
@@ -1068,17 +1072,19 @@ export default function Page() {
           gap: 12px;
         }
 
-        /* Default (non-landing-topbar contexts) */
+        /* Base sizes (chat keeps its overrides below) */
         .plm-brand-mark {
           width: 140px;
           height: 140px;
           flex-shrink: 0;
         }
 
+        .plm-logo-img,
         .plm-brand-mark img {
-          width: 100%;
-          height: 100%;
+          width: 100% !important;
+          height: 100% !important;
           object-fit: contain;
+          display: block;
         }
 
         .plm-brand-wrap {
@@ -1101,6 +1107,35 @@ export default function Page() {
         .plm-brand.chat .plm-brand-mark {
           width: 110px;
           height: 110px;
+        }
+
+        /* ✅ Landing header-specific tuning:
+           Keeps the bar compact while keeping your logo visually large,
+           and centers logo/text + button perfectly in the bar. */
+        .landing-topbar .plm-brand-inner {
+          align-items: center;
+          gap: 10px;
+        }
+
+        /* layout box stays small so it doesn't blow up the header height */
+        .landing-topbar .plm-brand-mark {
+          width: 74px;
+          height: 74px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* visually enlarge the logo without affecting layout height */
+        .landing-topbar .plm-logo-img {
+          transform: translateY(12px) scale(1.6);
+          transform-origin: left center;
+        }
+
+        .landing-topbar .plm-brand-text {
+          line-height: 1;
+          position: relative;
+          top: 1px;
         }
 
         .desktop-only {
@@ -1161,7 +1196,7 @@ export default function Page() {
         /* Landing */
         .landing-root {
           position: relative;
-          padding-top: max(92px, env(safe-area-inset-top) + 72px);
+          padding-top: calc(env(safe-area-inset-top) + var(--landing-topbar-h) + 18px);
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
@@ -1171,17 +1206,17 @@ export default function Page() {
           isolation: isolate;
         }
 
-        /* ✅ FIX: shrink the white bar by ~35–40% without shrinking the logo drastically.
-           The bar has a fixed height; the logo can overflow below it (so the bar doesn't become huge). */
         .landing-topbar {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           z-index: 30;
-          height: calc(env(safe-area-inset-top) + 88px);
+          height: calc(env(safe-area-inset-top) + var(--landing-topbar-h));
           padding: env(safe-area-inset-top) max(18px, env(safe-area-inset-right) + 10px) 0
             max(18px, env(safe-area-inset-left) + 10px);
+          display: flex;
+          align-items: stretch;
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
           backdrop-filter: blur(12px) saturate(125%);
           -webkit-backdrop-filter: blur(12px) saturate(125%);
@@ -1191,34 +1226,21 @@ export default function Page() {
         .landing-topbar-inner {
           width: 100%;
           max-width: 1080px;
-          height: 88px;
           margin: 0 auto;
+          height: var(--landing-topbar-h);
           display: flex;
-          align-items: flex-start; /* let the logo overflow downward, not upward */
+          align-items: center;
           justify-content: space-between;
           gap: 12px;
           background: none;
-          padding: 8px 0 0; /* small top inset inside the bar */
-        }
-
-        /* ✅ Landing-only tweaks: tighter logo/text spacing + logo size for header */
-        .landing-topbar .plm-brand-inner {
-          gap: 10px;
-        }
-        .landing-topbar .plm-brand-mark {
-          width: 124px;
-          height: 124px;
-        }
-
-        /* Keep the right-side button vertically centered even though the left is top-aligned */
-        .landing-topbar .landing-top-actions {
-          align-self: center;
+          padding: 0;
         }
 
         .landing-top-actions {
           display: flex;
           align-items: center;
           gap: 8px;
+          height: 100%;
         }
 
         .btn-nav {
@@ -1234,6 +1256,7 @@ export default function Page() {
           transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
           font-family: inherit;
           box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+          align-self: center;
         }
 
         .btn-nav:hover {
@@ -1310,6 +1333,7 @@ export default function Page() {
           margin: 0;
         }
 
+        /* ✅ Only break line on mobile so: "Catch Violations," then "Not Fines." */
         .hero-break {
           display: none;
         }
@@ -1322,6 +1346,7 @@ export default function Page() {
           max-width: 52ch;
         }
 
+        /* ✅ Keep CTA in one row on mobile + desktop */
         .hero-cta-row {
           display: flex;
           align-items: center;
@@ -1330,7 +1355,7 @@ export default function Page() {
           flex-wrap: nowrap;
           flex-direction: row;
           margin-top: 14px;
-          padding-top: 6px;
+          padding-top: 6px; /* a little buffer from body text */
         }
 
         .hero-arrow-text {
@@ -1438,6 +1463,7 @@ export default function Page() {
           transform: translateY(0);
         }
 
+        /* ✅ Footer links centered + darker gray so visible */
         .plm-footer-links {
           position: absolute;
           bottom: max(18px, env(safe-area-inset-bottom));
@@ -1801,14 +1827,16 @@ export default function Page() {
 
         /* Responsive */
         @media (max-width: 768px) {
-          .landing-root {
-            padding-top: max(86px, env(safe-area-inset-top) + 66px);
+          :root {
+            --landing-topbar-h: 68px;
           }
 
+          /* ✅ Show title line-break only on mobile */
           .hero-break {
             display: inline;
           }
 
+          /* ✅ Keep CTA in one row on mobile */
           .hero-cta-row {
             gap: 10px;
             margin-top: 12px;
@@ -1863,25 +1891,9 @@ export default function Page() {
             font-size: 13px;
           }
 
-          /* ✅ Match smaller bar height on mobile */
           .landing-topbar {
-            height: calc(env(safe-area-inset-top) + 78px);
             padding: env(safe-area-inset-top) max(14px, env(safe-area-inset-right) + 8px) 0
               max(14px, env(safe-area-inset-left) + 8px);
-          }
-
-          .landing-topbar-inner {
-            height: 78px;
-            padding-top: 6px;
-          }
-
-          .landing-topbar .plm-brand-inner {
-            gap: 9px;
-          }
-
-          .landing-topbar .plm-brand-mark {
-            width: 112px;
-            height: 112px;
           }
 
           .landing-hero {
@@ -1892,6 +1904,7 @@ export default function Page() {
             padding: 28px 24px;
           }
 
+          /* keep your existing general mobile brand sizing */
           .plm-brand-mark {
             width: 120px;
             height: 120px;
@@ -1900,6 +1913,15 @@ export default function Page() {
           .plm-brand.chat .plm-brand-mark {
             width: 102px;
             height: 102px;
+          }
+
+          /* landing header overrides for mobile */
+          .landing-topbar .plm-brand-mark {
+            width: 70px;
+            height: 70px;
+          }
+          .landing-topbar .plm-logo-img {
+            transform: translateY(10px) scale(1.55);
           }
 
           .plm-brand-text {
@@ -1919,27 +1941,8 @@ export default function Page() {
         }
 
         @media (max-width: 480px) {
-          .landing-root {
-            padding-top: max(82px, env(safe-area-inset-top) + 62px);
-          }
-
-          /* ✅ Slightly shorter bar on tiny screens */
-          .landing-topbar {
-            height: calc(env(safe-area-inset-top) + 74px);
-          }
-
-          .landing-topbar-inner {
-            height: 74px;
-            padding-top: 5px;
-          }
-
-          .landing-topbar .plm-brand-inner {
-            gap: 8px;
-          }
-
-          .landing-topbar .plm-brand-mark {
-            width: 104px;
-            height: 104px;
+          :root {
+            --landing-topbar-h: 64px;
           }
 
           .plm-brand-mark {
@@ -1954,6 +1957,15 @@ export default function Page() {
           .plm-brand.chat .plm-brand-mark {
             width: 96px;
             height: 96px;
+          }
+
+          /* landing header overrides for tiny screens */
+          .landing-topbar .plm-brand-mark {
+            width: 66px;
+            height: 66px;
+          }
+          .landing-topbar .plm-logo-img {
+            transform: translateY(9px) scale(1.5);
           }
 
           .chat-input-inner {
@@ -1975,6 +1987,7 @@ export default function Page() {
             padding: 10px 12px;
           }
 
+          /* Keep CTA row from wrapping weirdly on tiny screens */
           .hero-cta-row {
             gap: 8px;
           }
