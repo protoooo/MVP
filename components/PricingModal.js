@@ -1,9 +1,9 @@
 // components/PricingModal.js - Single device-based plan
 'use client'
 
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
@@ -22,7 +22,7 @@ export default function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container pricing-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card pricing-modal glass-surface ${ibmMono.className}`}>
+        <div className={`modal-card pricing-modal glass-surface ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
