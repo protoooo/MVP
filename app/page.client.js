@@ -2460,7 +2460,7 @@ export default function Page() {
           margin: 0 auto;
           width: 100%;
           min-height: 100px;
-          overflow-y: visible;
+          overflow-y: auto;
           overflow-x: hidden;
         }
 
@@ -2600,7 +2600,7 @@ export default function Page() {
         .chat-input-wrapper {
           flex: 1;
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           border-radius: var(--radius-md);
           min-width: 0;
           min-height: 48px;
@@ -2649,7 +2649,8 @@ export default function Page() {
           width: 38px;
           height: 38px;
           border-radius: 10px;
-          margin: 0;
+          margin: 0 0 5px 0;
+          align-self: flex-end;
         }
 
         .chat-send-spinner {
