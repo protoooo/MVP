@@ -109,7 +109,7 @@ export default function Contact() {
             Location
           </div>
           <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
-            Washtenaw County, Michigan
+            Michigan
           </div>
           <p style={{ fontSize: '13px', color: 'var(--ink-2)', margin: 0 }}>
             Serving restaurants and food operators statewide.
