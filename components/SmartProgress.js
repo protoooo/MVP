@@ -87,14 +87,14 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
 
   return (
     <div className="w-full px-3 pb-2">
-      <div className="flex items-center justify-between text-xs text-white/70 mb-2">
+      <div className="flex items-center justify-between text-xs text-slate-700 mb-2">
         <span>{phase}</span>
         <span>{progress}%</span>
       </div>
 
-      <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+      <div className="h-2 w-full rounded-full bg-slate-200/60 overflow-hidden">
         <div
-          className="h-full rounded-full bg-white/60"
+          className="h-full rounded-full bg-blue-500"
           style={{
             width: `${progress}%`,
             transition: 'width 160ms linear',

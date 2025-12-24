@@ -156,7 +156,7 @@ export default function AcceptTermsPage() {
         <h2 className="info-section-title">What You're Agreeing To</h2>
         <ul>
           <li>protocolLM is a reference tool; human review is required for compliance decisions.</li>
-          <li>LLM outputs may be imperfect; always verify with official Washtenaw County guidance.</li>
+          <li>LLM outputs may be imperfect; always verify with official Michigan guidance.</li>
           <li>Data is protected with encryption, limited retention, and no use for public model training.</li>
           <li>Each license is valid for ONE physical restaurant location only.</li>
         </ul>

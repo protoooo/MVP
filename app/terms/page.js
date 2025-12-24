@@ -6,7 +6,7 @@ export default function TermsOfService() {
   return (
     <InfoPageLayout
       title="Terms of Service"
-      subtitle="Please review these terms carefully before using protocolLM. By accessing the platform you acknowledge the limits of LLM assistance and agree to operate within Washtenaw County health code requirements."
+      subtitle="Please review these terms carefully before using protocolLM. By accessing the platform you acknowledge the limits of LLM assistance and agree to operate within Michigan health code requirements."
       eyebrow="Legal"
     >
       <div className="info-highlight">

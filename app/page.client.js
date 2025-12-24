@@ -101,7 +101,7 @@ function Portal({ children }) {
 
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
-  const size = isChat ? 110 : 140
+  const size = isChat ? 116 : 147
 
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
@@ -163,7 +163,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               </h1>
               <p className="hero-support">
                 Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
-                instant answers and guidance from Washtenaw County Food Safety Regulations.
+                instant answers and guidance from Michigan Food Safety Regulations.
               </p>
             </div>
 
@@ -396,97 +396,95 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
             </div>
             <h2 className="modal-title pricing-title">Start your trial</h2>
             <p className="pricing-sub">
-              Unlimited questions + photo scans for your location. Built for Washtenaw County compliance workflows.
+              Unlimited questions + photo scans for your location. Built for Michigan compliance workflows.
             </p>
           </div>
 
-          <div className="pricing-grid">
-            <LiquidGlass variant="side" className="pricing-card">
-              <div className="pricing-card-head">
-                <div className="pricing-plan">
-                  <span className="pricing-plan-name">{planName}</span>
-                  <span className="pricing-plan-badge">Recommended</span>
-                </div>
-                <div className="pricing-price">
-                  <span className="pricing-price-amount">$100</span>
-                  <span className="pricing-price-term">/ month</span>
-                </div>
+          <div className="pricing-content">
+            <div className="pricing-card-head">
+              <div className="pricing-plan">
+                <span className="pricing-plan-name">{planName}</span>
+                <span className="pricing-plan-badge">Recommended</span>
               </div>
-
-              <ul className="pricing-list">
-                <li>
-                  <span className="pricing-check" aria-hidden="true">
-                    ✓
-                  </span>
-                  Unlimited questions and photo scans
-                </li>
-                <li>
-                  <span className="pricing-check" aria-hidden="true">
-                    ✓
-                  </span>
-                  Washtenaw County knowledge base
-                </li>
-                <li>
-                  <span className="pricing-check" aria-hidden="true">
-                    ✓
-                  </span>
-                  Cohere-powered privacy + security
-                </li>
-                <li>
-                  <span className="pricing-check" aria-hidden="true">
-                    ✓
-                  </span>
-                  Email support
-                </li>
-                <li>
-                  <span className="pricing-check" aria-hidden="true">
-                    ✓
-                  </span>
-                  One registered device per license
-                </li>
-              </ul>
-
-              <div className="pricing-actions">
-                <button
-                  type="button"
-                  className="pricing-primary"
-                  disabled={!!loading}
-                  onClick={() => {
-                    if (!priceId) {
-                      alert('Missing Stripe price id (NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY).')
-                      return
-                    }
-                    onCheckout(priceId, planName)
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner" /> Starting…
-                    </>
-                  ) : (
-                    <>
-                      Start trial <span aria-hidden="true">→</span>
-                    </>
-                  )}
-                </button>
-
-                <button type="button" className="pricing-secondary" onClick={onClose}>
-                  Not now
-                </button>
+              <div className="pricing-price">
+                <span className="pricing-price-amount">$100</span>
+                <span className="pricing-price-term">/ month</span>
               </div>
+            </div>
 
-              <p className="pricing-fineprint">
-                By starting your trial, you agree to our{' '}
-                <Link href="/terms" className="pricing-link">
-                  Terms
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="pricing-link">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
-            </LiquidGlass>
+            <ul className="pricing-list">
+              <li>
+                <span className="pricing-check" aria-hidden="true">
+                  ✓
+                </span>
+                Unlimited questions and photo scans
+              </li>
+              <li>
+                <span className="pricing-check" aria-hidden="true">
+                  ✓
+                </span>
+                Michigan knowledge base
+              </li>
+              <li>
+                <span className="pricing-check" aria-hidden="true">
+                  ✓
+                </span>
+                Cohere-powered privacy + security
+              </li>
+              <li>
+                <span className="pricing-check" aria-hidden="true">
+                  ✓
+                </span>
+                Email support
+              </li>
+              <li>
+                <span className="pricing-check" aria-hidden="true">
+                  ✓
+                </span>
+                One registered device per license
+              </li>
+            </ul>
+
+            <div className="pricing-actions">
+              <button
+                type="button"
+                className="pricing-primary"
+                disabled={!!loading}
+                onClick={() => {
+                  if (!priceId) {
+                    alert('Missing Stripe price id (NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY).')
+                    return
+                  }
+                  onCheckout(priceId, planName)
+                }}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner" /> Starting…
+                  </>
+                ) : (
+                  <>
+                    Start trial <span aria-hidden="true">→</span>
+                  </>
+                )}
+              </button>
+
+              <button type="button" className="pricing-secondary" onClick={onClose}>
+                Not now
+              </button>
+            </div>
+
+            <p className="pricing-fineprint">
+              By starting your trial, you agree to our{' '}
+              <Link href="/terms" className="pricing-link">
+                Terms
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="pricing-link">
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         </LiquidGlass>
       </div>
@@ -1695,39 +1693,8 @@ export default function Page() {
           font-weight: 650;
         }
 
-        .pricing-grid {
+        .pricing-content {
           margin-top: 12px;
-        }
-
-        /* ✅ Inner pricing card: also force “light glass” + iOS crispness */
-        .pricing-card {
-          border-radius: 16px;
-          padding: 16px;
-
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.68)) !important;
-          border: 1px solid rgba(255, 255, 255, 0.55) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 18px 55px rgba(10, 18, 35, 0.16) !important;
-          backdrop-filter: blur(14px) saturate(125%) !important;
-          -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
-          color-scheme: light !important;
-          overflow: hidden;
-
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          -webkit-font-smoothing: antialiased;
-          text-rendering: optimizeLegibility;
-          -moz-osx-font-smoothing: grayscale;
-        }
-
-        .pricing-card::before {
-          display: none; /* Remove gradient overlay that causes blurry text */
-        }
-
-        .pricing-card > * {
-          position: relative;
-          z-index: 1;
         }
 
         .pricing-card-head {
@@ -1946,16 +1913,16 @@ export default function Page() {
 
           /* ✅ FIX: prevents clipping of descenders (bottom of "p") */
           padding-left: 2px;
-          padding-bottom: 6px;
-          line-height: 1.35;
+          padding-bottom: 8px;
+          line-height: 1.4;
         }
 
         .plm-brand.chat .plm-brand-inner {
           gap: 0;
         }
         .plm-brand.chat .plm-brand-mark {
-          width: 110px;
-          height: 110px;
+          width: 116px;
+          height: 116px;
         }
 
         .landing-topbar .plm-brand-inner {
@@ -1964,8 +1931,8 @@ export default function Page() {
         }
 
         .landing-topbar .plm-brand-mark {
-          width: 66px;
-          height: 66px;
+          width: 69px;
+          height: 69px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
@@ -1973,18 +1940,18 @@ export default function Page() {
           margin-right: 4px;
         }
 
-        /* ✅ UPDATED LOGO TRANSFORM (desktop) */
+        /* ✅ UPDATED LOGO TRANSFORM (desktop) - 5% larger */
         .landing-topbar .plm-logo-img {
-          transform: translateY(2px) scale(1.12);
+          transform: translateY(2px) scale(1.18);
           transform-origin: center;
         }
 
         .landing-topbar .plm-brand-text {
-          line-height: 1.35;
+          line-height: 1.4;
           position: relative;
           top: 0px;
           font-size: 17.5px;
-          padding-bottom: 5px;
+          padding-bottom: 7px;
         }
 
         /* Shared icon button styling */
@@ -2355,8 +2322,8 @@ export default function Page() {
           right: 0;
           z-index: 20;
           width: 100%;
-          padding: max(14px, env(safe-area-inset-top) + 10px) max(18px, env(safe-area-inset-right) + 12px) 0
-            max(18px, env(safe-area-inset-left) + 12px);
+          padding: max(16px, env(safe-area-inset-top) + 12px) max(16px, env(safe-area-inset-right) + 16px) 0
+            max(16px, env(safe-area-inset-left) + 16px);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -2368,6 +2335,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 6px;
+          margin-right: 0;
         }
 
         .chat-settings-wrap {
@@ -2430,7 +2398,7 @@ export default function Page() {
 
           /* ✅ Increased top padding to clear logo, added extra bottom padding for gap above chat input */
           padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 32px);
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 48px);
           background: transparent;
         }
 
@@ -2702,13 +2670,13 @@ export default function Page() {
           }
 
           .chat-topbar {
-            padding: max(12px, env(safe-area-inset-top) + 8px) max(14px, env(safe-area-inset-right) + 10px) 0
-              max(14px, env(safe-area-inset-left) + 10px);
+            padding: max(14px, env(safe-area-inset-top) + 10px) max(16px, env(safe-area-inset-right) + 16px) 0
+              max(16px, env(safe-area-inset-left) + 16px);
           }
 
           .chat-messages {
             padding: calc(max(120px, env(safe-area-inset-top) + 105px)) 16px
-              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 28px);
+              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 40px);
           }
 
           .chat-input-inner {
@@ -2755,30 +2723,31 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 120px;
-            height: 120px;
+            width: 126px;
+            height: 126px;
           }
 
           .plm-brand.chat .plm-brand-mark {
-            width: 102px;
-            height: 102px;
+            width: 107px;
+            height: 107px;
           }
 
           .landing-topbar .plm-brand-mark {
-            width: 62px;
-            height: 62px;
+            width: 65px;
+            height: 65px;
             margin-right: 4px;
           }
 
-          /* ✅ UPDATED LOGO TRANSFORM (mobile) */
+          /* ✅ UPDATED LOGO TRANSFORM (mobile) - 5% larger */
           .landing-topbar .plm-logo-img {
-            transform: translateY(2px) scale(1.1);
+            transform: translateY(2px) scale(1.16);
             transform-origin: center;
           }
 
           .plm-brand-text {
             font-size: 16.5px;
             max-width: 220px;
+            padding-bottom: 6px;
           }
 
           .landing-signin-btn {
@@ -2799,28 +2768,29 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 110px;
-            height: 110px;
+            width: 116px;
+            height: 116px;
           }
 
           .plm-brand-text {
             font-size: 15.5px;
+            padding-bottom: 6px;
           }
 
           .plm-brand.chat .plm-brand-mark {
-            width: 96px;
-            height: 96px;
+            width: 101px;
+            height: 101px;
           }
 
           .landing-topbar .plm-brand-mark {
-            width: 58px;
-            height: 58px;
+            width: 61px;
+            height: 61px;
             margin-right: 4px;
           }
 
-          /* ✅ UPDATED LOGO TRANSFORM (smallest mobile) */
+          /* ✅ UPDATED LOGO TRANSFORM (smallest mobile) - 5% larger */
           .landing-topbar .plm-logo-img {
-            transform: translateY(1px) scale(1.08);
+            transform: translateY(1px) scale(1.13);
             transform-origin: center;
           }
 
