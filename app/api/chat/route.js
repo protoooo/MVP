@@ -147,6 +147,8 @@ function normalizeImagesForCohere(images) {
 
 const FEATURE_COHERE = (process.env.FEATURE_COHERE ?? 'true').toLowerCase() !== 'false'
 const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() === 'true'
+const FEATURE_VISION_DOUBLECHECK =
+  (process.env.FEATURE_VISION_DOUBLECHECK ?? 'true').toLowerCase() === 'true'
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
 const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-32b'
@@ -162,6 +164,7 @@ const MODEL_LABEL = 'Cohere'
 const ANSWER_TIMEOUT_MS = 35000
 const RETRIEVAL_TIMEOUT_MS = 9000
 const PINNED_RETRIEVAL_TIMEOUT_MS = 3200
+const DOUBLECHECK_TIMEOUT_MS = 12000
 
 // Retrieval + rerank config
 const TOPK_PER_QUERY = 20
@@ -308,18 +311,30 @@ function cohereResponseToText(resp) {
 // ============================================================================
 
 const PINNED_POLICY_QUERIES = [
-  'Michigan Modified Food Code Priority item Priority Foundation item correct within 10 days Core within 90 days violation categories',
-  'MCL Act 92 of 2000 Michigan Food Law Priority Item Priority Foundation Item definition food service establishment',
-  'Michigan food safety enforcement action imminent health hazard closure license suspension revocation progressive enforcement',
-  'Michigan Modified Food Code temperature control TCS foods time temperature control safety',
+  // Priority/Pf/Core + correction timelines
+  'Michigan Modified Food Code Priority item Priority Foundation item Core item definitions correction time frames',
+  'MCL Act 92 of 2000 Michigan Food Law enforcement authority license suspension revocation hearing',
+
+  // Enforcement / imminent hazard
+  'Michigan food safety enforcement action imminent health hazard closure order reopen approval',
+
+  // Time/temperature anchors
+  'Michigan Modified Food Code time temperature control for safety TCS hot holding cold holding cooling reheating',
+
+  // Chemical storage anchors (Windex-in-sink type misses)
+  'Michigan Modified Food Code poisonous or toxic materials storage separation not above food equipment utensils single-service warewashing area stored to prevent contamination',
+  'Michigan Modified Food Code chemical cleaners sanitizers stored to prevent contamination of food equipment utensils',
 ]
 
 const MICHIGAN_POLICY_FALLBACK = `MICHIGAN STATE FOOD SAFETY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
 - Authority: Michigan Food Law (MCL Act 92 of 2000) and Michigan Modified Food Code.
 - Categories: Priority (P), Priority Foundation (Pf), Core.
 - Typical correction: P and Pf corrected at inspection or within 10 days; Core corrected by a specified date (typically within 90 days).
-- If imminent health hazard exists (no water, no power, sewage backup, severe pests, fire, flood, outbreak), the health department may order immediate closure; reopen only after correction and approval.
-- Otherwise: progressive enforcement can escalate (follow-up inspection, Office Conference, Informal Hearing, license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
+- Imminent health hazard examples: no water, no power, sewage backup, fire, flood, outbreak, severe pests; may require immediate closure until corrected and approved.
+
+CHEMICAL HANDLING (POISONOUS/TOXIC MATERIALS) - PRACTICAL RULE:
+- Cleaning chemicals must be stored/placed so they cannot contaminate food, equipment, utensils, linens, or single-service items.
+- In photos: a cleaner bottle sitting in a sink basin, on a drainboard where dishes are handled, on food-contact surfaces, or stored with/above dishes is a reportable Chemical Handling violation.`
 
 function normalizeSourceLabel(src) {
   const s = String(src || '').toLowerCase()
@@ -427,8 +442,18 @@ function determineViolationType(issue) {
     thermometer: 'Equipment Maintenance',
 
     pest: 'Pest Control',
+
     chemicals: 'Chemical Handling',
+    chemical: 'Chemical Handling',
     toxic: 'Chemical Handling',
+    poisonous: 'Chemical Handling',
+    cleaner: 'Chemical Handling',
+    'glass cleaner': 'Chemical Handling',
+    windex: 'Chemical Handling',
+    bleach: 'Chemical Handling',
+    degreaser: 'Chemical Handling',
+    'spray bottle': 'Chemical Handling',
+
     allergen: 'Allergen Control',
     'employee health': 'Employee Health',
 
@@ -475,6 +500,28 @@ function normalizeCategoryLabel(raw) {
 function determineViolationCategory(issue, remediation = '', type = '') {
   const hay = `${issue || ''} ${remediation || ''} ${type || ''}`.toLowerCase()
 
+  // ✅ Chemical handling should be treated as Priority when it involves storage/placement that can contaminate
+  const chemicalPatterns = [
+    /\bwindex\b/i,
+    /\bbleach\b/i,
+    /\bdegreaser\b/i,
+    /\bglass\s*cleaner\b/i,
+    /\bpoison(?:ous)?\b/i,
+    /\btoxic\b/i,
+    /\bchemical\b/i,
+    /\bcleaner\b/i,
+    /\bsanitizer\b/i,
+  ]
+
+  if (chemicalPatterns.some((p) => p.test(hay))) {
+    return {
+      category: 'Priority (P)',
+      correction: 'Immediately',
+      ifNotCorrected:
+        'Contamination risk; may require follow-up inspection and can escalate to enforcement for repeat/unresolved issues.',
+    }
+  }
+
   if (isImminentHazardText(hay)) {
     return {
       category: 'Priority (P)',
@@ -499,6 +546,7 @@ function determineViolationCategory(issue, remediation = '', type = '') {
     /sanitize|sanitiz(?:e|ing) (?:food|utensil|equipment)|food[- ]?contact.*sanit/i,
     /\bpest\b|rodent|roach|flies/i,
     /toxic|poison|chemical.*(label|store)|cleaner.*(label|store)/i,
+    /\bwindex\b/i,
   ]
   if (priorityPatterns.some((p) => p.test(hay))) {
     return {
@@ -509,7 +557,13 @@ function determineViolationCategory(issue, remediation = '', type = '') {
     }
   }
 
-  const pfPatterns = [/thermometer|probe\s*therm/i, /test\s*strip|sanitizer\s*test/i, /calibrat(?:e|ion)/i, /haccp|plan|critical\s*limit/i, /training|policy|procedure|documentation|record[- ]?keeping/i]
+  const pfPatterns = [
+    /thermometer|probe\s*therm/i,
+    /test\s*strip|sanitizer\s*test/i,
+    /calibrat(?:e|ion)/i,
+    /haccp|plan|critical\s*limit/i,
+    /training|policy|procedure|documentation|record[- ]?keeping/i,
+  ]
   if (pfPatterns.some((p) => p.test(hay))) {
     return {
       category: 'Priority Foundation (Pf)',
@@ -851,11 +905,19 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
       t.includes('reheat') ||
       t.includes('holding')
     ) {
-      add('Is there a visible label, date mark, or thermometer reading for the food/item in question? If so, can you share a close-up photo of it?')
+      add(
+        'Is there a visible label, date mark, or thermometer reading for the food/item in question? If so, can you share a close-up photo of it?'
+      )
       continue
     }
 
-    if (t.includes('stove') || t.includes('stovetop') || t.includes('burner') || t.includes('timer') || t.includes('unattended')) {
+    if (
+      t.includes('stove') ||
+      t.includes('stovetop') ||
+      t.includes('burner') ||
+      t.includes('timer') ||
+      t.includes('unattended')
+    ) {
       add('Were any burners actually on at the time of the photo, or was the pot just sitting on the stovetop?')
       continue
     }
@@ -1130,6 +1192,17 @@ function extractSearchKeywords(text) {
     'employee health',
     'chemicals',
     'toxic',
+    'poisonous',
+    'toxic materials',
+    'chemical storage',
+    'cleaner',
+    'glass cleaner',
+    'windex',
+    'bleach',
+    'degreaser',
+    'detergent',
+    'sanitizer bottle',
+    'spray bottle',
     'allergen',
     'sink',
     'drainage',
@@ -1256,6 +1329,21 @@ function finalizeUserFacingText(raw, hasImage) {
 }
 
 // ============================================================================
+// VISION DOUBLE-CHECK PROMPT (CHEMICAL HANDLING)
+// ============================================================================
+
+function buildVisionDoublecheckPrompt(original = '') {
+  const base = safeLine(original || '')
+  return (
+    'Double-check the photo specifically for visible CHEMICAL HANDLING issues. ' +
+    'Look for cleaner bottles/spray chemicals (e.g., Windex/bleach/degreaser) stored in a sink basin, on drainboards, ' +
+    'on food-contact surfaces, above/with dishes or utensils, or near exposed food. ' +
+    'Only report what you can directly see. Use the exact same output format rules.\n' +
+    (base ? `\nContext from user: ${base}\n` : '')
+  )
+}
+
+// ============================================================================
 // MAIN HANDLER
 // ============================================================================
 
@@ -1326,7 +1414,11 @@ export async function POST(request) {
 
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for food safety and sanitation issues. Only report violations you can directly see in the photo. Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, storage duration, or that cooking is actively occurring unless clearly visible (labels, date marks, displays, thermometer readings). Do not report cooking timers or generic "stove is on" operational warnings as violations. If you cannot confirm, ask up to three short clarification questions instead of guessing. For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
+        'Review the photo for food safety and sanitation issues. Only report violations you can directly see in the photo. ' +
+        'Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, storage duration, or that cooking is actively occurring unless clearly visible (labels, date marks, displays, thermometer readings). ' +
+        'DO report visible chemical handling problems: cleaner bottles (e.g., Windex/bleach/degreaser) sitting in a sink basin, on a drainboard where dishes are handled, on food-contact surfaces, or stored with/above dishes/utensils. ' +
+        'If you cannot confirm something, ask up to three short clarification questions instead of guessing. ' +
+        'For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
     }
 
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
@@ -1549,6 +1641,7 @@ Critical rule for photos:
 - Only report violations you can directly see in the photo.
 - For each violation Issue, describe it as a visible observation (use language like "In the photo, I can see ...").
 - Do not assume missing sinks, missing soap/towels, temperatures, time out of temperature control, "leftovers," storage duration, or whether cooking is actively occurring unless clearly visible evidence is present (labels, date marks, displays, gauges, thermometer readings, timestamps).
+- DO report visible chemical handling problems: cleaner bottles (e.g., Windex/bleach/degreaser) sitting in a sink basin, on a drainboard where dishes are handled, on food-contact surfaces, or stored with/above dishes/utensils.
 - Do NOT report cooking timers, "timer not set", or generic "stove/burner is on" operational warnings as food-code violations.
 - If you cannot confirm, ask up to three short clarification questions instead of guessing.
 
@@ -1654,6 +1747,31 @@ If you need clarification:
         tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
         modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
         assistantMessage = finalizeUserFacingText(modelText || 'Unable to process request. Please try again.', hasImage)
+
+        // ✅ Vision double-check: if the model says "No violations observed." on an image,
+        // do a fast second pass focused on chemical handling (catches Windex-in-sink misses).
+        if (
+          hasImage &&
+          FEATURE_VISION_DOUBLECHECK &&
+          !visionFallbackUsed &&
+          /^No violations observed\./i.test(assistantMessage)
+        ) {
+          try {
+            const dcReq = buildCohereRequest(usedModel)
+            dcReq.message = buildVisionDoublecheckPrompt(userMessage)
+
+            const dcResp = await withTimeout(callCohereChat(dcReq), DOUBLECHECK_TIMEOUT_MS, 'DOUBLECHECK_TIMEOUT')
+            const dcText = dcResp?.__text || dcResp?.text || responseOutputToString(dcResp) || ''
+            const dcMsg = finalizeUserFacingText(dcText || 'No violations observed.', true)
+
+            // Only override if the double-check finds something actionable (or needs clarification)
+            if (/^(Violations observed:|Need a quick clarification:)/i.test(dcMsg)) {
+              assistantMessage = dcMsg
+            }
+          } catch (err) {
+            logger.warn('Vision double-check failed (non-blocking)', { error: err?.message })
+          }
+        }
       } catch (visionErr) {
         const detail = safeErrorDetails(visionErr)
         const isLikelyBadRequest =
