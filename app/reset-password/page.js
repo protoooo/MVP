@@ -1,3 +1,4 @@
+// app/reset-password/page.js - UPDATED: Light UI with Liquid Glass
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,8 +8,9 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from '@/app/apple-icon.png'
+import LiquidGlass from '@/components/ui/LiquidGlass'
 
-const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -25,7 +27,7 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = 'chat'
+    document.documentElement.dataset.view = 'landing'
   }, [])
 
   useEffect(() => {
@@ -118,22 +120,22 @@ export default function ResetPasswordPage() {
     <>
       <style jsx global>{`
         :root {
-          --bg-0: #09090b;
-          --bg-1: #0c0c0e;
-          --bg-2: #131316;
-          --bg-3: #1a1a1f;
+          --bg-0: rgba(5, 7, 13, 0.72);
+          --bg-1: rgba(7, 10, 18, 0.78);
+          --bg-2: rgba(9, 13, 22, 0.82);
+          --bg-3: rgba(255, 255, 255, 0.1);
 
-          --ink-0: #fafafa;
-          --ink-1: #a0a0a8;
-          --ink-2: #636369;
-          --ink-3: #3f3f46;
+          --ink-0: #f6f9ff;
+          --ink-1: rgba(240, 244, 255, 0.86);
+          --ink-2: rgba(214, 222, 240, 0.76);
+          --ink-3: rgba(178, 190, 215, 0.6);
 
-          --accent: #3b82f6;
-          --accent-hover: #2563eb;
-          --accent-dim: rgba(59, 130, 246, 0.1);
+          --accent: #5fa8ff;
+          --accent-hover: #7bc2ff;
+          --accent-dim: rgba(95, 168, 255, 0.2);
 
-          --border-subtle: rgba(255, 255, 255, 0.05);
-          --border-default: rgba(255, 255, 255, 0.08);
+          --border-subtle: rgba(255, 255, 255, 0.18);
+          --border-default: rgba(255, 255, 255, 0.32);
 
           --radius-sm: 8px;
           --radius-md: 12px;
@@ -143,14 +145,14 @@ export default function ResetPasswordPage() {
         html, body {
           height: 100%;
           margin: 0;
-          background: var(--bg-0);
+          background: transparent;
           color: var(--ink-0);
         }
 
         .reset-page {
           min-height: 100vh;
           min-height: 100dvh;
-          background: var(--bg-0);
+          background: transparent;
           display: flex;
           flex-direction: column;
         }
@@ -166,7 +168,7 @@ export default function ResetPasswordPage() {
         }
 
         .reset-brand {
-          color: var(--ink-0);
+          color: rgba(15, 23, 42, 0.92);
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -200,12 +202,13 @@ export default function ResetPasswordPage() {
 
         .reset-back {
           font-size: 13px;
-          color: var(--ink-1);
+          color: rgba(15, 23, 42, 0.72);
           text-decoration: none;
+          font-weight: 600;
         }
 
         .reset-back:hover {
-          color: var(--ink-0);
+          color: rgba(15, 23, 42, 0.92);
         }
 
         .reset-content {
@@ -218,11 +221,7 @@ export default function ResetPasswordPage() {
 
         .reset-card {
           width: 100%;
-          max-width: 420px;
-          background: var(--bg-2);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          padding: 32px;
+          max-width: 480px;
         }
 
         .reset-header {
@@ -230,18 +229,31 @@ export default function ResetPasswordPage() {
           margin-bottom: 28px;
         }
 
+        .reset-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--accent);
+          margin-bottom: 12px;
+        }
+
         .reset-title {
-          font-size: 24px;
+          font-size: 28px;
           font-weight: 700;
-          letter-spacing: -0.02em;
-          margin: 0 0 8px;
-          color: var(--ink-0);
+          letter-spacing: -0.03em;
+          margin: 0 0 12px;
+          color: rgba(15, 23, 42, 0.92);
         }
 
         .reset-subtitle {
-          font-size: 14px;
-          color: var(--ink-1);
+          font-size: 15px;
+          color: rgba(30, 41, 59, 0.74);
           margin: 0;
+          line-height: 1.6;
         }
 
         .reset-alert {
@@ -251,24 +263,25 @@ export default function ResetPasswordPage() {
           font-size: 14px;
           line-height: 1.6;
           text-align: center;
+          font-weight: 600;
         }
 
         .reset-alert.error {
           background: rgba(239, 68, 68, 0.1);
           border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #fca5a5;
+          color: #dc2626;
         }
 
         .reset-alert.success {
           background: rgba(34, 197, 94, 0.1);
           border: 1px solid rgba(34, 197, 94, 0.3);
-          color: #6ee7b7;
+          color: #16a34a;
         }
 
         .reset-alert.loading {
-          background: var(--bg-3);
-          border: 1px solid var(--border-subtle);
-          color: var(--ink-1);
+          background: rgba(255, 255, 255, 0.5);
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          color: rgba(15, 23, 42, 0.72);
         }
 
         .reset-form {
@@ -285,9 +298,9 @@ export default function ResetPasswordPage() {
 
         .form-label {
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
           letter-spacing: 0.02em;
-          color: var(--ink-1);
+          color: rgba(15, 23, 42, 0.7);
         }
 
         .form-input-group {
@@ -296,18 +309,20 @@ export default function ResetPasswordPage() {
 
         .form-input {
           width: 100%;
-          height: 42px;
+          height: 44px;
           padding: 0 14px;
-          background: var(--bg-3);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-sm);
-          color: var(--ink-0);
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          border-radius: 12px;
+          color: rgba(15, 23, 42, 0.92);
           font-size: 14px;
+          font-weight: 600;
         }
 
         .form-input:focus {
           outline: none;
           border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.12);
         }
 
         .form-toggle {
@@ -317,14 +332,14 @@ export default function ResetPasswordPage() {
           transform: translateY(-50%);
           background: none;
           border: none;
-          color: var(--ink-2);
+          color: rgba(15, 23, 42, 0.72);
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
           cursor: pointer;
         }
 
         .form-toggle:hover {
-          color: var(--ink-0);
+          color: rgba(15, 23, 42, 0.92);
         }
 
         .reset-btn {
@@ -337,21 +352,30 @@ export default function ResetPasswordPage() {
           background: var(--accent);
           color: #fff;
           border: none;
-          border-radius: var(--radius-sm);
+          border-radius: 9999px;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 800;
           cursor: pointer;
-          transition: background 0.15s ease;
+          box-shadow: 0 14px 34px rgba(95, 168, 255, 0.24);
+          transition: background 0.15s ease, transform 0.12s ease;
           margin-top: 4px;
         }
 
         .reset-btn:hover:not(:disabled) {
           background: var(--accent-hover);
+          transform: translateY(-1px);
+          box-shadow: 0 16px 40px rgba(95, 168, 255, 0.28);
+        }
+
+        .reset-btn:active:not(:disabled) {
+          transform: translateY(0px);
         }
 
         .reset-btn:disabled {
-          opacity: 0.5;
+          opacity: 0.6;
           cursor: not-allowed;
+          box-shadow: none;
+          transform: none;
         }
 
         .btn-spinner {
@@ -370,24 +394,25 @@ export default function ResetPasswordPage() {
         .reset-footer {
           margin-top: 20px;
           padding-top: 20px;
-          border-top: 1px solid var(--border-subtle);
+          border-top: 1px solid rgba(15, 23, 42, 0.12);
           text-align: center;
         }
 
         .reset-link {
           font-size: 13px;
-          color: var(--ink-2);
-          text-decoration: underline;
+          color: rgba(15, 23, 42, 0.72);
+          text-decoration: none;
+          font-weight: 700;
           cursor: pointer;
         }
 
         .reset-link:hover {
-          color: var(--ink-0);
+          color: rgba(15, 23, 42, 0.92);
         }
 
         @media (max-width: 768px) {
           .reset-card {
-            padding: 24px;
+            max-width: 100%;
           }
 
           .reset-brand-mark {
@@ -397,6 +422,10 @@ export default function ResetPasswordPage() {
 
           .reset-brand-text {
             font-size: 15px;
+          }
+
+          .reset-title {
+            font-size: 24px;
           }
         }
       `}</style>
@@ -417,10 +446,11 @@ export default function ResetPasswordPage() {
         </header>
 
         <div className="reset-content">
-          <div className="reset-card">
+          <LiquidGlass variant="main" className="reset-card">
             <div className="reset-header">
-              <h1 className="reset-title">Reset Your Password</h1>
-              <p className="reset-subtitle">Choose a new password to secure your account.</p>
+              <div className="reset-eyebrow">Password Reset</div>
+              <h1 className="reset-title">Set New Password</h1>
+              <p className="reset-subtitle">Choose a strong password to secure your account.</p>
             </div>
 
             {verifying && !fatalError && (
@@ -490,7 +520,7 @@ export default function ResetPasswordPage() {
             {success && (
               <>
                 <div className="reset-alert success">
-                  Your password has been reset successfully! You can now sign in with your new password.
+                  ✓ Your password has been reset successfully! You can now sign in with your new password.
                 </div>
                 <button
                   onClick={() => router.push('/')}
@@ -503,10 +533,10 @@ export default function ResetPasswordPage() {
 
             <div className="reset-footer">
               <button onClick={handleBackHome} className="reset-link">
-                Back to home
+                ← Back to home
               </button>
             </div>
-          </div>
+          </LiquidGlass>
         </div>
       </div>
     </>
