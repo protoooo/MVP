@@ -77,7 +77,7 @@ function BrandLink({ variant = 'landing' }) {
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={69} height={69} priority />
+          <Image src={appleIcon} alt="" width={138} height={138} priority />
         </span>
         {!isChat && <span className="plm-brand-text">protocolLM</span>}
       </span>
@@ -1041,7 +1041,7 @@ export default function Page() {
 
         /* Brand */
         .plm-brand {
-          color: var(--ink-0);
+          color: #0b1220;
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -1059,8 +1059,8 @@ export default function Page() {
         }
 
         .plm-brand-mark {
-          width: 69px;
-          height: 69px;
+          width: 138px;
+          height: 138px;
           flex-shrink: 0;
         }
 
@@ -1088,8 +1088,8 @@ export default function Page() {
           gap: 0;
         }
         .plm-brand.chat .plm-brand-mark {
-          width: 56px;
-          height: 56px;
+          width: 112px;
+          height: 112px;
         }
 
         .desktop-only {
@@ -1102,6 +1102,7 @@ export default function Page() {
         /* Landing */
         .landing-root {
           position: relative;
+          padding-top: max(170px, env(safe-area-inset-top) + 140px);
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
@@ -1112,13 +1113,17 @@ export default function Page() {
         }
 
         .landing-topbar {
-          position: absolute;
+          position: fixed;
           top: 0;
           left: 0;
           right: 0;
           z-index: 10;
           padding: max(18px, env(safe-area-inset-top) + 8px) max(22px, env(safe-area-inset-right) + 8px) 0
             max(22px, env(safe-area-inset-left) + 8px);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82));
+          backdrop-filter: blur(10px) saturate(120%);
+          -webkit-backdrop-filter: blur(10px) saturate(120%);
+          box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16);
         }
 
         .landing-topbar-inner {
@@ -1142,25 +1147,29 @@ export default function Page() {
         .btn-nav {
           height: 36px;
           padding: 0 14px;
-          background: transparent;
-          color: var(--ink-1);
-          border: none;
+          background: rgba(255, 255, 255, 0.9);
+          color: #0b1220;
+          border: 1px solid rgba(15, 23, 42, 0.12);
           border-radius: var(--radius-sm);
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
-          transition: color 0.15s ease;
+          transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
           font-family: inherit;
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
         }
 
         .btn-nav:hover {
-          color: var(--ink-0);
+          color: #05070d;
+          background: #fff;
+          border-color: rgba(15, 23, 42, 0.18);
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
         }
 
         /* Sign-in button white on all devices */
         .landing-signin-btn {
-          color: #fff !important;
-          font-weight: 600 !important;
+          color: #0b1220 !important;
+          font-weight: 700 !important;
         }
 
         .btn-primary {
@@ -1187,7 +1196,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 0 24px;
+          padding: 40px 24px 0;
           min-height: 0;
         }
 
@@ -1423,13 +1432,13 @@ export default function Page() {
 
         .modal-card {
           position: relative;
-          border: 1px solid rgba(255, 255, 255, 0.26);
+          border: 1px solid rgba(15, 23, 42, 0.12);
           border-radius: 20px;
           padding: 30px;
-          background: linear-gradient(170deg, rgba(6, 11, 20, 0.9), rgba(10, 16, 26, 0.84));
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 28px 76px rgba(5, 7, 13, 0.42);
-          backdrop-filter: blur(20px) saturate(135%);
-          -webkit-backdrop-filter: blur(20px) saturate(135%);
+          background: #f8fafc;
+          box-shadow: 0 28px 76px rgba(0, 0, 0, 0.12);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
         }
 
         .modal-header {
@@ -1441,7 +1450,7 @@ export default function Page() {
           font-size: 20px;
           font-weight: 700;
           letter-spacing: -0.02em;
-          color: var(--ink-0);
+          color: #0b1220;
         }
 
         .modal-close {
@@ -1489,18 +1498,18 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: linear-gradient(120deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.28);
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.12);
           border-radius: var(--radius-sm);
           padding: 0 10px;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+          box-shadow: none;
           transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
           overflow: hidden;
         }
 
         .form-input-wrap:focus-within {
-          border-color: var(--accent);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 3px var(--accent-dim);
+          border-color: rgba(15, 23, 42, 0.28);
+          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
         }
 
         .form-input {
@@ -1508,7 +1517,7 @@ export default function Page() {
           height: 44px;
           background: transparent;
           border: none;
-          color: var(--ink-0);
+          color: #0b1220;
           font-size: 14px;
           font-weight: 500;
           font-family: inherit;
@@ -1516,7 +1525,7 @@ export default function Page() {
         }
 
         .form-input::placeholder {
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(15, 23, 42, 0.4);
         }
 
         .form-input:focus {
@@ -1536,7 +1545,7 @@ export default function Page() {
         .form-toggle-vis {
           background: none;
           border: none;
-          color: var(--ink-1);
+          color: #475569;
           font-size: 12px;
           font-weight: 700;
           cursor: pointer;
@@ -1545,7 +1554,7 @@ export default function Page() {
         }
 
         .form-toggle-vis:hover {
-          color: var(--accent);
+          color: #0b1220;
         }
 
         .btn-submit {
@@ -1593,9 +1602,9 @@ export default function Page() {
           border-radius: var(--radius-sm);
           font-size: 13px;
           line-height: 1.4;
-          border: 1px solid rgba(255, 255, 255, 0.26);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
-          color: var(--ink-0);
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: rgba(15, 23, 42, 0.04);
+          color: #0b1220;
         }
 
         .modal-message.ok {
@@ -1645,11 +1654,9 @@ export default function Page() {
 
         /* Auth modal refinements */
         .auth-modal {
-          background: linear-gradient(165deg, rgba(10, 14, 26, 0.92), rgba(18, 25, 40, 0.88));
-          border-color: rgba(255, 255, 255, 0.22);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.38),
-            0 32px 80px rgba(5, 7, 13, 0.5);
+          background: #ffffff;
+          border-color: rgba(15, 23, 42, 0.12);
+          box-shadow: 0 22px 60px rgba(0, 0, 0, 0.12);
         }
 
         .auth-modal .modal-title {
@@ -1661,14 +1668,14 @@ export default function Page() {
         }
 
         .auth-modal .form-label {
-          color: rgba(246, 249, 255, 0.82);
+          color: rgba(15, 23, 42, 0.6);
           letter-spacing: 0.05em;
         }
 
         .auth-modal .form-input-wrap {
-          background: linear-gradient(120deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          background: #f1f5f9;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.26);
+          border: 1px solid rgba(15, 23, 42, 0.12);
           padding: 0 12px;
         }
 
@@ -1679,12 +1686,12 @@ export default function Page() {
 
         .auth-modal .form-input {
           height: 46px;
-          color: var(--ink-0);
+          color: #0b1220;
           font-size: 15px;
         }
 
         .auth-modal .form-input::placeholder {
-          color: rgba(246, 249, 255, 0.7);
+          color: rgba(15, 23, 42, 0.5);
         }
 
         .auth-modal .btn-submit {
@@ -1694,11 +1701,11 @@ export default function Page() {
         }
 
         .auth-modal .modal-footer .modal-link {
-          color: var(--ink-1);
+          color: #475569;
         }
 
         .auth-modal .modal-footer .modal-link:hover {
-          color: var(--ink-0);
+          color: #0b1220;
         }
 
         /* Pricing modal polish - align with info pages glass look */
@@ -1892,7 +1899,7 @@ export default function Page() {
 
         /* TOP BAR: remove the black strip entirely (logo + gear float on background) */
         .chat-topbar {
-          position: absolute;
+          position: fixed;
           top: 0;
           left: 0;
           right: 0;
@@ -1900,7 +1907,7 @@ export default function Page() {
           width: 100%;
           max-width: 880px;
           margin: 0 auto;
-          padding: max(14px, env(safe-area-inset-top) + 8px) max(18px, env(safe-area-inset-right) + 12px) 0
+          padding: max(14px, env(safe-area-inset-top) + 10px) max(18px, env(safe-area-inset-right) + 12px) 0
             max(18px, env(safe-area-inset-left) + 12px);
           display: flex;
           align-items: center;
@@ -1929,20 +1936,22 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: #0f172a;
+          border: 1px solid #0b1220;
           border-radius: 12px;
-          color: var(--ink-0);
+          color: #f8fafc;
           cursor: pointer;
-          transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
-          backdrop-filter: blur(14px) saturate(120%);
-          -webkit-backdrop-filter: blur(14px) saturate(120%);
+          transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
         }
 
         .chat-settings-btn:hover {
           transform: translateY(-1px);
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.24);
+          background: #111827;
+          border-color: #0f172a;
+          box-shadow: 0 14px 32px rgba(0, 0, 0, 0.26);
         }
 
         .chat-settings-menu {
@@ -1994,7 +2003,7 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
-          padding: calc(max(76px, env(safe-area-inset-top) + 76px)) 24px 12px;
+          padding: calc(max(110px, env(safe-area-inset-top) + 100px)) 24px 12px;
           background: transparent;
         }
 
@@ -2109,6 +2118,15 @@ export default function Page() {
           gap: 12px;
           padding: 14px 16px;
           border-radius: var(--radius-lg);
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          box-shadow: 0 20px 55px rgba(0, 0, 0, 0.12);
+        }
+
+        .chat-dock .glass__innerHighlight,
+        .chat-dock .glass__shine,
+        .chat-dock .glass__grain {
+          display: none;
         }
 
         .chat-attachment {
@@ -2156,41 +2174,42 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
-          border: 1px solid var(--accent);
+          background: #0f172a;
+          border: 1px solid #0f172a;
           border-radius: var(--radius-md);
-          color: var(--accent);
+          color: #f8fafc;
           cursor: pointer;
           flex-shrink: 0;
           transition: border-color 0.15s ease, box-shadow 0.15s ease;
           overflow: visible;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 10px 26px rgba(5, 7, 13, 0.18);
-          backdrop-filter: blur(12px) saturate(120%);
-          -webkit-backdrop-filter: blur(12px) saturate(120%);
+          box-shadow: 0 10px 26px rgba(5, 7, 13, 0.25);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
         }
 
         .chat-camera-btn:hover {
-          border-color: var(--accent-hover);
-          box-shadow: 0 0 0 3px var(--accent-dim);
+          border-color: #0b1220;
+          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.18);
         }
 
         .chat-input-wrapper {
           flex: 1;
           display: flex;
           align-items: flex-end;
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
-          border: 1px solid rgba(255, 255, 255, 0.28);
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.12);
           border-radius: var(--radius-md);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+          box-shadow: none;
           transition: border-color 0.15s ease, box-shadow 0.15s ease;
           min-width: 0;
-          backdrop-filter: blur(14px) saturate(120%);
-          -webkit-backdrop-filter: blur(14px) saturate(120%);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
           min-height: 48px;
         }
 
         .chat-input-wrapper:focus-within {
-          border-color: var(--accent);
+          border-color: rgba(15, 23, 42, 0.28);
+          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
         }
 
         .chat-textarea {
@@ -2221,19 +2240,20 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(125deg, #7bc2ff, #5fa8ff);
-          border: 1px solid rgba(255, 255, 255, 0.42);
-          color: #0b1220;
+          background: #0f172a;
+          border: 1px solid #0b1220;
+          color: #f8fafc;
           cursor: pointer;
           flex-shrink: 0;
           border-radius: 12px;
-          transition: transform 0.12s ease, filter 0.12s ease;
-          box-shadow: 0 10px 28px rgba(95, 168, 255, 0.28);
+          transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+          box-shadow: 0 10px 28px rgba(5, 7, 13, 0.26);
         }
 
         .chat-send-btn:hover:not(:disabled) {
           transform: translateY(-1px);
-          filter: brightness(1.05);
+          filter: none;
+          box-shadow: 0 12px 30px rgba(5, 7, 13, 0.3);
         }
         .chat-send-btn:disabled {
           opacity: 0.3;
@@ -2265,6 +2285,10 @@ export default function Page() {
 
         /* Responsive */
         @media (max-width: 768px) {
+          .landing-root {
+            padding-top: max(150px, env(safe-area-inset-top) + 120px);
+          }
+
           .hero-cta-row {
             flex-direction: column;
             gap: 0;
@@ -2295,7 +2319,7 @@ export default function Page() {
           }
 
           .chat-messages {
-            padding: calc(max(70px, env(safe-area-inset-top) + 70px)) 16px 10px;
+            padding: calc(max(100px, env(safe-area-inset-top) + 92px)) 16px 10px;
           }
 
           .chat-input-inner {
@@ -2337,8 +2361,12 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 64px;
-            height: 64px;
+            width: 120px;
+            height: 120px;
+          }
+          .plm-brand.chat .plm-brand-mark {
+            width: 104px;
+            height: 104px;
           }
           .plm-brand-text {
             font-size: 19px;
@@ -2357,21 +2385,25 @@ export default function Page() {
         }
 
         @media (max-width: 480px) {
+          .landing-root {
+            padding-top: max(140px, env(safe-area-inset-top) + 110px);
+          }
+
           .modal-card {
             padding: 24px 20px;
           }
 
           .plm-brand-mark {
-            width: 59px;
-            height: 59px;
+            width: 108px;
+            height: 108px;
           }
           .plm-brand-text {
             font-size: 18px;
           }
 
           .plm-brand.chat .plm-brand-mark {
-            width: 54px;
-            height: 54px;
+            width: 100px;
+            height: 100px;
           }
 
           .chat-input-inner {
