@@ -80,7 +80,7 @@ export default function Auth() {
           protocol LM
         </h1>
         <p style={{ color: '#A1A1AA', marginBottom: '25px', fontSize: '14px', lineHeight: '1.5' }}>
-          Access food safety compliance resources for Washtenaw County restaurants.
+          Access food safety compliance resources for Michigan restaurants.
         </p>
         
         <form onSubmit={handleLogin}>
