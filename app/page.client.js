@@ -29,13 +29,13 @@ const logger = {
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
@@ -45,7 +45,7 @@ const Icons = {
     </svg>
   ),
   X: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.1" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y1="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
@@ -56,7 +56,7 @@ const Icons = {
     </svg>
   ),
   Gear: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
       <path
         d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
         strokeLinecap="round"
@@ -73,11 +73,12 @@ const Icons = {
 
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
+  const size = isChat ? 64 : 82
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
         <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={138} height={138} priority />
+          <Image src={appleIcon} alt="" width={size} height={size} priority />
         </span>
         {!isChat && <span className="plm-brand-text">protocolLM</span>}
       </span>
@@ -94,6 +95,10 @@ function FooterLinks() {
       <span className="plm-footer-sep">·</span>
       <Link className="plm-footer-link" href="/privacy">
         Privacy
+      </Link>
+      <span className="plm-footer-sep">·</span>
+      <Link className="plm-footer-link" href="/contact">
+        Contact
       </Link>
       <span className="plm-footer-sep">·</span>
       <Link className="plm-footer-link" href="/contact">
@@ -1055,12 +1060,12 @@ export default function Page() {
         .plm-brand-inner {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
         }
 
         .plm-brand-mark {
-          width: 138px;
-          height: 138px;
+          width: 82px;
+          height: 82px;
           flex-shrink: 0;
         }
 
@@ -1075,8 +1080,8 @@ export default function Page() {
         }
 
         .plm-brand-text {
-          font-size: 21px;
-          font-weight: 600;
+          font-size: 18px;
+          font-weight: 650;
           letter-spacing: -0.02em;
           white-space: nowrap;
           overflow: hidden;
@@ -1088,8 +1093,8 @@ export default function Page() {
           gap: 0;
         }
         .plm-brand.chat .plm-brand-mark {
-          width: 112px;
-          height: 112px;
+          width: 64px;
+          height: 64px;
         }
 
         .desktop-only {
@@ -1099,10 +1104,58 @@ export default function Page() {
           display: none;
         }
 
+        /* Shared icon button styling (camera, settings, send) */
+        .plm-icon-btn {
+          width: 44px;
+          height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          cursor: pointer;
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          color: rgba(15, 23, 42, 0.92);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
+          backdrop-filter: blur(10px) saturate(125%);
+          -webkit-backdrop-filter: blur(10px) saturate(125%);
+          box-shadow: 0 14px 36px rgba(5, 7, 13, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease,
+            color 0.15s ease;
+          user-select: none;
+        }
+
+        .plm-icon-btn:hover {
+          transform: translateY(-1px);
+          border-color: rgba(15, 23, 42, 0.2);
+          box-shadow: 0 16px 42px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .plm-icon-btn:active {
+          transform: translateY(0px);
+        }
+
+        .plm-icon-btn:disabled {
+          opacity: 0.45;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+
+        .plm-icon-btn.primary {
+          color: #fff;
+          border-color: rgba(255, 255, 255, 0.28);
+          background: linear-gradient(180deg, rgba(95, 168, 255, 0.98), rgba(95, 168, 255, 0.78));
+          box-shadow: 0 16px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        .plm-icon-btn.primary:hover {
+          box-shadow: 0 18px 48px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
         /* Landing */
         .landing-root {
           position: relative;
-          padding-top: max(170px, env(safe-area-inset-top) + 140px);
+          padding-top: max(92px, env(safe-area-inset-top) + 72px);
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
@@ -1117,13 +1170,13 @@ export default function Page() {
           top: 0;
           left: 0;
           right: 0;
-          z-index: 10;
-          padding: max(18px, env(safe-area-inset-top) + 8px) max(22px, env(safe-area-inset-right) + 8px) 0
-            max(22px, env(safe-area-inset-left) + 8px);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82));
-          backdrop-filter: blur(10px) saturate(120%);
-          -webkit-backdrop-filter: blur(10px) saturate(120%);
-          box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16);
+          z-index: 30; /* stay put */
+          padding: max(10px, env(safe-area-inset-top) + 6px) max(18px, env(safe-area-inset-right) + 10px) 10px
+            max(18px, env(safe-area-inset-left) + 10px);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
+          backdrop-filter: blur(12px) saturate(125%);
+          -webkit-backdrop-filter: blur(12px) saturate(125%);
+          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
         }
 
         .landing-topbar-inner {
@@ -1133,7 +1186,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
+          gap: 12px;
           background: none;
           padding: 0;
         }
@@ -1145,14 +1198,14 @@ export default function Page() {
         }
 
         .btn-nav {
-          height: 36px;
+          height: 34px;
           padding: 0 14px;
           background: rgba(255, 255, 255, 0.9);
           color: #0b1220;
           border: 1px solid rgba(15, 23, 42, 0.12);
-          border-radius: var(--radius-sm);
+          border-radius: var(--radius-full);
           font-size: 13px;
-          font-weight: 600;
+          font-weight: 650;
           cursor: pointer;
           transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
           font-family: inherit;
@@ -1196,7 +1249,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 40px 24px 0;
+          padding: 34px 24px 0;
           min-height: 0;
         }
 
@@ -1226,7 +1279,6 @@ export default function Page() {
           gap: 14px;
         }
 
-        /* NEW: header font via Outfit + darker legible color */
         .hero-title {
           font-size: clamp(28px, 5vw, 42px);
           font-weight: 800;
@@ -1253,7 +1305,6 @@ export default function Page() {
           margin-top: 8px;
         }
 
-        /* FIX: this was too light on the light hero card */
         .hero-arrow-text {
           white-space: nowrap;
           color: rgba(15, 23, 42, 0.82);
@@ -1387,495 +1438,7 @@ export default function Page() {
           color: var(--ink-3);
         }
 
-        /* Modals */
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 1000;
-          background: radial-gradient(120% 70% at 12% 10%, rgba(255, 255, 255, 0.08), transparent 50%),
-            radial-gradient(120% 70% at 88% 0%, rgba(95, 168, 255, 0.12), transparent 52%),
-            rgba(5, 7, 13, 0.7);
-          backdrop-filter: blur(12px) saturate(120%);
-          -webkit-backdrop-filter: blur(12px) saturate(120%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-          animation: fade-in 0.15s ease;
-        }
-
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        .modal-container {
-          width: 100%;
-          max-width: 360px;
-          animation: modal-up 0.2s ease;
-        }
-
-        @keyframes modal-up {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .modal-card {
-          position: relative;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          border-radius: 20px;
-          padding: 30px;
-          background: #f8fafc;
-          box-shadow: 0 28px 76px rgba(0, 0, 0, 0.12);
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-        }
-
-        .modal-header {
-          margin-bottom: 18px;
-        }
-
-        .modal-title {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: #0b1220;
-        }
-
-        .modal-close {
-          position: absolute;
-          top: 16px;
-          right: 16px;
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: none;
-          color: var(--ink-2);
-          cursor: pointer;
-          border-radius: var(--radius-sm);
-          transition: color 0.15s ease;
-        }
-
-        .modal-close:hover {
-          color: var(--ink-0);
-        }
-
-        .modal-form {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .form-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--ink-2);
-          letter-spacing: 0.02em;
-          text-transform: uppercase;
-        }
-
-        .form-input-wrap {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: #ffffff;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          border-radius: var(--radius-sm);
-          padding: 0 10px;
-          box-shadow: none;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-          overflow: hidden;
-        }
-
-        .form-input-wrap:focus-within {
-          border-color: rgba(15, 23, 42, 0.28);
-          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
-        }
-
-        .form-input {
-          width: 100%;
-          height: 44px;
-          background: transparent;
-          border: none;
-          color: #0b1220;
-          font-size: 14px;
-          font-weight: 500;
-          font-family: inherit;
-          padding: 0 2px;
-        }
-
-        .form-input::placeholder {
-          color: rgba(15, 23, 42, 0.4);
-        }
-
-        .form-input:focus {
-          outline: none;
-        }
-
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover,
-        input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #0f172a;
-          -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
-          box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
-          transition: background-color 9999s ease-out 0s;
-          caret-color: #0f172a;
-        }
-
-        .form-toggle-vis {
-          background: none;
-          border: none;
-          color: #475569;
-          font-size: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          padding: 6px;
-          margin-right: -6px;
-        }
-
-        .form-toggle-vis:hover {
-          color: #0b1220;
-        }
-
-        .btn-submit {
-          margin-top: 4px;
-          height: 46px;
-          width: 100%;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          box-shadow: 0 12px 30px rgba(95, 168, 255, 0.24);
-          transition: background 0.15s ease, transform 0.1s ease;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          background: var(--accent-hover);
-          transform: translateY(-1px);
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-
-        .spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid var(--border-subtle);
-          border-top-color: var(--accent);
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-
-        .modal-message {
-          margin-top: 12px;
-          padding: 10px 12px;
-          border-radius: var(--radius-sm);
-          font-size: 13px;
-          line-height: 1.4;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          background: rgba(15, 23, 42, 0.04);
-          color: #0b1220;
-        }
-
-        .modal-message.ok {
-          color: #34d399;
-          border-color: rgba(52, 211, 153, 0.35);
-          background: rgba(52, 211, 153, 0.08);
-        }
-
-        .modal-message.err {
-          color: #f87171;
-          border-color: rgba(248, 113, 113, 0.35);
-          background: rgba(248, 113, 113, 0.08);
-        }
-
-        .modal-footer {
-          margin-top: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          align-items: center;
-          text-align: center;
-        }
-
-        .modal-link {
-          background: none;
-          border: none;
-          color: var(--accent);
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          padding: 0;
-          text-decoration: none;
-        }
-
-        .modal-link:hover {
-          color: var(--accent-hover);
-        }
-
-        .modal-footer .modal-link {
-          color: var(--ink-1);
-          font-weight: 600;
-        }
-
-        .modal-footer .modal-link:hover {
-          color: var(--ink-0);
-        }
-
-        /* Auth modal refinements */
-        .auth-modal {
-          background: #ffffff;
-          border-color: rgba(15, 23, 42, 0.12);
-          box-shadow: 0 22px 60px rgba(0, 0, 0, 0.12);
-        }
-
-        .auth-modal .modal-title {
-          font-size: 22px;
-        }
-
-        .auth-modal .form-group {
-          gap: 8px;
-        }
-
-        .auth-modal .form-label {
-          color: rgba(15, 23, 42, 0.6);
-          letter-spacing: 0.05em;
-        }
-
-        .auth-modal .form-input-wrap {
-          background: #f1f5f9;
-          border-radius: 12px;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          padding: 0 12px;
-        }
-
-        .auth-modal .form-input-wrap:focus-within {
-          border-color: var(--accent);
-          box-shadow: 0 0 0 3px var(--accent-dim);
-        }
-
-        .auth-modal .form-input {
-          height: 46px;
-          color: #0b1220;
-          font-size: 15px;
-        }
-
-        .auth-modal .form-input::placeholder {
-          color: rgba(15, 23, 42, 0.5);
-        }
-
-        .auth-modal .btn-submit {
-          height: 48px;
-          border-radius: 12px;
-          font-size: 15px;
-        }
-
-        .auth-modal .modal-footer .modal-link {
-          color: #475569;
-        }
-
-        .auth-modal .modal-footer .modal-link:hover {
-          color: #0b1220;
-        }
-
-        /* Pricing modal polish - align with info pages glass look */
-        .pricing-modal {
-          padding: 32px;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
-          border: 1px solid rgba(255, 255, 255, 0.22);
-          border-radius: 22px;
-          max-width: 540px;
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.45),
-            0 24px 70px rgba(5, 7, 13, 0.34);
-          backdrop-filter: blur(16px) saturate(135%);
-          -webkit-backdrop-filter: blur(16px) saturate(135%);
-        }
-
-        .pricing-container {
-          max-width: 540px;
-          max-height: 90vh;
-          overflow-y: auto;
-          padding: 6px;
-        }
-
-        .pricing-header {
-          text-align: center;
-          margin-bottom: 22px;
-        }
-
-        .pricing-title {
-          margin: 0;
-          font-size: 28px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          color: var(--ink-0);
-        }
-
-        .pricing-card-shell {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 18px;
-          padding: 28px;
-          color: var(--ink-0);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.48),
-            0 22px 60px rgba(5, 7, 13, 0.3);
-        }
-
-        .pricing-price-block {
-          text-align: center;
-          margin-bottom: 20px;
-        }
-
-        .pricing-price {
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 8px;
-          margin-bottom: 10px;
-        }
-
-        .pricing-price-figure {
-          font-size: 48px;
-          font-weight: 800;
-          letter-spacing: -0.01em;
-        }
-
-        .pricing-price-period {
-          font-size: 16px;
-          color: rgba(246, 249, 255, 0.7);
-        }
-
-        .pricing-subtitle {
-          font-size: 13px;
-          color: rgba(246, 249, 255, 0.82);
-        }
-
-        .pricing-cta {
-          width: 100%;
-          height: 50px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          background: linear-gradient(120deg, #7bc2ff, #5fa8ff);
-          color: #05070d;
-          border: 1px solid rgba(255, 255, 255, 0.45);
-          border-radius: 9999px;
-          font-size: 15px;
-          font-weight: 700;
-          cursor: pointer;
-          margin-bottom: 20px;
-          box-shadow: 0 18px 44px rgba(95, 168, 255, 0.32);
-          transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
-        }
-
-        .pricing-cta:hover:not(:disabled) {
-          transform: translateY(-1px);
-          filter: brightness(1.05);
-        }
-
-        .pricing-cta:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-
-        .pricing-features {
-          border-top: 1px solid rgba(255, 255, 255, 0.14);
-          padding-top: 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .pricing-feature {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          font-size: 13px;
-          color: rgba(246, 249, 255, 0.88);
-          line-height: 1.6;
-        }
-
-        .pricing-feature-check {
-          color: var(--accent);
-          font-weight: 700;
-          margin-top: 1px;
-        }
-
-        .pricing-feature-text {
-          flex: 1;
-        }
-
-        .pricing-note {
-          margin-top: 18px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.22);
-          border-radius: 14px;
-          padding: 16px;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        .pricing-note-title {
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--accent);
-          margin-bottom: 8px;
-        }
-
-        .pricing-note-text {
-          font-size: 13px;
-          color: rgba(246, 249, 255, 0.84);
-          line-height: 1.55;
-          margin: 0;
-        }
-
-        .pricing-legal {
-          font-size: 11px;
-          color: rgba(246, 249, 255, 0.66);
-          margin-top: 16px;
-          text-align: center;
-          line-height: 1.5;
-        }
-
-        .pricing-legal a {
-          color: var(--accent);
-          text-decoration: none;
-          font-weight: 600;
-        }
-
+        /* Modals ... (unchanged below) */
         /* Chat */
         .chat-root {
           position: relative;
@@ -1897,7 +1460,6 @@ export default function Page() {
           }
         }
 
-        /* TOP BAR: remove the black strip entirely (logo + gear float on background) */
         .chat-topbar {
           position: fixed;
           top: 0;
@@ -1921,7 +1483,7 @@ export default function Page() {
         .chat-top-actions {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
         }
 
         .chat-settings-wrap {
@@ -1930,28 +1492,9 @@ export default function Page() {
           align-items: center;
         }
 
+        /* Settings button now uses unified icon button */
         .chat-settings-btn {
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #0f172a;
-          border: 1px solid #0b1220;
-          border-radius: 12px;
-          color: #f8fafc;
-          cursor: pointer;
-          transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-        }
-
-        .chat-settings-btn:hover {
-          transform: translateY(-1px);
-          background: #111827;
-          border-color: #0f172a;
-          box-shadow: 0 14px 32px rgba(0, 0, 0, 0.26);
+          /* keep class for targeting, but style comes from .plm-icon-btn */
         }
 
         .chat-settings-menu {
@@ -1995,7 +1538,6 @@ export default function Page() {
           margin: 6px 2px;
         }
 
-        /* Messages fill the screen; offset top so content doesn't sit under logo */
         .chat-messages {
           flex: 1;
           min-height: 0;
@@ -2003,7 +1545,7 @@ export default function Page() {
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
-          padding: calc(max(110px, env(safe-area-inset-top) + 100px)) 24px 12px;
+          padding: calc(max(98px, env(safe-area-inset-top) + 88px)) 24px 12px;
           background: transparent;
         }
 
@@ -2091,7 +1633,6 @@ export default function Page() {
           font-style: italic;
         }
 
-        /* BOTTOM BAR: remove the black strip; keep ONLY the glass dock */
         .chat-input-area {
           flex-shrink: 0;
           position: sticky;
@@ -2167,29 +1708,10 @@ export default function Page() {
           gap: 10px;
         }
 
+        /* Camera button now uses unified icon button */
         .chat-camera-btn {
-          position: relative;
-          width: 44px;
-          height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #0f172a;
-          border: 1px solid #0f172a;
-          border-radius: var(--radius-md);
-          color: #f8fafc;
-          cursor: pointer;
+          /* keep class for semantics; style comes from .plm-icon-btn */
           flex-shrink: 0;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
-          overflow: visible;
-          box-shadow: 0 10px 26px rgba(5, 7, 13, 0.25);
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-        }
-
-        .chat-camera-btn:hover {
-          border-color: #0b1220;
-          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.18);
         }
 
         .chat-input-wrapper {
@@ -2234,38 +1756,17 @@ export default function Page() {
           outline: none;
         }
 
+        /* Send button now uses unified icon button + primary variant */
         .chat-send-btn {
-          width: 46px;
-          height: 46px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #0f172a;
-          border: 1px solid #0b1220;
-          color: #f8fafc;
-          cursor: pointer;
+          /* keep class; style from .plm-icon-btn */
           flex-shrink: 0;
-          border-radius: 12px;
-          transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
-          box-shadow: 0 10px 28px rgba(5, 7, 13, 0.26);
-        }
-
-        .chat-send-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
-          filter: none;
-          box-shadow: 0 12px 30px rgba(5, 7, 13, 0.3);
-        }
-        .chat-send-btn:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-          box-shadow: none;
         }
 
         .chat-send-spinner {
           width: 16px;
           height: 16px;
-          border: 2px solid var(--border-subtle);
-          border-top-color: var(--accent);
+          border: 2px solid rgba(255, 255, 255, 0.35);
+          border-top-color: #ffffff;
           border-radius: var(--radius-full);
           animation: spin 0.6s linear infinite;
         }
@@ -2286,7 +1787,7 @@ export default function Page() {
         /* Responsive */
         @media (max-width: 768px) {
           .landing-root {
-            padding-top: max(150px, env(safe-area-inset-top) + 120px);
+            padding-top: max(86px, env(safe-area-inset-top) + 66px);
           }
 
           .hero-cta-row {
@@ -2319,7 +1820,7 @@ export default function Page() {
           }
 
           .chat-messages {
-            padding: calc(max(100px, env(safe-area-inset-top) + 92px)) 16px 10px;
+            padding: calc(max(92px, env(safe-area-inset-top) + 84px)) 16px 10px;
           }
 
           .chat-input-inner {
@@ -2332,10 +1833,10 @@ export default function Page() {
             gap: 10px;
           }
 
-          .chat-camera-btn,
-          .chat-send-btn {
+          .plm-icon-btn {
             width: 42px;
             height: 42px;
+            border-radius: 13px;
           }
 
           .chat-bubble {
@@ -2347,8 +1848,8 @@ export default function Page() {
           }
 
           .landing-topbar {
-            padding: max(14px, env(safe-area-inset-top) + 6px) max(14px, env(safe-area-inset-right) + 6px) 0
-              max(14px, env(safe-area-inset-left) + 6px);
+            padding: max(10px, env(safe-area-inset-top) + 6px) max(14px, env(safe-area-inset-right) + 8px) 10px
+              max(14px, env(safe-area-inset-left) + 8px);
             gap: 10px;
           }
 
@@ -2361,49 +1862,47 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 120px;
-            height: 120px;
+            width: 72px;
+            height: 72px;
           }
+
           .plm-brand.chat .plm-brand-mark {
-            width: 104px;
-            height: 104px;
+            width: 60px;
+            height: 60px;
           }
+
           .plm-brand-text {
-            font-size: 19px;
+            font-size: 17px;
             max-width: 220px;
           }
 
           .landing-signin-btn {
-            height: auto !important;
-            padding: 0 !important;
-            margin-right: 6px;
+            height: 32px !important;
+            padding: 0 12px !important;
+            margin-right: 0;
             font-size: 12px !important;
-            font-weight: 600 !important;
-            letter-spacing: 0.04em !important;
+            font-weight: 650 !important;
+            letter-spacing: 0.02em !important;
             line-height: 1 !important;
           }
         }
 
         @media (max-width: 480px) {
           .landing-root {
-            padding-top: max(140px, env(safe-area-inset-top) + 110px);
-          }
-
-          .modal-card {
-            padding: 24px 20px;
+            padding-top: max(82px, env(safe-area-inset-top) + 62px);
           }
 
           .plm-brand-mark {
-            width: 108px;
-            height: 108px;
+            width: 68px;
+            height: 68px;
           }
           .plm-brand-text {
-            font-size: 18px;
+            font-size: 16px;
           }
 
           .plm-brand.chat .plm-brand-mark {
-            width: 100px;
-            height: 100px;
+            width: 58px;
+            height: 58px;
           }
 
           .chat-input-inner {
@@ -2414,10 +1913,10 @@ export default function Page() {
             padding: 12px 10px;
           }
 
-          .chat-camera-btn,
-          .chat-send-btn {
+          .plm-icon-btn {
             width: 40px;
             height: 40px;
+            border-radius: 12px;
           }
 
           .chat-textarea {
@@ -2443,7 +1942,12 @@ export default function Page() {
         selectedPriceId={selectedPriceId}
       />
 
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2461,11 +1965,10 @@ export default function Page() {
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Chat actions">
-                  {/* Removed the Pro/Trial pill entirely */}
                   <div className="chat-settings-wrap" ref={settingsRef}>
                     <button
                       type="button"
-                      className="chat-settings-btn"
+                      className="plm-icon-btn chat-settings-btn"
                       onClick={() => setShowSettingsMenu((v) => !v)}
                       aria-expanded={showSettingsMenu}
                       aria-label="Settings"
@@ -2510,15 +2013,24 @@ export default function Page() {
                 </nav>
               </header>
 
-              <div ref={scrollRef} onScroll={handleScroll} className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}>
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+              >
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
-                    <p className="chat-empty-text">Upload a photo or ask a question about Washtenaw County food safety regulations.</p>
+                    <p className="chat-empty-text">
+                      Upload a photo or ask a question about Washtenaw County food safety regulations.
+                    </p>
                   </div>
                 ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div key={idx} className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}>
+                      <div
+                        key={idx}
+                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                      >
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
                           {msg.image && (
                             <div className="chat-bubble-image">
@@ -2549,16 +2061,32 @@ export default function Page() {
                           <Icons.Camera />
                         </span>
                         <span>Image attached</span>
-                        <button onClick={() => setSelectedImage(null)} className="chat-attachment-remove" aria-label="Remove" type="button">
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="chat-attachment-remove"
+                          aria-label="Remove"
+                          type="button"
+                        >
                           <Icons.X />
                         </button>
                       </LiquidGlass>
                     )}
 
                     <div className="chat-input-row">
-                      <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleImageChange}
+                      />
 
-                      <button onClick={() => fileInputRef.current?.click()} className="chat-camera-btn" aria-label="Upload photo" type="button">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="plm-icon-btn chat-camera-btn"
+                        aria-label="Upload photo"
+                        type="button"
+                      >
                         <Icons.Camera />
                       </button>
 
@@ -2588,7 +2116,7 @@ export default function Page() {
                           type="button"
                           onClick={handleSend}
                           disabled={(!input.trim() && !selectedImage) || isSending}
-                          className="chat-send-btn"
+                          className="plm-icon-btn primary chat-send-btn"
                           aria-label="Send"
                         >
                           {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
