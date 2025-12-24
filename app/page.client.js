@@ -46,7 +46,7 @@ const Icons = {
   ),
   X: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.1" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="18" y1="6" x2="6" y1="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
@@ -74,9 +74,8 @@ const Icons = {
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
 
-  // ✅ Keep logo nice and big, but reduce just enough so the topbar isn't massive.
-  // Landing: ~11% smaller than 140. Chat stays as-is.
-  const size = isChat ? 110 : 124
+  // ✅ Increase logo size ~70% across desktop + mobile
+  const size = isChat ? 110 : 140
 
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
@@ -1065,13 +1064,13 @@ export default function Page() {
         .plm-brand-inner {
           display: flex;
           align-items: center;
-          gap: 10px; /* ✅ slightly tighter so mobile spacing isn't weird */
+          gap: 12px;
         }
 
-        /* ✅ Shrink header footprint without killing the vibe */
+        /* ✅ Larger logo */
         .plm-brand-mark {
-          width: 124px; /* matches BrandLink landing size */
-          height: 124px;
+          width: 140px;
+          height: 140px;
           flex-shrink: 0;
         }
 
@@ -1161,8 +1160,7 @@ export default function Page() {
         /* Landing */
         .landing-root {
           position: relative;
-          /* ✅ shrink the reserved space so the hero isn't pushed down */
-          padding-top: max(66px, env(safe-area-inset-top) + 54px);
+          padding-top: max(92px, env(safe-area-inset-top) + 72px);
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
@@ -1178,8 +1176,7 @@ export default function Page() {
           left: 0;
           right: 0;
           z-index: 30; /* stay put */
-          /* ✅ reduce topbar thickness ~30–40% */
-          padding: max(6px, env(safe-area-inset-top) + 4px) max(18px, env(safe-area-inset-right) + 10px) 6px
+          padding: max(10px, env(safe-area-inset-top) + 6px) max(18px, env(safe-area-inset-right) + 10px) 10px
             max(18px, env(safe-area-inset-left) + 10px);
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
           backdrop-filter: blur(12px) saturate(125%);
@@ -1294,6 +1291,7 @@ export default function Page() {
           margin: 0;
         }
 
+        /* ✅ Only break line on mobile so: "Catch Violations," then "Not Fines." */
         .hero-break {
           display: none;
         }
@@ -1306,6 +1304,7 @@ export default function Page() {
           max-width: 52ch;
         }
 
+        /* ✅ Keep CTA in one row on mobile + desktop */
         .hero-cta-row {
           display: flex;
           align-items: center;
@@ -1314,7 +1313,7 @@ export default function Page() {
           flex-wrap: nowrap;
           flex-direction: row;
           margin-top: 14px;
-          padding-top: 6px;
+          padding-top: 6px; /* a little buffer from body text */
         }
 
         .hero-arrow-text {
@@ -1422,6 +1421,7 @@ export default function Page() {
           transform: translateY(0);
         }
 
+        /* ✅ Footer links centered + darker gray so visible */
         .plm-footer-links {
           position: absolute;
           bottom: max(18px, env(safe-area-inset-bottom));
@@ -1496,17 +1496,305 @@ export default function Page() {
           -webkit-backdrop-filter: none;
         }
 
+        .chat-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .chat-settings-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .chat-settings-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 180px;
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          border-radius: var(--radius-md);
+          padding: 8px;
+          box-shadow: 0 16px 48px rgba(5, 7, 13, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          backdrop-filter: blur(14px) saturate(120%);
+          -webkit-backdrop-filter: blur(14px) saturate(120%);
+          animation: dropdown-in 0.15s ease;
+          z-index: 50;
+        }
+
+        .chat-settings-item {
+          width: 100%;
+          text-align: left;
+          padding: 10px 10px;
+          background: transparent;
+          border: none;
+          border-radius: var(--radius-sm);
+          color: var(--ink-0);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background 0.15s ease;
+        }
+
+        .chat-settings-item:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-settings-sep {
+          height: 1px;
+          background: var(--border-subtle);
+          margin: 6px 2px;
+        }
+
+        .chat-messages {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          padding: calc(max(98px, env(safe-area-inset-top) + 88px)) 24px 12px;
+          background: transparent;
+        }
+
+        .chat-messages.empty {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .chat-empty-text {
+          font-size: 14px;
+          color: rgba(15, 23, 42, 0.7);
+          line-height: 1.6;
+          margin: 0;
+          text-align: center;
+          background: rgba(255, 255, 255, 0.18);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          padding: 12px 14px;
+          border-radius: 14px;
+          backdrop-filter: blur(16px) saturate(120%);
+          -webkit-backdrop-filter: blur(16px) saturate(120%);
+        }
+
+        .chat-history {
+          max-width: 760px;
+          margin: 0 auto;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+          padding-top: 16px;
+          padding-bottom: 6px;
+        }
+
+        .chat-message {
+          display: flex;
+          width: 100%;
+          align-items: flex-start;
+        }
+        .chat-message-user {
+          justify-content: flex-end;
+        }
+        .chat-message-assistant {
+          justify-content: flex-start;
+        }
+
+        .chat-bubble {
+          max-width: 75%;
+          font-size: 15px;
+          line-height: 1.7;
+          display: block;
+        }
+
+        .chat-bubble-user {
+          color: var(--ink-0);
+        }
+        .chat-bubble-assistant {
+          color: rgba(15, 23, 42, 0.86);
+        }
+
+        .chat-bubble-image {
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          margin-bottom: 12px;
+          display: inline-block;
+        }
+
+        .chat-bubble-image img {
+          display: block;
+          max-width: 100%;
+          max-height: 280px;
+          object-fit: contain;
+        }
+
+        .chat-content {
+          display: block;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+
+        .chat-thinking {
+          display: block;
+          color: rgba(15, 23, 42, 0.7);
+          font-style: italic;
+        }
+
+        .chat-input-area {
+          flex-shrink: 0;
+          position: sticky;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: transparent;
+          border-top: none;
+          z-index: 15;
+        }
+
+        .chat-input-inner {
+          max-width: 840px;
+          width: min(100%, 920px);
+          margin: 0 auto;
+          padding: 12px 24px;
+          padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
+        }
+
+        .chat-dock {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: var(--radius-lg);
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          box-shadow: 0 20px 55px rgba(0, 0, 0, 0.12);
+        }
+
+        .chat-dock .glass__innerHighlight,
+        .chat-dock .glass__shine,
+        .chat-dock .glass__grain {
+          display: none;
+        }
+
+        .chat-attachment {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 12px;
+          border-radius: var(--radius-sm);
+          margin-bottom: 12px;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.86);
+        }
+
+        .chat-attachment-icon {
+          color: var(--accent);
+          display: flex;
+        }
+
+        .chat-attachment-remove {
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: none;
+          color: rgba(15, 23, 42, 0.72);
+          cursor: pointer;
+        }
+
+        .chat-attachment-remove:hover {
+          color: rgba(15, 23, 42, 0.9);
+        }
+
+        .chat-input-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 10px;
+        }
+
+        .chat-input-wrapper {
+          flex: 1;
+          display: flex;
+          align-items: flex-end;
+          background: #ffffff;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          border-radius: var(--radius-md);
+          box-shadow: none;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          min-width: 0;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          min-height: 48px;
+        }
+
+        .chat-input-wrapper:focus-within {
+          border-color: rgba(15, 23, 42, 0.28);
+          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+        }
+
+        .chat-textarea {
+          flex: 1;
+          min-height: 44px;
+          max-height: 160px;
+          padding: 12px 14px;
+          background: transparent;
+          border: none;
+          color: rgba(15, 23, 42, 0.96);
+          font-size: 16px;
+          line-height: 1.4;
+          resize: none;
+          font-family: inherit;
+          min-width: 0;
+        }
+
+        .chat-textarea::placeholder {
+          color: rgba(15, 23, 42, 0.7);
+        }
+        .chat-textarea:focus {
+          outline: none;
+        }
+
+        .chat-send-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.35);
+          border-top-color: #ffffff;
+          border-radius: var(--radius-full);
+          animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .chat-disclaimer {
+          text-align: center;
+          font-size: 11px;
+          color: rgba(15, 23, 42, 0.72);
+          margin-top: 8px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
           .landing-root {
-            /* ✅ shrink reserved top space on mobile too */
-            padding-top: max(62px, env(safe-area-inset-top) + 50px);
+            padding-top: max(86px, env(safe-area-inset-top) + 66px);
           }
 
+          /* ✅ Show title line-break only on mobile */
           .hero-break {
             display: inline;
           }
 
+          /* ✅ Keep CTA in one row on mobile */
           .hero-cta-row {
             gap: 10px;
             margin-top: 12px;
@@ -1528,9 +1816,41 @@ export default function Page() {
             padding: 0 16px;
           }
 
+          .chat-topbar {
+            padding: max(12px, env(safe-area-inset-top) + 8px) max(14px, env(safe-area-inset-right) + 10px) 0
+              max(14px, env(safe-area-inset-left) + 10px);
+          }
+
+          .chat-messages {
+            padding: calc(max(92px, env(safe-area-inset-top) + 84px)) 16px 10px;
+          }
+
+          .chat-input-inner {
+            padding: 10px 14px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+          }
+
+          .chat-dock {
+            padding: 12px 12px;
+            gap: 10px;
+          }
+
+          .plm-icon-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+          }
+
+          .chat-bubble {
+            max-width: 85%;
+          }
+
+          .chat-empty-text {
+            font-size: 13px;
+          }
+
           .landing-topbar {
-            /* ✅ thinner on mobile */
-            padding: max(6px, env(safe-area-inset-top) + 4px) max(14px, env(safe-area-inset-right) + 8px) 6px
+            padding: max(10px, env(safe-area-inset-top) + 6px) max(14px, env(safe-area-inset-right) + 8px) 10px
               max(14px, env(safe-area-inset-left) + 8px);
             gap: 10px;
           }
@@ -1543,19 +1863,15 @@ export default function Page() {
             padding: 28px 24px;
           }
 
-          /* ✅ keep logo big, but stop it from forcing a huge bar */
+          /* ✅ Larger logo on mobile as well */
           .plm-brand-mark {
-            width: 112px;
-            height: 112px;
+            width: 120px;
+            height: 120px;
           }
 
           .plm-brand.chat .plm-brand-mark {
             width: 102px;
             height: 102px;
-          }
-
-          .plm-brand-inner {
-            gap: 8px; /* ✅ fix weird spacing */
           }
 
           .plm-brand-text {
@@ -1576,29 +1892,49 @@ export default function Page() {
 
         @media (max-width: 480px) {
           .landing-root {
-            padding-top: max(58px, env(safe-area-inset-top) + 46px);
+            padding-top: max(82px, env(safe-area-inset-top) + 62px);
           }
 
-          /* ✅ option A: tighten in-row spacing */
           .plm-brand-mark {
-            width: 104px;
-            height: 104px;
+            width: 110px;
+            height: 110px;
           }
 
           .plm-brand-text {
             font-size: 16px;
           }
 
-          /* ✅ option B (your suggestion): stack on tiny screens so it looks intentional */
-          .plm-brand.landing .plm-brand-inner {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 4px;
-          }
-
           .plm-brand.chat .plm-brand-mark {
             width: 96px;
             height: 96px;
+          }
+
+          .chat-input-inner {
+            padding: 10px 12px;
+          }
+
+          .chat-dock {
+            padding: 12px 10px;
+          }
+
+          .plm-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+          }
+
+          .chat-textarea {
+            font-size: 15px;
+            padding: 10px 12px;
+          }
+
+          /* Keep CTA row from wrapping weirdly on tiny screens */
+          .hero-cta-row {
+            gap: 8px;
+          }
+
+          .hero-arrow-text {
+            font-size: 12.5px;
           }
         }
 
