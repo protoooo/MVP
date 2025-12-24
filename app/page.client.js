@@ -21,6 +21,11 @@ const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500
 
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
+// Pricing constants
+const PRICE_PER_LOCATION = 50
+const MIN_MULTI_LOCATIONS = 2
+const MAX_MULTI_LOCATIONS = 500
+
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
@@ -384,7 +389,6 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
 
   const priceId = UNLIMITED_MONTHLY
   const planName = 'Unlimited'
-  const pricePerLocation = 50
 
   const handleMultiLocationCheckout = async () => {
     if (multiLocationLoading) return
@@ -425,7 +429,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
                 <span className="pricing-plan-badge">Recommended</span>
               </div>
               <div className="pricing-price">
-                <span className="pricing-price-amount">${pricePerLocation}</span>
+                <span className="pricing-price-amount">${PRICE_PER_LOCATION}</span>
                 <span className="pricing-price-term">/ month per location</span>
               </div>
             </div>
@@ -504,28 +508,28 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
                     <button 
                       type="button" 
                       className="multi-location-btn"
-                      onClick={() => setLocationCount(Math.max(2, locationCount - 1))}
+                      onClick={() => setLocationCount(Math.max(MIN_MULTI_LOCATIONS, locationCount - 1))}
                     >
                       −
                     </button>
                     <input
                       type="number"
-                      min="2"
-                      max="500"
+                      min={MIN_MULTI_LOCATIONS}
+                      max={MAX_MULTI_LOCATIONS}
                       value={locationCount}
-                      onChange={(e) => setLocationCount(Math.max(2, Math.min(500, parseInt(e.target.value) || 2)))}
+                      onChange={(e) => setLocationCount(Math.max(MIN_MULTI_LOCATIONS, Math.min(MAX_MULTI_LOCATIONS, parseInt(e.target.value) || MIN_MULTI_LOCATIONS)))}
                       className="multi-location-input"
                     />
                     <button 
                       type="button" 
                       className="multi-location-btn"
-                      onClick={() => setLocationCount(Math.min(500, locationCount + 1))}
+                      onClick={() => setLocationCount(Math.min(MAX_MULTI_LOCATIONS, locationCount + 1))}
                     >
                       +
                     </button>
                   </div>
                   <div className="multi-location-total">
-                    Total: ${pricePerLocation * locationCount}/month
+                    Total: ${PRICE_PER_LOCATION * locationCount}/month
                   </div>
                 </div>
 
@@ -591,6 +595,21 @@ function safeTrim(s) {
  * - "VIOLATIONS:" -> red bold header with bullet points
  * - "NEED INFO:" -> amber header with questions
  */
+
+// Helper to parse bullet point lines from text
+function parseBulletItems(text, skipLines = 1) {
+  const lines = text.split('\n').filter(l => l.trim())
+  const items = []
+  
+  for (let i = skipLines; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (line.startsWith('•') || line.startsWith('-')) {
+      items.push(line.replace(/^[•\-]\s*/, ''))
+    }
+  }
+  return items
+}
+
 function formatAssistantContent(content) {
   const text = safeTrim(content)
   if (!text) return null
@@ -606,25 +625,19 @@ function formatAssistantContent(content) {
   
   // Check for "VIOLATIONS:" pattern
   if (/^VIOLATIONS:/i.test(text)) {
-    const lines = text.split('\n').filter(l => l.trim())
-    const violations = []
-    
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (line.startsWith('•') || line.startsWith('-')) {
-        const content = line.replace(/^[•\-]\s*/, '')
-        // Try to split by "FIX:" 
-        const fixMatch = content.match(/^(.+?)\.\s*FIX:\s*(.+)$/i)
-        if (fixMatch) {
-          violations.push({
-            issue: fixMatch[1].trim(),
-            fix: fixMatch[2].trim()
-          })
-        } else {
-          violations.push({ issue: content, fix: null })
+    const items = parseBulletItems(text, 1)
+    const violations = items.map(item => {
+      // Try to split by "FIX:"
+      const fixMatch = item.match(/^(.+?)\.\s*FIX:\s*(.+)$/i)
+      if (fixMatch) {
+        return {
+          issue: fixMatch[1].trim(),
+          fix: fixMatch[2].trim()
         }
+      } else {
+        return { issue: item, fix: null }
       }
-    }
+    })
     
     return (
       <div>
@@ -646,15 +659,7 @@ function formatAssistantContent(content) {
   
   // Check for "NEED INFO:" pattern
   if (/^NEED INFO:/i.test(text)) {
-    const lines = text.split('\n').filter(l => l.trim())
-    const questions = []
-    
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (line.startsWith('•') || line.startsWith('-')) {
-        questions.push(line.replace(/^[•\-]\s*/, ''))
-      }
-    }
+    const questions = parseBulletItems(text, 1)
     
     return (
       <div>

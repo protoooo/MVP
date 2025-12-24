@@ -14,8 +14,10 @@ export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Multi-location pricing: $50/month per location
+// Multi-location pricing constants
 const PRICE_PER_LOCATION = 50
+const MIN_LOCATIONS = 2
+const MAX_LOCATIONS = 500
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
 function getClientIp(request) {
@@ -52,12 +54,12 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const { locationCount, captchaToken, organizationName } = body
 
-    // Validate location count (minimum 2 for multi-location, maximum 500)
+    // Validate location count
     const count = parseInt(locationCount, 10)
-    if (!Number.isFinite(count) || count < 2 || count > 500) {
+    if (!Number.isFinite(count) || count < MIN_LOCATIONS || count > MAX_LOCATIONS) {
       logger.security('Invalid location count attempted', { locationCount, ip })
       return NextResponse.json({ 
-        error: 'Location count must be between 2 and 500' 
+        error: `Location count must be between ${MIN_LOCATIONS} and ${MAX_LOCATIONS}` 
       }, { status: 400 })
     }
 
