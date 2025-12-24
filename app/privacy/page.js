@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
       <div className="info-section">
         <h2 className="info-section-title">2. LLM Processing & Third-Party Services</h2>
         <p>
-          protocolLM uses large language model services provided by <strong>Anthropic</strong> (Claude) for text analysis 
+          protocolLM uses large language model services provided by <strong>Cohere</strong> (Cohere) for text analysis 
           and response generation, and <strong>Cohere</strong> for document search and embedding. When you use our Service:
         </p>
         <ul>
