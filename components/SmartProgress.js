@@ -14,7 +14,7 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
   })
 
   const config = useMemo(() => {
-    // vision feels slower — give it a lower “cap” early so it feels honest
+    // vision feels slower — give it a lower "cap" early so it feels honest
     return mode === 'vision'
       ? { baseCap: 88, finalCap: 94, k: 0.030 }
       : { baseCap: 90, finalCap: 96, k: 0.040 }
@@ -35,7 +35,7 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
       refs.current.timer = setInterval(() => {
         const elapsed = (Date.now() - refs.current.startedAt) / 1000
 
-        // cap rises slowly over time so it feels like it’s “getting closer”
+        // cap rises slowly over time so it feels like it's "getting closer"
         const cap =
           elapsed < 1.5
             ? config.baseCap - 8
@@ -55,7 +55,7 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
         // phase text driven by progress (no jitter)
         const p = pctInt
         if (p < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading question…')
-        else if (p < 45) setPhase('Searching Washtenaw excerpts…')
+        else if (p < 45) setPhase('Searching Michigan excerpts…')
         else if (p < 70) setPhase('Cross-checking requirements…')
         else if (p < 90) setPhase('Building the best answer…')
         else setPhase('Finalizing…')
