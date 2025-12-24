@@ -9,7 +9,7 @@ const appFont = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '
 
 export const metadata = {
   title: 'protocolLM',
-  description: 'Health Code Compliance for Washtenaw County',
+  description: 'Health Code Compliance for Michigan',
 }
 
 export default function RootLayout({ children }) {
