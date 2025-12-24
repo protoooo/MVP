@@ -1419,16 +1419,16 @@ export default function Page() {
           box-shadow: 0 30px 90px rgba(10, 18, 35, 0.26) !important;
 
           /* reduce nested blur strength a touch (helps iOS crispness) */
-          backdrop-filter: blur(16px) saturate(165%) !important;
-          -webkit-backdrop-filter: blur(16px) saturate(165%) !important;
+          backdrop-filter: blur(12px) saturate(150%) !important;
+          -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
 
           color: var(--glass-ink) !important;
           color-scheme: light !important;
           overflow: hidden;
 
           /* ✅ anti-blur / rasterization fixes */
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
+          -webkit-transform: translate3d(0, 0, 0);
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           filter: none !important;
@@ -1718,8 +1718,8 @@ export default function Page() {
           color-scheme: light !important;
           overflow: hidden;
 
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
+          -webkit-transform: translate3d(0, 0, 0);
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           -webkit-font-smoothing: antialiased;
@@ -1953,11 +1953,12 @@ export default function Page() {
           font-weight: 650;
           letter-spacing: -0.02em;
           white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          overflow: visible;
 
-          /* ✅ FIX: prevents the leading “p” from being clipped on iOS/Safari */
+          /* ✅ FIX: prevents clipping of descenders (bottom of "p") */
           padding-left: 2px;
+          padding-bottom: 4px;
+          line-height: 1.3;
         }
 
         .plm-brand.chat .plm-brand-inner {
@@ -1990,10 +1991,11 @@ export default function Page() {
         }
 
         .landing-topbar .plm-brand-text {
-          line-height: 1.1;
+          line-height: 1.3;
           position: relative;
           top: 0px;
           font-size: 17.5px;
+          padding-bottom: 3px;
         }
 
         /* Shared icon button styling */
@@ -2439,9 +2441,9 @@ export default function Page() {
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
 
-          /* top padding clears topbar, bottom padding clears fixed dock */
-          padding: calc(max(98px, env(safe-area-inset-top) + 88px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room));
+          /* ✅ Increased top padding to clear logo, added extra bottom padding for gap above chat input */
+          padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 16px);
           background: transparent;
         }
 
@@ -2465,15 +2467,25 @@ export default function Page() {
           -webkit-backdrop-filter: blur(16px) saturate(120%);
         }
 
-        .chat-history {
-          max-width: 760px;
+        /* ✅ Frosted glass card for chat conversation */
+        .chat-history-card {
+          max-width: 820px;
           margin: 0 auto;
+          width: 100%;
+          min-height: 100px;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+
+        .chat-history {
+          max-width: 100%;
+          margin: 0;
           width: 100%;
           display: flex;
           flex-direction: column;
           gap: 32px;
-          padding-top: 16px;
-          padding-bottom: 6px;
+          padding-top: 8px;
+          padding-bottom: 8px;
         }
 
         .chat-message {
@@ -2697,8 +2709,8 @@ export default function Page() {
           }
 
           .chat-messages {
-            padding: calc(max(92px, env(safe-area-inset-top) + 84px)) 16px
-              calc(env(safe-area-inset-bottom) + var(--chat-dock-room));
+            padding: calc(max(120px, env(safe-area-inset-top) + 105px)) 16px
+              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 14px);
           }
 
           .chat-input-inner {
@@ -2937,34 +2949,36 @@ export default function Page() {
                 {messages.length === 0 ? (
                   <div className="chat-empty-state">
                     <p className="chat-empty-text">
-                      Upload a photo or ask a question about Washtenaw County food safety regulations.
+                      Upload a photo or ask a question about Michigan food safety regulations.
                     </p>
                   </div>
                 ) : (
-                  <div className="chat-history">
-                    {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
-                      >
+                  <LiquidGlass variant="main" className="chat-history-card">
+                    <div className="chat-history">
+                      {messages.map((msg, idx) => (
                         <div
-                          className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
+                          key={idx}
+                          className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
                         >
-                          {msg.image && (
-                            <div className="chat-bubble-image">
-                              <img src={msg.image} alt="Uploaded" />
-                            </div>
-                          )}
+                          <div
+                            className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
+                          >
+                            {msg.image && (
+                              <div className="chat-bubble-image">
+                                <img src={msg.image} alt="Uploaded" />
+                              </div>
+                            )}
 
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="chat-thinking">Analyzing…</div>
-                          ) : (
-                            <div className="chat-content">{msg.content}</div>
-                          )}
+                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                              <div className="chat-thinking">Analyzing…</div>
+                            ) : (
+                              <div className="chat-content">{msg.content}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </LiquidGlass>
                 )}
               </div>
 
