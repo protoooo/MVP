@@ -109,7 +109,7 @@ function BrandLink({ variant = 'landing' }) {
         <span className="plm-brand-mark" aria-hidden="true">
           <Image src={appleIcon} alt="" width={size} height={size} priority className="plm-logo-img" />
         </span>
-        {!isChat && <span className="plm-brand-text">protocolLM</span>}
+        {!isChat && <span className="plm-brand-text"></span>}
       </span>
     </Link>
   )
