@@ -1288,7 +1288,8 @@ export default function Page() {
 
           /* ✅ prevents iOS “soft” text scaling / odd rasterization in overlays */
           -webkit-text-size-adjust: 100%;
-          text-rendering: geometricPrecision;
+          text-rendering: optimizeLegibility;
+          -moz-osx-font-smoothing: grayscale;
           overscroll-behavior-y: none;
         }
 
@@ -1414,13 +1415,13 @@ export default function Page() {
           border-radius: 18px;
           padding: 22px;
 
-          background: var(--glass-bg-strong) !important;
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.75)) !important;
           border: 1px solid var(--glass-border) !important;
-          box-shadow: 0 30px 90px rgba(10, 18, 35, 0.26) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 30px 90px rgba(10, 18, 35, 0.26) !important;
 
           /* reduce nested blur strength a touch (helps iOS crispness) */
-          backdrop-filter: blur(12px) saturate(150%) !important;
-          -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+          backdrop-filter: blur(14px) saturate(125%) !important;
+          -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
 
           color: var(--glass-ink) !important;
           color-scheme: light !important;
@@ -1434,19 +1435,12 @@ export default function Page() {
           filter: none !important;
           -webkit-filter: none !important;
           -webkit-font-smoothing: antialiased;
-          text-rendering: geometricPrecision;
+          text-rendering: optimizeLegibility;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         .glass-modal.modal-card::before {
-          content: '';
-          position: absolute;
-          inset: -2px;
-          border-radius: inherit;
-          pointer-events: none;
-          background: radial-gradient(1100px circle at 18% 20%, rgba(95, 168, 255, 0.32), transparent 58%),
-            radial-gradient(900px circle at 86% 24%, rgba(120, 255, 235, 0.18), transparent 55%),
-            radial-gradient(1000px circle at 78% 86%, rgba(255, 180, 165, 0.22), transparent 58%);
-          opacity: 0.95;
+          display: none; /* ✅ Remove gradient overlay that causes blurry text */
         }
 
         .glass-modal.modal-card > * {
@@ -1710,31 +1704,25 @@ export default function Page() {
           border-radius: 16px;
           padding: 16px;
 
-          background: rgba(255, 255, 255, 0.56) !important;
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.68)) !important;
           border: 1px solid rgba(255, 255, 255, 0.55) !important;
-          box-shadow: 0 18px 55px rgba(10, 18, 35, 0.16) !important;
-          backdrop-filter: blur(14px) saturate(155%) !important;
-          -webkit-backdrop-filter: blur(14px) saturate(155%) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 18px 55px rgba(10, 18, 35, 0.16) !important;
+          backdrop-filter: blur(14px) saturate(125%) !important;
+          -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
           color-scheme: light !important;
           overflow: hidden;
 
-          transform: translate3d(0, 0, 0);
-          -webkit-transform: translate3d(0, 0, 0);
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           -webkit-font-smoothing: antialiased;
-          text-rendering: geometricPrecision;
+          text-rendering: optimizeLegibility;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         .pricing-card::before {
-          content: '';
-          position: absolute;
-          inset: -2px;
-          border-radius: inherit;
-          pointer-events: none;
-          background: radial-gradient(900px circle at 22% 22%, rgba(95, 168, 255, 0.22), transparent 58%),
-            radial-gradient(900px circle at 82% 78%, rgba(255, 180, 165, 0.14), transparent 58%);
-          opacity: 0.9;
+          display: none; /* Remove gradient overlay that causes blurry text */
         }
 
         .pricing-card > * {
@@ -1892,6 +1880,7 @@ export default function Page() {
           line-height: 1.5;
           color: rgba(15, 23, 42, 0.62);
           font-weight: 800;
+          text-align: center;
         }
 
         .pricing-link {
@@ -1957,8 +1946,8 @@ export default function Page() {
 
           /* ✅ FIX: prevents clipping of descenders (bottom of "p") */
           padding-left: 2px;
-          padding-bottom: 4px;
-          line-height: 1.3;
+          padding-bottom: 6px;
+          line-height: 1.35;
         }
 
         .plm-brand.chat .plm-brand-inner {
@@ -1991,11 +1980,11 @@ export default function Page() {
         }
 
         .landing-topbar .plm-brand-text {
-          line-height: 1.3;
+          line-height: 1.35;
           position: relative;
           top: 0px;
           font-size: 17.5px;
-          padding-bottom: 3px;
+          padding-bottom: 5px;
         }
 
         /* Shared icon button styling */
@@ -2366,8 +2355,6 @@ export default function Page() {
           right: 0;
           z-index: 20;
           width: 100%;
-          max-width: 880px;
-          margin: 0 auto;
           padding: max(14px, env(safe-area-inset-top) + 10px) max(18px, env(safe-area-inset-right) + 12px) 0
             max(18px, env(safe-area-inset-left) + 12px);
           display: flex;
@@ -2394,11 +2381,11 @@ export default function Page() {
           top: calc(100% + 8px);
           right: 0;
           min-width: 180px;
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.28);
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(15, 23, 42, 0.12);
           border-radius: var(--radius-md);
           padding: 8px;
-          box-shadow: 0 16px 48px rgba(5, 7, 13, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          box-shadow: 0 16px 48px rgba(5, 7, 13, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
           backdrop-filter: blur(14px) saturate(120%);
           -webkit-backdrop-filter: blur(14px) saturate(120%);
           animation: dropdown-in 0.15s ease;
@@ -2412,7 +2399,7 @@ export default function Page() {
           background: transparent;
           border: none;
           border-radius: var(--radius-sm);
-          color: var(--ink-0);
+          color: #1f2937;
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
@@ -2421,12 +2408,12 @@ export default function Page() {
         }
 
         .chat-settings-item:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(15, 23, 42, 0.08);
         }
 
         .chat-settings-sep {
           height: 1px;
-          background: var(--border-subtle);
+          background: rgba(15, 23, 42, 0.12);
           margin: 6px 2px;
         }
 
@@ -2443,7 +2430,7 @@ export default function Page() {
 
           /* ✅ Increased top padding to clear logo, added extra bottom padding for gap above chat input */
           padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 16px);
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 32px);
           background: transparent;
         }
 
@@ -2461,15 +2448,15 @@ export default function Page() {
           text-align: center;
           background: rgba(255, 255, 255, 0.18);
           border: 1px solid rgba(255, 255, 255, 0.28);
-          padding: 12px 14px;
+          padding: 12px 8px 12px 14px;
           border-radius: 14px;
           backdrop-filter: blur(16px) saturate(120%);
           -webkit-backdrop-filter: blur(16px) saturate(120%);
         }
 
-        /* ✅ Frosted glass card for chat conversation */
+        /* ✅ Frosted glass card for chat conversation - matches chat input width */
         .chat-history-card {
-          max-width: 820px;
+          max-width: calc(840px - 48px); /* Match chat-input-inner max-width minus padding */
           margin: 0 auto;
           width: 100%;
           min-height: 100px;
@@ -2617,6 +2604,7 @@ export default function Page() {
           border-radius: var(--radius-md);
           min-width: 0;
           min-height: 48px;
+          padding-right: 6px;
 
           background: rgba(255, 255, 255, 0.46);
           border: 1px solid rgba(15, 23, 42, 0.14);
@@ -2637,7 +2625,7 @@ export default function Page() {
           flex: 1;
           min-height: 44px;
           max-height: 160px;
-          padding: 12px 14px;
+          padding: 12px 8px 12px 14px;
           background: transparent;
           border: none;
           color: rgba(15, 23, 42, 0.96);
@@ -2653,6 +2641,16 @@ export default function Page() {
         }
         .chat-textarea:focus {
           outline: none;
+        }
+
+        /* ✅ Send button inside input wrapper */
+        .chat-send-btn {
+          flex-shrink: 0;
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          margin: 0 0 5px 0;
+          align-self: flex-end;
         }
 
         .chat-send-spinner {
@@ -2710,7 +2708,7 @@ export default function Page() {
 
           .chat-messages {
             padding: calc(max(120px, env(safe-area-inset-top) + 105px)) 16px
-              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 14px);
+              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 28px);
           }
 
           .chat-input-inner {
@@ -2727,6 +2725,12 @@ export default function Page() {
             width: 42px;
             height: 42px;
             border-radius: 13px;
+          }
+
+          .chat-send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
           }
 
           .chat-bubble {
