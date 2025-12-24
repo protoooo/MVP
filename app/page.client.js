@@ -21,6 +21,11 @@ const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500
 
 const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
+// Pricing constants
+const PRICE_PER_LOCATION = 50
+const MIN_MULTI_LOCATIONS = 2
+const MAX_MULTI_LOCATIONS = 500
+
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
@@ -375,11 +380,28 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 /**
  * ✅ Pricing modal now matches your LiquidGlass exactly (outer card AND inner plan card)
  */
-function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
+function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocation }) {
+  const [showMultiLocation, setShowMultiLocation] = useState(false)
+  const [locationCount, setLocationCount] = useState(5)
+  const [multiLocationLoading, setMultiLocationLoading] = useState(false)
+  
   if (!isOpen) return null
 
   const priceId = UNLIMITED_MONTHLY
   const planName = 'Unlimited'
+
+  const handleMultiLocationCheckout = async () => {
+    if (multiLocationLoading) return
+    setMultiLocationLoading(true)
+    
+    try {
+      if (onMultiLocation) {
+        await onMultiLocation(locationCount)
+      }
+    } finally {
+      setMultiLocationLoading(false)
+    }
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Pricing">
@@ -407,8 +429,8 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="pricing-plan-badge">Recommended</span>
               </div>
               <div className="pricing-price">
-                <span className="pricing-price-amount">$100</span>
-                <span className="pricing-price-term">/ month</span>
+                <span className="pricing-price-amount">${PRICE_PER_LOCATION}</span>
+                <span className="pricing-price-term">/ month per location</span>
               </div>
             </div>
 
@@ -445,34 +467,98 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
               </li>
             </ul>
 
-            <div className="pricing-actions">
-              <button
-                type="button"
-                className="pricing-primary"
-                disabled={!!loading}
-                onClick={() => {
-                  if (!priceId) {
-                    alert('Missing Stripe price id (NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY).')
-                    return
-                  }
-                  onCheckout(priceId, planName)
-                }}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner" /> Starting…
-                  </>
-                ) : (
-                  <>
-                    Start trial <span aria-hidden="true">→</span>
-                  </>
-                )}
-              </button>
+            {!showMultiLocation ? (
+              <div className="pricing-actions">
+                <button
+                  type="button"
+                  className="pricing-primary"
+                  disabled={!!loading}
+                  onClick={() => {
+                    if (!priceId) {
+                      alert('Missing Stripe price id (NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY).')
+                      return
+                    }
+                    onCheckout(priceId, planName)
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner" /> Starting…
+                    </>
+                  ) : (
+                    <>
+                      Start trial (1 location) <span aria-hidden="true">→</span>
+                    </>
+                  )}
+                </button>
 
-              <button type="button" className="pricing-secondary" onClick={onClose}>
-                Not now
-              </button>
-            </div>
+                <button 
+                  type="button" 
+                  className="pricing-secondary"
+                  onClick={() => setShowMultiLocation(true)}
+                >
+                  Buy for multiple locations
+                </button>
+              </div>
+            ) : (
+              <div className="pricing-actions">
+                <div className="multi-location-selector">
+                  <label className="multi-location-label">Number of locations:</label>
+                  <div className="multi-location-input-row">
+                    <button 
+                      type="button" 
+                      className="multi-location-btn"
+                      onClick={() => setLocationCount(Math.max(MIN_MULTI_LOCATIONS, locationCount - 1))}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={MIN_MULTI_LOCATIONS}
+                      max={MAX_MULTI_LOCATIONS}
+                      value={locationCount}
+                      onChange={(e) => setLocationCount(Math.max(MIN_MULTI_LOCATIONS, Math.min(MAX_MULTI_LOCATIONS, parseInt(e.target.value) || MIN_MULTI_LOCATIONS)))}
+                      className="multi-location-input"
+                    />
+                    <button 
+                      type="button" 
+                      className="multi-location-btn"
+                      onClick={() => setLocationCount(Math.min(MAX_MULTI_LOCATIONS, locationCount + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div className="multi-location-total">
+                    Total: ${PRICE_PER_LOCATION * locationCount}/month
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="pricing-primary"
+                  disabled={multiLocationLoading}
+                  onClick={handleMultiLocationCheckout}
+                >
+                  {multiLocationLoading ? (
+                    <>
+                      <span className="spinner" /> Processing…
+                    </>
+                  ) : (
+                    <>
+                      Start trial ({locationCount} locations) <span aria-hidden="true">→</span>
+                    </>
+                  )}
+                </button>
+
+                <button 
+                  type="button" 
+                  className="pricing-secondary"
+                  onClick={() => setShowMultiLocation(false)}
+                >
+                  Back to single location
+                </button>
+              </div>
+            )}
 
             <p className="pricing-fineprint">
               By starting your trial, you agree to our{' '}
@@ -501,6 +587,94 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
 
 function safeTrim(s) {
   return String(s || '').trim()
+}
+
+/**
+ * Formats assistant response content with styled components
+ * - "NO VIOLATIONS ✓" -> green bold
+ * - "VIOLATIONS:" -> red bold header with bullet points
+ * - "NEED INFO:" -> amber header with questions
+ */
+
+// Helper to parse bullet point lines from text
+function parseBulletItems(text, skipLines = 1) {
+  const lines = text.split('\n').filter(l => l.trim())
+  const items = []
+  
+  for (let i = skipLines; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (line.startsWith('•') || line.startsWith('-')) {
+      items.push(line.replace(/^[•\-]\s*/, ''))
+    }
+  }
+  return items
+}
+
+function formatAssistantContent(content) {
+  const text = safeTrim(content)
+  if (!text) return null
+  
+  // Check for "NO VIOLATIONS" pattern
+  if (/^NO VIOLATIONS/i.test(text)) {
+    return (
+      <div className="chat-no-violations">
+        No violations! ✓
+      </div>
+    )
+  }
+  
+  // Check for "VIOLATIONS:" pattern
+  if (/^VIOLATIONS:/i.test(text)) {
+    const items = parseBulletItems(text, 1)
+    const violations = items.map(item => {
+      // Try to split by "FIX:"
+      const fixMatch = item.match(/^(.+?)\.\s*FIX:\s*(.+)$/i)
+      if (fixMatch) {
+        return {
+          issue: fixMatch[1].trim(),
+          fix: fixMatch[2].trim()
+        }
+      } else {
+        return { issue: item, fix: null }
+      }
+    })
+    
+    return (
+      <div>
+        <div className="chat-violations-header">Violations:</div>
+        {violations.map((v, idx) => (
+          <div key={idx} className="chat-violation-item">
+            <span className="chat-violation-type">{v.issue}</span>
+            {v.fix && (
+              <>
+                <br />
+                <span className="chat-violation-fix">Fix: {v.fix}</span>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+  
+  // Check for "NEED INFO:" pattern
+  if (/^NEED INFO:/i.test(text)) {
+    const questions = parseBulletItems(text, 1)
+    
+    return (
+      <div>
+        <div className="chat-need-info-header">Need more info:</div>
+        {questions.map((q, idx) => (
+          <div key={idx} style={{ marginBottom: '6px', paddingLeft: '12px' }}>
+            • {q}
+          </div>
+        ))}
+      </div>
+    )
+  }
+  
+  // Default: return as plain text
+  return <div className="chat-content">{text}</div>
 }
 
 function normalizeOutgoingMessages(msgs) {
@@ -807,6 +981,83 @@ export default function Page() {
         }
       } catch (error) {
         console.error('Checkout error:', error)
+        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+      } finally {
+        setCheckoutLoading(null)
+      }
+    },
+    [supabase, captchaLoaded, executeRecaptcha, router]
+  )
+
+  const handleMultiLocationCheckout = useCallback(
+    async (locationCount) => {
+      try {
+        const { data } = await supabase.auth.getSession()
+
+        if (!data.session) {
+          setShowPricingModal(false)
+          setAuthInitialMode('signup')
+          setShowAuthModal(true)
+          return
+        }
+
+        if (!data.session.user.email_confirmed_at) {
+          alert('Please verify your email before starting a trial. Check your inbox.')
+          setShowPricingModal(false)
+          router.push('/verify-email')
+          return
+        }
+
+        if (!captchaLoaded) {
+          alert('Security verification is still loading. Please try again in a moment.')
+          return
+        }
+
+        setCheckoutLoading('multi-location')
+
+        const captchaToken = await executeRecaptcha('multi_location_checkout')
+        if (!captchaToken || captchaToken === 'turnstile_unavailable') {
+          throw new Error('Security verification failed. Please refresh and try again.')
+        }
+
+        const res = await fetch('/api/create-multi-location-checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({ 
+            locationCount,
+            captchaToken 
+          }),
+          credentials: 'include',
+        })
+
+        const payload = await res.json().catch(() => ({}))
+
+        if (!res.ok) {
+          if (payload.code === 'EMAIL_NOT_VERIFIED') {
+            alert('Please verify your email before starting a trial.')
+            router.push('/verify-email')
+            return
+          }
+
+          if (payload.code === 'ALREADY_SUBSCRIBED') {
+            alert('You already have an active subscription. Contact support to add locations.')
+            setShowPricingModal(false)
+            return
+          }
+
+          throw new Error(payload.error || 'Checkout failed')
+        }
+
+        if (payload.url) {
+          window.location.href = payload.url
+        } else {
+          throw new Error('No checkout URL returned')
+        }
+      } catch (error) {
+        console.error('Multi-location checkout error:', error)
         alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       } finally {
         setCheckoutLoading(null)
@@ -1857,6 +2108,76 @@ export default function Page() {
           text-underline-offset: 2px;
         }
 
+        /* Multi-location selector */
+        .multi-location-selector {
+          background: rgba(255, 255, 255, 0.5);
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          border-radius: 12px;
+          padding: 16px;
+          margin-bottom: 12px;
+        }
+
+        .multi-location-label {
+          display: block;
+          font-size: 13px;
+          font-weight: 700;
+          color: rgba(15, 23, 42, 0.82);
+          margin-bottom: 10px;
+        }
+
+        .multi-location-input-row {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+
+        .multi-location-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: rgba(255, 255, 255, 0.8);
+          color: rgba(15, 23, 42, 0.86);
+          font-size: 18px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease;
+        }
+
+        .multi-location-btn:hover {
+          background: rgba(255, 255, 255, 1);
+        }
+
+        .multi-location-input {
+          width: 80px;
+          height: 40px;
+          text-align: center;
+          font-size: 18px;
+          font-weight: 700;
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.9);
+          color: rgba(15, 23, 42, 0.92);
+        }
+
+        .multi-location-input:focus {
+          outline: none;
+          border-color: rgba(95, 168, 255, 0.5);
+          box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.15);
+        }
+
+        .multi-location-total {
+          text-align: center;
+          font-size: 16px;
+          font-weight: 800;
+          color: rgba(15, 23, 42, 0.92);
+        }
+
         /* App */
         .app-container {
           height: 100vh;
@@ -2322,7 +2643,7 @@ export default function Page() {
           right: 0;
           z-index: 20;
           width: 100%;
-          padding: max(16px, env(safe-area-inset-top) + 12px) max(16px, env(safe-area-inset-right) + 16px) 0
+          padding: max(16px, env(safe-area-inset-top) + 16px) max(16px, env(safe-area-inset-right) + 16px) 0
             max(16px, env(safe-area-inset-left) + 16px);
           display: flex;
           align-items: center;
@@ -2391,14 +2712,16 @@ export default function Page() {
           left: 0;
           right: 0;
           bottom: 0;
-          overflow-y: auto;
+          overflow-y: hidden;
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
 
-          /* ✅ Increased top padding to clear logo, added extra bottom padding for gap above chat input */
+          /* ✅ Updated: use flexbox to position the glass card with proper bounds */
+          display: flex;
+          flex-direction: column;
           padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 48px);
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 24px);
           background: transparent;
         }
 
@@ -2422,14 +2745,16 @@ export default function Page() {
           -webkit-backdrop-filter: blur(16px) saturate(120%);
         }
 
-        /* ✅ Frosted glass card for chat conversation - matches chat input width */
+        /* ✅ Frosted glass card for chat conversation - fixed height, scrollable content */
         .chat-history-card {
           max-width: calc(840px - 48px); /* Match chat-input-inner max-width minus padding */
           margin: 0 auto;
           width: 100%;
-          min-height: 100px;
+          flex: 1;
+          min-height: 0; /* Important for flex child to allow shrinking */
           overflow-y: auto;
           overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
         }
 
         .chat-history {
@@ -2488,6 +2813,45 @@ export default function Page() {
           white-space: pre-wrap;
           overflow-wrap: anywhere;
           word-break: break-word;
+        }
+
+        /* ✅ Response styling - No violations (green) */
+        .chat-no-violations {
+          color: #16a34a;
+          font-weight: 700;
+          font-size: 16px;
+        }
+
+        /* ✅ Response styling - Violations header (red) */
+        .chat-violations-header {
+          color: #dc2626;
+          font-weight: 700;
+          font-size: 16px;
+          margin-bottom: 8px;
+        }
+
+        /* ✅ Response styling - Violation item */
+        .chat-violation-item {
+          margin-bottom: 12px;
+          padding-left: 12px;
+          border-left: 3px solid #dc2626;
+        }
+
+        .chat-violation-type {
+          color: #dc2626;
+          font-weight: 700;
+        }
+
+        .chat-violation-fix {
+          color: rgba(15, 23, 42, 0.86);
+        }
+
+        /* ✅ Response styling - Need info (amber) */
+        .chat-need-info-header {
+          color: #d97706;
+          font-weight: 700;
+          font-size: 16px;
+          margin-bottom: 8px;
         }
 
         .chat-thinking {
@@ -2670,13 +3034,13 @@ export default function Page() {
           }
 
           .chat-topbar {
-            padding: max(14px, env(safe-area-inset-top) + 10px) max(16px, env(safe-area-inset-right) + 16px) 0
+            padding: max(16px, env(safe-area-inset-top) + 16px) max(16px, env(safe-area-inset-right) + 16px) 0
               max(16px, env(safe-area-inset-left) + 16px);
           }
 
           .chat-messages {
             padding: calc(max(120px, env(safe-area-inset-top) + 105px)) 16px
-              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 40px);
+              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 20px);
           }
 
           .chat-input-inner {
@@ -2847,6 +3211,7 @@ export default function Page() {
           isOpen={showPricingModal}
           onClose={() => setShowPricingModal(false)}
           onCheckout={handleCheckout}
+          onMultiLocation={handleMultiLocationCheckout}
           loading={checkoutLoading}
         />
       </Portal>
@@ -2945,6 +3310,8 @@ export default function Page() {
 
                             {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                               <div className="chat-thinking">Analyzing…</div>
+                            ) : msg.role === 'assistant' ? (
+                              formatAssistantContent(msg.content)
                             ) : (
                               <div className="chat-content">{msg.content}</div>
                             )}
