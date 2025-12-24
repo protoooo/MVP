@@ -1,13 +1,15 @@
-// app/verify-email/page.js - COMPLETE FILE with auto-redirect after verification
+// app/verify-email/page.js - Light frosted theme matching landing page
 'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
-import { Outfit, Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
+import Link from 'next/link'
+import Image from 'next/image'
+import appleIcon from '@/app/apple-icon.png'
 
-const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700', '800'] })
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 
 export default function VerifyEmailPage() {
   const supabase = createClient()
@@ -20,6 +22,12 @@ export default function VerifyEmailPage() {
   const [messageType, setMessageType] = useState('info')
 
   useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.view = 'landing'
+    }
+  }, [])
+
+  useEffect(() => {
     async function checkUser() {
       const { data: { user } } = await supabase.auth.getUser()
       
@@ -28,7 +36,6 @@ export default function VerifyEmailPage() {
         return
       }
 
-      // If email is verified, redirect to pricing to start trial
       if (user.email_confirmed_at) {
         console.log('✅ Email already verified, redirecting to pricing')
         router.push('/?showPricing=true&emailVerified=true')
@@ -76,76 +83,184 @@ export default function VerifyEmailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] bg-black flex items-center justify-center text-white/70">
-        Loading…
+      <div className="min-h-[100dvh] flex items-center justify-center">
+        <div className="text-slate-600">Loading…</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-[100dvh] bg-black flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 shadow-[0_40px_120px_rgba(0,0,0,0.75)]">
-        {/* Icon */}
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-          <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
+    <>
+      <style jsx global>{`
+        html[data-view='landing'] body {
+          background: transparent;
+        }
+      `}</style>
 
-        <div className={`text-white text-xl font-semibold text-center mb-2 ${outfit.className}`}>
-          Verify Your Email
-        </div>
-        
-        <div className={`text-white/60 text-sm text-center mb-6 ${inter.className}`}>
-          We sent a verification link to:
-          <div className="text-white/90 font-medium mt-1">{user?.email}</div>
-        </div>
+      <div className={`${plusJakarta.className} min-h-[100dvh] flex items-center justify-center px-4`}>
+        <div className="w-full max-w-md">
+          {/* Light frosted card matching landing page */}
+          <div style={{
+            background: 'linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88))',
+            border: '1px solid rgba(15, 23, 42, 0.12)',
+            borderRadius: '18px',
+            padding: '32px',
+            boxShadow: '0 20px 55px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55)'
+          }}>
+            {/* Header with logo */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <Link href="/" style={{ display: 'inline-block', marginBottom: '16px' }}>
+                <Image src={appleIcon} alt="" width={64} height={64} priority />
+              </Link>
+            </div>
 
-        {message && (
-          <div className={`mb-4 rounded-xl border px-3 py-2 text-sm ${
-            messageType === 'error' 
-              ? 'border-red-500/30 bg-red-500/10 text-red-200' 
-              : 'border-green-500/30 bg-green-500/10 text-green-200'
-          }`}>
-            {message}
-          </div>
-        )}
+            {/* Icon */}
+            <div style={{
+              width: '64px',
+              height: '64px',
+              margin: '0 auto 16px',
+              borderRadius: '16px',
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <svg width="32" height="32" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
 
-        <div className="space-y-3">
-          <div className={`rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/70 ${inter.className}`}>
-            <p className="mb-2">📧 <strong className="text-white/90">Check your email</strong></p>
-            <p className="text-xs">
-              Click the verification link to activate your account and start your free trial.
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              textAlign: 'center',
+              color: 'rgba(15, 23, 42, 0.92)',
+              marginBottom: '8px'
+            }}>
+              Verify Your Email
+            </h1>
+            
+            <p style={{
+              textAlign: 'center',
+              fontSize: '14px',
+              color: 'rgba(30, 41, 59, 0.74)',
+              marginBottom: '8px'
+            }}>
+              We sent a verification link to:
+            </p>
+            
+            <p style={{
+              textAlign: 'center',
+              fontSize: '15px',
+              fontWeight: '600',
+              color: 'rgba(15, 23, 42, 0.92)',
+              marginBottom: '24px'
+            }}>
+              {user?.email}
+            </p>
+
+            {message && (
+              <div style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '12px',
+                border: messageType === 'error' 
+                  ? '1px solid rgba(239, 68, 68, 0.3)' 
+                  : '1px solid rgba(34, 197, 94, 0.3)',
+                background: messageType === 'error'
+                  ? 'rgba(239, 68, 68, 0.1)'
+                  : 'rgba(34, 197, 94, 0.1)',
+                color: messageType === 'error' ? '#dc2626' : '#16a34a',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}>
+                {message}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.5)',
+                border: '1px solid rgba(15, 23, 42, 0.1)',
+                borderRadius: '12px'
+              }}>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(15, 23, 42, 0.92)', marginBottom: '8px' }}>
+                  📧 Check your email
+                </p>
+                <p style={{ fontSize: '13px', color: 'rgba(30, 41, 59, 0.74)', margin: 0 }}>
+                  Click the verification link to activate your account and start your free trial.
+                </p>
+              </div>
+
+              <div style={{
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.5)',
+                border: '1px solid rgba(15, 23, 42, 0.1)',
+                borderRadius: '12px'
+              }}>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(15, 23, 42, 0.92)', marginBottom: '8px' }}>
+                  📂 Check spam folder
+                </p>
+                <p style={{ fontSize: '13px', color: 'rgba(30, 41, 59, 0.74)', margin: 0 }}>
+                  If you don't see it in your inbox, check your spam or junk folder.
+                </p>
+              </div>
+
+              <button
+                onClick={handleResend}
+                disabled={resending}
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  marginTop: '8px',
+                  background: resending ? 'rgba(15, 23, 42, 0.5)' : 'rgba(15, 23, 42, 0.92)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '9999px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  cursor: resending ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.15s ease',
+                  opacity: resending ? 0.7 : 1
+                }}
+              >
+                {resending ? 'Sending…' : 'Resend Verification Email'}
+              </button>
+
+              <button
+                onClick={handleSignOut}
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  color: 'rgba(15, 23, 42, 0.86)',
+                  border: '1px solid rgba(15, 23, 42, 0.12)',
+                  borderRadius: '9999px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.8)'}
+              >
+                Sign Out
+              </button>
+            </div>
+
+            <p style={{
+              marginTop: '16px',
+              textAlign: 'center',
+              fontSize: '12px',
+              color: 'rgba(100, 116, 139, 0.74)'
+            }}>
+              After verifying, you'll be redirected to start your 7-day free trial
             </p>
           </div>
-
-          <div className={`rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/70 ${inter.className}`}>
-            <p className="mb-2">📂 <strong className="text-white/90">Check spam folder</strong></p>
-            <p className="text-xs">
-              If you don't see it in your inbox, check your spam or junk folder.
-            </p>
-          </div>
-
-          <button
-            onClick={handleResend}
-            disabled={resending}
-            className="w-full rounded-xl bg-white text-black font-semibold py-3 disabled:opacity-50 hover:bg-white/90 transition"
-          >
-            {resending ? 'Sending…' : 'Resend Verification Email'}
-          </button>
-
-          <button
-            onClick={handleSignOut}
-            className="w-full rounded-xl border border-white/10 bg-transparent text-white/70 py-3 hover:bg-white/[0.04] transition"
-          >
-            Sign Out
-          </button>
-        </div>
-
-        <div className={`mt-4 text-center text-xs text-white/40 ${inter.className}`}>
-          After verifying, you'll be redirected to start your 7-day free trial
         </div>
       </div>
-    </div>
+    </>
   )
 }
