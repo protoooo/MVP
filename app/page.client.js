@@ -74,8 +74,9 @@ const Icons = {
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
 
-  // ✅ Increase logo size ~70% across desktop + mobile
-  const size = isChat ? 110 : 140
+  // Landing logo stays large, but the *bar* no longer grows with it.
+  // (Slightly reduced from 140 -> 124, within your 10–15% allowance.)
+  const size = isChat ? 110 : 124
 
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
@@ -1067,7 +1068,7 @@ export default function Page() {
           gap: 12px;
         }
 
-        /* ✅ Larger logo */
+        /* Default (non-landing-topbar contexts) */
         .plm-brand-mark {
           width: 140px;
           height: 140px;
@@ -1170,13 +1171,16 @@ export default function Page() {
           isolation: isolate;
         }
 
+        /* ✅ FIX: shrink the white bar by ~35–40% without shrinking the logo drastically.
+           The bar has a fixed height; the logo can overflow below it (so the bar doesn't become huge). */
         .landing-topbar {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
-          z-index: 30; /* stay put */
-          padding: max(10px, env(safe-area-inset-top) + 6px) max(18px, env(safe-area-inset-right) + 10px) 10px
+          z-index: 30;
+          height: calc(env(safe-area-inset-top) + 88px);
+          padding: env(safe-area-inset-top) max(18px, env(safe-area-inset-right) + 10px) 0
             max(18px, env(safe-area-inset-left) + 10px);
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
           backdrop-filter: blur(12px) saturate(125%);
@@ -1187,13 +1191,28 @@ export default function Page() {
         .landing-topbar-inner {
           width: 100%;
           max-width: 1080px;
+          height: 88px;
           margin: 0 auto;
           display: flex;
-          align-items: center;
+          align-items: flex-start; /* let the logo overflow downward, not upward */
           justify-content: space-between;
           gap: 12px;
           background: none;
-          padding: 0;
+          padding: 8px 0 0; /* small top inset inside the bar */
+        }
+
+        /* ✅ Landing-only tweaks: tighter logo/text spacing + logo size for header */
+        .landing-topbar .plm-brand-inner {
+          gap: 10px;
+        }
+        .landing-topbar .plm-brand-mark {
+          width: 124px;
+          height: 124px;
+        }
+
+        /* Keep the right-side button vertically centered even though the left is top-aligned */
+        .landing-topbar .landing-top-actions {
+          align-self: center;
         }
 
         .landing-top-actions {
@@ -1291,7 +1310,6 @@ export default function Page() {
           margin: 0;
         }
 
-        /* ✅ Only break line on mobile so: "Catch Violations," then "Not Fines." */
         .hero-break {
           display: none;
         }
@@ -1304,7 +1322,6 @@ export default function Page() {
           max-width: 52ch;
         }
 
-        /* ✅ Keep CTA in one row on mobile + desktop */
         .hero-cta-row {
           display: flex;
           align-items: center;
@@ -1313,7 +1330,7 @@ export default function Page() {
           flex-wrap: nowrap;
           flex-direction: row;
           margin-top: 14px;
-          padding-top: 6px; /* a little buffer from body text */
+          padding-top: 6px;
         }
 
         .hero-arrow-text {
@@ -1421,7 +1438,6 @@ export default function Page() {
           transform: translateY(0);
         }
 
-        /* ✅ Footer links centered + darker gray so visible */
         .plm-footer-links {
           position: absolute;
           bottom: max(18px, env(safe-area-inset-bottom));
@@ -1789,12 +1805,10 @@ export default function Page() {
             padding-top: max(86px, env(safe-area-inset-top) + 66px);
           }
 
-          /* ✅ Show title line-break only on mobile */
           .hero-break {
             display: inline;
           }
 
-          /* ✅ Keep CTA in one row on mobile */
           .hero-cta-row {
             gap: 10px;
             margin-top: 12px;
@@ -1849,10 +1863,25 @@ export default function Page() {
             font-size: 13px;
           }
 
+          /* ✅ Match smaller bar height on mobile */
           .landing-topbar {
-            padding: max(10px, env(safe-area-inset-top) + 6px) max(14px, env(safe-area-inset-right) + 8px) 10px
+            height: calc(env(safe-area-inset-top) + 78px);
+            padding: env(safe-area-inset-top) max(14px, env(safe-area-inset-right) + 8px) 0
               max(14px, env(safe-area-inset-left) + 8px);
-            gap: 10px;
+          }
+
+          .landing-topbar-inner {
+            height: 78px;
+            padding-top: 6px;
+          }
+
+          .landing-topbar .plm-brand-inner {
+            gap: 9px;
+          }
+
+          .landing-topbar .plm-brand-mark {
+            width: 112px;
+            height: 112px;
           }
 
           .landing-hero {
@@ -1863,7 +1892,6 @@ export default function Page() {
             padding: 28px 24px;
           }
 
-          /* ✅ Larger logo on mobile as well */
           .plm-brand-mark {
             width: 120px;
             height: 120px;
@@ -1893,6 +1921,25 @@ export default function Page() {
         @media (max-width: 480px) {
           .landing-root {
             padding-top: max(82px, env(safe-area-inset-top) + 62px);
+          }
+
+          /* ✅ Slightly shorter bar on tiny screens */
+          .landing-topbar {
+            height: calc(env(safe-area-inset-top) + 74px);
+          }
+
+          .landing-topbar-inner {
+            height: 74px;
+            padding-top: 5px;
+          }
+
+          .landing-topbar .plm-brand-inner {
+            gap: 8px;
+          }
+
+          .landing-topbar .plm-brand-mark {
+            width: 104px;
+            height: 104px;
           }
 
           .plm-brand-mark {
@@ -1928,7 +1975,6 @@ export default function Page() {
             padding: 10px 12px;
           }
 
-          /* Keep CTA row from wrapping weirdly on tiny screens */
           .hero-cta-row {
             gap: 8px;
           }
