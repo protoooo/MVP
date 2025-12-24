@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
         </p>
         <ul>
           <li>
-            <strong>Anthropic Claude API:</strong> Processes your text queries and facility images to generate 
+            <strong>Cohere API:</strong> Processes your text queries and facility images to generate 
             compliance-related responses. Data is transmitted using industry-standard encryption (TLS 1.2+).
           </li>
           <li>
