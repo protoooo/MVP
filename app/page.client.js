@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -11,7 +12,9 @@ import { compressImage } from '@/lib/imageCompression'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
-import PricingModal from '@/components/PricingModal'
+// ⛔️ IMPORTANT: we intentionally DO NOT use the imported PricingModal
+// because it’s rendering “in flow” on iOS/Safari due to containing-block issues.
+// import PricingModal from '@/components/PricingModal'
 import LiquidGlass from '@/components/ui/LiquidGlass'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
@@ -71,10 +74,20 @@ const Icons = {
   ),
 }
 
+/**
+ * ✅ Portal helper:
+ * iOS Safari + “glass”/filters/transforms can cause fixed-position modals to render like normal flow elements.
+ * Rendering to document.body avoids that containing-block bug.
+ */
+function Portal({ children }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  if (!mounted) return null
+  return createPortal(children, document.body)
+}
+
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
-
-  // keep your current sizing; landing header compaction is handled via CSS (scoped to .landing-topbar)
   const size = isChat ? 110 : 140
 
   return (
@@ -159,7 +172,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-/* AuthModal unchanged */
+/* AuthModal unchanged, but now rendered via Portal so it always overlays correctly */
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -201,11 +214,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
         endpoint = '/api/auth/reset-password'
       } else {
         body.password = password
-
-        if (mode === 'signup' && selectedPriceId) {
-          body.selectedPriceId = selectedPriceId
-        }
-
+        if (mode === 'signup' && selectedPriceId) body.selectedPriceId = selectedPriceId
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
@@ -257,7 +266,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   if (!isOpen) return null
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <div className={`modal-card auth-modal glass-surface ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
@@ -350,6 +359,129 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   )
 }
 
+/**
+ * ✅ New in-file Pricing Modal (matches your frosted/glass UI, always overlays correctly)
+ * This replaces the broken “card-in-layout” behavior you’re seeing when clicking Start trial.
+ */
+function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
+  if (!isOpen) return null
+
+  const priceId = UNLIMITED_MONTHLY
+  const planName = 'Unlimited'
+
+  return (
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Pricing">
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <LiquidGlass variant="main" className={`modal-card pricing-modal ${plusJakarta.className}`}>
+          <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
+            <Icons.X />
+          </button>
+
+          <div className="pricing-top">
+            <div className="pricing-pill">
+              <span className="pricing-pill-dot" aria-hidden="true" />
+              <span>7-day free trial</span>
+            </div>
+            <h2 className="modal-title pricing-title">Start your trial</h2>
+            <p className="pricing-sub">
+              Unlimited questions + photo scans for your location. Built for Washtenaw County compliance workflows.
+            </p>
+          </div>
+
+          <div className="pricing-grid">
+            <div className="pricing-card">
+              <div className="pricing-card-head">
+                <div className="pricing-plan">
+                  <span className="pricing-plan-name">{planName}</span>
+                  <span className="pricing-plan-badge">Recommended</span>
+                </div>
+                <div className="pricing-price">
+                  <span className="pricing-price-amount">$100</span>
+                  <span className="pricing-price-term">/ month</span>
+                </div>
+              </div>
+
+              <ul className="pricing-list">
+                <li>
+                  <span className="pricing-check" aria-hidden="true">
+                    ✓
+                  </span>
+                  Unlimited questions and photo scans
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">
+                    ✓
+                  </span>
+                  Washtenaw County knowledge base
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">
+                    ✓
+                  </span>
+                  Cohere-powered privacy + security
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">
+                    ✓
+                  </span>
+                  Email support
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">
+                    ✓
+                  </span>
+                  One registered device per license
+                </li>
+              </ul>
+
+              <div className="pricing-actions">
+                <button
+                  type="button"
+                  className="pricing-primary"
+                  disabled={!!loading}
+                  onClick={() => {
+                    if (!priceId) {
+                      alert('Missing Stripe price id (NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY).')
+                      return
+                    }
+                    onCheckout(priceId, planName)
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner" /> Starting…
+                    </>
+                  ) : (
+                    <>
+                      Start trial <span aria-hidden="true">→</span>
+                    </>
+                  )}
+                </button>
+
+                <button type="button" className="pricing-secondary" onClick={onClose}>
+                  Not now
+                </button>
+              </div>
+
+              <p className="pricing-fineprint">
+                By starting your trial, you agree to our{' '}
+                <Link href="/terms" className="pricing-link">
+                  Terms
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="pricing-link">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        </LiquidGlass>
+      </div>
+    </div>
+  )
+}
+
 export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
@@ -425,6 +557,19 @@ export default function Page() {
       splineContainer.style.display = isAuthenticated ? 'none' : 'block'
     }
   }, [isAuthenticated])
+
+  // ✅ Prevent background scroll when a modal is open (also helps iOS)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const open = showAuthModal || showPricingModal
+    if (!open) return
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prevOverflow
+    }
+  }, [showAuthModal, showPricingModal])
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
@@ -939,7 +1084,6 @@ export default function Page() {
           --radius-lg: 16px;
           --radius-full: 9999px;
 
-          /* ✅ compact landing header height (content area; safe-area is added separately) */
           --landing-topbar-h: 74px;
         }
 
@@ -1044,6 +1188,397 @@ export default function Page() {
           }
         }
 
+        /* ✅ Modal base (Auth + Pricing) */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 22px;
+          background: rgba(5, 7, 13, 0.52);
+          backdrop-filter: blur(10px) saturate(120%);
+          -webkit-backdrop-filter: blur(10px) saturate(120%);
+          animation: modal-fade 0.14s ease;
+        }
+
+        @keyframes modal-fade {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .modal-container {
+          width: 100%;
+          max-width: 560px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .modal-card {
+          width: 100%;
+          position: relative;
+          border-radius: 18px;
+          padding: 22px;
+          box-shadow: 0 26px 70px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .modal-close {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: rgba(255, 255, 255, 0.78);
+          color: rgba(15, 23, 42, 0.92);
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        }
+
+        .modal-header {
+          padding-right: 42px;
+          margin-bottom: 12px;
+        }
+
+        .modal-title {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: rgba(15, 23, 42, 0.92);
+        }
+
+        /* Auth form minimal styling (safe defaults) */
+        .modal-form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 8px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .form-label {
+          font-size: 12px;
+          font-weight: 700;
+          color: rgba(15, 23, 42, 0.7);
+        }
+
+        .form-input-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .form-input {
+          width: 100%;
+          height: 44px;
+          padding: 0 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: rgba(255, 255, 255, 0.9);
+          color: rgba(15, 23, 42, 0.92);
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .form-toggle-vis {
+          position: absolute;
+          right: 10px;
+          height: 30px;
+          padding: 0 10px;
+          border-radius: 9999px;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: rgba(255, 255, 255, 0.82);
+          color: rgba(15, 23, 42, 0.82);
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 12px;
+        }
+
+        .btn-submit {
+          height: 44px;
+          border-radius: 9999px;
+          border: none;
+          background: var(--accent);
+          color: #fff;
+          font-weight: 800;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          box-shadow: 0 14px 34px rgba(95, 168, 255, 0.24);
+        }
+
+        .btn-submit:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .spinner {
+          width: 16px;
+          height: 16px;
+          border-radius: 9999px;
+          border: 2px solid rgba(255, 255, 255, 0.45);
+          border-top-color: #fff;
+          animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .modal-message {
+          margin-top: 10px;
+          font-size: 13px;
+          font-weight: 700;
+          padding: 10px 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: rgba(255, 255, 255, 0.78);
+          color: rgba(15, 23, 42, 0.86);
+        }
+        .modal-message.ok {
+          border-color: rgba(34, 197, 94, 0.35);
+        }
+        .modal-message.err {
+          border-color: rgba(239, 68, 68, 0.35);
+        }
+
+        .modal-footer {
+          margin-top: 12px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .modal-link {
+          background: transparent;
+          border: none;
+          color: rgba(15, 23, 42, 0.74);
+          font-weight: 800;
+          font-size: 12px;
+          cursor: pointer;
+          padding: 0;
+        }
+        .modal-link:hover {
+          color: rgba(15, 23, 42, 0.92);
+        }
+
+        /* ✅ Pricing modal styling (matches your UI vibe) */
+        .pricing-modal {
+          padding: 24px;
+        }
+
+        .pricing-top {
+          padding-right: 42px;
+        }
+
+        .pricing-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border-radius: 9999px;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: rgba(255, 255, 255, 0.72);
+          color: rgba(15, 23, 42, 0.78);
+          font-size: 12px;
+          font-weight: 800;
+          margin-bottom: 10px;
+        }
+
+        .pricing-pill-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 9999px;
+          background: rgba(95, 168, 255, 0.95);
+          box-shadow: 0 0 0 6px rgba(95, 168, 255, 0.12);
+        }
+
+        .pricing-title {
+          margin-bottom: 6px;
+        }
+
+        .pricing-sub {
+          margin: 0 0 12px 0;
+          color: rgba(30, 41, 59, 0.72);
+          font-size: 13.5px;
+          line-height: 1.6;
+          font-weight: 650;
+        }
+
+        .pricing-grid {
+          margin-top: 12px;
+        }
+
+        .pricing-card {
+          border-radius: 16px;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: rgba(255, 255, 255, 0.74);
+          box-shadow: 0 18px 46px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          padding: 16px;
+        }
+
+        .pricing-card-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+
+        .pricing-plan {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .pricing-plan-name {
+          font-size: 14px;
+          font-weight: 900;
+          color: rgba(15, 23, 42, 0.92);
+          letter-spacing: -0.01em;
+        }
+
+        .pricing-plan-badge {
+          display: inline-flex;
+          width: fit-content;
+          padding: 5px 9px;
+          border-radius: 9999px;
+          border: 1px solid rgba(95, 168, 255, 0.22);
+          background: rgba(95, 168, 255, 0.12);
+          color: rgba(15, 23, 42, 0.82);
+          font-size: 11px;
+          font-weight: 900;
+        }
+
+        .pricing-price {
+          display: flex;
+          align-items: baseline;
+          gap: 6px;
+        }
+
+        .pricing-price-amount {
+          font-size: 22px;
+          font-weight: 950;
+          color: rgba(15, 23, 42, 0.92);
+          letter-spacing: -0.03em;
+        }
+
+        .pricing-price-term {
+          font-size: 12px;
+          font-weight: 900;
+          color: rgba(15, 23, 42, 0.62);
+        }
+
+        .pricing-list {
+          list-style: none;
+          padding: 0;
+          margin: 10px 0 14px 0;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+
+        .pricing-list li {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          font-size: 13px;
+          line-height: 1.5;
+          color: rgba(15, 23, 42, 0.82);
+          font-weight: 700;
+        }
+
+        .pricing-check {
+          width: 20px;
+          height: 20px;
+          flex-shrink: 0;
+          border-radius: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(95, 168, 255, 0.14);
+          border: 1px solid rgba(95, 168, 255, 0.22);
+          color: rgba(15, 23, 42, 0.88);
+          font-weight: 950;
+        }
+
+        .pricing-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .pricing-primary {
+          height: 46px;
+          border-radius: 9999px;
+          border: none;
+          background: var(--accent);
+          color: #fff;
+          font-weight: 950;
+          cursor: pointer;
+          box-shadow: 0 16px 40px rgba(95, 168, 255, 0.26);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          font-size: 14px;
+        }
+
+        .pricing-primary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .pricing-secondary {
+          height: 42px;
+          border-radius: 9999px;
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          background: rgba(255, 255, 255, 0.7);
+          color: rgba(15, 23, 42, 0.86);
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .pricing-fineprint {
+          margin: 12px 2px 0;
+          font-size: 11.5px;
+          line-height: 1.5;
+          color: rgba(15, 23, 42, 0.62);
+          font-weight: 800;
+        }
+
+        .pricing-link {
+          color: rgba(15, 23, 42, 0.78);
+          text-decoration: underline;
+          text-decoration-thickness: 2px;
+          text-underline-offset: 2px;
+        }
+
         /* App */
         .app-container {
           min-height: 100vh;
@@ -1072,7 +1607,6 @@ export default function Page() {
           gap: 12px;
         }
 
-        /* Base sizes (chat keeps its overrides below) */
         .plm-brand-mark {
           width: 140px;
           height: 140px;
@@ -1100,7 +1634,6 @@ export default function Page() {
           text-overflow: ellipsis;
         }
 
-        /* Chat brand: logo only (no text) + larger */
         .plm-brand.chat .plm-brand-inner {
           gap: 0;
         }
@@ -1109,13 +1642,11 @@ export default function Page() {
           height: 110px;
         }
 
-        /* ✅ Landing header-specific tuning (smaller logo + better spacing, no “jam”) */
         .landing-topbar .plm-brand-inner {
           align-items: center;
-          gap: 10px; /* nudge text closer to the mark */
+          gap: 10px;
         }
 
-        /* Keep the header compact, but reserve enough space for the logo */
         .landing-topbar .plm-brand-mark {
           width: 66px;
           height: 66px;
@@ -1123,12 +1654,9 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-
-          /* extra buffer so scaled logo never collides with text */
           margin-right: 4px;
         }
 
-        /* Shrink ~24% from 1.6 → 1.22 and center the growth (prevents pushing into text) */
         .landing-topbar .plm-logo-img {
           transform: translateY(4px) scale(1.22);
           transform-origin: center;
@@ -1148,7 +1676,7 @@ export default function Page() {
           display: none;
         }
 
-        /* Shared icon button styling (camera, settings, send) */
+        /* Shared icon button styling */
         .plm-icon-btn {
           width: 44px;
           height: 44px;
@@ -1292,7 +1820,6 @@ export default function Page() {
           background: var(--accent-hover);
         }
 
-        /* Hero - TRUE CENTER */
         .landing-hero {
           flex: 1;
           display: flex;
@@ -1336,7 +1863,6 @@ export default function Page() {
           margin: 0;
         }
 
-        /* ✅ Only break line on mobile so: "Catch Violations," then "Not Fines." */
         .hero-break {
           display: none;
         }
@@ -1349,7 +1875,6 @@ export default function Page() {
           max-width: 52ch;
         }
 
-        /* ✅ Keep CTA in one row on mobile + desktop */
         .hero-cta-row {
           display: flex;
           align-items: center;
@@ -1358,7 +1883,7 @@ export default function Page() {
           flex-wrap: nowrap;
           flex-direction: row;
           margin-top: 14px;
-          padding-top: 6px; /* a little buffer from body text */
+          padding-top: 6px;
         }
 
         .hero-arrow-text {
@@ -1466,7 +1991,6 @@ export default function Page() {
           transform: translateY(0);
         }
 
-        /* ✅ Footer links centered + darker gray so visible */
         .plm-footer-links {
           position: absolute;
           bottom: max(18px, env(safe-area-inset-bottom));
@@ -1815,12 +2339,6 @@ export default function Page() {
           animation: spin 0.6s linear infinite;
         }
 
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
         .chat-disclaimer {
           text-align: center;
           font-size: 11px;
@@ -1834,12 +2352,10 @@ export default function Page() {
             --landing-topbar-h: 68px;
           }
 
-          /* ✅ Show title line-break only on mobile */
           .hero-break {
             display: inline;
           }
 
-          /* ✅ Keep CTA in one row on mobile */
           .hero-cta-row {
             gap: 10px;
             margin-top: 12px;
@@ -1907,7 +2423,6 @@ export default function Page() {
             padding: 28px 24px;
           }
 
-          /* keep your existing general mobile brand sizing */
           .plm-brand-mark {
             width: 120px;
             height: 120px;
@@ -1918,7 +2433,6 @@ export default function Page() {
             height: 102px;
           }
 
-          /* landing header overrides for mobile */
           .landing-topbar .plm-brand-mark {
             width: 62px;
             height: 62px;
@@ -1964,7 +2478,6 @@ export default function Page() {
             height: 96px;
           }
 
-          /* landing header overrides for tiny screens */
           .landing-topbar .plm-brand-mark {
             width: 58px;
             height: 58px;
@@ -1994,7 +2507,6 @@ export default function Page() {
             padding: 10px 12px;
           }
 
-          /* Keep CTA row from wrapping weirdly on tiny screens */
           .hero-cta-row {
             gap: 8px;
           }
@@ -2014,19 +2526,24 @@ export default function Page() {
         }
       `}</style>
 
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        initialMode={authInitialMode}
-        selectedPriceId={selectedPriceId}
-      />
+      {/* ✅ Render modals via Portal so they always overlay correctly */}
+      <Portal>
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          initialMode={authInitialMode}
+          selectedPriceId={selectedPriceId}
+        />
+      </Portal>
 
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <Portal>
+        <PricingModalLocal
+          isOpen={showPricingModal}
+          onClose={() => setShowPricingModal(false)}
+          onCheckout={handleCheckout}
+          loading={checkoutLoading}
+        />
+      </Portal>
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -2205,7 +2722,9 @@ export default function Page() {
                       </div>
                     </div>
 
-                    <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
+                    <p className="chat-disclaimer">
+                      protocolLM may make mistakes. Verify critical decisions with official regulations.
+                    </p>
                   </LiquidGlass>
                 </div>
               </div>
