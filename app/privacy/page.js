@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
             compliance-related responses. Data is transmitted using industry-standard encryption (TLS 1.2+).
           </li>
           <li>
-            <strong>Cohere API:</strong> Creates embeddings from your queries to search our Washtenaw County food code
+            <strong>Cohere API:</strong> Creates embeddings from your queries to search our Michigan food code
             database. Enables fast, relevant document retrieval.
           </li>
           <li>Processing occurs on secure servers operated by these providers in accordance with their respective privacy policies.</li>
