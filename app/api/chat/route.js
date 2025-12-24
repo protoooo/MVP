@@ -1,6 +1,6 @@
 // app/api/chat/route.js
 // Cohere text + Cohere v2 vision via REST (messages + image_url)
-// ProtocolLM - Washtenaw County Food Safety Compliance Engine
+// ProtocolLM - Michigan Food Safety Compliance Engine (STATEWIDE)
 //
 // Output guarantees (post-processor backstop):
 // - Response starts with: "No violations observed." OR "Violations observed:" OR "Need a quick clarification:"
@@ -211,11 +211,12 @@ function stripPageLikeRefs(text) {
 
 function stripSourceLikeRefs(text) {
   if (!text) return ''
+  // Remove common “source-y” phrases if model leaks them
   return String(text)
-    .replace(/\bViolation Types\s*\|\s*Washtenaw County.*?\b/gi, '')
-    .replace(/\bEnforcement Action\s*\|\s*Washtenaw County.*?\b/gi, '')
     .replace(/\bMichigan Modified Food Code\b/gi, '')
+    .replace(/\bMichigan Food Law\b/gi, '')
     .replace(/\bAct\s*92\s*of\s*2000\b/gi, '')
+    .replace(/\bCourtesy of legislature\.mi\.gov\b/gi, '')
 }
 
 // Removes asterisks and hashtags from user-facing output, no matter what
@@ -314,28 +315,28 @@ function cohereResponseToText(resp) {
 }
 
 // ============================================================================
-// PINNED POLICY RETRIEVAL (CORPUS-BASED) + FALLBACK BLOCK
+// PINNED POLICY RETRIEVAL (STATEWIDE MI) + FALLBACK BLOCK
 // ============================================================================
 
 const PINNED_POLICY_QUERIES = [
-  'Washtenaw County violation types Priority Priority Foundation Core correct within 10 days 90 days follow-up inspection',
-  'Washtenaw County enforcement action imminent health hazard closure office conference informal hearing formal hearing license suspension revocation',
-  'Michigan Modified Food Code Priority item Priority Foundation item correct within 10 days Core within 90 days',
-  'MCL Act 92 of 2000 Priority Item Priority Foundation Item definition',
+  'Michigan Modified Food Code Priority Priority Foundation Core imminent health hazard permit suspension employee restriction vomiting diarrhea jaundice',
+  'Michigan Food Law Act 92 of 2000 enforcement penalties misbranding adulteration unsanitary conditions',
+  'Michigan norovirus environmental cleaning disinfection bleach ppm 1000 5000 food service establishment',
+  'Michigan minimum internal cooking temperatures 165 155 145 reheating 165 within two hours',
 ]
 
-const WASHTENAW_POLICY_FALLBACK = `WASHTENAW COUNTY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
+const MICHIGAN_POLICY_FALLBACK = `MICHIGAN FOOD SAFETY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
+- Core definitions & authority: Michigan Modified Food Code (based on FDA Food Code) and Michigan Food Law (Act 92 of 2000).
 - Categories: Priority (P), Priority Foundation (Pf), Core.
-- Typical correction: P and Pf corrected at inspection or within 10 days; Core corrected by a specified date (typically within 90 days).
-- If imminent health hazard exists (no water, no power, sewage backup, severe pests, fire, flood, outbreak), the county may order immediate closure; reopen only after correction and approval.
-- Otherwise: progressive enforcement can escalate (follow-up inspection, Office Conference, Informal Hearing, license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
+- Imminent health hazard examples: no water/no power/sewage backup/severe pests/fire/flood/outbreak -> may require immediate correction or cessation of operation.
+- Temperature anchors commonly used in practice: Cold holding 41°F or below; Hot holding 135°F or above; Reheat previously cooked TCS foods to 165°F within 2 hours; Cook to minimum internal temps by product (poultry 165°F, ground meats 155°F, seafood/steaks 145°F).`
 
 function normalizeSourceLabel(src) {
   const s = String(src || '').toLowerCase()
-  if (s.includes('violation types')) return 'Washtenaw Violation Categories'
-  if (s.includes('enforcement action')) return 'Washtenaw Enforcement Process'
-  if (s.includes('modified food code')) return 'Michigan Modified Food Code'
-  if (s.includes('act 92')) return 'Michigan Food Law (Act 92)'
+  if (s.includes('modified food code')) return 'MI Modified Food Code'
+  if (s.includes('act 92')) return 'MI Food Law (Act 92)'
+  if (s.includes('norovirus')) return 'MI Norovirus Cleaning'
+  if (s.includes('cooking') || s.includes('temperatures')) return 'MI Cooking Temperatures'
   return safeLine(src || 'Policy')
 }
 
@@ -363,10 +364,10 @@ function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
   return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
 }
 
-async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
+async function fetchPinnedPolicyDocs(searchDocumentsFn, corpusKey) {
   try {
     const tasks = PINNED_POLICY_QUERIES.map((q) =>
-      withTimeout(searchDocumentsFn(q, county, 6), PINNED_RETRIEVAL_TIMEOUT_MS, 'PINNED_TIMEOUT').catch(() => [])
+      withTimeout(searchDocumentsFn(q, corpusKey, 6), PINNED_RETRIEVAL_TIMEOUT_MS, 'PINNED_TIMEOUT').catch(() => [])
     )
 
     const results = await Promise.all(tasks)
@@ -472,12 +473,10 @@ function isImminentHazardText(text) {
 
 function normalizeCategoryLabel(raw) {
   const r = String(raw || '').toLowerCase().trim()
-
   if (!r) return ''
   if (r.includes('priority foundation') || r === 'pf' || r.includes('(pf)')) return 'Priority Foundation (Pf)'
   if (r === 'p' || r.includes('priority') || r.includes('(p)')) return 'Priority (P)'
   if (r.includes('core')) return 'Core'
-
   return raw.trim()
 }
 
@@ -487,9 +486,9 @@ function determineViolationCategory(issue, remediation = '', type = '') {
   if (isImminentHazardText(hay)) {
     return {
       category: 'Priority (P)',
-      correction: 'Correct immediately; operations may be ordered closed until corrected and approved.',
+      correction: 'Correct immediately; operations may be ordered stopped until corrected and approved.',
       ifNotCorrected:
-        'Imminent health hazard: the county may order immediate closure; reopening only after violations are corrected and approval is given.',
+        'Imminent health hazard: regulator may require immediate cessation of operation until corrected and approved.',
     }
   }
 
@@ -504,7 +503,7 @@ function determineViolationCategory(issue, remediation = '', type = '') {
     /reheat(?:ing)?|rapid(?:ly)? reheat/i,
     /cook(?:ing)? .* (?:temp|temperature)|undercook/i,
     /cross\s*contaminat|raw .* ready[- ]?to[- ]?eat|rte/i,
-    /ill\s*employee|vomit|diarrhea|exclude|restrict/i,
+    /ill\s*employee|vomit|diarrhea|jaundice|exclude|restrict/i,
     /sanitize|sanitiz(?:e|ing) (?:food|utensil|equipment)|food[- ]?contact.*sanit/i,
     /\bpest\b|rodent|roach|flies/i,
     /toxic|poison|chemical.*(label|store)|cleaner.*(label|store)/i,
@@ -512,27 +511,33 @@ function determineViolationCategory(issue, remediation = '', type = '') {
   if (priorityPatterns.some((p) => p.test(hay))) {
     return {
       category: 'Priority (P)',
-      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
+      correction: 'Correct immediately or ASAP; follow-up may occur if not corrected.',
       ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference, Informal Hearing, license limitation/suspension/revocation).',
+        'Likely follow-up; repeat/unresolved items can escalate through enforcement actions (up to permit action).',
     }
   }
 
-  const pfPatterns = [/thermometer|probe\s*therm/i, /test\s*strip|sanitizer\s*test/i, /calibrat(?:e|ion)/i, /haccp|plan|critical\s*limit/i, /training|policy|procedure|documentation|record[- ]?keeping/i]
+  const pfPatterns = [
+    /thermometer|probe\s*therm/i,
+    /test\s*strip|sanitizer\s*test/i,
+    /calibrat(?:e|ion)/i,
+    /haccp|plan|critical\s*limit/i,
+    /training|policy|procedure|documentation|record[- ]?keeping/i,
+  ]
   if (pfPatterns.some((p) => p.test(hay))) {
     return {
       category: 'Priority Foundation (Pf)',
-      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
+      correction: 'Correct promptly; follow-up may occur if not corrected.',
       ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference, Informal Hearing, license limitation/suspension/revocation).',
+        'Likely follow-up; repeat/unresolved items can escalate through enforcement actions (up to permit action).',
     }
   }
 
   return {
     category: 'Core',
-    correction: 'Correct by an agreed or specified date, typically no later than 90 days after inspection.',
+    correction: 'Correct by the next inspection or agreed date.',
     ifNotCorrected:
-      'Unresolved or repeat core issues can still lead to enforcement after opportunities to correct during inspection and follow-up.',
+      'Unresolved or repeat core issues can still lead to enforcement after opportunities to correct.',
   }
 }
 
@@ -655,7 +660,6 @@ function normalizeCategoryLines(text) {
 // + EVIDENCE GATE FOR TIME/TEMP CLAIMS
 // ============================================================================
 
-// Also wrap parseViolationBlocks in try-catch (defensive, prevents 500s)
 function parseViolationBlocks(text) {
   try {
     const out = safeText(text || '')
@@ -670,7 +674,6 @@ function parseViolationBlocks(text) {
       if (/^\s*-\s*Type\s*:\s*/i.test(body[i])) starts.push(i)
     }
 
-    // If no structured blocks, treat as tail-only
     if (!starts.length) return { header, blocks: [], tail: body }
 
     const blocks = []
@@ -706,12 +709,10 @@ function parseViolationBlocks(text) {
   }
 }
 
-// Evidence gate: time/temperature/cooking/storage claims require explicit evidence language
 function hasExplicitEvidenceLanguage(text) {
   const t = String(text || '').toLowerCase()
   if (!t) return false
 
-  // Evidence indicators that can plausibly be visible in a photo
   const evidence = [
     /thermometer/i,
     /probe/i,
@@ -723,7 +724,7 @@ function hasExplicitEvidenceLanguage(text) {
     /date[-\s]*marked/i,
     /timestamp/i,
     /time\s*stamp/i,
-    /\b\d{1,2}:\d{2}\b/i, // clock time
+    /\b\d{1,2}:\d{2}\b/i,
     /\b\d{1,3}\s*°?\s*f\b/i,
     /\b\d{1,3}\s*°?\s*c\b/i,
     /logged/i,
@@ -769,11 +770,9 @@ function looksLikeTimeTempOrOperationalInference(issue, remediation, type) {
   return timeTempInference.some((p) => p.test(t)) || operationalInference.some((p) => p.test(t))
 }
 
-// UPDATED: tighter “absence” patterns so we don’t delete legit “blocked/dirty/obstructed” findings
 function looksLikeNonVisualAssumption(issue, remediation, type) {
   const t = `${issue || ''} ${remediation || ''} ${type || ''}`.toLowerCase()
 
-  // Only flag true “absence / not present” claims (not “blocked/dirty/inaccessible”)
   const absenceClaims = [
     /\bno\s+hand\s*wash(?:ing)?\s*(?:sink)?\s*(?:available|present|provided|exists)\b/i,
     /\bhand\s*wash(?:ing)?\s*sink\s*(?:not\s+available|not\s+present|not\s+provided|does\s+not\s+exist)\b/i,
@@ -790,7 +789,6 @@ function looksLikeNonVisualAssumption(issue, remediation, type) {
     /\bmissing\s+test\s*strip(?:s)?\b/i,
   ]
 
-  // We explicitly allow visible “accessibility” findings; do NOT treat them as assumptions
   const allowedVisibleAccessibility = [
     /\bblocked\b/i,
     /\bobstructed\b/i,
@@ -804,11 +802,8 @@ function looksLikeNonVisualAssumption(issue, remediation, type) {
     /\bgrime\b/i,
   ]
   const isAccessibilityFinding = allowedVisibleAccessibility.some((p) => p.test(t))
-
-  // If it’s an accessibility/condition claim, keep it (it can be visible)
   if (isAccessibilityFinding) return false
 
-  // Hard-block operational/cooking-status claims as “violations”
   const operationalInference = [
     /\bstove(top)?\s+(?:is|was)\s+on\b/i,
     /\bburner(s)?\s+(?:is|are|was|were)\s+on\b/i,
@@ -818,7 +813,6 @@ function looksLikeNonVisualAssumption(issue, remediation, type) {
     /\bactively\s+cook(?:ing)?\b/i,
   ]
 
-  // Time/temp/storage/cooking claims require evidence language somewhere in the block
   const timeTempOrOperational = looksLikeTimeTempOrOperationalInference(issue, remediation, type)
   const hasEvidence = hasExplicitEvidenceLanguage(`${issue} ${remediation}`)
 
@@ -839,16 +833,13 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
   for (const b of droppedBlocks || []) {
     const t = `${b?.issue || ''} ${b?.type || ''} ${b?.remediation || ''}`.toLowerCase()
 
-    // Presence vs accessibility nuance
     if (t.includes('hand') && (t.includes('wash') || t.includes('handwash'))) {
-      add(
-        'Is the handwashing sink present in the area, and is it currently accessible (not blocked or used for storage) and stocked with soap and paper towels?'
-      )
+      add('Is the handwashing sink present in the area, and is it accessible and stocked (soap + paper towels)?')
       continue
     }
 
     if (t.includes('thermometer') || t.includes('test strip') || t.includes('sanitizer')) {
-      add('Do you have a thermometer/test-strip reading you can share, or a photo showing the display/label/reading?')
+      add('Can you share a close-up photo of the thermometer/test-strip reading or label?')
       continue
     }
 
@@ -860,22 +851,19 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
       t.includes('reheat') ||
       t.includes('holding')
     ) {
-      add('Is there a visible label, date mark, or thermometer reading for the food/item in question? If so, can you share a close-up photo of it?')
+      add('Is there a visible label/date mark or thermometer display for the item? If yes, can you share a close-up?')
       continue
     }
 
     if (t.includes('stove') || t.includes('stovetop') || t.includes('burner') || t.includes('timer') || t.includes('unattended')) {
-      add('Were any burners actually on at the time of the photo, or was the pot just sitting on the stovetop?')
+      add('Were any burners actually on at the time of the photo, or was the pot just sitting there?')
       continue
     }
 
-    add('Can you share one more photo that shows the specific area being referenced more clearly?')
+    add('Can you share one more photo angle that shows the referenced area clearly?')
   }
 
-  if (!qs.length) {
-    add('Can you share a clearer photo or one more angle of the area you want reviewed?')
-  }
-
+  if (!qs.length) add('Can you share a clearer photo or one more angle of the area you want reviewed?')
   return qs.slice(0, 3)
 }
 
@@ -901,15 +889,12 @@ function rebuildResponseFromBlocks(header, blocks, clarificationQuestions) {
   if (clarificationQuestions && clarificationQuestions.length) {
     parts.push('')
     parts.push('Need a quick clarification:')
-    for (const q of clarificationQuestions.slice(0, 3)) {
-      parts.push(`- ${safeLine(q)}`)
-    }
+    for (const q of clarificationQuestions.slice(0, 3)) parts.push(`- ${safeLine(q)}`)
   }
 
   return parts.join('\n').trim()
 }
 
-// Replace the applyNoAssumptionsGuard function (wrapped in try/catch for safety)
 function applyNoAssumptionsGuard(text, hasImage) {
   if (!hasImage) return { text, dropped: 0 }
 
@@ -928,18 +913,14 @@ function applyNoAssumptionsGuard(text, hasImage) {
       const remediation = safeLine(b.remediation || '')
       const type = safeLine(b.type || '')
 
-      if (looksLikeNonVisualAssumption(issue, remediation, type)) {
-        drop.push(b)
-      } else {
-        keep.push(b)
-      }
+      if (looksLikeNonVisualAssumption(issue, remediation, type)) drop.push(b)
+      else keep.push(b)
     }
 
     if (!drop.length) return { text: out, dropped: 0 }
 
     const questions = buildClarificationQuestionsFromDropped(drop)
 
-    // If everything was assumption-based, return clarification-only
     if (!keep.length) {
       const parts = ['Need a quick clarification:']
       for (const q of questions) parts.push(`- ${safeLine(q)}`)
@@ -949,7 +930,6 @@ function applyNoAssumptionsGuard(text, hasImage) {
     const rebuilt = rebuildResponseFromBlocks('Violations observed:', keep, questions)
     return { text: rebuilt, dropped: drop.length }
   } catch (error) {
-    // If parsing fails, return original text (non-breaking) to prevent 500s
     logger.warn('Violation parser error (non-breaking)', { error: error?.message })
     return { text: safeText(text || ''), dropped: 0 }
   }
@@ -968,7 +948,6 @@ function ensureAllowedHeader(text) {
 
   if (ok) return out
 
-  // Heuristic fallback
   if (/\bNeed a quick clarification\b/i.test(out) || /\?\s*$/.test(out)) {
     return `Need a quick clarification:\n- ${safeLine(out).slice(0, 220)}`
   }
@@ -976,7 +955,6 @@ function ensureAllowedHeader(text) {
   return `No violations observed.\n${safeLine(out).slice(0, 180)}`
 }
 
-// NEW: Encourage visibility language in Issue lines (non-breaking).
 function enforceVisibilityLanguage(text, hasImage) {
   if (!hasImage) return text
   const out = safeText(text || '')
@@ -1006,9 +984,12 @@ function enforceVisibilityLanguage(text, hasImage) {
 // COHERE v2 (REST) CHAT CALL FOR VISION + TEXT
 // ============================================================================
 
-async function callCohereChatV2Rest({ model, messages }) {
+async function callCohereChatV2Rest({ model, messages, documents }) {
   const apiKey = process.env.COHERE_API_KEY
   if (!apiKey) throw new Error('COHERE_API_KEY not configured')
+
+  const payload = { model, messages }
+  if (documents && Array.isArray(documents) && documents.length) payload.documents = documents
 
   const res = await fetch('https://api.cohere.com/v2/chat', {
     method: 'POST',
@@ -1016,7 +997,7 @@ async function callCohereChatV2Rest({ model, messages }) {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ model, messages }),
+    body: JSON.stringify(payload),
   })
 
   const raw = await res.text().catch(() => '')
@@ -1067,9 +1048,6 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
 }
 
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
-  // For v2/chat: documents are supported as "documents" in v2 (but schema differs),
-  // so we keep them inside the preamble as excerpts and also pass minimal docs as a best-effort.
-  // If Cohere rejects documents in v2 for your model, it will fall back to text-only later.
   const docs = (documents || []).map((doc) => ({
     id: doc?.id || 'internal',
     title: doc?.title || doc?.source || 'Policy',
@@ -1084,17 +1062,11 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     images,
   })
 
-  // If images were provided but got normalized away, throw so we can fall back cleanly.
   if (images && Array.isArray(images) && images.length && normalizedImagesCount === 0) {
     throw new Error('Image payload missing after normalization (v2)')
   }
 
-  const payload = { model, messages }
-
-  // Best-effort: only attach documents if present (some models accept, some may reject)
-  if (docs.length) payload.documents = docs
-
-  const respV2 = await callCohereChatV2Rest(payload)
+  const respV2 = await callCohereChatV2Rest({ model, messages, documents: docs.length ? docs : undefined })
   respV2.__text = cohereResponseToText(respV2)
   respV2.__format = 'v2_rest'
   return respV2
@@ -1146,13 +1118,12 @@ function extractSearchKeywords(text) {
     'priority',
     'priority foundation',
     'core',
-    'office conference',
-    'informal hearing',
-    'formal hearing',
-    'enforcement action',
     'imminent health hazard',
     'closure',
-    'license suspension',
+    'permit suspension',
+    'act 92',
+    'michigan modified food code',
+    'norovirus',
   ]
 
   const lower = (text || '').toLowerCase()
@@ -1190,9 +1161,9 @@ function wantsFineInfo(text) {
 // ============================================================================
 
 function getUserFriendlyErrorMessage(errorMessage) {
-  if (errorMessage === 'VISION_TIMEOUT') return 'Photo analysis took too long. Try a smaller image or wait 10 seconds and try again.'
+  if (errorMessage === 'VISION_TIMEOUT') return 'Photo analysis took too long. Try a smaller image or try again.'
   if (errorMessage === 'RETRIEVAL_TIMEOUT') return 'Document search timed out. Please try again.'
-  if (errorMessage === 'ANSWER_TIMEOUT') return 'Response generation timed out. System may be busy. Try again in 10 seconds.'
+  if (errorMessage === 'ANSWER_TIMEOUT') return 'Response timed out. Try again in a few seconds.'
   if (errorMessage === 'EMBEDDING_TIMEOUT') return 'Search processing timed out. Please try again.'
   return 'Unable to process request. Please try again.'
 }
@@ -1241,6 +1212,103 @@ function getSessionInfo(request) {
 }
 
 // ============================================================================
+// TOOL-STYLE OUTPUT FORMATTER (HTML + TEXT)
+// ============================================================================
+
+function escapeHtml(input) {
+  if (input === null || input === undefined) return ''
+  return String(input)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function stripTags(html) {
+  return String(html || '')
+    .replace(/<\/(div|p|li|ul|ol|br|span|b|strong)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+// Compact: 1–2 lines per violation (tool feel)
+function toolHtmlFromFinalText(finalText) {
+  const t = safeText(finalText || '')
+  if (!t) {
+    const html = `<div style="font-family:ui-sans-serif,system-ui;line-height:1.25">
+      <b style="color:#34d399">Looks great.</b> No violations spotted.
+    </div>`
+    return { html, text: stripTags(html) }
+  }
+
+  const first = t.split('\n').find((l) => l.trim())?.trim() || ''
+
+  if (/^No violations observed\./i.test(first)) {
+    const html = `<div style="font-family:ui-sans-serif,system-ui;line-height:1.25">
+      <b style="color:#34d399">Looks great.</b> No violations spotted.
+    </div>`
+    return { html, text: stripTags(html) }
+  }
+
+  if (/^Need a quick clarification:/i.test(first)) {
+    const lines = t.split('\n').slice(1).filter((l) => l.trim().startsWith('-'))
+    const items = lines.slice(0, 3).map((l) => escapeHtml(safeLine(l.replace(/^-/, '').trim())))
+    const html = `<div style="font-family:ui-sans-serif,system-ui;line-height:1.25">
+      <b style="color:#fbbf24">Need a quick clarification.</b>
+      <ul style="margin:8px 0 0 18px;padding:0">
+        ${items.map((q) => `<li style="margin:4px 0">${q}</li>`).join('')}
+      </ul>
+    </div>`
+    return { html, text: stripTags(html) }
+  }
+
+  // Violations
+  const parsed = parseViolationBlocks(t)
+  const blocks = parsed?.blocks || []
+
+  // If model didn’t give structured blocks for some reason, show a minimal fallback
+  if (!blocks.length) {
+    const html = `<div style="font-family:ui-sans-serif,system-ui;line-height:1.25">
+      <b style="color:#ef4444">Violation</b>; ${escapeHtml(safeLine(t).slice(0, 260))}
+    </div>`
+    return { html, text: stripTags(html) }
+  }
+
+  const rows = blocks.slice(0, 12).map((b) => {
+    const type = escapeHtml(safeLine(b.type || determineViolationType(b.issue || '')))
+    const cat = escapeHtml(normalizeCategoryLabel(b.category || ''))
+    const issue = escapeHtml(safeLine(b.issue || ''))
+    const fix = escapeHtml(safeLine(b.remediation || ''))
+    const by = escapeHtml(safeLine(b.correction || ''))
+    // Keep “if not corrected” very short (tool vibe)
+    const risk = escapeHtml(safeLine(b.ifNotCorrected || '').slice(0, 160))
+
+    // One compact card
+    return `
+      <div style="padding:10px 12px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;margin:10px 0;background:rgba(255,255,255,0.04)">
+        <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+          <b style="color:#ef4444">VIOLATION</b>
+          <span style="color:rgba(255,255,255,0.78)">${type}${cat ? ` • ${cat}` : ''}</span>
+        </div>
+        <div style="margin-top:6px;color:rgba(255,255,255,0.92)">${issue}</div>
+        ${fix ? `<div style="margin-top:6px;color:rgba(255,255,255,0.78)"><b style="color:#93c5fd">Fix</b>: ${fix}</div>` : ''}
+        ${by ? `<div style="margin-top:4px;color:rgba(255,255,255,0.72)"><b style="color:#a7f3d0">By</b>: ${by}</div>` : ''}
+        ${risk ? `<div style="margin-top:4px;color:rgba(255,255,255,0.62)"><b style="color:#fca5a5">If not fixed</b>: ${risk}</div>` : ''}
+      </div>
+    `
+  })
+
+  const html = `<div style="font-family:ui-sans-serif,system-ui;line-height:1.25">
+    ${rows.join('')}
+  </div>`
+
+  return { html, text: stripTags(html) }
+}
+
+// ============================================================================
 // FINALIZE USER-FACING OUTPUT (HARD VALIDATOR PIPELINE)
 // ============================================================================
 
@@ -1251,10 +1319,8 @@ function finalizeUserFacingText(raw, hasImage) {
   out = sanitizeOutput(enrichViolationsIfMissingFields(out))
   out = sanitizeOutput(normalizeCategoryLines(out))
 
-  // Encourage “visible in photo” phrasing in Issue lines (image mode)
   out = sanitizeOutput(enforceVisibilityLanguage(out, hasImage))
 
-  // No-assumptions guard (image mode) - now non-breaking
   const guarded = applyNoAssumptionsGuard(out, hasImage)
   out = sanitizeOutput(guarded.text)
 
@@ -1335,12 +1401,17 @@ export async function POST(request) {
 
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for food safety and sanitation issues. Only report violations you can directly see in the photo. Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, storage duration, or that cooking is actively occurring unless clearly visible (labels, date marks, displays, thermometer readings). Do not report cooking timers or generic "stove is on" operational warnings as violations. If you cannot confirm, ask up to three short clarification questions instead of guessing. For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
+        'Review the photo for Michigan food safety and sanitation issues. Only report violations you can directly see in the photo. Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, storage duration, or that cooking is actively occurring unless clearly visible (labels, date marks, displays, thermometer readings). Do not report cooking timers or generic "stove is on" operational warnings as violations. If you cannot confirm, ask up to three short clarification questions instead of guessing. For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
     }
 
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
 
-    const county = safeLine(body?.county || 'washtenaw') || 'washtenaw'
+    // ---- STATEWIDE CORPUS KEY ----
+    // Keep request param name "county" for backward compatibility, but treat it as a corpus key.
+    // If callers send "washtenaw", map to "michigan" so you’re statewide by default.
+    const rawCorpusKey = safeLine(body?.county || body?.corpus || body?.jurisdiction || 'michigan') || 'michigan'
+    const corpusKey = rawCorpusKey.toLowerCase().includes('washtenaw') ? 'michigan' : rawCorpusKey.toLowerCase()
+
     const effectivePrompt = userMessage
 
     const fullAudit = wantsFullAudit(effectivePrompt) || Boolean(body?.fullAudit)
@@ -1474,12 +1545,12 @@ export async function POST(request) {
     // ========================================================================
 
     const userKeywords = extractSearchKeywords(effectivePrompt)
-    const searchQuery = [effectivePrompt, userKeywords.slice(0, 7).join(' '), 'Washtenaw County Michigan food code']
+    const searchQuery = [effectivePrompt, userKeywords.slice(0, 7).join(' '), 'Michigan food code']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
 
-    const pinnedPolicyDocsPromise = fetchPinnedPolicyDocs(searchDocumentsFn, county)
+    const pinnedPolicyDocsPromise = fetchPinnedPolicyDocs(searchDocumentsFn, corpusKey)
 
     let userDocs = []
     let rerankUsed = false
@@ -1487,7 +1558,7 @@ export async function POST(request) {
 
     try {
       const initialDocs = await withTimeout(
-        searchDocumentsFn(searchQuery, county, TOPK_PER_QUERY),
+        searchDocumentsFn(searchQuery, corpusKey, TOPK_PER_QUERY),
         RETRIEVAL_TIMEOUT_MS,
         'RETRIEVAL_TIMEOUT'
       )
@@ -1546,31 +1617,25 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // SYSTEM PROMPT (PLAIN TEXT FORMAT, NO MARKDOWN)
+    // SYSTEM PROMPT (STATEWIDE MI + TOOL-LIKE, SHORT OUTPUT)
     // ========================================================================
 
-    const systemPrompt = `You are ProtocolLM - a Washtenaw County, Michigan food service compliance assistant.
+    const systemPrompt = `You are ProtocolLM — a Michigan food service compliance tool (statewide).
 
 You may receive a user question and sometimes one or more photos. You also receive internal policy excerpts for grounding.
-Do not mention, cite, or reference any documents, excerpts, page numbers, ids, filenames, or sources in your response.
+Do NOT mention, cite, or reference any documents, excerpts, page numbers, ids, filenames, or sources in your response.
 
 Critical rule for photos:
 - Only report violations you can directly see in the photo.
-- For each violation Issue, describe it as a visible observation (use language like "In the photo, I can see ...").
-- Do not assume missing sinks, missing soap/towels, temperatures, time out of temperature control, "leftovers," storage duration, or whether cooking is actively occurring unless clearly visible evidence is present (labels, date marks, displays, gauges, thermometer readings, timestamps).
+- Do not assume missing sinks, missing soap/towels, temperatures, time out of temperature control, storage duration, "leftovers," or whether cooking is actively occurring unless clearly visible evidence is present (labels, date marks, displays, gauges, thermometer readings, timestamps).
 - Do NOT report cooking timers, “timer not set”, or generic “stove/burner is on” operational warnings as food-code violations.
 - If you cannot confirm, ask up to three short clarification questions instead of guessing.
 
-Goals:
-- Identify specific violations based on observed conditions or user descriptions.
-- Provide clear, actionable remediation steps for each violation.
-- Specify the violation Type (example: Food Storage, Sanitation, Temperature Control).
-- Classify each issue as Category: Priority (P), Priority Foundation (Pf), or Core.
-- For each violation, include Correction time frame and what typically happens if not corrected (follow-up, enforcement, closure for imminent hazards).
-- Avoid false positives. If unsure, ask clarifying questions instead of guessing.
-- No emojis. No citations. Do not mention confidence.
+Tone and length:
+- Respond like a utility tool, not a chat agent.
+- Be concise and actionable. No filler.
 
-Output format:
+Output format (plain text only; no markdown; no emojis):
 If no issues are visible:
 - Start with: No violations observed.
 - Add 1 short sentence.
@@ -1615,7 +1680,7 @@ If you need clarification:
     }
 
     const systemHistoryPreamble = historySystemMessages.filter(Boolean).join('\n\n')
-    const fallbackBlock = pinnedPolicyDocs.length ? '' : WASHTENAW_POLICY_FALLBACK
+    const fallbackBlock = pinnedPolicyDocs.length ? '' : MICHIGAN_POLICY_FALLBACK
 
     const preambleParts = [
       systemPrompt,
@@ -1633,8 +1698,7 @@ If you need clarification:
     // ========================================================================
 
     let modelText = ''
-    let assistantMessage = ''
-    let status = 'guidance'
+    let assistantFinalText = ''
     let usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
     let billedUnits = {}
     let tokenUsage = {}
@@ -1665,7 +1729,7 @@ If you need clarification:
         billedUnits = answerResp?.meta?.billed_units || answerResp?.billed_units || {}
         tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
         modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
-        assistantMessage = finalizeUserFacingText(modelText || 'Unable to process request. Please try again.', hasImage)
+        assistantFinalText = finalizeUserFacingText(modelText || 'Unable to process request. Please try again.', hasImage)
       } catch (visionErr) {
         const detail = safeErrorDetails(visionErr)
         const isLikelyBadRequest =
@@ -1683,7 +1747,7 @@ If you need clarification:
           billedUnits = fallbackResp?.meta?.billed_units || fallbackResp?.billed_units || {}
           tokenUsage = fallbackResp?.meta?.tokens || fallbackResp?.tokens || {}
           modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
-          assistantMessage = finalizeUserFacingText(
+          assistantFinalText = finalizeUserFacingText(
             `Photo analysis is temporarily unavailable. Answering based on the request text.\n\n${modelText || 'Unable to process request. Please try again.'}`,
             false
           )
@@ -1701,6 +1765,14 @@ If you need clarification:
     }
 
     // ========================================================================
+    // TOOL-LIKE TRANSFORM: FINAL TEXT -> HTML (and plain fallback)
+    // ========================================================================
+
+    const tool = toolHtmlFromFinalText(assistantFinalText)
+    const assistantMessageHtml = tool.html
+    const assistantMessagePlain = tool.text || assistantFinalText
+
+    // ========================================================================
     // UPDATE MEMORY
     // ========================================================================
 
@@ -1709,7 +1781,7 @@ If you need clarification:
       try {
         await updateMemory(userId, {
           userMessage: effectivePrompt,
-          assistantResponse: assistantMessage,
+          assistantResponse: assistantMessagePlain,
           mode: imageMode,
           meta: { firstUseComplete: true },
           firstUseComplete: true,
@@ -1725,7 +1797,6 @@ If you need clarification:
 
     logger.info('Response complete', {
       hasImage,
-      status,
       durationMs: Date.now() - startedAt,
       docsRetrieved: contextDocs.length,
       pinnedPolicyDocs: pinnedPolicyDocs.length,
@@ -1735,7 +1806,7 @@ If you need clarification:
       visionFallbackUsed,
       embedModel: COHERE_EMBED_MODEL,
       embedDims: COHERE_EMBED_DIMS,
-      rerankUsed,
+      rerankUsed: FEATURE_RERANK,
     })
 
     await logModelUsageDetail({
@@ -1747,8 +1818,8 @@ If you need clarification:
       outputTokens: tokenUsage.output_tokens ?? tokenUsage.completion_tokens,
       billedInputTokens: billedUnits.input_tokens,
       billedOutputTokens: billedUnits.output_tokens,
-      rerankUsed,
-      rerankCandidates,
+      rerankUsed: FEATURE_RERANK,
+      rerankCandidates: 0,
     })
 
     await safeLogUsage({
@@ -1760,18 +1831,21 @@ If you need clarification:
 
     return NextResponse.json(
       {
-        message: assistantMessage,
+        // Plain text fallback (always safe)
+        message: assistantMessagePlain,
+        // Tool UI output (render on client)
+        message_html: assistantMessageHtml,
         _meta: {
           model: usedModel,
           modelLabel: MODEL_LABEL,
           hasImage,
-          status,
           fullAudit,
           includeFines,
           docsRetrieved: contextDocs.length,
           pinnedPolicyDocs: pinnedPolicyDocs.length,
           durationMs: Date.now() - startedAt,
           visionFallbackUsed,
+          corpusKey,
         },
       },
       { status: 200 }
