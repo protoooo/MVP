@@ -159,13 +159,13 @@ const FEATURE_COHERE = (process.env.FEATURE_COHERE ?? 'true').toLowerCase() !== 
 const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() === 'true'
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
-const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-8b'
+const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-32b'
 
 const rawEmbedModel = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
 const COHERE_EMBED_MODEL = rawEmbedModel === 'embed-english-v4.0' ? 'embed-v4.0' : rawEmbedModel
 const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1536
 
-const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v3.5'
+const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v4.0-pro'
 const MODEL_LABEL = 'Cohere'
 
 // Time budgets
@@ -359,6 +359,10 @@ function dedupeByText(items) {
   return out
 }
 
+function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
+}
+
 async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
   try {
     const tasks = PINNED_POLICY_QUERIES.map((q) =>
@@ -514,13 +518,7 @@ function determineViolationCategory(issue, remediation = '', type = '') {
     }
   }
 
-  const pfPatterns = [
-    /thermometer|probe\s*therm/i,
-    /test\s*strip|sanitizer\s*test/i,
-    /calibrat(?:e|ion)/i,
-    /haccp|plan|critical\s*limit/i,
-    /training|policy|procedure|documentation|record[- ]?keeping/i,
-  ]
+  const pfPatterns = [/thermometer|probe\s*therm/i, /test\s*strip|sanitizer\s*test/i, /calibrat(?:e|ion)/i, /haccp|plan|critical\s*limit/i, /training|policy|procedure|documentation|record[- ]?keeping/i]
   if (pfPatterns.some((p) => p.test(hay))) {
     return {
       category: 'Priority Foundation (Pf)',
@@ -657,49 +655,55 @@ function normalizeCategoryLines(text) {
 // + EVIDENCE GATE FOR TIME/TEMP CLAIMS
 // ============================================================================
 
+// Also wrap parseViolationBlocks in try-catch (defensive, prevents 500s)
 function parseViolationBlocks(text) {
-  const out = safeText(text || '')
-  const lines = out.split('\n').filter((l) => l.trim().length > 0)
-  if (!lines.length) return { header: '', blocks: [], tail: [] }
+  try {
+    const out = safeText(text || '')
+    const lines = out.split('\n').filter((l) => l.trim().length > 0)
+    if (!lines.length) return { header: '', blocks: [], tail: [] }
 
-  const header = lines[0].trim()
-  const body = lines.slice(1)
+    const header = lines[0].trim()
+    const body = lines.slice(1)
 
-  const starts = []
-  for (let i = 0; i < body.length; i++) {
-    if (/^\s*-\s*Type\s*:\s*/i.test(body[i])) starts.push(i)
+    const starts = []
+    for (let i = 0; i < body.length; i++) {
+      if (/^\s*-\s*Type\s*:\s*/i.test(body[i])) starts.push(i)
+    }
+
+    // If no structured blocks, treat as tail-only
+    if (!starts.length) return { header, blocks: [], tail: body }
+
+    const blocks = []
+    for (let si = 0; si < starts.length; si++) {
+      const start = starts[si]
+      const end = si + 1 < starts.length ? starts[si + 1] : body.length
+      const chunk = body.slice(start, end)
+      const joined = chunk.join('\n')
+
+      const type = safeLine(joined.match(/-\s*Type\s*:\s*(.+)\s*$/im)?.[1] || '')
+      const category = safeLine(joined.match(/^\s*Category\s*:\s*(.+)\s*$/im)?.[1] || '')
+      const issue = safeLine(joined.match(/^\s*Issue\s*:\s*(.+)\s*$/im)?.[1] || '')
+      const remediation = safeLine(joined.match(/^\s*Remediation\s*:\s*(.+)\s*$/im)?.[1] || '')
+      const correction = safeLine(joined.match(/^\s*Correction\s*:\s*(.+)\s*$/im)?.[1] || '')
+      const ifNotCorrected = safeLine(joined.match(/^\s*If not corrected\s*:\s*(.+)\s*$/im)?.[1] || '')
+
+      blocks.push({
+        type,
+        category,
+        issue,
+        remediation,
+        correction,
+        ifNotCorrected,
+        rawLines: chunk,
+        rawText: joined,
+      })
+    }
+
+    return { header, blocks, tail: [] }
+  } catch (error) {
+    logger.warn('Parse violation blocks error (non-breaking)', { error: error?.message })
+    return { header: '', blocks: [], tail: [] }
   }
-
-  // If no structured blocks, treat as tail-only
-  if (!starts.length) return { header, blocks: [], tail: body }
-
-  const blocks = []
-  for (let si = 0; si < starts.length; si++) {
-    const start = starts[si]
-    const end = si + 1 < starts.length ? starts[si + 1] : body.length
-    const chunk = body.slice(start, end)
-    const joined = chunk.join('\n')
-
-    const type = safeLine(joined.match(/-\s*Type\s*:\s*(.+)\s*$/im)?.[1] || '')
-    const category = safeLine(joined.match(/^\s*Category\s*:\s*(.+)\s*$/im)?.[1] || '')
-    const issue = safeLine(joined.match(/^\s*Issue\s*:\s*(.+)\s*$/im)?.[1] || '')
-    const remediation = safeLine(joined.match(/^\s*Remediation\s*:\s*(.+)\s*$/im)?.[1] || '')
-    const correction = safeLine(joined.match(/^\s*Correction\s*:\s*(.+)\s*$/im)?.[1] || '')
-    const ifNotCorrected = safeLine(joined.match(/^\s*If not corrected\s*:\s*(.+)\s*$/im)?.[1] || '')
-
-    blocks.push({
-      type,
-      category,
-      issue,
-      remediation,
-      correction,
-      ifNotCorrected,
-      rawLines: chunk,
-      rawText: joined,
-    })
-  }
-
-  return { header, blocks, tail: [] }
 }
 
 // Evidence gate: time/temperature/cooking/storage claims require explicit evidence language
@@ -837,7 +841,9 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
 
     // Presence vs accessibility nuance
     if (t.includes('hand') && (t.includes('wash') || t.includes('handwash'))) {
-      add('Is the handwashing sink present in the area, and is it currently accessible (not blocked or used for storage) and stocked with soap and paper towels?')
+      add(
+        'Is the handwashing sink present in the area, and is it currently accessible (not blocked or used for storage) and stocked with soap and paper towels?'
+      )
       continue
     }
 
@@ -846,7 +852,14 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
       continue
     }
 
-    if (t.includes('room temperature') || t.includes('leftover') || t.includes('stored') || t.includes('cool') || t.includes('reheat') || t.includes('holding')) {
+    if (
+      t.includes('room temperature') ||
+      t.includes('leftover') ||
+      t.includes('stored') ||
+      t.includes('cool') ||
+      t.includes('reheat') ||
+      t.includes('holding')
+    ) {
       add('Is there a visible label, date mark, or thermometer reading for the food/item in question? If so, can you share a close-up photo of it?')
       continue
     }
@@ -896,39 +909,50 @@ function rebuildResponseFromBlocks(header, blocks, clarificationQuestions) {
   return parts.join('\n').trim()
 }
 
+// Replace the applyNoAssumptionsGuard function (wrapped in try/catch for safety)
 function applyNoAssumptionsGuard(text, hasImage) {
   if (!hasImage) return { text, dropped: 0 }
 
-  const out = safeText(text || '')
-  if (!/^Violations observed:/i.test(out)) return { text: out, dropped: 0 }
+  try {
+    const out = safeText(text || '')
+    if (!/^Violations observed:/i.test(out)) return { text: out, dropped: 0 }
 
-  const parsed = parseViolationBlocks(out)
-  if (!parsed.blocks.length) return { text: out, dropped: 0 }
+    const parsed = parseViolationBlocks(out)
+    if (!parsed.blocks.length) return { text: out, dropped: 0 }
 
-  const keep = []
-  const drop = []
+    const keep = []
+    const drop = []
 
-  for (const b of parsed.blocks) {
-    const issue = safeLine(b.issue || '')
-    const remediation = safeLine(b.remediation || '')
-    const type = safeLine(b.type || '')
-    if (looksLikeNonVisualAssumption(issue, remediation, type)) drop.push(b)
-    else keep.push(b)
+    for (const b of parsed.blocks) {
+      const issue = safeLine(b.issue || '')
+      const remediation = safeLine(b.remediation || '')
+      const type = safeLine(b.type || '')
+
+      if (looksLikeNonVisualAssumption(issue, remediation, type)) {
+        drop.push(b)
+      } else {
+        keep.push(b)
+      }
+    }
+
+    if (!drop.length) return { text: out, dropped: 0 }
+
+    const questions = buildClarificationQuestionsFromDropped(drop)
+
+    // If everything was assumption-based, return clarification-only
+    if (!keep.length) {
+      const parts = ['Need a quick clarification:']
+      for (const q of questions) parts.push(`- ${safeLine(q)}`)
+      return { text: parts.join('\n').trim(), dropped: drop.length }
+    }
+
+    const rebuilt = rebuildResponseFromBlocks('Violations observed:', keep, questions)
+    return { text: rebuilt, dropped: drop.length }
+  } catch (error) {
+    // If parsing fails, return original text (non-breaking) to prevent 500s
+    logger.warn('Violation parser error (non-breaking)', { error: error?.message })
+    return { text: safeText(text || ''), dropped: 0 }
   }
-
-  if (!drop.length) return { text: out, dropped: 0 }
-
-  const questions = buildClarificationQuestionsFromDropped(drop)
-
-  // If everything was assumption-based, return clarification-only
-  if (!keep.length) {
-    const parts = ['Need a quick clarification:']
-    for (const q of questions) parts.push(`- ${safeLine(q)}`)
-    return { text: parts.join('\n').trim(), dropped: drop.length }
-  }
-
-  const rebuilt = rebuildResponseFromBlocks('Violations observed:', keep, questions)
-  return { text: rebuilt, dropped: drop.length }
 }
 
 function ensureAllowedHeader(text) {
@@ -953,8 +977,6 @@ function ensureAllowedHeader(text) {
 }
 
 // NEW: Encourage visibility language in Issue lines (non-breaking).
-// If the model forgets, we lightly prefix Issue with “In the photo, I can see …”
-// only in image mode and only if Issue doesn’t already have visibility phrasing.
 function enforceVisibilityLanguage(text, hasImage) {
   if (!hasImage) return text
   const out = safeText(text || '')
@@ -981,7 +1003,7 @@ function enforceVisibilityLanguage(text, hasImage) {
 }
 
 // ============================================================================
-// COHERE v2 (REST) CHAT CALL FOR VISION
+// COHERE v2 (REST) CHAT CALL FOR VISION + TEXT
 // ============================================================================
 
 async function callCohereChatV2Rest({ model, messages }) {
@@ -1011,17 +1033,6 @@ async function callCohereChatV2Rest({ model, messages }) {
   } catch {
     throw new Error('COHERE_V2_CHAT_BAD_JSON')
   }
-}
-
-// ============================================================================
-// COHERE CHAT CALL
-// - Vision uses v2 REST (messages + image_url)
-// - Text uses SDK legacy (message + preamble + chat_history)
-// ============================================================================
-
-function isVisionModel(model) {
-  const m = String(model || '').toLowerCase()
-  return m.includes('vision') || m.includes('aya-vision') || m.includes('command-a-vision')
 }
 
 function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
@@ -1056,6 +1067,9 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
 }
 
 async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
+  // For v2/chat: documents are supported as "documents" in v2 (but schema differs),
+  // so we keep them inside the preamble as excerpts and also pass minimal docs as a best-effort.
+  // If Cohere rejects documents in v2 for your model, it will fall back to text-only later.
   const docs = (documents || []).map((doc) => ({
     id: doc?.id || 'internal',
     title: doc?.title || doc?.source || 'Policy',
@@ -1063,45 +1077,27 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     text: doc?.text || '',
   }))
 
-  if (isVisionModel(model) && images) {
-    const { messages, normalizedImagesCount } = buildV2Messages({
-      preamble,
-      chatHistory,
-      userMessage: message,
-      images,
-    })
-
-    if (normalizedImagesCount === 0) throw new Error('Image payload missing after normalization (v2)')
-
-    const respV2 = await callCohereChatV2Rest({ model, messages })
-    respV2.__text = cohereResponseToText(respV2)
-    respV2.__format = 'v2_rest'
-    return respV2
-  }
-
-  const payloadLegacy = {
-    model,
-    message,
+  const { messages, normalizedImagesCount } = buildV2Messages({
     preamble,
-    chat_history: chatHistory,
-    documents: docs,
+    chatHistory,
+    userMessage: message,
+    images,
+  })
+
+  // If images were provided but got normalized away, throw so we can fall back cleanly.
+  if (images && Array.isArray(images) && images.length && normalizedImagesCount === 0) {
+    throw new Error('Image payload missing after normalization (v2)')
   }
 
-  const normalizedImages = normalizeImagesForCohere(images)
-  if (normalizedImages.length) payloadLegacy.images = normalizedImages
+  const payload = { model, messages }
 
-  if (!safeText(message) && !payloadLegacy.images?.length) {
-    throw new Error('Missing message content for Cohere chat')
-  }
+  // Best-effort: only attach documents if present (some models accept, some may reject)
+  if (docs.length) payload.documents = docs
 
-  const respLegacy = await cohereClient.chat(payloadLegacy)
-  respLegacy.__text = cohereResponseToText(respLegacy)
-  respLegacy.__format = 'legacy_sdk'
-  return respLegacy
-}
-
-function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
-  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms))])
+  const respV2 = await callCohereChatV2Rest(payload)
+  respV2.__text = cohereResponseToText(respV2)
+  respV2.__format = 'v2_rest'
+  return respV2
 }
 
 // ============================================================================
@@ -1255,10 +1251,10 @@ function finalizeUserFacingText(raw, hasImage) {
   out = sanitizeOutput(enrichViolationsIfMissingFields(out))
   out = sanitizeOutput(normalizeCategoryLines(out))
 
-  // NEW: encourage “visible in photo” phrasing in Issue lines (image mode)
+  // Encourage “visible in photo” phrasing in Issue lines (image mode)
   out = sanitizeOutput(enforceVisibilityLanguage(out, hasImage))
 
-  // No-assumptions guard (image mode)
+  // No-assumptions guard (image mode) - now non-breaking
   const guarded = applyNoAssumptionsGuard(out, hasImage)
   out = sanitizeOutput(guarded.text)
 
@@ -1297,10 +1293,8 @@ export async function POST(request) {
     const imageInput = body?.image || body?.imageBase64 || body?.image_url || body?.imageDataUrl || body?.image_data || body?.images
     const hasImage = Boolean(imageInput)
 
-    let fullDataUrl = null
     let normalizedImageUrls = []
     if (hasImage) {
-      // Support single or array
       const arr = Array.isArray(imageInput) ? imageInput : [imageInput]
       for (const img of arr) {
         const validation = validateImageData(img)
@@ -1311,8 +1305,6 @@ export async function POST(request) {
         logger.warn('Invalid image data', { error: 'All images failed validation' })
         return NextResponse.json({ error: 'Image validation failed: invalid image payload.' }, { status: 400 })
       }
-      // Keep first for legacy code paths; pass full list to vision calls
-      fullDataUrl = normalizedImageUrls[0]
     }
 
     const lastUserIndex = Array.isArray(messages)
@@ -1677,9 +1669,7 @@ If you need clarification:
       } catch (visionErr) {
         const detail = safeErrorDetails(visionErr)
         const isLikelyBadRequest =
-          detail.includes('COHERE_V2_CHAT_4') ||
-          detail.includes('COHERE_V2_CHAT_400') ||
-          detail.includes('COHERE_V2_CHAT_422')
+          detail.includes('COHERE_V2_CHAT_4') || detail.includes('COHERE_V2_CHAT_400') || detail.includes('COHERE_V2_CHAT_422')
 
         if (hasImage && isLikelyBadRequest) {
           visionFallbackUsed = true
