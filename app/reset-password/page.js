@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from '@/app/apple-icon.png'
 
-const ibmMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -401,7 +401,7 @@ export default function ResetPasswordPage() {
         }
       `}</style>
 
-      <div className={`${ibmMono.className} reset-page`}>
+      <div className={`${plusJakarta.className} reset-page`}>
         <header className="reset-topbar">
           <Link href="/" className="reset-brand">
             <span className="reset-brand-inner">
