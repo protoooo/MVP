@@ -1,10 +1,11 @@
 // app/api/chat/route.js
 // Cohere text + Cohere v2 vision via REST (messages + image_url)
-// ProtocolLM - Washtenaw County Food Safety Compliance Engine
+// ProtocolLM - Michigan Food Service Compliance Tool
 //
 // Output guarantees (post-processor backstop):
-// - Response starts with: "No violations observed." OR "Violations observed:" OR "Need a quick clarification:"
-// - Each violation includes: Type + Category (Priority/Pf/Core) + Issue + Remediation + Correction + If not corrected
+// - Response starts with: "No violations." OR "Violations:" OR "Clarification needed:"
+// - Each violation includes: Type + Category (P/Pf/Core) + Issue + Fix + Timeline + Consequence
+// - Tool-style output: direct, actionable, no conversational filler
 // - No "confidence" anywhere
 // - No citations, no doc/page/source mentions in the user-facing output
 // - No asterisks (*) and no hashtags (#) in the user-facing output
@@ -212,10 +213,11 @@ function stripPageLikeRefs(text) {
 function stripSourceLikeRefs(text) {
   if (!text) return ''
   return String(text)
-    .replace(/\bViolation Types\s*\|\s*Washtenaw County.*?\b/gi, '')
-    .replace(/\bEnforcement Action\s*\|\s*Washtenaw County.*?\b/gi, '')
+    .replace(/\bViolation Types\s*\|\s*(?:Washtenaw County|Michigan).*?\b/gi, '')
+    .replace(/\bEnforcement Action\s*\|\s*(?:Washtenaw County|Michigan).*?\b/gi, '')
     .replace(/\bMichigan Modified Food Code\b/gi, '')
     .replace(/\bAct\s*92\s*of\s*2000\b/gi, '')
+    .replace(/\bMCL\s*289\.\d+\b/gi, '')
 }
 
 // Removes asterisks and hashtags from user-facing output, no matter what
@@ -318,22 +320,31 @@ function cohereResponseToText(resp) {
 // ============================================================================
 
 const PINNED_POLICY_QUERIES = [
-  'Washtenaw County violation types Priority Priority Foundation Core correct within 10 days 90 days follow-up inspection',
-  'Washtenaw County enforcement action imminent health hazard closure office conference informal hearing formal hearing license suspension revocation',
+  'Michigan Food Law violation types Priority Priority Foundation Core correct within 10 days 90 days follow-up inspection',
+  'Michigan enforcement action imminent health hazard closure administrative hearing license suspension revocation',
   'Michigan Modified Food Code Priority item Priority Foundation item correct within 10 days Core within 90 days',
-  'MCL Act 92 of 2000 Priority Item Priority Foundation Item definition',
+  'MCL Act 92 of 2000 Priority Item Priority Foundation Item definition Michigan food service',
 ]
 
-const WASHTENAW_POLICY_FALLBACK = `WASHTENAW COUNTY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
-- Categories: Priority (P), Priority Foundation (Pf), Core.
-- Typical correction: P and Pf corrected at inspection or within 10 days; Core corrected by a specified date (typically within 90 days).
-- If imminent health hazard exists (no water, no power, sewage backup, severe pests, fire, flood, outbreak), the county may order immediate closure; reopen only after correction and approval.
-- Otherwise: progressive enforcement can escalate (follow-up inspection, Office Conference, Informal Hearing, license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
+const MICHIGAN_POLICY_FALLBACK = `MICHIGAN FOOD LAW (MCL 289.1101 et seq.) - REFERENCE
+Categories:
+- Priority (P): Direct food safety risk. Fix immediately or within 10 days.
+- Priority Foundation (Pf): Supports P items. Fix immediately or within 10 days.
+- Core: General sanitation. Fix within 90 days.
+
+Imminent Health Hazards (immediate closure required):
+- No water/power, sewage backup, severe pests, fire, flood, foodborne outbreak.
+
+Enforcement Escalation:
+1. Follow-up inspection
+2. Administrative hearing
+3. License suspension/revocation
+4. Civil/criminal penalties`
 
 function normalizeSourceLabel(src) {
   const s = String(src || '').toLowerCase()
-  if (s.includes('violation types')) return 'Washtenaw Violation Categories'
-  if (s.includes('enforcement action')) return 'Washtenaw Enforcement Process'
+  if (s.includes('violation types')) return 'Michigan Violation Categories'
+  if (s.includes('enforcement action')) return 'Michigan Enforcement Process'
   if (s.includes('modified food code')) return 'Michigan Modified Food Code'
   if (s.includes('act 92')) return 'Michigan Food Law (Act 92)'
   return safeLine(src || 'Policy')
@@ -487,9 +498,9 @@ function determineViolationCategory(issue, remediation = '', type = '') {
   if (isImminentHazardText(hay)) {
     return {
       category: 'Priority (P)',
-      correction: 'Correct immediately; operations may be ordered closed until corrected and approved.',
+      correction: 'Fix immediately. Operations closed until corrected.',
       ifNotCorrected:
-        'Imminent health hazard: the county may order immediate closure; reopening only after violations are corrected and approval is given.',
+        'Immediate closure required. Reopen only after correction and regulatory approval.',
     }
   }
 
@@ -512,9 +523,9 @@ function determineViolationCategory(issue, remediation = '', type = '') {
   if (priorityPatterns.some((p) => p.test(hay))) {
     return {
       category: 'Priority (P)',
-      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
+      correction: 'Fix immediately or within 10 days.',
       ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference, Informal Hearing, license limitation/suspension/revocation).',
+        'Follow-up inspection. Escalation: administrative hearing, license suspension/revocation.',
     }
   }
 
@@ -522,38 +533,40 @@ function determineViolationCategory(issue, remediation = '', type = '') {
   if (pfPatterns.some((p) => p.test(hay))) {
     return {
       category: 'Priority Foundation (Pf)',
-      correction: 'Correct at inspection or within 10 days; follow-up inspection may occur if not permanently corrected at inspection.',
+      correction: 'Fix immediately or within 10 days.',
       ifNotCorrected:
-        'Likely follow-up inspection; repeated or unresolved violations can escalate (Office Conference, Informal Hearing, license limitation/suspension/revocation).',
+        'Follow-up inspection. Escalation: administrative hearing, license suspension/revocation.',
     }
   }
 
   return {
     category: 'Core',
-    correction: 'Correct by an agreed or specified date, typically no later than 90 days after inspection.',
+    correction: 'Fix within 90 days.',
     ifNotCorrected:
-      'Unresolved or repeat core issues can still lead to enforcement after opportunities to correct during inspection and follow-up.',
+      'Repeat violations may trigger enforcement action.',
   }
 }
 
 // ============================================================================
-// OUTPUT ENFORCEMENT (PLAIN TEXT, NO MARKDOWN)
+// OUTPUT ENFORCEMENT (PLAIN TEXT, NO MARKDOWN, TOOL-STYLE)
 // ============================================================================
 
 function enforceViolationFormat(text) {
   let out = safeText(text || '')
 
-  out = out.replace(/^No clear violations observed\./i, 'No violations observed.')
-  out = out.replace(/^No violations found\./i, 'No violations observed.')
-  out = out.replace(/^Potential issues observed:/i, 'Violations observed:')
-  out = out.replace(/^Issues observed:/i, 'Violations observed:')
+  out = out.replace(/^No clear violations observed\./i, 'No violations.')
+  out = out.replace(/^No violations found\./i, 'No violations.')
+  out = out.replace(/^No violations observed\./i, 'No violations.')
+  out = out.replace(/^Potential issues observed:/i, 'Violations:')
+  out = out.replace(/^Issues observed:/i, 'Violations:')
+  out = out.replace(/^Violations observed:/i, 'Violations:')
 
   out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
   // Convert "- X. Fix: Y." style bullets into required schema (plain text labels)
-  if (/^Violations observed:/i.test(out) && !/\bType\s*:\s*/i.test(out)) {
+  if (/^Violations:/i.test(out) && !/\bType\s*:\s*/i.test(out)) {
     out = out.replace(
       /-\s*(.*?)\s*\.?\s*(?:Fix|Remediation|Action)\s*:\s*(.*?)(?=\n-\s|\n{2,}|$)/gis,
       (match, issueRaw, remRaw) => {
@@ -566,9 +579,9 @@ function enforceViolationFormat(text) {
         return `- Type: ${violationType}
   Category: ${catInfo.category}
   Issue: ${issue}
-  Remediation: ${remediation}
-  Correction: ${catInfo.correction}
-  If not corrected: ${catInfo.ifNotCorrected}`
+  Fix: ${remediation}
+  Timeline: ${catInfo.correction}
+  Consequence: ${catInfo.ifNotCorrected}`
       }
     )
   }
@@ -578,12 +591,12 @@ function enforceViolationFormat(text) {
 
 function enrichViolationsIfMissingFields(text) {
   const out = safeText(text || '')
-  if (!/^Violations observed:/i.test(out)) return out
+  if (!/^Violations:/i.test(out)) return out
 
   const hasCategory = /\bCategory\s*:\s*/i.test(out)
-  const hasCorrection = /\bCorrection\s*:\s*/i.test(out)
-  const hasIfNot = /\bIf not corrected\s*:\s*/i.test(out)
-  if (hasCategory && hasCorrection && hasIfNot) return out
+  const hasTimeline = /\b(Timeline|Correction)\s*:\s*/i.test(out)
+  const hasConsequence = /\b(Consequence|If not corrected)\s*:\s*/i.test(out)
+  if (hasCategory && hasTimeline && hasConsequence) return out
 
   const lines = out.split('\n')
   const rebuilt = []
@@ -595,22 +608,22 @@ function enrichViolationsIfMissingFields(text) {
     if (!current) return
     const type = safeLine(current.type || '')
     const issue = safeLine(current.issue || '')
-    const remediation = safeLine(current.remediation || '')
+    const fix = safeLine(current.fix || current.remediation || '')
 
-    if (!type || !issue || !remediation) {
+    if (!type || !issue || !fix) {
       rebuilt.push(...(current.raw || []))
       current = null
       return
     }
 
-    const catInfo = determineViolationCategory(issue, remediation, type)
+    const catInfo = determineViolationCategory(issue, fix, type)
 
     rebuilt.push(`- Type: ${type}`)
     rebuilt.push(`  Category: ${catInfo.category}`)
     rebuilt.push(`  Issue: ${issue}`)
-    rebuilt.push(`  Remediation: ${remediation}`)
-    rebuilt.push(`  Correction: ${catInfo.correction}`)
-    rebuilt.push(`  If not corrected: ${catInfo.ifNotCorrected}`)
+    rebuilt.push(`  Fix: ${fix}`)
+    rebuilt.push(`  Timeline: ${catInfo.correction}`)
+    rebuilt.push(`  Consequence: ${catInfo.ifNotCorrected}`)
     current = null
   }
 
@@ -620,7 +633,7 @@ function enrichViolationsIfMissingFields(text) {
     const typeMatch = line.match(/^\s*-\s*Type\s*:\s*(.+)\s*$/i)
     if (typeMatch) {
       flush()
-      current = { type: typeMatch[1], issue: '', remediation: '', raw: [line] }
+      current = { type: typeMatch[1], issue: '', fix: '', remediation: '', raw: [line] }
       continue
     }
 
@@ -628,6 +641,9 @@ function enrichViolationsIfMissingFields(text) {
       current.raw.push(line)
       const issueMatch = line.match(/^\s*Issue\s*:\s*(.+)\s*$/i) || line.match(/^\s*\s*Issue\s*:\s*(.+)\s*$/i)
       if (issueMatch) current.issue = issueMatch[1]
+      const fixMatch =
+        line.match(/^\s*Fix\s*:\s*(.+)\s*$/i) || line.match(/^\s*\s*Fix\s*:\s*(.+)\s*$/i)
+      if (fixMatch) current.fix = fixMatch[1]
       const remMatch =
         line.match(/^\s*Remediation\s*:\s*(.+)\s*$/i) || line.match(/^\s*\s*Remediation\s*:\s*(.+)\s*$/i)
       if (remMatch) current.remediation = remMatch[1]
@@ -880,27 +896,27 @@ function buildClarificationQuestionsFromDropped(droppedBlocks) {
 }
 
 function rebuildResponseFromBlocks(header, blocks, clarificationQuestions) {
-  const h = header && header.trim() ? header.trim() : 'Violations observed:'
+  const h = header && header.trim() ? header.trim() : 'Violations:'
   const parts = [h]
 
   for (const b of blocks || []) {
     const type = safeLine(b.type || '')
     const issue = safeLine(b.issue || '')
-    const remediation = safeLine(b.remediation || '')
+    const fix = safeLine(b.fix || b.remediation || '')
     const cat = normalizeCategoryLabel(b.category || '')
-    const catInfo = determineViolationCategory(issue, remediation, type || determineViolationType(issue))
+    const catInfo = determineViolationCategory(issue, fix, type || determineViolationType(issue))
 
     parts.push(`- Type: ${type || determineViolationType(issue)}`)
     parts.push(`  Category: ${normalizeCategoryLabel(cat || catInfo.category)}`)
     parts.push(`  Issue: ${issue}`)
-    parts.push(`  Remediation: ${remediation}`)
-    parts.push(`  Correction: ${safeLine(b.correction || catInfo.correction)}`)
-    parts.push(`  If not corrected: ${safeLine(b.ifNotCorrected || catInfo.ifNotCorrected)}`)
+    parts.push(`  Fix: ${fix}`)
+    parts.push(`  Timeline: ${safeLine(b.timeline || b.correction || catInfo.correction)}`)
+    parts.push(`  Consequence: ${safeLine(b.consequence || b.ifNotCorrected || catInfo.ifNotCorrected)}`)
   }
 
   if (clarificationQuestions && clarificationQuestions.length) {
     parts.push('')
-    parts.push('Need a quick clarification:')
+    parts.push('Clarification needed:')
     for (const q of clarificationQuestions.slice(0, 3)) {
       parts.push(`- ${safeLine(q)}`)
     }
@@ -915,7 +931,7 @@ function applyNoAssumptionsGuard(text, hasImage) {
 
   try {
     const out = safeText(text || '')
-    if (!/^Violations observed:/i.test(out)) return { text: out, dropped: 0 }
+    if (!/^Violations:/i.test(out)) return { text: out, dropped: 0 }
 
     const parsed = parseViolationBlocks(out)
     if (!parsed.blocks.length) return { text: out, dropped: 0 }
@@ -925,10 +941,10 @@ function applyNoAssumptionsGuard(text, hasImage) {
 
     for (const b of parsed.blocks) {
       const issue = safeLine(b.issue || '')
-      const remediation = safeLine(b.remediation || '')
+      const fix = safeLine(b.fix || b.remediation || '')
       const type = safeLine(b.type || '')
 
-      if (looksLikeNonVisualAssumption(issue, remediation, type)) {
+      if (looksLikeNonVisualAssumption(issue, fix, type)) {
         drop.push(b)
       } else {
         keep.push(b)
@@ -941,12 +957,12 @@ function applyNoAssumptionsGuard(text, hasImage) {
 
     // If everything was assumption-based, return clarification-only
     if (!keep.length) {
-      const parts = ['Need a quick clarification:']
+      const parts = ['Clarification needed:']
       for (const q of questions) parts.push(`- ${safeLine(q)}`)
       return { text: parts.join('\n').trim(), dropped: drop.length }
     }
 
-    const rebuilt = rebuildResponseFromBlocks('Violations observed:', keep, questions)
+    const rebuilt = rebuildResponseFromBlocks('Violations:', keep, questions)
     return { text: rebuilt, dropped: drop.length }
   } catch (error) {
     // If parsing fails, return original text (non-breaking) to prevent 500s
@@ -957,30 +973,30 @@ function applyNoAssumptionsGuard(text, hasImage) {
 
 function ensureAllowedHeader(text) {
   const out = safeText(text || '')
-  if (!out) return 'Need a quick clarification:\n- Can you re-send your question or upload a photo?'
+  if (!out) return 'Clarification needed:\n- Re-send your question or upload a photo.'
 
   const firstLine = out.split('\n').find((l) => l.trim().length > 0)?.trim() || ''
 
   const ok =
-    /^No violations observed\./i.test(firstLine) ||
-    /^Violations observed:/i.test(firstLine) ||
-    /^Need a quick clarification:/i.test(firstLine)
+    /^No violations\./i.test(firstLine) ||
+    /^Violations:/i.test(firstLine) ||
+    /^Clarification needed:/i.test(firstLine)
 
   if (ok) return out
 
   // Heuristic fallback
-  if (/\bNeed a quick clarification\b/i.test(out) || /\?\s*$/.test(out)) {
-    return `Need a quick clarification:\n- ${safeLine(out).slice(0, 220)}`
+  if (/\bClarification needed\b/i.test(out) || /\?\s*$/.test(out)) {
+    return `Clarification needed:\n- ${safeLine(out).slice(0, 220)}`
   }
-  if (/\bType\s*:\s*/i.test(out) || /-\s*Type\s*:\s*/i.test(out)) return `Violations observed:\n${out}`
-  return `No violations observed.\n${safeLine(out).slice(0, 180)}`
+  if (/\bType\s*:\s*/i.test(out) || /-\s*Type\s*:\s*/i.test(out)) return `Violations:\n${out}`
+  return `No violations.\n${safeLine(out).slice(0, 180)}`
 }
 
-// NEW: Encourage visibility language in Issue lines (non-breaking).
+// Encourage visibility language in Issue lines (non-breaking).
 function enforceVisibilityLanguage(text, hasImage) {
   if (!hasImage) return text
   const out = safeText(text || '')
-  if (!/^Violations observed:/i.test(out)) return out
+  if (!/^Violations:/i.test(out)) return out
 
   const lines = out.split('\n')
   const rebuilt = []
@@ -997,7 +1013,7 @@ function enforceVisibilityLanguage(text, hasImage) {
       rebuilt.push(`  Issue: ${issue}`)
       continue
     }
-    rebuilt.push(`  Issue: In the photo, I can see ${issue}`)
+    rebuilt.push(`  Issue: Visible: ${issue}`)
   }
   return rebuilt.join('\n').trim()
 }
@@ -1335,12 +1351,12 @@ export async function POST(request) {
 
     if (!userMessage && hasImage) {
       userMessage =
-        'Review the photo for food safety and sanitation issues. Only report violations you can directly see in the photo. Do not assume missing sinks, soap, towels, temperatures, time out of temperature control, storage duration, or that cooking is actively occurring unless clearly visible (labels, date marks, displays, thermometer readings). Do not report cooking timers or generic "stove is on" operational warnings as violations. If you cannot confirm, ask up to three short clarification questions instead of guessing. For each confirmed violation: provide Type, Category (Priority (P), Priority Foundation (Pf), or Core), Issue, Remediation, Correction time frame, and what typically happens if it is not corrected.'
+        'Analyze photo for Michigan Food Code violations. Report only visible issues. For each: Type, Category (P/Pf/Core), Issue, Fix, Timeline, Consequence. If uncertain, ask clarification questions.'
     }
 
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
 
-    const county = safeLine(body?.county || 'washtenaw') || 'washtenaw'
+    const county = safeLine(body?.county || 'michigan') || 'michigan'
     const effectivePrompt = userMessage
 
     const fullAudit = wantsFullAudit(effectivePrompt) || Boolean(body?.fullAudit)
@@ -1474,7 +1490,7 @@ export async function POST(request) {
     // ========================================================================
 
     const userKeywords = extractSearchKeywords(effectivePrompt)
-    const searchQuery = [effectivePrompt, userKeywords.slice(0, 7).join(' '), 'Washtenaw County Michigan food code']
+    const searchQuery = [effectivePrompt, userKeywords.slice(0, 7).join(' '), 'Michigan Modified Food Code MCL Act 92']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
@@ -1545,51 +1561,50 @@ export async function POST(request) {
       memoryContext = buildMemoryContext(userMemory) || ''
     } catch {}
 
+
     // ========================================================================
-    // SYSTEM PROMPT (PLAIN TEXT FORMAT, NO MARKDOWN)
+    // SYSTEM PROMPT (TOOL-STYLE, MICHIGAN FOOD LAW FOCUSED)
     // ========================================================================
 
-    const systemPrompt = `You are ProtocolLM - a Washtenaw County, Michigan food service compliance assistant.
+    const systemPrompt = `You are ProtocolLM - a Michigan food service compliance tool based on the Michigan Modified Food Code and MCL Act 92 of 2000.
 
-You may receive a user question and sometimes one or more photos. You also receive internal policy excerpts for grounding.
-Do not mention, cite, or reference any documents, excerpts, page numbers, ids, filenames, or sources in your response.
+ROLE: Compliance analysis tool. Give direct, actionable answers. No conversational filler.
 
-Critical rule for photos:
-- Only report violations you can directly see in the photo.
-- For each violation Issue, describe it as a visible observation (use language like "In the photo, I can see ...").
-- Do not assume missing sinks, missing soap/towels, temperatures, time out of temperature control, "leftovers," storage duration, or whether cooking is actively occurring unless clearly visible evidence is present (labels, date marks, displays, gauges, thermometer readings, timestamps).
-- Do NOT report cooking timers, “timer not set”, or generic “stove/burner is on” operational warnings as food-code violations.
-- If you cannot confirm, ask up to three short clarification questions instead of guessing.
+KNOWLEDGE BASE: Michigan Modified Food Code, MCL 289.1101 et seq. (Act 92 of 2000), FDA Food Code.
 
-Goals:
-- Identify specific violations based on observed conditions or user descriptions.
-- Provide clear, actionable remediation steps for each violation.
-- Specify the violation Type (example: Food Storage, Sanitation, Temperature Control).
-- Classify each issue as Category: Priority (P), Priority Foundation (Pf), or Core.
-- For each violation, include Correction time frame and what typically happens if not corrected (follow-up, enforcement, closure for imminent hazards).
-- Avoid false positives. If unsure, ask clarifying questions instead of guessing.
-- No emojis. No citations. Do not mention confidence.
+PHOTO ANALYSIS RULES:
+- Only report what is directly visible in the photo.
+- Do not assume: missing equipment, temperatures, time violations, storage duration, or cooking status unless visible evidence exists (labels, displays, thermometer readings).
+- Do NOT report operational warnings (timers, burners on) as code violations.
+- If uncertain, ask up to 3 clarification questions.
 
-Output format:
-If no issues are visible:
-- Start with: No violations observed.
-- Add 1 short sentence.
+VIOLATION CATEGORIES (Michigan Food Law):
+- Priority (P): Direct contamination risk. Fix immediately or within 10 days.
+- Priority Foundation (Pf): Supports P items. Fix immediately or within 10 days.
+- Core: General sanitation. Fix within 90 days.
 
-If issues are observed:
-- Start with: Violations observed:
-- For each violation, use this exact structure:
-  - Type: ...
-    Category: ...
-    Issue: ...
-    Remediation: ...
-    Correction: ...
-    If not corrected: ...
+OUTPUT FORMAT:
 
-If you need clarification:
-- Start with: Need a quick clarification:
-- Ask up to 3 questions.`
+No issues found:
+No violations.
+[One sentence summary]
 
-    const historySystemMessages = []
+Issues found:
+Violations:
+- Type: [Category name]
+  Category: [P/Pf/Core]
+  Issue: [What is wrong]
+  Fix: [Specific action to take]
+  Timeline: [When to fix]
+  Consequence: [What happens if not fixed]
+
+Need more info:
+Clarification needed:
+- [Question 1]
+- [Question 2]
+
+STYLE: Be concise. Be specific. Be actionable. No emojis. No citations. No confidence levels.`
+
     const cohereChatHistory = []
 
     if (Array.isArray(messages)) {
@@ -1615,7 +1630,7 @@ If you need clarification:
     }
 
     const systemHistoryPreamble = historySystemMessages.filter(Boolean).join('\n\n')
-    const fallbackBlock = pinnedPolicyDocs.length ? '' : WASHTENAW_POLICY_FALLBACK
+    const fallbackBlock = pinnedPolicyDocs.length ? '' : MICHIGAN_POLICY_FALLBACK
 
     const preambleParts = [
       systemPrompt,
@@ -1623,7 +1638,7 @@ If you need clarification:
       systemHistoryPreamble,
       fallbackBlock,
       excerptBlock ? `\n\n${excerptBlock}` : '',
-      'Reminder: Do not mention or cite any internal documents or excerpts.',
+      'Do not cite documents. Give direct answers only.',
     ].filter(Boolean)
 
     const preamble = preambleParts.join('\n\n')
