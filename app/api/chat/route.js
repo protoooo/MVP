@@ -9,6 +9,11 @@
 // - No citations, no doc/page/source mentions in the user-facing output
 // - No asterisks (*) and no hashtags (#) in the user-facing output
 // - No assumptions: do not claim missing facilities, temperatures, cooking status, or time-based storage unless clearly visible
+//
+// IMPORTANT FIX (Dec 2025):
+// - If there is an image, we ONLY call the vision model.
+// - No “fallback to text model” when images are present (prevents COHERE_V2_CHAT_400 on command-*).
+// - For text-only models, user message content is a STRING (not the multimodal parts array).
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -1016,7 +1021,9 @@ async function callCohereChatV2Rest({ model, messages, documents }) {
   }
 }
 
-function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
+// FIX: for text-only models, last user message content must be a STRING.
+// For vision models, last user message content is an ARRAY of parts (text + image_url).
+function buildV2Messages({ preamble, chatHistory, userMessage, images, isVision }) {
   const messages = []
 
   if (safeText(preamble)) messages.push({ role: 'system', content: safeText(preamble) })
@@ -1030,8 +1037,18 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
     else if (roleRaw === 'CHATBOT' || roleRaw === 'ASSISTANT') messages.push({ role: 'assistant', content: text })
   }
 
+  const msgText = safeText(userMessage) || ''
+
+  if (!isVision) {
+    messages.push({
+      role: 'user',
+      content: msgText || 'Help with Michigan food safety compliance.',
+    })
+    return { messages, normalizedImagesCount: 0 }
+  }
+
+  // Vision: build parts
   const parts = []
-  const msgText = safeText(userMessage)
   if (msgText) parts.push({ type: 'text', text: msgText })
 
   const normalizedImages = normalizeImagesForCohere(images)
@@ -1047,7 +1064,7 @@ function buildV2Messages({ preamble, chatHistory, userMessage, images }) {
   return { messages, normalizedImagesCount: normalizedImages.length }
 }
 
-async function callCohereChat({ model, message, chatHistory, preamble, documents, images }) {
+async function callCohereChat({ model, message, chatHistory, preamble, documents, images, isVision }) {
   const docs = (documents || []).map((doc) => ({
     id: doc?.id || 'internal',
     title: doc?.title || doc?.source || 'Policy',
@@ -1060,9 +1077,11 @@ async function callCohereChat({ model, message, chatHistory, preamble, documents
     chatHistory,
     userMessage: message,
     images,
+    isVision,
   })
 
-  if (images && Array.isArray(images) && images.length && normalizedImagesCount === 0) {
+  // Only enforce image normalization when we are truly in vision mode
+  if (isVision && images && Array.isArray(images) && images.length && normalizedImagesCount === 0) {
     throw new Error('Image payload missing after normalization (v2)')
   }
 
@@ -1283,10 +1302,8 @@ function toolHtmlFromFinalText(finalText) {
     const issue = escapeHtml(safeLine(b.issue || ''))
     const fix = escapeHtml(safeLine(b.remediation || ''))
     const by = escapeHtml(safeLine(b.correction || ''))
-    // Keep “if not corrected” very short (tool vibe)
     const risk = escapeHtml(safeLine(b.ifNotCorrected || '').slice(0, 160))
 
-    // One compact card
     return `
       <div style="padding:10px 12px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;margin:10px 0;background:rgba(255,255,255,0.04)">
         <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
@@ -1407,8 +1424,6 @@ export async function POST(request) {
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
 
     // ---- STATEWIDE CORPUS KEY ----
-    // Keep request param name "county" for backward compatibility, but treat it as a corpus key.
-    // If callers send "washtenaw", map to "michigan" so you’re statewide by default.
     const rawCorpusKey = safeLine(body?.county || body?.corpus || body?.jurisdiction || 'michigan') || 'michigan'
     const corpusKey = rawCorpusKey.toLowerCase().includes('washtenaw') ? 'michigan' : rawCorpusKey.toLowerCase()
 
@@ -1699,69 +1714,57 @@ If you need clarification:
 
     let modelText = ''
     let assistantFinalText = ''
-    let usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
+    const usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
     let billedUnits = {}
     let tokenUsage = {}
-    let visionFallbackUsed = false
 
     try {
-      const buildCohereRequest = (model) => {
-        const visionImages = hasImage && normalizedImageUrls.length ? normalizedImageUrls : []
-        return {
-          model,
-          message: userMessage,
-          chatHistory: cohereChatHistory,
-          preamble,
-          documents: contextDocs.map((doc) => ({
-            id: 'internal',
-            title: normalizeSourceLabel(doc.source || doc.title || 'Policy'),
-            snippet: docTextForExcerpt(doc, 900),
-            text: docTextForExcerpt(doc, 1400),
-          })),
-          images: visionImages,
-        }
+      const isVision = hasImage
+
+      const req = {
+        model: usedModel,
+        message: userMessage,
+        chatHistory: cohereChatHistory,
+        preamble,
+        documents: contextDocs.map((doc) => ({
+          id: 'internal',
+          title: normalizeSourceLabel(doc.source || doc.title || 'Policy'),
+          snippet: docTextForExcerpt(doc, 900),
+          text: docTextForExcerpt(doc, 1400),
+        })),
+        images: isVision ? normalizedImageUrls : [],
+        isVision,
       }
 
-      const req = buildCohereRequest(usedModel)
+      // If there is an image, ONLY vision model is allowed. No fallback to text model.
+      const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
+      billedUnits = answerResp?.meta?.billed_units || answerResp?.billed_units || {}
+      tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
+      modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
 
-      try {
-        const answerResp = await withTimeout(callCohereChat(req), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
-        billedUnits = answerResp?.meta?.billed_units || answerResp?.billed_units || {}
-        tokenUsage = answerResp?.meta?.tokens || answerResp?.tokens || {}
-        modelText = answerResp?.__text || answerResp?.text || responseOutputToString(answerResp) || ''
-        assistantFinalText = finalizeUserFacingText(modelText || 'Unable to process request. Please try again.', hasImage)
-      } catch (visionErr) {
-        const detail = safeErrorDetails(visionErr)
-        const isLikelyBadRequest =
-          detail.includes('COHERE_V2_CHAT_4') || detail.includes('COHERE_V2_CHAT_400') || detail.includes('COHERE_V2_CHAT_422')
-
-        if (hasImage && isLikelyBadRequest) {
-          visionFallbackUsed = true
-          logger.warn('Vision rejected; falling back to text-only.', { detail, model: usedModel })
-
-          usedModel = COHERE_TEXT_MODEL
-          const fallbackReq = buildCohereRequest(usedModel)
-          fallbackReq.images = []
-
-          const fallbackResp = await withTimeout(callCohereChat(fallbackReq), ANSWER_TIMEOUT_MS, 'ANSWER_TIMEOUT')
-          billedUnits = fallbackResp?.meta?.billed_units || fallbackResp?.billed_units || {}
-          tokenUsage = fallbackResp?.meta?.tokens || fallbackResp?.tokens || {}
-          modelText = fallbackResp?.__text || fallbackResp?.text || responseOutputToString(fallbackResp) || ''
-          assistantFinalText = finalizeUserFacingText(
-            `Photo analysis is temporarily unavailable. Answering based on the request text.\n\n${modelText || 'Unable to process request. Please try again.'}`,
-            false
-          )
-        } else {
-          throw visionErr
-        }
-      }
+      assistantFinalText = finalizeUserFacingText(
+        modelText || 'Need a quick clarification:\n- Can you re-upload that photo or share a clearer angle?',
+        hasImage
+      )
     } catch (e) {
       const detail = safeErrorDetails(e)
       logger.error('Generation failed', { error: e?.message, detail, hasImage, model: usedModel })
-      return NextResponse.json(
-        { error: 'Generation failed', details: detail },
-        { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
-      )
+
+      // For image requests, return a safe clarification (NOT a server error) so UI never shows “Generation failed”.
+      if (hasImage) {
+        assistantFinalText = finalizeUserFacingText(
+          `Need a quick clarification:
+- I could not process that photo. Please re-upload it (or try a smaller image).
+- What should I check in the photo (cleanliness, storage, handwashing, temperature control)?
+- If possible, share one more angle/close-up of the area you want reviewed.`,
+          true
+        )
+      } else {
+        return NextResponse.json(
+          { error: 'Generation failed', details: detail },
+          { status: e?.message?.includes('TIMEOUT') ? 408 : 500 }
+        )
+      }
     }
 
     // ========================================================================
@@ -1803,7 +1806,6 @@ If you need clarification:
       fullAudit,
       includeFines,
       model: usedModel,
-      visionFallbackUsed,
       embedModel: COHERE_EMBED_MODEL,
       embedDims: COHERE_EMBED_DIMS,
       rerankUsed: FEATURE_RERANK,
@@ -1819,7 +1821,7 @@ If you need clarification:
       billedInputTokens: billedUnits.input_tokens,
       billedOutputTokens: billedUnits.output_tokens,
       rerankUsed: FEATURE_RERANK,
-      rerankCandidates: 0,
+      rerankCandidates,
     })
 
     await safeLogUsage({
@@ -1831,9 +1833,7 @@ If you need clarification:
 
     return NextResponse.json(
       {
-        // Plain text fallback (always safe)
         message: assistantMessagePlain,
-        // Tool UI output (render on client)
         message_html: assistantMessageHtml,
         _meta: {
           model: usedModel,
@@ -1844,7 +1844,6 @@ If you need clarification:
           docsRetrieved: contextDocs.length,
           pinnedPolicyDocs: pinnedPolicyDocs.length,
           durationMs: Date.now() - startedAt,
-          visionFallbackUsed,
           corpusKey,
         },
       },
