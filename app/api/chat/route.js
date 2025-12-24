@@ -308,24 +308,25 @@ function cohereResponseToText(resp) {
 // ============================================================================
 
 const PINNED_POLICY_QUERIES = [
-  'Washtenaw County violation types Priority Priority Foundation Core correct within 10 days 90 days follow-up inspection',
-  'Washtenaw County enforcement action imminent health hazard closure office conference informal hearing formal hearing license suspension revocation',
-  'Michigan Modified Food Code Priority item Priority Foundation item correct within 10 days Core within 90 days',
-  'MCL Act 92 of 2000 Priority Item Priority Foundation Item definition',
+  'Michigan Modified Food Code Priority item Priority Foundation item correct within 10 days Core within 90 days violation categories',
+  'MCL Act 92 of 2000 Michigan Food Law Priority Item Priority Foundation Item definition food service establishment',
+  'Michigan food safety enforcement action imminent health hazard closure license suspension revocation progressive enforcement',
+  'Michigan Modified Food Code temperature control TCS foods time temperature control safety',
 ]
 
-const WASHTENAW_POLICY_FALLBACK = `WASHTENAW COUNTY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
+const MICHIGAN_POLICY_FALLBACK = `MICHIGAN STATE FOOD SAFETY POLICY (FALLBACK IF CORPUS CHUNKS NOT RETRIEVED)
+- Authority: Michigan Food Law (MCL Act 92 of 2000) and Michigan Modified Food Code.
 - Categories: Priority (P), Priority Foundation (Pf), Core.
 - Typical correction: P and Pf corrected at inspection or within 10 days; Core corrected by a specified date (typically within 90 days).
-- If imminent health hazard exists (no water, no power, sewage backup, severe pests, fire, flood, outbreak), the county may order immediate closure; reopen only after correction and approval.
+- If imminent health hazard exists (no water, no power, sewage backup, severe pests, fire, flood, outbreak), the health department may order immediate closure; reopen only after correction and approval.
 - Otherwise: progressive enforcement can escalate (follow-up inspection, Office Conference, Informal Hearing, license limitation/suspension/revocation; Formal Hearing may be requested to appeal).`
 
 function normalizeSourceLabel(src) {
   const s = String(src || '').toLowerCase()
-  if (s.includes('violation types')) return 'Washtenaw Violation Categories'
-  if (s.includes('enforcement action')) return 'Washtenaw Enforcement Process'
   if (s.includes('modified food code')) return 'Michigan Modified Food Code'
-  if (s.includes('act 92')) return 'Michigan Food Law (Act 92)'
+  if (s.includes('act 92') || s.includes('mcl')) return 'Michigan Food Law (MCL Act 92)'
+  if (s.includes('violation types')) return 'Violation Categories'
+  if (s.includes('enforcement action')) return 'Enforcement Process'
   return safeLine(src || 'Policy')
 }
 
@@ -1464,7 +1465,7 @@ export async function POST(request) {
     // ========================================================================
 
     const userKeywords = extractSearchKeywords(effectivePrompt)
-    const searchQuery = [effectivePrompt, userKeywords.slice(0, 7).join(' '), 'Washtenaw County Michigan food code']
+    const searchQuery = [effectivePrompt, userKeywords.slice(0, 7).join(' '), 'Michigan food code MCL Act 92']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
@@ -1539,7 +1540,7 @@ export async function POST(request) {
     // SYSTEM PROMPT (PLAIN TEXT FORMAT, NO MARKDOWN)
     // ========================================================================
 
-    const systemPrompt = `You are ProtocolLM - a Washtenaw County, Michigan food service compliance assistant.
+    const systemPrompt = `You are ProtocolLM - a Michigan food service compliance assistant specializing in Michigan Food Law (MCL Act 92 of 2000) and the Michigan Modified Food Code.
 
 You may receive a user question and sometimes one or more photos. You also receive internal policy excerpts for grounding.
 Do not mention, cite, or reference any documents, excerpts, page numbers, ids, filenames, or sources in your response.
@@ -1552,11 +1553,13 @@ Critical rule for photos:
 - If you cannot confirm, ask up to three short clarification questions instead of guessing.
 
 Goals:
+- Provide guidance based on Michigan Food Law (MCL Act 92 of 2000) and the Michigan Modified Food Code.
 - Identify specific violations based on observed conditions or user descriptions.
 - Provide clear, actionable remediation steps for each violation.
 - Specify the violation Type (example: Food Storage, Sanitation, Temperature Control).
-- Classify each issue as Category: Priority (P), Priority Foundation (Pf), or Core.
+- Classify each issue as Category: Priority (P), Priority Foundation (Pf), or Core per Michigan food code standards.
 - For each violation, include Correction time frame and what typically happens if not corrected (follow-up, enforcement, closure for imminent hazards).
+- Keep responses concise - focus on the key violation(s) and remediation steps.
 - Avoid false positives. If unsure, ask clarifying questions instead of guessing.
 - No emojis. No citations. Do not mention confidence.
 
@@ -1605,7 +1608,7 @@ If you need clarification:
     }
 
     const systemHistoryPreamble = historySystemMessages.filter(Boolean).join('\n\n')
-    const fallbackBlock = pinnedPolicyDocs.length ? '' : WASHTENAW_POLICY_FALLBACK
+    const fallbackBlock = pinnedPolicyDocs.length ? '' : MICHIGAN_POLICY_FALLBACK
 
     const preambleParts = [
       systemPrompt,
