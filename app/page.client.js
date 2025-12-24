@@ -1102,6 +1102,15 @@ export default function Page() {
 
           /* ✅ Chat dock sizing + safe room (prevents needing to scroll page to “reach” the dock) */
           --chat-dock-room: 190px;
+
+          /* ✅ Light “Apple frosted glass” tokens for modals + composer */
+          --glass-ink: #0b1324;
+          --glass-ink-70: rgba(11, 19, 36, 0.7);
+          --glass-ink-55: rgba(11, 19, 36, 0.55);
+          --glass-bg: rgba(255, 255, 255, 0.52);
+          --glass-bg-strong: rgba(255, 255, 255, 0.62);
+          --glass-border: rgba(255, 255, 255, 0.55);
+          --glass-shadow: 0 26px 80px rgba(10, 18, 35, 0.22);
         }
 
         *,
@@ -1237,12 +1246,41 @@ export default function Page() {
           align-items: center;
         }
 
-        /* ✅ Modal cards are now LiquidGlass components */
+        /* ✅ Modal cards: FORCE light frosted glass (so they don’t go “dark” over the dim overlay) */
         .glass-modal.modal-card {
           width: 100%;
           position: relative;
           border-radius: 18px;
           padding: 22px;
+
+          /* key fix */
+          background: var(--glass-bg-strong) !important;
+          border: 1px solid var(--glass-border) !important;
+          box-shadow: 0 30px 90px rgba(10, 18, 35, 0.28) !important;
+
+          backdrop-filter: blur(18px) saturate(165%) !important;
+          -webkit-backdrop-filter: blur(18px) saturate(165%) !important;
+
+          color: var(--glass-ink) !important;
+          color-scheme: light !important;
+          overflow: hidden;
+        }
+
+        .glass-modal.modal-card::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          pointer-events: none;
+          background: radial-gradient(1100px circle at 18% 20%, rgba(95, 168, 255, 0.32), transparent 58%),
+            radial-gradient(900px circle at 86% 24%, rgba(120, 255, 235, 0.18), transparent 55%),
+            radial-gradient(1000px circle at 78% 86%, rgba(255, 180, 165, 0.22), transparent 58%);
+          opacity: 0.95;
+        }
+
+        .glass-modal.modal-card > * {
+          position: relative;
+          z-index: 1;
         }
 
         .modal-close {
@@ -1483,10 +1521,34 @@ export default function Page() {
           margin-top: 12px;
         }
 
-        /* ✅ Inner pricing card is also LiquidGlass */
+        /* ✅ Inner pricing card: also force “light glass” so it doesn’t go dark inside the modal */
         .pricing-card {
           border-radius: 16px;
           padding: 16px;
+
+          background: rgba(255, 255, 255, 0.54) !important;
+          border: 1px solid rgba(255, 255, 255, 0.55) !important;
+          box-shadow: 0 18px 55px rgba(10, 18, 35, 0.16) !important;
+          backdrop-filter: blur(16px) saturate(155%) !important;
+          -webkit-backdrop-filter: blur(16px) saturate(155%) !important;
+          color-scheme: light !important;
+          overflow: hidden;
+        }
+
+        .pricing-card::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          pointer-events: none;
+          background: radial-gradient(900px circle at 22% 22%, rgba(95, 168, 255, 0.22), transparent 58%),
+            radial-gradient(900px circle at 82% 78%, rgba(255, 180, 165, 0.14), transparent 58%);
+          opacity: 0.9;
+        }
+
+        .pricing-card > * {
+          position: relative;
+          z-index: 1;
         }
 
         .pricing-card-head {
@@ -1785,6 +1847,7 @@ export default function Page() {
         .landing-root {
           position: relative;
           padding-top: calc(env(safe-area-inset-top) + var(--landing-topbar-h) + 18px);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 72px); /* ✅ room for fixed footer */
           min-height: 100vh;
           min-height: 100dvh;
           display: flex;
@@ -2043,19 +2106,21 @@ export default function Page() {
           transform: translateY(0);
         }
 
+        /* ✅ Footer links pinned to viewport bottom (no shifting) */
         .plm-footer-links {
-          position: absolute;
-          bottom: max(18px, env(safe-area-inset-bottom));
+          position: fixed;
           left: 0;
           right: 0;
+          bottom: max(18px, env(safe-area-inset-bottom));
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 14px;
-          z-index: 10;
+          z-index: 40;
           padding: 0 16px;
           flex-wrap: wrap;
+          pointer-events: auto;
         }
 
         .plm-footer-link {
@@ -2283,17 +2348,14 @@ export default function Page() {
           padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
         }
 
-        /* ✅ REMOVE the old “white card” overrides so LiquidGlass shows */
+        /* ✅ FIX: DO NOT override LiquidGlass with transparent/none (this was causing the “matte white” bar) */
         .chat-dock {
           width: 100%;
           display: flex;
           flex-direction: column;
           gap: 12px;
           padding: 14px 16px;
-          border-radius: var(--radius-lg);
-          background: transparent;
-          border: none;
-          box-shadow: none;
+          color-scheme: light; /* helps iOS inputs render correctly */
         }
 
         .chat-attachment {
@@ -2334,7 +2396,7 @@ export default function Page() {
           gap: 10px;
         }
 
-        /* ✅ Input wrapper now matches LiquidGlass style (no flat white) */
+        /* ✅ Input wrapper: keep it frosted, but less “flat white” */
         .chat-input-wrapper {
           flex: 1;
           display: flex;
@@ -2343,11 +2405,11 @@ export default function Page() {
           min-width: 0;
           min-height: 48px;
 
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.58));
+          background: rgba(255, 255, 255, 0.46);
           border: 1px solid rgba(15, 23, 42, 0.14);
           box-shadow: 0 16px 44px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(14px) saturate(125%);
-          -webkit-backdrop-filter: blur(14px) saturate(125%);
+          backdrop-filter: blur(14px) saturate(130%);
+          -webkit-backdrop-filter: blur(14px) saturate(130%);
           transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
         }
 
@@ -2355,7 +2417,7 @@ export default function Page() {
           border-color: rgba(15, 23, 42, 0.26);
           box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.16), 0 18px 48px rgba(5, 7, 13, 0.14),
             inset 0 1px 0 rgba(255, 255, 255, 0.6);
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.62));
+          background: rgba(255, 255, 255, 0.56);
         }
 
         .chat-textarea {
