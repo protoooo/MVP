@@ -1,4 +1,3 @@
-// app/verify-email/page.js - Light frosted theme matching landing page
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -84,7 +83,7 @@ export default function VerifyEmailPage() {
   if (loading) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center">
-        <div className="text-slate-600">Loading…</div>
+        <div style={{ color: 'rgba(15, 23, 42, 0.7)' }}>Loading…</div>
       </div>
     )
   }
@@ -99,7 +98,6 @@ export default function VerifyEmailPage() {
 
       <div className={`${plusJakarta.className} min-h-[100dvh] flex items-center justify-center px-4`}>
         <div className="w-full max-w-md">
-          {/* Light frosted card matching landing page */}
           <div style={{
             background: 'linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88))',
             border: '1px solid rgba(15, 23, 42, 0.12)',
