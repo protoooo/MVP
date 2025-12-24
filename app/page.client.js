@@ -73,7 +73,10 @@ const Icons = {
 
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
-  const size = isChat ? 64 : 82
+
+  // ✅ Increase logo size ~70% across desktop + mobile
+  const size = isChat ? 110 : 140
+
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
       <span className="plm-brand-inner">
@@ -95,10 +98,6 @@ function FooterLinks() {
       <span className="plm-footer-sep">·</span>
       <Link className="plm-footer-link" href="/privacy">
         Privacy
-      </Link>
-      <span className="plm-footer-sep">·</span>
-      <Link className="plm-footer-link" href="/contact">
-        Contact
       </Link>
       <span className="plm-footer-sep">·</span>
       <Link className="plm-footer-link" href="/contact">
@@ -129,7 +128,13 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <LiquidGlass variant="main" className="landing-hero-card">
           <div className="hero-content">
             <div className="hero-headings">
-              <h1 className={`hero-title ${plusJakarta.className}`}>Catch Violations, Not Fines.</h1>
+              <h1 className={`hero-title ${plusJakarta.className}`}>
+                Catch Violations,
+                <span className="hero-break">
+                  <br />
+                </span>{' '}
+                Not Fines.
+              </h1>
               <p className="hero-support">
                 Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
                 instant answers and guidance from Washtenaw County Food Safety Regulations.
@@ -154,6 +159,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
+/* AuthModal unchanged */
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -781,8 +787,6 @@ export default function Page() {
     }
   }
 
-  // ✅ UPDATED: ensures we send the image data URL at top-level `image`,
-  // and also include it inside the latest user message object.
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
@@ -1063,9 +1067,10 @@ export default function Page() {
           gap: 12px;
         }
 
+        /* ✅ Larger logo */
         .plm-brand-mark {
-          width: 82px;
-          height: 82px;
+          width: 140px;
+          height: 140px;
           flex-shrink: 0;
         }
 
@@ -1088,13 +1093,13 @@ export default function Page() {
           text-overflow: ellipsis;
         }
 
-        /* Chat brand: logo only (no text) + tighter sizing */
+        /* Chat brand: logo only (no text) + larger */
         .plm-brand.chat .plm-brand-inner {
           gap: 0;
         }
         .plm-brand.chat .plm-brand-mark {
-          width: 64px;
-          height: 64px;
+          width: 110px;
+          height: 110px;
         }
 
         .desktop-only {
@@ -1219,7 +1224,6 @@ export default function Page() {
           box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
         }
 
-        /* Sign-in button white on all devices */
         .landing-signin-btn {
           color: #0b1220 !important;
           font-weight: 700 !important;
@@ -1287,6 +1291,11 @@ export default function Page() {
           margin: 0;
         }
 
+        /* ✅ Only break line on mobile so: "Catch Violations," then "Not Fines." */
+        .hero-break {
+          display: none;
+        }
+
         .hero-support {
           margin: 0;
           font-size: 16px;
@@ -1295,6 +1304,7 @@ export default function Page() {
           max-width: 52ch;
         }
 
+        /* ✅ Keep CTA in one row on mobile + desktop */
         .hero-cta-row {
           display: flex;
           align-items: center;
@@ -1302,7 +1312,8 @@ export default function Page() {
           justify-content: center;
           flex-wrap: nowrap;
           flex-direction: row;
-          margin-top: 8px;
+          margin-top: 14px;
+          padding-top: 6px; /* a little buffer from body text */
         }
 
         .hero-arrow-text {
@@ -1357,6 +1368,7 @@ export default function Page() {
           overflow: visible;
           box-shadow: 0 12px 30px rgba(95, 168, 255, 0.24);
           transition: transform 0.12s ease;
+          white-space: nowrap;
         }
 
         .hero-cta-trace {
@@ -1409,37 +1421,41 @@ export default function Page() {
           transform: translateY(0);
         }
 
-        /* Footer links */
+        /* ✅ Footer links centered + darker gray so visible */
         .plm-footer-links {
           position: absolute;
-          bottom: max(20px, env(safe-area-inset-bottom));
-          left: 50%;
-          transform: translateX(-50%);
+          bottom: max(18px, env(safe-area-inset-bottom));
+          left: 0;
+          right: 0;
+          transform: none;
+          width: 100%;
           display: flex;
           align-items: center;
-          gap: 16px;
+          justify-content: center;
+          gap: 14px;
           z-index: 10;
+          padding: 0 16px;
+          flex-wrap: wrap;
         }
 
         .plm-footer-link {
-          color: var(--ink-2);
+          color: rgba(15, 23, 42, 0.6);
           text-decoration: none;
           font-size: 11px;
-          font-weight: 500;
+          font-weight: 650;
           letter-spacing: 0.04em;
           text-transform: uppercase;
           transition: color 0.15s ease;
         }
 
         .plm-footer-link:hover {
-          color: var(--ink-0);
+          color: rgba(15, 23, 42, 0.82);
         }
         .plm-footer-sep {
-          color: var(--ink-3);
+          color: rgba(15, 23, 42, 0.45);
         }
 
-        /* Modals ... (unchanged below) */
-        /* Chat */
+        /* Chat (unchanged below) */
         .chat-root {
           position: relative;
           flex: 1;
@@ -1490,11 +1506,6 @@ export default function Page() {
           position: relative;
           display: flex;
           align-items: center;
-        }
-
-        /* Settings button now uses unified icon button */
-        .chat-settings-btn {
-          /* keep class for targeting, but style comes from .plm-icon-btn */
         }
 
         .chat-settings-menu {
@@ -1708,12 +1719,6 @@ export default function Page() {
           gap: 10px;
         }
 
-        /* Camera button now uses unified icon button */
-        .chat-camera-btn {
-          /* keep class for semantics; style comes from .plm-icon-btn */
-          flex-shrink: 0;
-        }
-
         .chat-input-wrapper {
           flex: 1;
           display: flex;
@@ -1756,12 +1761,6 @@ export default function Page() {
           outline: none;
         }
 
-        /* Send button now uses unified icon button + primary variant */
-        .chat-send-btn {
-          /* keep class; style from .plm-icon-btn */
-          flex-shrink: 0;
-        }
-
         .chat-send-spinner {
           width: 16px;
           height: 16px;
@@ -1790,28 +1789,31 @@ export default function Page() {
             padding-top: max(86px, env(safe-area-inset-top) + 66px);
           }
 
+          /* ✅ Show title line-break only on mobile */
+          .hero-break {
+            display: inline;
+          }
+
+          /* ✅ Keep CTA in one row on mobile */
           .hero-cta-row {
-            flex-direction: column;
-            gap: 0;
-            align-items: center;
-            text-align: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 6px;
           }
 
           .hero-arrow-text {
             font-size: 13px;
-            order: 0;
-            margin-bottom: 10px;
           }
 
           .hero-arrow-icon {
-            order: 1;
-            transform: rotate(90deg);
-            margin: 6px 0;
+            width: 32px;
+            height: 32px;
           }
 
-          .hero-arrow-icon svg {
-            width: 18px;
-            height: 18px;
+          .hero-cta {
+            height: 44px;
+            font-size: 13px;
+            padding: 0 16px;
           }
 
           .chat-topbar {
@@ -1861,14 +1863,15 @@ export default function Page() {
             padding: 28px 24px;
           }
 
+          /* ✅ Larger logo on mobile as well */
           .plm-brand-mark {
-            width: 72px;
-            height: 72px;
+            width: 120px;
+            height: 120px;
           }
 
           .plm-brand.chat .plm-brand-mark {
-            width: 60px;
-            height: 60px;
+            width: 102px;
+            height: 102px;
           }
 
           .plm-brand-text {
@@ -1893,16 +1896,17 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 68px;
-            height: 68px;
+            width: 110px;
+            height: 110px;
           }
+
           .plm-brand-text {
             font-size: 16px;
           }
 
           .plm-brand.chat .plm-brand-mark {
-            width: 58px;
-            height: 58px;
+            width: 96px;
+            height: 96px;
           }
 
           .chat-input-inner {
@@ -1922,6 +1926,15 @@ export default function Page() {
           .chat-textarea {
             font-size: 15px;
             padding: 10px 12px;
+          }
+
+          /* Keep CTA row from wrapping weirdly on tiny screens */
+          .hero-cta-row {
+            gap: 8px;
+          }
+
+          .hero-arrow-text {
+            font-size: 12.5px;
           }
         }
 
@@ -2031,7 +2044,9 @@ export default function Page() {
                         key={idx}
                         className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
                       >
-                        <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+                        <div
+                          className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
+                        >
                           {msg.image && (
                             <div className="chat-bubble-image">
                               <img src={msg.image} alt="Uploaded" />
@@ -2124,7 +2139,9 @@ export default function Page() {
                       </div>
                     </div>
 
-                    <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
+                    <p className="chat-disclaimer">
+                      protocolLM may make mistakes. Verify critical decisions with official regulations.
+                    </p>
                   </LiquidGlass>
                 </div>
               </div>
