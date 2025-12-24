@@ -47,12 +47,25 @@ const Icons = {
       <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+
+  // ✅ FIX: iOS/Safari was rendering your old <line> X as a single slash sometimes.
+  // Use a single <path> with round caps so it ALWAYS looks like an “X”.
   X: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.1" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y1="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+    <svg
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      viewBox="0 0 24 24"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   ),
+
   Sparkle: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
@@ -1107,8 +1120,8 @@ export default function Page() {
           --glass-ink: #0b1324;
           --glass-ink-70: rgba(11, 19, 36, 0.7);
           --glass-ink-55: rgba(11, 19, 36, 0.55);
-          --glass-bg: rgba(255, 255, 255, 0.52);
-          --glass-bg-strong: rgba(255, 255, 255, 0.62);
+          --glass-bg: rgba(255, 255, 255, 0.56);
+          --glass-bg-strong: rgba(255, 255, 255, 0.68);
           --glass-border: rgba(255, 255, 255, 0.55);
           --glass-shadow: 0 26px 80px rgba(10, 18, 35, 0.22);
         }
@@ -1128,6 +1141,10 @@ export default function Page() {
           color: var(--ink-0);
           overflow-x: hidden;
           -webkit-font-smoothing: antialiased;
+
+          /* ✅ prevents iOS “soft” text scaling / odd rasterization in overlays */
+          -webkit-text-size-adjust: 100%;
+          text-rendering: geometricPrecision;
           overscroll-behavior-y: none;
         }
 
@@ -1246,24 +1263,34 @@ export default function Page() {
           align-items: center;
         }
 
-        /* ✅ Modal cards: FORCE light frosted glass (so they don’t go “dark” over the dim overlay) */
+        /* ✅ Modal cards: FORCE light frosted glass + fix “blurry” text on iOS (compositing) */
         .glass-modal.modal-card {
           width: 100%;
           position: relative;
           border-radius: 18px;
           padding: 22px;
 
-          /* key fix */
           background: var(--glass-bg-strong) !important;
           border: 1px solid var(--glass-border) !important;
-          box-shadow: 0 30px 90px rgba(10, 18, 35, 0.28) !important;
+          box-shadow: 0 30px 90px rgba(10, 18, 35, 0.26) !important;
 
-          backdrop-filter: blur(18px) saturate(165%) !important;
-          -webkit-backdrop-filter: blur(18px) saturate(165%) !important;
+          /* reduce nested blur strength a touch (helps iOS crispness) */
+          backdrop-filter: blur(16px) saturate(165%) !important;
+          -webkit-backdrop-filter: blur(16px) saturate(165%) !important;
 
           color: var(--glass-ink) !important;
           color-scheme: light !important;
           overflow: hidden;
+
+          /* ✅ anti-blur / rasterization fixes */
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          filter: none !important;
+          -webkit-filter: none !important;
+          -webkit-font-smoothing: antialiased;
+          text-rendering: geometricPrecision;
         }
 
         .glass-modal.modal-card::before {
@@ -1297,8 +1324,14 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          line-height: 0;
           box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
           transition: background 0.15s ease;
+        }
+
+        .modal-close svg {
+          display: block;
+          pointer-events: none;
         }
 
         .modal-close:hover {
@@ -1313,7 +1346,7 @@ export default function Page() {
         .modal-title {
           margin: 0;
           font-size: 18px;
-          font-weight: 800;
+          font-weight: 850;
           letter-spacing: -0.02em;
           color: rgba(15, 23, 42, 0.92);
         }
@@ -1334,7 +1367,7 @@ export default function Page() {
 
         .form-label {
           font-size: 12px;
-          font-weight: 700;
+          font-weight: 750;
           color: rgba(15, 23, 42, 0.7);
         }
 
@@ -1351,10 +1384,10 @@ export default function Page() {
           padding: 0 12px;
           border-radius: 12px;
           border: 1px solid rgba(15, 23, 42, 0.14);
-          background: rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.74);
           color: rgba(15, 23, 42, 0.92);
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 650;
           transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
           backdrop-filter: blur(10px) saturate(120%);
           -webkit-backdrop-filter: blur(10px) saturate(120%);
@@ -1363,8 +1396,8 @@ export default function Page() {
         .form-input:focus {
           outline: none;
           border-color: rgba(15, 23, 42, 0.28);
-          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
-          background: rgba(255, 255, 255, 0.86);
+          box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.18);
+          background: rgba(255, 255, 255, 0.9);
         }
 
         .form-toggle-vis {
@@ -1377,7 +1410,7 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.75);
           color: rgba(15, 23, 42, 0.82);
           cursor: pointer;
-          font-weight: 700;
+          font-weight: 800;
           font-size: 12px;
           transition: background 0.15s ease;
         }
@@ -1386,31 +1419,38 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.95);
         }
 
+        /* ✅ Match landing/chat CTA vibe (blue accent) */
         .btn-submit {
           height: 44px;
           border-radius: 9999px;
-          border: none;
-          background: rgba(15, 23, 42, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          background: linear-gradient(180deg, rgba(95, 168, 255, 0.98), rgba(95, 168, 255, 0.78));
           color: #fff;
-          font-weight: 800;
+          font-weight: 900;
           cursor: pointer;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 10px;
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24);
-          transition: background 0.15s ease, box-shadow 0.15s ease;
+          box-shadow: 0 16px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
         }
 
         .btn-submit:hover:not(:disabled) {
-          background: rgba(15, 23, 42, 1);
-          box-shadow: 0 16px 38px rgba(15, 23, 42, 0.28);
+          transform: translateY(-1px);
+          box-shadow: 0 18px 48px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          filter: saturate(1.03);
+        }
+
+        .btn-submit:active:not(:disabled) {
+          transform: translateY(0px);
         }
 
         .btn-submit:disabled {
           opacity: 0.55;
           cursor: not-allowed;
           box-shadow: none;
+          transform: none;
         }
 
         .spinner {
@@ -1431,7 +1471,7 @@ export default function Page() {
         .modal-message {
           margin-top: 10px;
           font-size: 13px;
-          font-weight: 700;
+          font-weight: 750;
           padding: 10px 12px;
           border-radius: 12px;
           border: 1px solid rgba(15, 23, 42, 0.12);
@@ -1462,7 +1502,7 @@ export default function Page() {
           background: transparent;
           border: none;
           color: rgba(15, 23, 42, 0.74);
-          font-weight: 800;
+          font-weight: 850;
           font-size: 12px;
           cursor: pointer;
           padding: 0;
@@ -1491,7 +1531,7 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.58);
           color: rgba(15, 23, 42, 0.78);
           font-size: 12px;
-          font-weight: 800;
+          font-weight: 900;
           margin-bottom: 10px;
           backdrop-filter: blur(12px) saturate(120%);
           -webkit-backdrop-filter: blur(12px) saturate(120%);
@@ -1521,18 +1561,25 @@ export default function Page() {
           margin-top: 12px;
         }
 
-        /* ✅ Inner pricing card: also force “light glass” so it doesn’t go dark inside the modal */
+        /* ✅ Inner pricing card: also force “light glass” + iOS crispness */
         .pricing-card {
           border-radius: 16px;
           padding: 16px;
 
-          background: rgba(255, 255, 255, 0.54) !important;
+          background: rgba(255, 255, 255, 0.56) !important;
           border: 1px solid rgba(255, 255, 255, 0.55) !important;
           box-shadow: 0 18px 55px rgba(10, 18, 35, 0.16) !important;
-          backdrop-filter: blur(16px) saturate(155%) !important;
-          -webkit-backdrop-filter: blur(16px) saturate(155%) !important;
+          backdrop-filter: blur(14px) saturate(155%) !important;
+          -webkit-backdrop-filter: blur(14px) saturate(155%) !important;
           color-scheme: light !important;
           overflow: hidden;
+
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          -webkit-font-smoothing: antialiased;
+          text-rendering: geometricPrecision;
         }
 
         .pricing-card::before {
@@ -1619,7 +1666,7 @@ export default function Page() {
           font-size: 13px;
           line-height: 1.5;
           color: rgba(15, 23, 42, 0.82);
-          font-weight: 700;
+          font-weight: 750;
         }
 
         .pricing-check {
@@ -1643,32 +1690,39 @@ export default function Page() {
           margin-top: 10px;
         }
 
+        /* ✅ Match landing/chat CTA vibe (blue accent) */
         .pricing-primary {
           height: 46px;
           border-radius: 9999px;
-          border: none;
-          background: rgba(15, 23, 42, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          background: linear-gradient(180deg, rgba(95, 168, 255, 0.98), rgba(95, 168, 255, 0.78));
           color: #fff;
           font-weight: 950;
           cursor: pointer;
-          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.26);
+          box-shadow: 0 16px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 10px;
           font-size: 14px;
-          transition: background 0.15s ease, box-shadow 0.15s ease;
+          transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
         }
 
         .pricing-primary:hover:not(:disabled) {
-          background: rgba(15, 23, 42, 1);
-          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.32);
+          transform: translateY(-1px);
+          box-shadow: 0 18px 48px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          filter: saturate(1.03);
+        }
+
+        .pricing-primary:active:not(:disabled) {
+          transform: translateY(0px);
         }
 
         .pricing-primary:disabled {
           opacity: 0.6;
           cursor: not-allowed;
           box-shadow: none;
+          transform: none;
         }
 
         .pricing-secondary {
@@ -1757,6 +1811,9 @@ export default function Page() {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+
+          /* ✅ FIX: prevents the leading “p” from being clipped on iOS/Safari */
+          padding-left: 2px;
         }
 
         .plm-brand.chat .plm-brand-inner {
@@ -1769,7 +1826,7 @@ export default function Page() {
 
         .landing-topbar .plm-brand-inner {
           align-items: center;
-          gap: 10px;
+          gap: 12px;
         }
 
         .landing-topbar .plm-brand-mark {
@@ -1789,7 +1846,7 @@ export default function Page() {
         }
 
         .landing-topbar .plm-brand-text {
-          line-height: 1;
+          line-height: 1.1;
           position: relative;
           top: 0px;
           font-size: 17.5px;
