@@ -12,6 +12,7 @@ import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
 import PricingModal from '@/components/PricingModal'
+import LiquidGlass from '@/components/ui/LiquidGlass'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
@@ -122,7 +123,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       </header>
 
       <main className="landing-hero">
-        <div className="landing-hero-card glass-surface">
+        <LiquidGlass variant="main" className="landing-hero-card">
           <div className="hero-content">
             <div className="hero-headings">
               <h1 className={`hero-title ${outfit.className}`}>Catch Violations, Not Fines.</h1>
@@ -142,7 +143,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               </button>
             </div>
           </div>
-        </div>
+        </LiquidGlass>
       </main>
 
       <FooterLinks />
@@ -249,7 +250,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className={`modal-card glass-surface ${ibmMono.className}`}>
+        <div className={`modal-card auth-modal glass-surface ${ibmMono.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -265,18 +266,20 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
           <form onSubmit={handleSubmit} className="modal-form">
             <div className="form-group">
               <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                required
-                className="form-input"
-                autoComplete="username"
-                inputMode="email"
-                autoFocus
-              />
+              <div className="form-input-wrap">
+                <input
+                  type="email"
+                  name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  required
+                  className="form-input"
+                  autoComplete="username"
+                  inputMode="email"
+                  autoFocus
+                />
+              </div>
             </div>
 
             {mode !== 'reset' && (
@@ -1195,11 +1198,6 @@ export default function Page() {
           max-width: 880px;
           margin: 0 auto;
           padding: 40px 48px;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), 0 32px 96px rgba(5, 7, 13, 0.45);
-          backdrop-filter: blur(20px) saturate(130%);
-          -webkit-backdrop-filter: blur(20px) saturate(130%);
         }
 
         .hero-content {
@@ -1427,13 +1425,13 @@ export default function Page() {
 
         .modal-card {
           position: relative;
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          border-radius: var(--radius-lg);
-          padding: 28px;
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 24px 72px rgba(5, 7, 13, 0.4);
-          backdrop-filter: blur(18px) saturate(125%);
-          -webkit-backdrop-filter: blur(18px) saturate(125%);
+          border: 1px solid rgba(255, 255, 255, 0.26);
+          border-radius: 20px;
+          padding: 30px;
+          background: linear-gradient(170deg, rgba(6, 11, 20, 0.9), rgba(10, 16, 26, 0.84));
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 28px 76px rgba(5, 7, 13, 0.42);
+          backdrop-filter: blur(20px) saturate(135%);
+          -webkit-backdrop-filter: blur(20px) saturate(135%);
         }
 
         .modal-header {
@@ -1647,6 +1645,224 @@ export default function Page() {
           color: var(--ink-0);
         }
 
+        /* Auth modal refinements */
+        .auth-modal {
+          background: linear-gradient(165deg, rgba(10, 14, 26, 0.92), rgba(18, 25, 40, 0.88));
+          border-color: rgba(255, 255, 255, 0.22);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.38),
+            0 32px 80px rgba(5, 7, 13, 0.5);
+        }
+
+        .auth-modal .modal-title {
+          font-size: 22px;
+        }
+
+        .auth-modal .form-group {
+          gap: 8px;
+        }
+
+        .auth-modal .form-label {
+          color: rgba(246, 249, 255, 0.82);
+          letter-spacing: 0.05em;
+        }
+
+        .auth-modal .form-input-wrap {
+          background: linear-gradient(120deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.26);
+          padding: 0 12px;
+        }
+
+        .auth-modal .form-input-wrap:focus-within {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .auth-modal .form-input {
+          height: 46px;
+          color: var(--ink-0);
+          font-size: 15px;
+        }
+
+        .auth-modal .form-input::placeholder {
+          color: rgba(246, 249, 255, 0.7);
+        }
+
+        .auth-modal .btn-submit {
+          height: 48px;
+          border-radius: 12px;
+          font-size: 15px;
+        }
+
+        .auth-modal .modal-footer .modal-link {
+          color: var(--ink-1);
+        }
+
+        .auth-modal .modal-footer .modal-link:hover {
+          color: var(--ink-0);
+        }
+
+        /* Pricing modal polish */
+        .pricing-modal {
+          padding: 32px;
+          background: linear-gradient(160deg, rgba(8, 12, 22, 0.94), rgba(10, 18, 28, 0.9));
+          border-radius: 22px;
+          max-width: 540px;
+        }
+
+        .pricing-container {
+          max-width: 540px;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .pricing-header {
+          text-align: center;
+          margin-bottom: 22px;
+        }
+
+        .pricing-title {
+          margin: 0;
+          font-size: 28px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--ink-0);
+        }
+
+        .pricing-card-shell {
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+          border: 1px solid rgba(255, 255, 255, 0.26);
+          border-radius: 16px;
+          padding: 28px;
+          color: var(--ink-0);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.5),
+            0 24px 70px rgba(5, 7, 13, 0.45);
+        }
+
+        .pricing-price-block {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+
+        .pricing-price {
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+
+        .pricing-price-figure {
+          font-size: 48px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+        }
+
+        .pricing-price-period {
+          font-size: 16px;
+          color: rgba(246, 249, 255, 0.7);
+        }
+
+        .pricing-subtitle {
+          font-size: 13px;
+          color: rgba(246, 249, 255, 0.8);
+        }
+
+        .pricing-cta {
+          width: 100%;
+          height: 50px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: linear-gradient(120deg, #7bc2ff, #5fa8ff);
+          color: #05070d;
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          border-radius: 9999px;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          margin-bottom: 20px;
+          box-shadow: 0 18px 44px rgba(95, 168, 255, 0.32);
+          transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+        }
+
+        .pricing-cta:hover:not(:disabled) {
+          transform: translateY(-1px);
+          filter: brightness(1.05);
+        }
+
+        .pricing-cta:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .pricing-features {
+          border-top: 1px solid rgba(255, 255, 255, 0.14);
+          padding-top: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .pricing-feature {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: 13px;
+          color: rgba(246, 249, 255, 0.86);
+          line-height: 1.5;
+        }
+
+        .pricing-feature-check {
+          color: var(--accent);
+          font-weight: 700;
+          margin-top: 1px;
+        }
+
+        .pricing-feature-text {
+          flex: 1;
+        }
+
+        .pricing-note {
+          margin-top: 18px;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          border-radius: 14px;
+          padding: 16px;
+        }
+
+        .pricing-note-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--accent);
+          margin-bottom: 8px;
+        }
+
+        .pricing-note-text {
+          font-size: 13px;
+          color: rgba(246, 249, 255, 0.84);
+          line-height: 1.55;
+          margin: 0;
+        }
+
+        .pricing-legal {
+          font-size: 11px;
+          color: rgba(246, 249, 255, 0.66);
+          margin-top: 16px;
+          text-align: center;
+          line-height: 1.5;
+        }
+
+        .pricing-legal a {
+          color: var(--accent);
+          text-decoration: none;
+          font-weight: 600;
+        }
+
         /* Chat */
         .chat-root {
           position: relative;
@@ -1654,7 +1870,10 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           height: 100dvh;
+          height: 100svh;
           min-height: 100dvh;
+          min-height: 100svh;
+          max-height: 100svh;
           overflow: hidden;
         }
 
@@ -1860,15 +2079,19 @@ export default function Page() {
         /* BOTTOM BAR: remove the black strip; keep ONLY the glass dock */
         .chat-input-area {
           flex-shrink: 0;
-          position: relative;
-          background: transparent;
+          position: sticky;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.32) 55%, rgba(5, 7, 13, 0.46) 100%);
           border-top: none;
+          z-index: 15;
         }
 
         .chat-input-inner {
-          max-width: 760px;
+          max-width: 840px;
+          width: min(100%, 920px);
           margin: 0 auto;
-          width: 100%;
           padding: 12px 24px;
           padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
         }
@@ -1887,13 +2110,10 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           padding: 8px 12px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
-          border: 1px solid rgba(255, 255, 255, 0.26);
           border-radius: var(--radius-sm);
           margin-bottom: 12px;
           font-size: 12px;
           color: rgba(15, 23, 42, 0.86);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
 
         .chat-attachment-icon {
@@ -1960,6 +2180,7 @@ export default function Page() {
           min-width: 0;
           backdrop-filter: blur(14px) saturate(120%);
           -webkit-backdrop-filter: blur(14px) saturate(120%);
+          min-height: 48px;
         }
 
         .chat-input-wrapper:focus-within {
@@ -1973,7 +2194,7 @@ export default function Page() {
           padding: 12px 14px;
           background: transparent;
           border: none;
-          color: rgba(15, 23, 42, 0.92);
+          color: rgba(15, 23, 42, 0.96);
           font-size: 16px;
           line-height: 1.4;
           resize: none;
@@ -1982,32 +2203,36 @@ export default function Page() {
         }
 
         .chat-textarea::placeholder {
-          color: rgba(15, 23, 42, 0.55);
+          color: rgba(15, 23, 42, 0.7);
         }
         .chat-textarea:focus {
           outline: none;
         }
 
         .chat-send-btn {
-          width: 44px;
-          height: 44px;
+          width: 46px;
+          height: 46px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          border: none;
-          color: rgba(15, 23, 42, 0.6);
+          background: linear-gradient(125deg, #7bc2ff, #5fa8ff);
+          border: 1px solid rgba(255, 255, 255, 0.42);
+          color: #0b1220;
           cursor: pointer;
           flex-shrink: 0;
-          transition: color 0.15s ease;
+          border-radius: 12px;
+          transition: transform 0.12s ease, filter 0.12s ease;
+          box-shadow: 0 10px 28px rgba(95, 168, 255, 0.28);
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          color: var(--accent);
+          transform: translateY(-1px);
+          filter: brightness(1.05);
         }
         .chat-send-btn:disabled {
           opacity: 0.3;
           cursor: not-allowed;
+          box-shadow: none;
         }
 
         .chat-send-spinner {
@@ -2028,7 +2253,7 @@ export default function Page() {
         .chat-disclaimer {
           text-align: center;
           font-size: 11px;
-          color: rgba(15, 23, 42, 0.6);
+          color: rgba(15, 23, 42, 0.72);
           margin-top: 8px;
         }
 
@@ -2068,8 +2293,19 @@ export default function Page() {
           }
 
           .chat-input-inner {
-            padding: 10px 16px;
+            padding: 10px 14px;
             padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+          }
+
+          .chat-dock {
+            padding: 12px 12px;
+            gap: 10px;
+          }
+
+          .chat-camera-btn,
+          .chat-send-btn {
+            width: 42px;
+            height: 42px;
           }
 
           .chat-bubble {
@@ -2130,6 +2366,25 @@ export default function Page() {
           .plm-brand.chat .plm-brand-mark {
             width: 54px;
             height: 54px;
+          }
+
+          .chat-input-inner {
+            padding: 10px 12px;
+          }
+
+          .chat-dock {
+            padding: 12px 10px;
+          }
+
+          .chat-camera-btn,
+          .chat-send-btn {
+            width: 40px;
+            height: 40px;
+          }
+
+          .chat-textarea {
+            font-size: 15px;
+            padding: 10px 12px;
           }
         }
 
@@ -2247,11 +2502,11 @@ export default function Page() {
 
               <div className="chat-input-area">
                 <div className="chat-input-inner">
-                  <div className="chat-dock glass-surface">
+                  <LiquidGlass variant="main" className="chat-dock">
                     <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                     {selectedImage && (
-                      <div className="chat-attachment">
+                      <LiquidGlass variant="side" className="chat-attachment">
                         <span className="chat-attachment-icon">
                           <Icons.Camera />
                         </span>
@@ -2259,7 +2514,7 @@ export default function Page() {
                         <button onClick={() => setSelectedImage(null)} className="chat-attachment-remove" aria-label="Remove" type="button">
                           <Icons.X />
                         </button>
-                      </div>
+                      </LiquidGlass>
                     )}
 
                     <div className="chat-input-row">
@@ -2304,7 +2559,7 @@ export default function Page() {
                     </div>
 
                     <p className="chat-disclaimer">protocolLM may make mistakes. Verify critical decisions with official regulations.</p>
-                  </div>
+                  </LiquidGlass>
                 </div>
               </div>
             </div>
