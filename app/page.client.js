@@ -160,11 +160,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-content">
             <div className="hero-headings">
               <h1 className={`hero-title ${plusJakarta.className}`}>
-                Catch Violations,
+                CATCH VIOLATIONS,
                 <span className="hero-break">
                   <br />
                 </span>{' '}
-                Not Fines.
+                NOT FINES.
               </h1>
               <p className="hero-support">
                 Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
@@ -178,7 +178,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 <Icons.ArrowRight />
               </div>
               <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
-                Start trial
+                Start free trial
               </button>
             </div>
           </div>
@@ -2464,16 +2464,16 @@ export default function Page() {
         }
 
         .start-trial-btn {
-          background: linear-gradient(120deg, #4f9cff 0%, #22c55e 45%, #facc15 100%);
-          color: #0b1220;
-          border-color: rgba(15, 23, 42, 0.1);
-          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          background: var(--accent);
+          color: #fff;
+          border-color: rgba(95, 168, 255, 0.3);
+          box-shadow: 0 12px 30px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
           font-weight: 800;
         }
 
         .start-trial-btn:hover {
-          filter: saturate(1.05) brightness(1.02);
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          background: var(--accent-hover);
+          box-shadow: 0 14px 34px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
 
         .btn-nav:hover {
@@ -2672,19 +2672,14 @@ export default function Page() {
           transform: translateY(0);
         }
 
-        /* ✅ Footer links pinned to viewport bottom (no shifting) */
+        /* ✅ Footer links pinned below chat bar */
         .plm-footer-links {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: max(18px, env(safe-area-inset-bottom));
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 14px;
-          z-index: 40;
-          padding: 0 16px;
+          padding: 12px 16px 4px;
           flex-wrap: wrap;
           pointer-events: auto;
         }
@@ -2960,10 +2955,10 @@ export default function Page() {
 
         .chat-input-inner {
           pointer-events: auto;
-          max-width: 960px;
+          max-width: calc(960px + 48px); /* 960px + 24px padding on each side to match chat-messages */
           width: 100%;
           margin: 0 auto;
-          padding: 12px clamp(18px, 4vw, 28px);
+          padding: 12px 24px;
           padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
         }
 
@@ -3153,6 +3148,23 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.92);
           letter-spacing: -0.02em;
           margin: 0 0 12px 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .tool-welcome-line1,
+        .tool-welcome-line2 {
+          display: block;
+        }
+
+        /* On desktop, show on one line */
+        @media (min-width: 769px) {
+          .tool-welcome-title {
+            flex-direction: row;
+            justify-content: center;
+            gap: 0.3em;
+          }
         }
 
         .tool-welcome-text {
@@ -3250,7 +3262,7 @@ export default function Page() {
           }
 
           .chat-input-inner {
-            padding: 10px clamp(14px, 5vw, 22px);
+            padding: 10px 16px;
             padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
           }
 
@@ -3365,7 +3377,7 @@ export default function Page() {
           }
 
           .chat-input-inner {
-            padding: 10px 12px;
+            padding: 10px 16px;
           }
 
           .chat-dock {
@@ -3429,11 +3441,6 @@ export default function Page() {
             <header className="chat-topbar">
               <BrandLink variant="chat" />
               <nav className="chat-top-actions" aria-label="Tool actions">
-                {/* ✅ Free usage counter for anonymous users */}
-                {!isAuthenticated && deviceUsageRemaining > 0 && (
-                  <FreeUsageCounter remaining={deviceUsageRemaining} limit={FREE_USAGE_LIMIT} />
-                )}
-
                 {!isAuthenticated && (
                   <button
                     type="button"
@@ -3443,7 +3450,7 @@ export default function Page() {
                       setShowPricingModal(true)
                     }}
                   >
-                    Start trial
+                    Start free trial
                   </button>
                 )}
                 
@@ -3521,7 +3528,8 @@ export default function Page() {
                     <LiquidGlass variant="main" className="tool-welcome-card">
                       <div className="tool-welcome-content">
                         <h1 className={`tool-welcome-title ${plusJakarta.className}`}>
-                          protocolLM
+                          <span className="tool-welcome-line1">CATCH VIOLATIONS,</span>
+                          <span className="tool-welcome-line2">NOT FINES.</span>
                         </h1>
                         <p className="tool-welcome-text">
                           Take a photo of your restaurant to scan for visible violations and get fast, Michigan-specific guidance.
@@ -3537,13 +3545,7 @@ export default function Page() {
                               Start 7-day free trial
                             </button>
                           </div>
-                        ) : (
-                          <div className="tool-usage-available">
-                            <p className="tool-usage-text">
-                              {deviceUsageRemaining} free {deviceUsageRemaining === 1 ? 'scan' : 'scans'} remaining • No account needed
-                            </p>
-                          </div>
-                        )}
+                        ) : null}
                       </div>
                     </LiquidGlass>
                   ) : (
@@ -3666,6 +3668,7 @@ export default function Page() {
                     protocolLM may make mistakes. Verify critical decisions with official regulations.
                   </p>
                 </LiquidGlass>
+                <FooterLinks />
               </div>
             </div>
           </div>
