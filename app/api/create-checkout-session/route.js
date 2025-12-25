@@ -46,7 +46,19 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { priceId, captchaToken } = body
+    const { priceId, captchaToken, locationCount: rawLocationCount, devicesPerLocation: rawDevicesPerLocation } = body
+
+    const locationCount = Math.max(1, Math.min(500, parseInt(rawLocationCount || '1', 10)))
+    const devicesPerLocation = Math.max(1, Math.min(20, parseInt(rawDevicesPerLocation || '1', 10)))
+
+    const tier = locationCount >= 20 ? 'enterprise' : locationCount >= 5 ? 'multi' : 'single'
+    const pricePerLocation = tier === 'enterprise' ? 35 : tier === 'multi' ? 40 : 50
+    const devicePrice = tier === 'single' ? 20 : 15
+    const isMultiLocation = locationCount > 1
+
+    if (tier === 'enterprise') {
+      return NextResponse.json({ requiresContact: true, tier })
+    }
 
     // ✅ Validate price ID - must be the unlimited plan
     if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
@@ -227,19 +239,55 @@ export async function POST(request) {
       }, { status: 503 })
     }
 
+    const totalDevices = locationCount * devicesPerLocation
+    const additionalDevices = Math.max(0, totalDevices - locationCount)
+    const baseTotal = pricePerLocation * locationCount
+    const deviceTotal = devicePrice * additionalDevices
+
+    const lineItems = [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'protocolLM Location License' },
+          recurring: { interval: 'month' },
+          unit_amount: pricePerLocation * 100,
+        },
+        quantity: locationCount,
+      },
+    ]
+
+    if (additionalDevices > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Additional Device License' },
+          recurring: { interval: 'month' },
+          unit_amount: devicePrice * 100,
+        },
+        quantity: additionalDevices,
+      })
+    }
+
     // ✅ Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: user.email,
       client_reference_id: user.id,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: lineItems,
       subscription_data: {
         trial_period_days: 14,
         metadata: {
           userId: user.id,
           userEmail: user.email,
           captchaScore: captchaResult.score?.toString() || 'unknown',
+          pricingTier: tier,
+          locationCount: locationCount.toString(),
+          devicesPerLocation: devicesPerLocation.toString(),
+          basePricePerLocation: pricePerLocation.toString(),
+          deviceAddonPrice: devicePrice.toString(),
+          totalDevices: totalDevices.toString(),
+          isMultiLocation: isMultiLocation ? 'true' : 'false',
         },
       },
       allow_promotion_codes: true,
@@ -254,6 +302,13 @@ export async function POST(request) {
         timestamp: Date.now().toString(),
         captchaScore: captchaResult.score?.toString() || 'unknown',
         ipAddress: ip || 'unknown',
+        pricingTier: tier,
+        locationCount: locationCount.toString(),
+        devicesPerLocation: devicesPerLocation.toString(),
+        basePricePerLocation: pricePerLocation.toString(),
+        deviceAddonPrice: devicePrice.toString(),
+        totalDevices: totalDevices.toString(),
+        isMultiLocation: isMultiLocation ? 'true' : 'false',
       },
     })
 
@@ -264,6 +319,11 @@ export async function POST(request) {
       priceId,
       captchaScore: captchaResult.score,
       ip,
+      locationCount,
+      devicesPerLocation,
+      pricingTier: tier,
+      monthlyTotal: baseTotal + deviceTotal,
+      additionalDevices,
     })
 
     return NextResponse.json({ url: checkoutSession.url })

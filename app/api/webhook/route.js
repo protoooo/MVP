@@ -91,9 +91,19 @@ export async function POST(req) {
         const userId = session.metadata?.userId
         const subscriptionId = session.subscription
         const customerId = session.customer
-        const isMultiLocation = session.metadata?.isMultiLocation === 'true'
-        const locationCount = parseInt(session.metadata?.locationCount || '1')
-        const pendingPurchaseId = session.metadata?.pendingPurchaseId
+        const sessionMetadata = session.metadata || {}
+        let locationCount = parseInt(sessionMetadata.locationCount || '1', 10) || 1
+        let devicesPerLocation = parseInt(sessionMetadata.devicesPerLocation || '1', 10) || 1
+        let totalDevices =
+          parseInt(sessionMetadata.totalDevices || `${locationCount * devicesPerLocation}`, 10) ||
+          locationCount * devicesPerLocation
+        let pricingTier =
+          sessionMetadata.pricingTier ||
+          (locationCount >= 20 ? 'enterprise' : locationCount >= 5 ? 'multi' : 'single')
+        let basePricePerLocation = sessionMetadata.basePricePerLocation
+        let deviceAddonPrice = sessionMetadata.deviceAddonPrice
+        let pendingPurchaseId = sessionMetadata.pendingPurchaseId
+        let isMultiLocation = sessionMetadata.isMultiLocation === 'true' || locationCount > 1
 
         if (!userId || !subscriptionId || !customerId) {
           logger.error('Missing required data in checkout', {
@@ -107,6 +117,22 @@ export async function POST(req) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
         const quantity = subscription.items.data[0].quantity || 1
+        const subscriptionMetadata = subscription.metadata || {}
+
+        locationCount =
+          parseInt(subscriptionMetadata.locationCount || locationCount || '1', 10) || locationCount
+        devicesPerLocation =
+          parseInt(subscriptionMetadata.devicesPerLocation || devicesPerLocation || '1', 10) ||
+          devicesPerLocation
+        totalDevices =
+          parseInt(subscriptionMetadata.totalDevices || `${locationCount * devicesPerLocation}`, 10) ||
+          locationCount * devicesPerLocation
+        pricingTier = subscriptionMetadata.pricingTier || pricingTier
+        basePricePerLocation = subscriptionMetadata.basePricePerLocation || basePricePerLocation
+        deviceAddonPrice = subscriptionMetadata.deviceAddonPrice || deviceAddonPrice
+        pendingPurchaseId = pendingPurchaseId || subscriptionMetadata.pendingPurchaseId
+        isMultiLocation =
+          subscriptionMetadata.isMultiLocation === 'true' || isMultiLocation || locationCount > 1
 
         logger.info('New subscription created', {
           userId,
@@ -146,20 +172,35 @@ export async function POST(req) {
             if (pendingPurchase?.invite_codes) {
               const inviteCodes = pendingPurchase.invite_codes
               const buyerEmail = pendingPurchase.buyer_email
+              const inviteLinks = []
+              const signupBase = (process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.org').replace(/\/$/, '')
 
               for (const inviteCode of inviteCodes) {
-                const { error: insertError } = await supabase
-                  .from('multi_location_invites')
-                  .insert({
-                    code: inviteCode.code,
-                    buyer_user_id: userId,
-                    buyer_email: buyerEmail,
-                    location_number: inviteCode.location_number,
-                    total_locations: locationCount,
-                    stripe_subscription_id: subscriptionId,
-                    used: false,
-                    created_at: new Date().toISOString(),
-                  })
+                const baseInviteRecord = {
+                  code: inviteCode.code,
+                  buyer_user_id: userId,
+                  buyer_email: buyerEmail,
+                  location_number: inviteCode.location_number,
+                  total_locations: locationCount,
+                  stripe_subscription_id: subscriptionId,
+                  used: false,
+                  created_at: new Date().toISOString(),
+                }
+
+                let insertError = null
+
+                const { error: primaryInsertError } = await supabase.from('multi_location_invites').insert(
+                  inviteCode.device_number
+                    ? { ...baseInviteRecord, device_number: inviteCode.device_number }
+                    : baseInviteRecord
+                )
+
+                insertError = primaryInsertError
+
+                if (insertError?.message?.toLowerCase().includes('device_number')) {
+                  const { error: retryError } = await supabase.from('multi_location_invites').insert(baseInviteRecord)
+                  insertError = retryError
+                }
 
                 if (insertError) {
                   logger.error('Failed to insert invite code', {
@@ -167,6 +208,29 @@ export async function POST(req) {
                     code: inviteCode.code,
                   })
                 }
+
+                inviteLinks.push({
+                  location: inviteCode.location_number || inviteLinks.length + 1,
+                  device: inviteCode.device_number || 1,
+                  url: `${signupBase}/signup?invite=${inviteCode.code}`,
+                })
+              }
+
+              if (inviteLinks.length && buyerEmail) {
+                const safeBasePrice = Number(basePricePerLocation || 0)
+                const safeDevicePrice = Number(deviceAddonPrice || 0)
+                const additionalDevices = Math.max(0, totalDevices - locationCount)
+                const totalMonthly = locationCount * safeBasePrice + additionalDevices * safeDevicePrice
+                const buyerName = buyerEmail.split('@')[0]
+
+                await emails.multiLocationPurchaseComplete(
+                  buyerEmail,
+                  buyerName,
+                  locationCount,
+                  devicesPerLocation,
+                  totalMonthly,
+                  inviteLinks
+                )
               }
             }
 
@@ -223,6 +287,11 @@ export async function POST(req) {
             metadata: {
               stripe_quantity: quantity,
               is_multi_location_buyer: isMultiLocation,
+              pricing_tier: pricingTier,
+              devices_per_location: devicesPerLocation,
+              base_price_per_location: basePricePerLocation ? Number(basePricePerLocation) : null,
+              device_addon_price: deviceAddonPrice ? Number(deviceAddonPrice) : null,
+              total_devices: totalDevices,
             },
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -284,12 +353,31 @@ export async function POST(req) {
         const quantity = subscription.items.data[0].quantity || 1
         const previousStatus = event.data.previous_attributes?.status
         const newStatus = subscription.status
+        const subscriptionMetadata = subscription.metadata || {}
+        const resolvedLocationCount =
+          parseInt(subscriptionMetadata.locationCount || quantity || '1', 10) || quantity
+        const resolvedDevicesPerLocation =
+          parseInt(subscriptionMetadata.devicesPerLocation || '1', 10) || 1
+        const resolvedTotalDevices =
+          parseInt(
+            subscriptionMetadata.totalDevices || `${resolvedLocationCount * resolvedDevicesPerLocation}`,
+            10
+          ) || resolvedLocationCount * resolvedDevicesPerLocation
+        const resolvedPricingTier =
+          subscriptionMetadata.pricingTier ||
+          (resolvedLocationCount >= 20 ? 'enterprise' : resolvedLocationCount >= 5 ? 'multi' : 'single')
+        const resolvedBasePrice = subscriptionMetadata.basePricePerLocation
+        const resolvedDevicePrice = subscriptionMetadata.deviceAddonPrice
+        const isMultiLocation =
+          subscriptionMetadata.isMultiLocation === 'true' || resolvedLocationCount > 1
 
         logger.info('Subscription updated', {
           subscriptionId: subscription.id,
           oldStatus: previousStatus,
           newStatus,
           quantity,
+          locationCount: resolvedLocationCount,
+          devicesPerLocation: resolvedDevicesPerLocation,
         })
 
         const { data: existingSub } = await supabase
@@ -311,8 +399,17 @@ export async function POST(req) {
               ? new Date(subscription.trial_end * 1000).toISOString()
               : null,
             cancel_at_period_end: subscription.cancel_at_period_end,
-            location_count: quantity,
-            is_multi_location: quantity > 1,
+            location_count: resolvedLocationCount,
+            is_multi_location: isMultiLocation,
+            metadata: {
+              stripe_quantity: quantity,
+              is_multi_location_buyer: isMultiLocation,
+              pricing_tier: resolvedPricingTier,
+              devices_per_location: resolvedDevicesPerLocation,
+              base_price_per_location: resolvedBasePrice ? Number(resolvedBasePrice) : null,
+              device_addon_price: resolvedDevicePrice ? Number(resolvedDevicePrice) : null,
+              total_devices: resolvedTotalDevices,
+            },
             updated_at: new Date().toISOString(),
           })
           .eq('stripe_subscription_id', subscription.id)
@@ -322,13 +419,13 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        if (quantity > 1 && userId) {
+        if (resolvedLocationCount > 1 && userId) {
           await supabase
             .from('location_whitelist')
             .upsert(
               {
                 user_id: userId,
-                reason: `Multi-location subscription: ${quantity} locations`,
+                reason: `Multi-location subscription: ${resolvedLocationCount} locations`,
                 whitelisted_at: new Date().toISOString(),
               },
               { onConflict: 'user_id' }
