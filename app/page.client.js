@@ -2521,13 +2521,13 @@ export default function Page() {
           margin: 0 auto;
         }
 
-        /* ✅ Override LiquidGlass with exact info-highlight style from terms page
-         * Source: components/InfoPageLayout.js - .info-highlight class
-         * Maintains visual consistency between landing hero and terms page highlights
+        /* ✅ Override LiquidGlass with light Apple-style glass effect
+         * Reduced opacity to show kitchen background clearly through the card
+         * Maintains text readability while achieving true see-through glass aesthetic
          * Note: Using !important to override LiquidGlass component styles without modifying
          * the shared component itself (minimal change approach) */
         .landing-hero-card.landing-hero-card--terms-style {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)) !important;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04)) !important;
           border: 1px solid rgba(255, 255, 255, 0.22) !important;
           border-left: 3px solid var(--accent) !important;
           border-radius: 8px !important;
