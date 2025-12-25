@@ -535,7 +535,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
                     </button>
                   </div>
                   <div className="multi-location-total">
-                    Total: ${singlePricing.total}/month ({singlePricing.pricePerLocation}/location, {singlePricing.devicePrice}/add-on device)
+                    {`Total: $${singlePricing.total}/month (${singlePricing.pricePerLocation}/location${singleDevices > 1 ? `, $${singlePricing.devicePrice}/add-on device` : ', first device included'})`}
                   </div>
                 </div>
 
@@ -633,13 +633,13 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
                 </div>
 
                 <div className="multi-location-total">
-                  <div>Base: {locationCount} locations × ${multiPricing.pricePerLocation}/mo = ${multiPricing.baseTotal}</div>
+                  <div>{`Base: ${locationCount} locations × $${multiPricing.pricePerLocation}/mo = $${multiPricing.baseTotal}`}</div>
                   {multiPricing.additionalDevices > 0 && (
                     <div style={{ marginTop: 6 }}>
-                      Devices: {multiPricing.additionalDevices} × ${multiPricing.devicePrice}/mo = ${multiPricing.deviceTotal}
+                      {`Devices: ${multiPricing.additionalDevices} × $${multiPricing.devicePrice}/mo = $${multiPricing.deviceTotal}`}
                     </div>
                   )}
-                  <div className="total">Total: ${multiPricing.total}/month</div>
+                  <div className="total">{`Total: $${multiPricing.total}/month`}</div>
                   {requiresEnterpriseContact && (
                     <div style={{ marginTop: 8, color: '#f97316', fontWeight: 600 }}>
                       20+ locations requires custom enterprise pricing.
