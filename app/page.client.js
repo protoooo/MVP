@@ -791,8 +791,7 @@ export default function Page() {
   const shouldAutoScrollRef = useRef(true)
 
   const isAuthenticated = !!session
-  const hasPaidAccess =
-    isAuthenticated && (hasActiveSubscription || subscription?.status === 'active' || subscription?.status === 'trialing')
+  const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === 'trialing')
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
@@ -3618,7 +3617,7 @@ export default function Page() {
                           </h1>
                           <div className="hero-underline" aria-hidden="true" />
                           <p className="hero-overlay-text">
-                            Start 14-day free trial.
+                            Start 14-day free trial
                           </p>
                           <button
                             className="btn-primary tool-cta"
