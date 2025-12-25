@@ -3676,7 +3676,6 @@ export default function Page() {
                         className="plm-icon-btn chat-camera-btn"
                         aria-label="Upload photo"
                         type="button"
-                        disabled={!hasPaidAccess}
                       >
                         <Icons.Camera />
                       </button>
@@ -3692,10 +3691,9 @@ export default function Page() {
                               textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                             }
                           }}
-                          placeholder={!hasPaidAccess ? 'Sign up to continue...' : 'Ask a question…'}
+                          placeholder="Ask a question…"
                           rows={1}
                           className="chat-textarea"
-                          disabled={!hasPaidAccess}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault()
@@ -3707,7 +3705,7 @@ export default function Page() {
                         <button
                           type="button"
                           onClick={handleSend}
-                          disabled={(!safeTrim(input) && !selectedImage) || isSending || !hasPaidAccess}
+                          disabled={(!safeTrim(input) && !selectedImage) || isSending}
                           className="plm-icon-btn primary chat-send-btn"
                           aria-label="Send"
                         >
