@@ -27,7 +27,6 @@ const PRICE_PER_LOCATION = 50
 const MIN_MULTI_LOCATIONS = 2
 const MAX_MULTI_LOCATIONS = 500
 const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
-const TRIAL_CTA_TEXT = 'Start 14-Day Free Trial'
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -3608,41 +3607,16 @@ export default function Page() {
 
               <div
                 ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
-                {messages.length === 0 ? (
-                  <div className="chat-empty-state">
-                    {!isAuthenticated ? (
-                      <div className="hero-overlay-block">
-                        <div className="hero-overlay-glass">
-                          <h1 className={`hero-overlay-title ${plusJakarta.className}`}>
-                            CATCH VIOLATIONS, NOT FINES.
-                          </h1>
-                          <div className="hero-underline" aria-hidden="true" />
-                          <p className="hero-overlay-text">
-                            {TRIAL_CTA_TEXT}
-                          </p>
-                          <button
-                            className="btn-primary tool-cta"
-                            onClick={() => {
-                              setSelectedPriceId(null)
-                              setAuthInitialMode('signup')
-                              setShowAuthModal(true)
-                            }}
-                            type="button"
-                          >
-                            {TRIAL_CTA_TEXT}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="chat-empty-text">
-                        Upload a photo or ask a question about Michigan food safety regulations.
-                      </p>
-                    )}
-                  </div>
-                ) : (
+              onScroll={handleScroll}
+              className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+            >
+              {messages.length === 0 ? (
+                <div className="chat-empty-state">
+                  <p className="chat-empty-text">
+                    Upload a photo or ask a question about Michigan food safety regulations.
+                  </p>
+                </div>
+              ) : (
                   <LiquidGlass variant="main" className="chat-history-card">
                     <div className="chat-history">
                       {messages.map((msg, idx) => (
