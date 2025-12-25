@@ -3309,10 +3309,6 @@ export default function Page() {
             padding: 0 20px calc(env(safe-area-inset-bottom) + 24px);
           }
 
-          .landing-hero-card {
-            padding: 28px 24px;
-          }
-
           .landing-hero-card.landing-hero-card--terms-style {
             padding: 28px 24px;
           }
