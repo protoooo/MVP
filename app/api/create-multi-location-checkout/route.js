@@ -188,7 +188,7 @@ export async function POST(request) {
         quantity: count 
       }],
       subscription_data: {
-        trial_period_days: 7,
+        trial_period_days: 14,
         metadata: {
           userId: user.id,
           userEmail: user.email,
