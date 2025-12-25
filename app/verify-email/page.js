@@ -412,7 +412,7 @@ export default function VerifyEmailPage() {
             </div>
 
             <p className="verify-note">
-              After verifying, you'll be redirected to start your 7-day free trial
+             After verifying, you'll be redirected to start your 14-day free trial
             </p>
           </LiquidGlass>
         </div>
