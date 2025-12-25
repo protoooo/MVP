@@ -180,7 +180,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 <Icons.ArrowRight />
               </div>
               <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
-                Start 14-day free trial
+                Start free trial
               </button>
             </div>
           </div>
@@ -1538,6 +1538,7 @@ export default function Page() {
           --accent: #5fa8ff;
           --accent-hover: #7bc2ff;
           --accent-dim: rgba(95, 168, 255, 0.2);
+          --footer-links-z: 15;
 
           --border-subtle: rgba(255, 255, 255, 0.18);
           --border-default: rgba(255, 255, 255, 0.32);
@@ -2506,8 +2507,8 @@ export default function Page() {
          * Note: Using !important to override LiquidGlass component styles without modifying
          * the shared component itself (minimal change approach) */
         .landing-hero-card.landing-hero-card--terms-style {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04)) !important;
-          border: 1px solid rgba(255, 255, 255, 0.22) !important;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.034)) !important;
+          border: 1px solid rgba(255, 255, 255, 0.19) !important;
           border-left: 3px solid var(--accent) !important;
           border-radius: 8px !important;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
@@ -2553,7 +2554,7 @@ export default function Page() {
           margin: 0;
           font-size: 16px;
           line-height: 1.65;
-          color: rgba(15, 23, 42, 0.9);
+          color: #0f172a;
           max-width: 52ch;
         }
 
@@ -2570,7 +2571,7 @@ export default function Page() {
           align-items: center;
           gap: 14px;
           justify-content: center;
-          flex-wrap: nowrap;
+          flex-wrap: wrap;
           flex-direction: row;
           margin-top: 14px;
           padding-top: 6px;
@@ -2676,6 +2677,13 @@ export default function Page() {
           transform: translateY(0);
         }
 
+        @media (min-width: 1024px) {
+          .hero-support {
+            white-space: nowrap;
+            max-width: none;
+          }
+        }
+
         /* ✅ Footer links pinned below chat bar */
         .plm-footer-links {
           width: 100%;
@@ -2686,6 +2694,16 @@ export default function Page() {
           padding: 12px 16px 4px;
           flex-wrap: wrap;
           pointer-events: auto;
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: calc(env(safe-area-inset-bottom) + 10px);
+          z-index: var(--footer-links-z);
+        }
+
+        .chat-root .plm-footer-links {
+          position: static;
+          bottom: auto;
         }
 
         .plm-footer-link {
@@ -3340,21 +3358,30 @@ export default function Page() {
             gap: 10px;
             margin-top: 12px;
             padding-top: 6px;
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
           }
 
           .hero-arrow-text {
             font-size: 13px;
+            text-align: center;
+            width: 100%;
           }
 
           .hero-arrow-icon {
             width: 32px;
             height: 32px;
+            align-self: center;
           }
 
           .hero-cta {
             height: 44px;
             font-size: 13px;
             padding: 0 16px;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
           }
 
           .chat-topbar {
