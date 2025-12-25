@@ -3313,6 +3313,10 @@ export default function Page() {
             padding: 28px 24px;
           }
 
+          .landing-hero-card.landing-hero-card--terms-style {
+            padding: 28px 24px;
+          }
+
           .plm-brand-mark {
             width: 126px;
             height: 126px;
