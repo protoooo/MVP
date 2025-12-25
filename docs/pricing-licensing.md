@@ -12,6 +12,11 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 - **Trial & free usage**: keep 14-day free trial + limited free usage (N scans/day) on unlicensed locations to drive adoption.
 > Default inclusion is 2 devices/location; enterprise can intentionally move to 3 included devices via config to simplify rollout. Document deviations in the pricing config table.
 > Current implementation still charges $50/location in `create-multi-location-checkout`. When adopting this model, update the config/Price ids and keep a transition note for legacy customers.
+- **Pricing migration (high level)**: 
+  1) Create new Stripe Prices (do **not** delete the $50 Price). 
+  2) Ship a feature flag to switch the checkout route to the new Price ids for new customers only. 
+  3) Offer existing customers a migration path at renewal (prorate or move at period end). 
+  4) After 100% traffic cutover, deprecate the $50 default but keep compatibility handling for legacy subs.
 
 ## 2) Purchasing scenarios coverage
 - **Single restaurant, 1–3 devices**: buy one location, choose devices (default 2 included, optionally +1 device add-on).
@@ -32,6 +37,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 
 > Users are only needed for admin/purchaser and delegated manager roles; pricing/enforcement is device/location based (no per-user metering).
 > Existing tables like `pending_multi_location_purchases` and invite codes can map into this model: each pending purchase creates an `organization` plus `locations` seeded from the invite set. Add migration scripts before removing the legacy tables.
+> Migration details: backfill `organizations` from distinct buyers, map `pending_multi_location_purchases` → `locations` (respect invite codes), then create `subscriptions`/`subscription_items` rows from active Stripe subscriptions. Validate counts (`location_limit`, invites length) and keep a rollback script to restore the previous schema snapshot if counts mismatch.
 
 ## 4) Pricing choice & enforcement (comments)
 - **Hybrid per-location + device add-on** keeps procurement simple and fair for high-device sites; avoids per-scan metering.
@@ -106,7 +112,11 @@ await db.transaction(async (tx) => {
 - Centralized purchaser remains owner; delegate `location_manager` role for day-to-day device management.
 
 ## 10) Implementation hints for current codebase
-- Reuse existing multi-location checkout route (`app/api/create-multi-location-checkout/route.js`): extend payload to include `devicesPerLocation` (or explicit `extra_devices`), compute addon quantity, and pass metadata (`plan_tier`, `included_devices_per_location`, `pending_purchase_id`). Adjust Stripe line items to include the device add-on Price when applicable; keep a compatibility mode that preserves the current single line item (location-only, $50) until the new Prices are live.
+- Reuse existing multi-location checkout route (`app/api/create-multi-location-checkout/route.js`):
+  1) Add request params: `devicesPerLocation` (default 2) or `extra_devices`.
+  2) Update pricing calc: derive `extra_devices = max(0, devicesPerLocation - included) * locationCount`.
+  3) Modify Stripe line items: include base Price (quantity = `locationCount`) and optional device add-on Price (quantity = `extra_devices`).
+  4) Add compatibility layer: when the new Prices are not configured, fall back to the current single line item ($50 * locations) and existing metadata (`userId`, `pendingPurchaseId`).
 - Store `subscription_items` rows per Stripe item id to track quantities for audit.
 - Device auth middleware should check `licenses.location_limit` and device allocations before serving scans.
 
