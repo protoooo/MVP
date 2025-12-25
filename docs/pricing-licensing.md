@@ -10,7 +10,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
   - **Enterprise (10+ locations or custom terms)**: **$29–$33/location/month** with negotiated device packs and annual/quarterly billing; optionally include **3 devices** per location to reduce procurement friction (explicitly configurable per deal).
 - **Rationale**: per-location is intuitive for operators; device add-ons keep fairness for high-usage sites without per-scan complexity. Pricing stays in the $30–$50 band for small restaurants while scaling down for volume.
 - **Trial & free usage**: keep 14-day free trial + limited free usage (N scans/day) on unlicensed locations to drive adoption.
-> Default inclusion is 2 devices/location; enterprise can intentionally move to 3 included devices via config to simplify rollout. Document deviations in the pricing config table.
+> Default inclusion is 2 devices/location; enterprise can optionally move to 3 included devices via config to simplify rollout. Document deviations in the pricing config table.
 > Current implementation still charges $50/location via `PRICE_PER_LOCATION` in `create-multi-location-checkout`. When adopting this model, update the config/Price ids (or that constant) and keep a transition note for legacy customers.
 - **Pricing migration (high level)**: 
   1) Create new Stripe Prices (do **not** delete the $50 Price). 
@@ -73,7 +73,10 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 // On checkout.session.completed or customer.subscription.updated
 const session = event.data.object
 const sub = await stripe.subscriptions.retrieve(session.subscription, { expand: ['items'] })
-const orgId = session.metadata.org_id || await lookupOrgFromPending(session.metadata.pendingPurchaseId) // fallback to legacy flow; validate that the pending purchase maps to an org stub before proceeding
+const orgId =
+  session.metadata.org_id ||
+  await lookupOrgFromPending(session.metadata.pendingPurchaseId)
+// fallback to legacy flow; validate that the pending purchase maps to an org stub before proceeding
 const locCount = Number(session.metadata.location_count)
 const includedPerLoc = Number(session.metadata.included_devices_per_location || 2)
 const extraDevices = Number(session.metadata.extra_devices || 0)
@@ -98,8 +101,14 @@ await db.transaction(async (tx) => {
   await allocateDeviceSlots(tx, orgId, totalDeviceEntitlements) // ensure enough device entitlements; disable overage devices on downgrade
 })
 ```
-- **ensureLocations(tx, orgId, locCount)**: creates missing location rows + invite codes up to `locCount`, reactivates inactive ones, and if downsizing, marks surplus locations inactive (do not hard delete). Should be idempotent and raise a typed `LocationConflictError` (custom error class to add) on conflicting external refs; webhook should log, alert, and leave subscription active but mark provisioning as `failed`.
-- **allocateDeviceSlots(tx, orgId, totalDevices)**: guarantees there are `totalDevices` active device entitlements across the org; on downgrade, marks excess devices inactive and revokes tokens. Should be idempotent, return which devices were disabled, and throw `DeviceAllocationError` (custom error class) on failure so the webhook can roll back and retry.
+- **ensureLocations(tx, orgId, locCount)**:
+  - create missing location rows + invite codes up to `locCount`
+  - reactivate inactive ones, mark surplus inactive (no hard delete) when downsizing
+  - raise `LocationConflictError` (custom class) on conflicting external refs; webhook logs + alerts and marks provisioning `failed` while leaving the sub active
+- **allocateDeviceSlots(tx, orgId, totalDevices)**:
+  - guarantee `totalDevices` active entitlements; revoke tokens on downgrade
+  - return disabled device IDs
+  - throw `DeviceAllocationError` (custom class) on failure so the webhook can roll back and retry
 > `LocationConflictError` should include fields like `external_ref`, `existing_location_id`, and a machine-readable `code` (e.g., `LOCATION_EXTERNAL_REF_CONFLICT`). `DeviceAllocationError` should include `device_ids`, `requested_total`, `available_total`, and `code` (e.g., `DEVICE_SLOT_SHORTAGE`) for alerting and retries.
 > The current webhook flow provisions locations from `pending_multi_location_purchases` and invite codes. The above helpers represent the target state; implement them incrementally and keep compatibility with the existing invite-based provisioning until data is migrated.
 
