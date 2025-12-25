@@ -2519,7 +2519,6 @@ export default function Page() {
           width: 100%;
           max-width: 880px;
           margin: 0 auto;
-          padding: 40px 48px;
         }
 
         /* ✅ Override LiquidGlass with exact info-highlight style from terms page */
