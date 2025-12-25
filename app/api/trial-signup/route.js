@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'austinrnorthrop@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || null
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.org/auth'
 
@@ -83,7 +83,11 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Unable to send welcome email right now.' }, { status: 500 })
     }
 
-    await sendEmail(ADMIN_EMAIL, 'New protocolLM trial signup', adminHtml, emailConfigured ? email : undefined)
+    if (ADMIN_EMAIL) {
+      await sendEmail(ADMIN_EMAIL, 'New protocolLM trial signup', adminHtml, emailConfigured ? email : undefined)
+    } else {
+      logger.warn('ADMIN_EMAIL not configured; skipped admin trial notification', { email: maskEmail(email), visitorId })
+    }
 
     logger.audit('trial_signup', { email: maskEmail(email), visitorId })
 

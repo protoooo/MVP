@@ -1,6 +1,7 @@
 import './globals.css'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import CookieConsent from '@/components/CookieConsent'
+import SessionGuard from '@/components/SessionGuard'
 import Image from 'next/image'
 import bg from '@/app/assets/background/protocolLM-bg.png'
 
@@ -34,6 +35,7 @@ export default function RootLayout({ children }) {
 
         {/* ✅ App content wrapper above background */}
         <div className="plm-app">
+          <SessionGuard />
           {children}
           <CookieConsent />
         </div>

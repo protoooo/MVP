@@ -24,7 +24,10 @@ function useVisitorId() {
       setVisitorId(existing)
       return
     }
-    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`
     window.localStorage.setItem('plm_visitor_id', id)
     setVisitorId(id)
   }, [])
