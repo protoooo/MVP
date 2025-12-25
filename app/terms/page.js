@@ -86,7 +86,7 @@ export default function TermsOfService() {
         <h2 className="info-section-title">5. Subscription & Cancellation</h2>
         <ul>
           <li>
-            <strong>Free Trial:</strong> A 7-day trial may be offered. Unless cancelled before the trial ends, your 
+           <strong>Free Trial:</strong> A 14-day trial may be offered. Unless cancelled before the trial ends, your
             subscription will convert to a paid plan at $50/month.
           </li>
           <li>

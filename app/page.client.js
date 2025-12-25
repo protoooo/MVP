@@ -9,6 +9,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { compressImage } from '@/lib/imageCompression'
+import { trackEvent, AnalyticsEvents } from '@/lib/analytics'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import SmartProgress from '@/components/SmartProgress'
@@ -179,7 +180,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 <Icons.ArrowRight />
               </div>
               <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
-                Start free trial
+                Start 14-day free trial
               </button>
             </div>
           </div>
@@ -187,20 +188,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       </main>
 
       <FooterLinks />
-    </div>
-  )
-}
-
-/**
- * ✅ Free Usage Counter - Subtle display showing remaining free uses
- */
-function FreeUsageCounter({ remaining, limit }) {
-  if (remaining <= 0) return null
-  
-  return (
-    <div className="free-usage-counter">
-      <span className="free-usage-dot" />
-      <span className="free-usage-text">{remaining} free {remaining === 1 ? 'scan' : 'scans'} remaining</span>
     </div>
   )
 }
@@ -273,6 +260,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
           setMessage('')
         }, 2000)
       } else if (mode === 'signup') {
+        trackEvent(AnalyticsEvents.TRIAL_STARTED, { plan: 'unlimited', trial_days: 14 })
         setMessageKind('ok')
         setMessage('Account created. Check your email to verify.')
         setTimeout(() => {
@@ -435,7 +423,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
           <div className="pricing-top">
             <div className="pricing-pill">
               <span className="pricing-pill-dot" aria-hidden="true" />
-              <span>7-day free trial</span>
+              <span>14-day free trial</span>
             </div>
             <h2 className="modal-title pricing-title">Start your trial</h2>
             <p className="pricing-sub">
@@ -798,11 +786,6 @@ export default function Page() {
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
 
-  // ✅ Device free usage state for anonymous users
-  const [deviceUsageRemaining, setDeviceUsageRemaining] = useState(5)
-  const [deviceUsageBlocked, setDeviceUsageBlocked] = useState(false)
-  const FREE_USAGE_LIMIT = 5
-
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
@@ -854,34 +837,6 @@ export default function Page() {
       splineContainer.style.display = 'block'
     }
   }, [isAuthenticated])
-
-  // ✅ Fetch device usage status for anonymous users
-  useEffect(() => {
-    async function fetchDeviceUsage() {
-      if (isAuthenticated) {
-        // Authenticated users don't need device tracking
-        setDeviceUsageRemaining(FREE_USAGE_LIMIT)
-        setDeviceUsageBlocked(false)
-        return
-      }
-
-      try {
-        const res = await fetch('/api/device-usage')
-        if (res.ok) {
-          const data = await res.json()
-          setDeviceUsageRemaining(data.remaining ?? FREE_USAGE_LIMIT)
-          setDeviceUsageBlocked(data.blocked ?? false)
-        }
-      } catch (error) {
-        // On error, allow access (fail open for better UX)
-        console.warn('Device usage check failed:', error)
-      }
-    }
-
-    if (!isLoading) {
-      fetchDeviceUsage()
-    }
-  }, [isAuthenticated, isLoading])
 
   // ✅ Prevent background scroll when a modal is open (also helps iOS)
   useEffect(() => {
@@ -1352,14 +1307,10 @@ export default function Page() {
     if (e) e.preventDefault()
     if (isSending) return
 
-    // ✅ Check device usage for anonymous users before sending
-    if (!isAuthenticated && deviceUsageBlocked) {
-      setShowPricingModal(true)
-      return
-    }
-
-    if (!isAuthenticated && deviceUsageRemaining <= 0) {
-      setShowPricingModal(true)
+    if (!isAuthenticated) {
+      setSelectedPriceId(null)
+      setAuthInitialMode('signup')
+      setShowAuthModal(true)
       return
     }
 
@@ -1376,6 +1327,9 @@ export default function Page() {
     setSendKey((k) => k + 1)
 
     const newUserMessage = { role: 'user', content: question, image }
+    trackEvent(image ? AnalyticsEvents.PHOTO_SCAN : AnalyticsEvents.TEXT_QUESTION, {
+      mode: image ? 'vision' : 'text',
+    })
 
     const baseMessages = messages
     const outgoingLocalMessages = [...baseMessages, newUserMessage]
@@ -1478,19 +1432,14 @@ export default function Page() {
             return updated
           })
         }
+        if (safeTrim(last).toUpperCase().includes('VIOLATIONS:')) {
+          trackEvent(AnalyticsEvents.VIOLATION_FOUND)
+        }
         return
       }
 
       // ✅ JSON response support (current route)
       const data = await res.json().catch(() => ({}))
-
-      // ✅ Update device usage from response for anonymous users
-      if (data._meta?.isAnonymous && typeof data._meta?.deviceUsageRemaining === 'number') {
-        setDeviceUsageRemaining(data._meta.deviceUsageRemaining)
-        if (data._meta.deviceUsageRemaining <= 0) {
-          setDeviceUsageBlocked(true)
-        }
-      }
 
       // Common shapes: { message }, { text }, { output }, { response }
       const msg =
@@ -1504,6 +1453,10 @@ export default function Page() {
       // If route returns chatId, keep in sync
       if (data?.chatId && !currentChatId) {
         setCurrentChatId(data.chatId)
+      }
+
+      if (safeTrim(msg).toUpperCase().includes('VIOLATIONS:')) {
+        trackEvent(AnalyticsEvents.VIOLATION_FOUND)
       }
 
       setMessages((prev) => {
@@ -3589,7 +3542,7 @@ export default function Page() {
                       setShowPricingModal(true)
                     }}
                   >
-                    Start free trial
+                    Start 14-day free trial
                   </button>
                 )}
                 
@@ -3671,20 +3624,19 @@ export default function Page() {
                         </h1>
                         <div className="hero-underline" aria-hidden="true" />
                         <p className="hero-overlay-text">
-                          Take a photo of your restaurant to scan for visible violations and get fast, Michigan-specific guidance.
+                          Sign up for 14 days free. No credit card required.
                         </p>
-                        {(deviceUsageBlocked || deviceUsageRemaining <= 0) && (
-                          <div className="hero-cta-inline">
-                            <p className="hero-cta-note">Free usage limit reached.</p>
-                            <button
-                              className="btn-primary tool-cta"
-                              onClick={() => setShowPricingModal(true)}
-                              type="button"
-                            >
-                              Start 7-day free trial
-                            </button>
-                          </div>
-                        )}
+                        <button
+                          className="btn-primary tool-cta"
+                          onClick={() => {
+                            setSelectedPriceId(null)
+                            setAuthInitialMode('signup')
+                            setShowAuthModal(true)
+                          }}
+                          type="button"
+                        >
+                          Start 14-Day Free Trial
+                        </button>
                       </div>
                     </div>
                   ) : (
@@ -3761,7 +3713,7 @@ export default function Page() {
                       className="plm-icon-btn chat-camera-btn"
                       aria-label="Upload photo"
                       type="button"
-                      disabled={!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0)}
+                      disabled={!isAuthenticated}
                     >
                       <Icons.Camera />
                     </button>
@@ -3777,12 +3729,10 @@ export default function Page() {
                             textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                           }
                         }}
-                        placeholder={!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0) 
-                          ? "Sign up to continue..." 
-                          : "Ask a question…"}
+                        placeholder={!isAuthenticated ? 'Sign up to continue...' : 'Ask a question…'}
                         rows={1}
                         className="chat-textarea"
-                        disabled={!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0)}
+                        disabled={!isAuthenticated}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -3794,7 +3744,7 @@ export default function Page() {
                       <button
                         type="button"
                         onClick={handleSend}
-                        disabled={(!safeTrim(input) && !selectedImage) || isSending || (!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0))}
+                        disabled={(!safeTrim(input) && !selectedImage) || isSending || !isAuthenticated}
                         className="plm-icon-btn primary chat-send-btn"
                         aria-label="Send"
                       >
