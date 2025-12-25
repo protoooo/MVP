@@ -165,12 +165,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 <span className="hero-break">
                   <br />
                 </span>{' '}
-                NOT FINES.
+                <span className="hero-nowrap">NOT&nbsp;FINES.</span>
               </h1>
               <div className="hero-divider" aria-hidden="true" />
               <p className="hero-support">
-                Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
-                instant answers and guidance from Michigan Food Safety Regulations.
+                Take pictures within your food establishment to catch violations and prepare for inspections.
               </p>
             </div>
 
@@ -792,6 +791,8 @@ export default function Page() {
   const shouldAutoScrollRef = useRef(true)
 
   const isAuthenticated = !!session
+  const hasPaidAccess =
+    isAuthenticated && (hasActiveSubscription || subscription?.status === 'active' || subscription?.status === 'trialing')
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
@@ -829,14 +830,12 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    // ✅ Tool-first UI: Always use 'chat' view since tool interface is shown for everyone
-    document.documentElement.dataset.view = 'chat'
+    document.documentElement.dataset.view = hasPaidAccess ? 'chat' : 'landing'
     const splineContainer = document.getElementById('plm-spline-bg')
     if (splineContainer) {
-      // Show background for all users in tool-first UI
-      splineContainer.style.display = 'block'
+      splineContainer.style.display = hasPaidAccess ? 'block' : 'none'
     }
-  }, [isAuthenticated])
+  }, [hasPaidAccess])
 
   // ✅ Prevent background scroll when a modal is open (also helps iOS)
   useEffect(() => {
@@ -854,16 +853,21 @@ export default function Page() {
   // ✅ Tool-first UI: Always lock the page scroll so the tool input is reachable
   useEffect(() => {
     if (typeof document === 'undefined') return
+    if (!hasPaidAccess) {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+      return
+    }
     const prev = document.body.style.overflow
     const prevHtml = document.documentElement.style.overflow
-    // Lock scroll for tool-first UI (all users)
+    // Lock scroll when the chat interface is available
     document.body.style.overflow = 'hidden'
     document.documentElement.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
       document.documentElement.style.overflow = prevHtml
     }
-  }, [])
+  }, [hasPaidAccess])
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
@@ -2535,6 +2539,10 @@ export default function Page() {
           display: none;
         }
 
+        .hero-nowrap {
+          white-space: nowrap;
+        }
+
         .hero-support {
           margin: 0;
           font-size: 16px;
@@ -3527,241 +3535,240 @@ export default function Page() {
       </Portal>
 
       <div className="app-container">
-        <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          {/* ✅ Tool-first UI: Show tool interface for everyone */}
-          <div className={`${plusJakarta.className} chat-root tool-first-ui`}>
-            <header className="chat-topbar">
-              <BrandLink variant="chat" />
-              <nav className="chat-top-actions" aria-label="Tool actions">
-                {!isAuthenticated && (
-                  <button
-                    type="button"
-                    className="btn-nav start-trial-btn"
-                    onClick={() => {
-                      setSelectedPriceId(null)
-                      setShowPricingModal(true)
-                    }}
-                  >
-                    Start 14-day free trial
-                  </button>
-                )}
-                
-                {!isAuthenticated ? (
-                  <button 
-                    onClick={() => {
-                      setSelectedPriceId(null)
-                      setAuthInitialMode('signin')
-                      setShowAuthModal(true)
-                    }} 
-                    className="btn-nav landing-signin-btn" 
-                    type="button"
-                  >
-                    Sign in
-                  </button>
-                ) : (
-                  <div className="chat-settings-wrap" ref={settingsRef}>
-                    <button
-                      type="button"
-                      className="plm-icon-btn chat-settings-btn"
-                      onClick={() => setShowSettingsMenu((v) => !v)}
-                      aria-expanded={showSettingsMenu}
-                      aria-label="Settings"
-                    >
-                      <Icons.Gear />
-                    </button>
-
-                    {showSettingsMenu && (
-                      <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                        <button
-                          type="button"
-                          className="chat-settings-item"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            if (hasActiveSubscription) {
-                              handleManageBilling()
-                            } else {
-                              setShowPricingModal(true)
-                            }
-                          }}
-                        >
-                          {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                        </button>
-
-                        <div className="chat-settings-sep" />
-
-                        <button
-                          type="button"
-                          className="chat-settings-item"
-                          role="menuitem"
-                          onClick={() => {
-                            setShowSettingsMenu(false)
-                            handleSignOut()
-                          }}
-                        >
-                          Log out
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </nav>
-            </header>
-
-            <div
-              ref={scrollRef}
-              onScroll={handleScroll}
-              className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-            >
-              {messages.length === 0 ? (
-                <div className="chat-empty-state">
-                  {/* ✅ Marketing content for logged-out users, simple prompt for logged-in */}
+        {hasPaidAccess ? (
+          <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <div className={`${plusJakarta.className} chat-root tool-first-ui`}>
+              <header className="chat-topbar">
+                <BrandLink variant="chat" />
+                <nav className="chat-top-actions" aria-label="Tool actions">
                   {!isAuthenticated ? (
-                    <div className="hero-overlay-block">
-                      <div className="hero-overlay-glass">
-                        <h1 className={`hero-overlay-title ${plusJakarta.className}`}>
-                          CATCH VIOLATIONS, NOT FINES.
-                        </h1>
-                        <div className="hero-underline" aria-hidden="true" />
-                        <p className="hero-overlay-text">
-                          Sign up for 14 days free. No credit card required.
-                        </p>
-                        <button
-                          className="btn-primary tool-cta"
-                          onClick={() => {
-                            setSelectedPriceId(null)
-                            setAuthInitialMode('signup')
-                            setShowAuthModal(true)
-                          }}
-                          type="button"
-                        >
-                          Start 14-Day Free Trial
-                        </button>
-                      </div>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedPriceId(null)
+                        setAuthInitialMode('signin')
+                        setShowAuthModal(true)
+                      }}
+                      className="btn-nav landing-signin-btn"
+                      type="button"
+                    >
+                      Sign in
+                    </button>
                   ) : (
-                    <p className="chat-empty-text">
-                      Upload a photo or ask a question about Michigan food safety regulations.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <LiquidGlass variant="main" className="chat-history-card">
-                  <div className="chat-history">
-                    {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                    <div className="chat-settings-wrap" ref={settingsRef}>
+                      <button
+                        type="button"
+                        className="plm-icon-btn chat-settings-btn"
+                        onClick={() => setShowSettingsMenu((v) => !v)}
+                        aria-expanded={showSettingsMenu}
+                        aria-label="Settings"
                       >
-                        <div
-                          className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
-                        >
-                          {msg.image && (
-                            <div className="chat-bubble-image">
-                              <img src={msg.image} alt="Uploaded" />
-                            </div>
-                          )}
+                        <Icons.Gear />
+                      </button>
 
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="chat-thinking">Analyzing…</div>
-                          ) : msg.role === 'assistant' ? (
-                            formatAssistantContent(msg.content)
-                          ) : (
-                            <div className="chat-content">{msg.content}</div>
-                          )}
+                      {showSettingsMenu && (
+                        <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
+                          <button
+                            type="button"
+                            className="chat-settings-item"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              if (hasActiveSubscription) {
+                                handleManageBilling()
+                              } else {
+                                setShowPricingModal(true)
+                              }
+                            }}
+                          >
+                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                          </button>
+
+                          <div className="chat-settings-sep" />
+
+                          <button
+                            type="button"
+                            className="chat-settings-item"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              handleSignOut()
+                            }}
+                          >
+                            Log out
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </nav>
+              </header>
+
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+              >
+                {messages.length === 0 ? (
+                  <div className="chat-empty-state">
+                    {!isAuthenticated ? (
+                      <div className="hero-overlay-block">
+                        <div className="hero-overlay-glass">
+                          <h1 className={`hero-overlay-title ${plusJakarta.className}`}>
+                            CATCH VIOLATIONS, NOT FINES.
+                          </h1>
+                          <div className="hero-underline" aria-hidden="true" />
+                          <p className="hero-overlay-text">
+                            Start 14-day free trial.
+                          </p>
+                          <button
+                            className="btn-primary tool-cta"
+                            onClick={() => {
+                              setSelectedPriceId(null)
+                              setAuthInitialMode('signup')
+                              setShowAuthModal(true)
+                            }}
+                            type="button"
+                          >
+                            Start 14-Day Free Trial
+                          </button>
                         </div>
                       </div>
-                    ))}
+                    ) : (
+                      <p className="chat-empty-text">
+                        Upload a photo or ask a question about Michigan food safety regulations.
+                      </p>
+                    )}
                   </div>
-                </LiquidGlass>
-              )}
-            </div>
+                ) : (
+                  <LiquidGlass variant="main" className="chat-history-card">
+                    <div className="chat-history">
+                      {messages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                        >
+                          <div
+                            className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
+                          >
+                            {msg.image && (
+                              <div className="chat-bubble-image">
+                                <img src={msg.image} alt="Uploaded" />
+                              </div>
+                            )}
 
-            <div className="chat-input-area">
-              <div className="chat-input-inner">
-                <LiquidGlass variant="main" className="chat-dock">
-                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                              <div className="chat-thinking">Analyzing…</div>
+                            ) : msg.role === 'assistant' ? (
+                              formatAssistantContent(msg.content)
+                            ) : (
+                              <div className="chat-content">{msg.content}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </LiquidGlass>
+                )}
+              </div>
 
-                  {selectedImage && (
-                    <LiquidGlass variant="side" className="chat-attachment">
-                      <span className="chat-attachment-icon">
-                        <Icons.Camera />
-                      </span>
-                      <span>Image attached</span>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="chat-attachment-remove"
-                        aria-label="Remove"
-                        type="button"
-                      >
-                        <Icons.X />
-                      </button>
-                    </LiquidGlass>
-                  )}
+              <div className="chat-input-area">
+                <div className="chat-input-inner">
+                  <LiquidGlass variant="main" className="chat-dock">
+                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                  <div className="chat-input-row">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleImageChange}
-                    />
+                    {selectedImage && (
+                      <LiquidGlass variant="side" className="chat-attachment">
+                        <span className="chat-attachment-icon">
+                          <Icons.Camera />
+                        </span>
+                        <span>Image attached</span>
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="chat-attachment-remove"
+                          aria-label="Remove"
+                          type="button"
+                        >
+                          <Icons.X />
+                        </button>
+                      </LiquidGlass>
+                    )}
 
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="plm-icon-btn chat-camera-btn"
-                      aria-label="Upload photo"
-                      type="button"
-                      disabled={!isAuthenticated}
-                    >
-                      <Icons.Camera />
-                    </button>
-
-                    <div className="chat-input-wrapper">
-                      <textarea
-                        ref={textAreaRef}
-                        value={input}
-                        onChange={(e) => {
-                          setInput(e.target.value)
-                          if (textAreaRef.current) {
-                            textAreaRef.current.style.height = 'auto'
-                            textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                          }
-                        }}
-                        placeholder={!isAuthenticated ? 'Sign up to continue...' : 'Ask a question…'}
-                        rows={1}
-                        className="chat-textarea"
-                        disabled={!isAuthenticated}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSend(e)
-                          }
-                        }}
+                    <div className="chat-input-row">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleImageChange}
                       />
 
                       <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="plm-icon-btn chat-camera-btn"
+                        aria-label="Upload photo"
                         type="button"
-                        onClick={handleSend}
-                        disabled={(!safeTrim(input) && !selectedImage) || isSending || !isAuthenticated}
-                        className="plm-icon-btn primary chat-send-btn"
-                        aria-label="Send"
+                        disabled={!isAuthenticated}
                       >
-                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                        <Icons.Camera />
                       </button>
-                    </div>
-                  </div>
 
-                  <p className="chat-disclaimer">
-                    protocolLM may make mistakes. Verify critical decisions with official regulations.
-                  </p>
-                </LiquidGlass>
-                <FooterLinks />
+                      <div className="chat-input-wrapper">
+                        <textarea
+                          ref={textAreaRef}
+                          value={input}
+                          onChange={(e) => {
+                            setInput(e.target.value)
+                            if (textAreaRef.current) {
+                              textAreaRef.current.style.height = 'auto'
+                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
+                            }
+                          }}
+                          placeholder={!isAuthenticated ? 'Sign up to continue...' : 'Ask a question…'}
+                          rows={1}
+                          className="chat-textarea"
+                          disabled={!isAuthenticated}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault()
+                              handleSend(e)
+                            }
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={handleSend}
+                          disabled={(!safeTrim(input) && !selectedImage) || isSending || !isAuthenticated}
+                          className="plm-icon-btn primary chat-send-btn"
+                          aria-label="Send"
+                        >
+                          {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="chat-disclaimer">
+                      protocolLM may make mistakes. Verify critical decisions with official regulations.
+                    </p>
+                  </LiquidGlass>
+                  <FooterLinks />
+                </div>
               </div>
             </div>
-          </div>
-        </main>
+          </main>
+        ) : (
+          <LandingPage
+            onShowPricing={() => {
+              setSelectedPriceId(null)
+              setShowPricingModal(true)
+            }}
+            onShowAuth={() => {
+              setSelectedPriceId(null)
+              setAuthInitialMode('signin')
+              setShowAuthModal(true)
+            }}
+          />
+        )}
       </div>
     </>
   )
