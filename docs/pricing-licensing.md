@@ -4,7 +4,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 
 ## 1) Recommended Pricing Strategy (simple mental model)
 - **Hybrid per-location with included devices**: each paid location includes a fixed device allowance; extra devices are add-ons.
-- **Suggested public pricing** (can be tuned by segment/geo):
+- **Suggested public pricing** (defaults; should come from a pricing config table/env so sales can update without code):
   - **Single location**: **$39/location/month** includes **2 devices**, unlimited scans. Additional devices: **$10/device/month**.
   - **Small franchise (3–9 locations)**: **$35/location/month** includes 2 devices. Additional devices: **$8/device/month**.
   - **Enterprise (10+ locations or custom terms)**: **$29–$33/location/month** with negotiated device packs and annual/quarterly billing; optionally include **3 devices** per location to reduce procurement friction.
@@ -28,7 +28,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 - **subscription_items**: `id`, `subscription_id`, `stripe_price_id`, `quantity`, `type` (`location_base`, `device_addon`), `unit_amount`.
 - **invites/access**: `id`, `organization_id`, `location_id`, `role`, `invite_code`, `status`.
 
-> Users are only needed for admin/purchaser identity; enforcement is device/location based.
+> Users are only needed for admin/purchaser and delegated manager roles; pricing/enforcement is device/location based (no per-user metering).
 
 ## 4) Pricing choice & enforcement (comments)
 - **Hybrid per-location + device add-on** keeps procurement simple and fair for high-device sites; avoids per-scan metering.
@@ -88,6 +88,8 @@ await db.transaction(async (tx) => {
   await allocateDeviceSlots(tx, orgId, includedPerLoc * locCount + extraDevices) // ensure enough device entitlements; disable overage devices on downgrade
 })
 ```
+- **ensureLocations(tx, orgId, locCount)**: creates missing location rows + invite codes up to `locCount`, reactivates inactive ones, and if downsizing, marks surplus locations inactive (do not hard delete). Should be idempotent and raise on conflicting external refs.
+- **allocateDeviceSlots(tx, orgId, totalDevices)**: guarantees there are `totalDevices` active device entitlements across the org; on downgrade, marks excess devices inactive and revokes tokens. Should be idempotent and return which devices were disabled for logging/notifications.
 
 ## 8) Adding locations/devices later
 - **Add locations**: update subscription item quantity for `location_base`; webhook updates `location_limit` and creates new location invite codes.
@@ -100,7 +102,7 @@ await db.transaction(async (tx) => {
 - Centralized purchaser remains owner; delegate `location_manager` role for day-to-day device management.
 
 ## 10) Implementation hints for current codebase
-- Reuse existing multi-location checkout route: send `locationCount`, derive `extra_devices`, pass metadata (`plan_tier`, `included_devices_per_location`, `pending_purchase_id`).
+- Reuse existing multi-location checkout route (`app/api/create-multi-location-checkout/route.js`): extend payload to include `devicesPerLocation` (or explicit `extra_devices`), compute addon quantity, and pass metadata (`plan_tier`, `included_devices_per_location`, `pending_purchase_id`). Adjust Stripe line items to include the device add-on Price when applicable.
 - Store `subscription_items` rows per Stripe item id to track quantities for audit.
 - Device auth middleware should check `licenses.location_limit` and device allocations before serving scans.
 
