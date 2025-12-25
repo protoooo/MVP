@@ -2874,7 +2874,7 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.4);
           color: rgba(15, 23, 42, 0.85);
           font-size: 12px;
-          font-weight: 750;
+          font-weight: 700;
           letter-spacing: -0.01em;
           backdrop-filter: blur(12px) saturate(120%);
           -webkit-backdrop-filter: blur(12px) saturate(120%);
@@ -2926,7 +2926,7 @@ export default function Page() {
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .hero-overlay-glass {
             text-align: center;
             align-items: center;
