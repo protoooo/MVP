@@ -44,7 +44,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
   - `protocolLM_device_addon` (recurring monthly & annual).
 - **Prices**:
   - Public: `location_base_monthly_standard` @ $39 with 2 devices included (in metadata).
-  - Tiered/volume Prices for 3–9 and 10+ locations (use graduated pricing on the same Price where possible; otherwise separate Prices keyed by tier).
+  - Tiered/volume Prices for 3–9 and 10+ locations (use graduated pricing on the same Price where possible; otherwise separate Prices keyed by tier). **Tier breakpoints and rates should be config-driven (env or pricing table) so sales can adjust without code changes.**
   - `device_addon_monthly` @ $10 (standard) and $8 (franchise/volume).
 - **Quantities**:
   - `location_base` quantity = number of locations.
@@ -84,8 +84,8 @@ await db.transaction(async (tx) => {
     subscription_id: sub.id,
     status: 'active',
   })
-  await ensureLocations(tx, orgId, locCount) // create location slots/invite codes
-  await allocateDeviceSlots(tx, orgId, includedPerLoc * locCount + extraDevices)
+  await ensureLocations(tx, orgId, locCount) // idempotently create/activate location slots + invite codes; handle downsize by marking extras inactive
+  await allocateDeviceSlots(tx, orgId, includedPerLoc * locCount + extraDevices) // ensure enough device entitlements; disable overage devices on downgrade
 })
 ```
 
