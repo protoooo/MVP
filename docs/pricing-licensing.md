@@ -11,6 +11,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 - **Rationale**: per-location is intuitive for operators; device add-ons keep fairness for high-usage sites without per-scan complexity. Pricing stays in the $30–$50 band for small restaurants while scaling down for volume.
 - **Trial & free usage**: keep 14-day free trial + limited free usage (N scans/day) on unlicensed locations to drive adoption.
 > Default inclusion is 2 devices/location; enterprise can intentionally move to 3 included devices via config to simplify rollout. Document deviations in the pricing config table.
+> Current implementation still charges $50/location in `create-multi-location-checkout`. When adopting this model, update the config/Price ids and keep a transition note for legacy customers.
 
 ## 2) Purchasing scenarios coverage
 - **Single restaurant, 1–3 devices**: buy one location, choose devices (default 2 included, optionally +1 device add-on).
@@ -30,6 +31,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 - **invites/access**: `id`, `organization_id`, `location_id`, `role`, `invite_code`, `status`.
 
 > Users are only needed for admin/purchaser and delegated manager roles; pricing/enforcement is device/location based (no per-user metering).
+> Existing tables like `pending_multi_location_purchases` and invite codes can map into this model: each pending purchase creates an `organization` plus `locations` seeded from the invite set. Add migration scripts before removing the legacy tables.
 
 ## 4) Pricing choice & enforcement (comments)
 - **Hybrid per-location + device add-on** keeps procurement simple and fair for high-device sites; avoids per-scan metering.
@@ -65,7 +67,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 // On checkout.session.completed or customer.subscription.updated
 const session = event.data.object
 const sub = await stripe.subscriptions.retrieve(session.subscription, { expand: ['items'] })
-const orgId = session.metadata.org_id
+const orgId = session.metadata.org_id || session.metadata.pendingPurchaseId // fallback to current flow until org is provisioned pre-checkout
 const locCount = Number(session.metadata.location_count)
 const includedPerLoc = Number(session.metadata.included_devices_per_location || 2)
 const extraDevices = Number(session.metadata.extra_devices || 0)
@@ -91,6 +93,7 @@ await db.transaction(async (tx) => {
 ```
 - **ensureLocations(tx, orgId, locCount)**: creates missing location rows + invite codes up to `locCount`, reactivates inactive ones, and if downsizing, marks surplus locations inactive (do not hard delete). Should be idempotent and raise a typed `LocationConflictError` on conflicting external refs; webhook should log, alert, and leave subscription active but mark provisioning as `failed`.
 - **allocateDeviceSlots(tx, orgId, totalDevices)**: guarantees there are `totalDevices` active device entitlements across the org; on downgrade, marks excess devices inactive and revokes tokens. Should be idempotent, return which devices were disabled, and throw `DeviceAllocationError` on failure so the webhook can roll back and retry.
+> The current webhook flow provisions locations from `pending_multi_location_purchases` and invite codes. The above helpers represent the target state; implement them incrementally and keep compatibility with the existing invite-based provisioning until data is migrated.
 
 ## 8) Adding locations/devices later
 - **Add locations**: update subscription item quantity for `location_base`; webhook updates `location_limit` and creates new location invite codes.
@@ -103,7 +106,7 @@ await db.transaction(async (tx) => {
 - Centralized purchaser remains owner; delegate `location_manager` role for day-to-day device management.
 
 ## 10) Implementation hints for current codebase
-- Reuse existing multi-location checkout route (`app/api/create-multi-location-checkout/route.js`): extend payload to include `devicesPerLocation` (or explicit `extra_devices`), compute addon quantity, and pass metadata (`plan_tier`, `included_devices_per_location`, `pending_purchase_id`). Adjust Stripe line items to include the device add-on Price when applicable.
+- Reuse existing multi-location checkout route (`app/api/create-multi-location-checkout/route.js`): extend payload to include `devicesPerLocation` (or explicit `extra_devices`), compute addon quantity, and pass metadata (`plan_tier`, `included_devices_per_location`, `pending_purchase_id`). Adjust Stripe line items to include the device add-on Price when applicable; keep a compatibility mode that preserves the current single line item (location-only, $50) until the new Prices are live.
 - Store `subscription_items` rows per Stripe item id to track quantities for audit.
 - Device auth middleware should check `licenses.location_limit` and device allocations before serving scans.
 
