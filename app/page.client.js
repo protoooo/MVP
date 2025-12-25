@@ -2507,12 +2507,41 @@ export default function Page() {
          * Note: Using !important to override LiquidGlass component styles without modifying
          * the shared component itself (minimal change approach) */
         .landing-hero-card.landing-hero-card--terms-style {
+          position: relative;
           background: linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.034)) !important;
-          border: 1px solid rgba(255, 255, 255, 0.19) !important;
-          border-left: 3px solid var(--accent) !important;
+          border: none !important;
           border-radius: 8px !important;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
           padding: 40px 48px;
+        }
+
+        /* ✅ Subtle gradient border matching ProtocolLM brand colors (blue, gray, orange, muted green)
+         * Uses pseudo-element with mask technique for Safari/iOS compatibility
+         * Preserves border-radius and maintains glass-like transparency */
+        .landing-hero-card.landing-hero-card--terms-style::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 8px;
+          padding: 1.5px;
+          background: linear-gradient(
+            135deg,
+            rgba(95, 168, 255, 0.45) 0%,
+            rgba(148, 163, 184, 0.35) 25%,
+            rgba(251, 146, 60, 0.38) 55%,
+            rgba(134, 179, 148, 0.32) 80%,
+            rgba(95, 168, 255, 0.45) 100%
+          );
+          -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          pointer-events: none;
+          z-index: 0;
         }
 
         .hero-content {
