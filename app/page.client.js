@@ -1771,10 +1771,10 @@ export default function Page() {
         /* ✅ Auth + Pricing cards: brighten glass to match landing hero clarity */
         .glass-modal.modal-card.auth-modal,
         .glass-modal.modal-card.pricing-modal {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.18)) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 32px 95px rgba(10, 18, 35, 0.32) !important;
-          backdrop-filter: blur(16px) saturate(140%) !important;
-          -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.48)) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 32px 95px rgba(10, 18, 35, 0.3) !important;
+          backdrop-filter: blur(18px) saturate(145%) !important;
+          -webkit-backdrop-filter: blur(18px) saturate(145%) !important;
         }
 
         .glass-modal.modal-card::before {
