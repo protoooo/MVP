@@ -166,6 +166,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 </span>{' '}
                 NOT FINES.
               </h1>
+              <div className="hero-divider" aria-hidden="true" />
               <p className="hero-support">
                 Take a photo or ask a question. Catch violations by simply taking pictures in your establishment, and get
                 instant answers and guidance from Michigan Food Safety Regulations.
@@ -300,7 +301,10 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <LiquidGlass variant="main" className={`modal-card glass-modal auth-modal ${plusJakarta.className}`}>
+        <LiquidGlass
+          variant="main"
+          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style auth-modal ${plusJakarta.className}`}
+        >
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -420,7 +424,10 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Pricing">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <LiquidGlass variant="main" className={`modal-card glass-modal pricing-modal ${plusJakarta.className}`}>
+        <LiquidGlass
+          variant="main"
+          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style pricing-modal ${plusJakarta.className}`}
+        >
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -2570,8 +2577,16 @@ export default function Page() {
           margin: 0;
           font-size: 16px;
           line-height: 1.65;
-          color: rgba(30, 41, 59, 0.74);
+          color: rgba(15, 23, 42, 0.9);
           max-width: 52ch;
+        }
+
+        .hero-divider {
+          width: 68px;
+          height: 3px;
+          border-radius: 9999px;
+          background: linear-gradient(90deg, #38bdf8, #3b82f6, #f97316);
+          box-shadow: 0 10px 26px rgba(5, 7, 13, 0.12);
         }
 
         .hero-cta-row {
@@ -3642,7 +3657,6 @@ export default function Page() {
                   {!isAuthenticated ? (
                     <div className="hero-overlay-block">
                       <div className="hero-overlay-glass">
-                        <div className="hero-chip">Michigan Food Safety · ProtocolLM</div>
                         <h1 className={`hero-overlay-title ${plusJakarta.className}`}>
                           CATCH VIOLATIONS, NOT FINES.
                         </h1>
