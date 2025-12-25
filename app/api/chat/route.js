@@ -1813,7 +1813,7 @@ Examples:
           hasImage &&
           FEATURE_VISION_DOUBLECHECK &&
           !visionFallbackUsed &&
-          /^No violations observed\./i.test(assistantMessage)
+          /^no violations\b/i.test(safeLine(assistantMessage))
         ) {
           try {
             const dcReq = buildCohereRequest(usedModel)

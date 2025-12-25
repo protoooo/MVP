@@ -1742,8 +1742,8 @@ export default function Page() {
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 30px 90px rgba(10, 18, 35, 0.26) !important;
 
           /* reduce nested blur strength a touch (helps iOS crispness) */
-          backdrop-filter: blur(14px) saturate(125%) !important;
-          -webkit-backdrop-filter: blur(14px) saturate(125%) !important;
+          backdrop-filter: blur(10px) saturate(125%) !important;
+          -webkit-backdrop-filter: blur(10px) saturate(125%) !important;
 
           color: var(--glass-ink) !important;
           color-scheme: light !important;
@@ -2463,6 +2463,19 @@ export default function Page() {
           align-self: center;
         }
 
+        .start-trial-btn {
+          background: linear-gradient(120deg, #4f9cff 0%, #22c55e 45%, #facc15 100%);
+          color: #0b1220;
+          border-color: rgba(15, 23, 42, 0.1);
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          font-weight: 800;
+        }
+
+        .start-trial-btn:hover {
+          filter: saturate(1.05) brightness(1.02);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+
         .btn-nav:hover {
           color: #05070d;
           background: #fff;
@@ -2805,8 +2818,8 @@ export default function Page() {
         }
 
         .chat-empty-text {
-          font-size: 14px;
-          color: rgba(15, 23, 42, 0.7);
+          font-size: 15px;
+          color: rgba(15, 23, 42, 0.86);
           line-height: 1.6;
           margin: 0;
           text-align: center;
@@ -2828,6 +2841,7 @@ export default function Page() {
           overflow-y: auto;
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
+          margin-bottom: 18px;
         }
 
         .chat-history {
@@ -3142,9 +3156,9 @@ export default function Page() {
         }
 
         .tool-welcome-text {
-          font-size: 14px;
-          line-height: 1.6;
-          color: rgba(30, 41, 59, 0.74);
+          font-size: 15px;
+          line-height: 1.65;
+          color: rgba(15, 23, 42, 0.82);
           margin: 0 0 20px 0;
         }
 
@@ -3153,9 +3167,9 @@ export default function Page() {
         }
 
         .tool-usage-text {
-          font-size: 12px;
-          font-weight: 600;
-          color: rgba(95, 168, 255, 0.95);
+          font-size: 13px;
+          font-weight: 700;
+          color: #1d4ed8;
           margin: 0;
         }
 
@@ -3419,6 +3433,19 @@ export default function Page() {
                 {!isAuthenticated && deviceUsageRemaining > 0 && (
                   <FreeUsageCounter remaining={deviceUsageRemaining} limit={FREE_USAGE_LIMIT} />
                 )}
+
+                {!isAuthenticated && (
+                  <button
+                    type="button"
+                    className="btn-nav start-trial-btn"
+                    onClick={() => {
+                      setSelectedPriceId(null)
+                      setShowPricingModal(true)
+                    }}
+                  >
+                    Start trial
+                  </button>
+                )}
                 
                 {!isAuthenticated ? (
                   <button 
@@ -3494,11 +3521,10 @@ export default function Page() {
                     <LiquidGlass variant="main" className="tool-welcome-card">
                       <div className="tool-welcome-content">
                         <h1 className={`tool-welcome-title ${plusJakarta.className}`}>
-                          Food Safety Compliance Scanner
+                          protocolLM
                         </h1>
                         <p className="tool-welcome-text">
-                          Take a photo or ask a question about Michigan Food Safety Regulations.
-                          Get instant violation detection and guidance.
+                          Take a photo of your restaurant to scan for visible violations and get fast, Michigan-specific guidance.
                         </p>
                         {deviceUsageBlocked || deviceUsageRemaining <= 0 ? (
                           <div className="tool-usage-blocked">
@@ -3637,11 +3663,7 @@ export default function Page() {
                   </div>
 
                   <p className="chat-disclaimer">
-                    {!isAuthenticated && !deviceUsageBlocked && deviceUsageRemaining > 0 ? (
-                      <>protocolLM may make mistakes. <button type="button" className="inline-link" onClick={() => setShowPricingModal(true)}>Start free trial</button> for unlimited access.</>
-                    ) : (
-                      'protocolLM may make mistakes. Verify critical decisions with official regulations.'
-                    )}
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
                   </p>
                 </LiquidGlass>
               </div>
