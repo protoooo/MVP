@@ -156,7 +156,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       </header>
 
       <main className="landing-hero">
-        <LiquidGlass variant="main" className="landing-hero-card">
+        <LiquidGlass variant="main" className="landing-hero-card landing-hero-card--terms-style">
           <div className="hero-content">
             <div className="hero-headings">
               <h1 className={`hero-title ${plusJakarta.className}`}>
@@ -2519,6 +2519,19 @@ export default function Page() {
           width: 100%;
           max-width: 880px;
           margin: 0 auto;
+        }
+
+        /* ✅ Override LiquidGlass with exact info-highlight style from terms page
+         * Source: components/InfoPageLayout.js - .info-highlight class
+         * Maintains visual consistency between landing hero and terms page highlights
+         * Note: Using !important to override LiquidGlass component styles without modifying
+         * the shared component itself (minimal change approach) */
+        .landing-hero-card.landing-hero-card--terms-style {
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)) !important;
+          border: 1px solid rgba(255, 255, 255, 0.22) !important;
+          border-left: 3px solid var(--accent) !important;
+          border-radius: 8px !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
           padding: 40px 48px;
         }
 
@@ -3300,7 +3313,7 @@ export default function Page() {
             padding: 0 20px calc(env(safe-area-inset-bottom) + 24px);
           }
 
-          .landing-hero-card {
+          .landing-hero-card.landing-hero-card--terms-style {
             padding: 28px 24px;
           }
 
