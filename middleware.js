@@ -1,5 +1,4 @@
 // middleware.js - COMPLETE: CSRF token generation + authentication checks
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { generateCSRFToken } from '@/lib/csrfProtection'
 
@@ -57,25 +56,22 @@ export async function middleware(request) {
   // ============================================================================
   // Authentication Check (for protected routes)
   // ============================================================================
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value
-        },
-        set(name, value, options) {
-          request.cookies.set({ name, value, ...options })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          request.cookies.set({ name, value: '', ...options })
-          response.cookies.set({ name, value: '', ...options })
-        },
+  const { createServerClient } = await import('@supabase/ssr')
+  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    cookies: {
+      get(name) {
+        return request.cookies.get(name)?.value
       },
-    }
-  )
+      set(name, value, options) {
+        request.cookies.set({ name, value, ...options })
+        response.cookies.set({ name, value, ...options })
+      },
+      remove(name, options) {
+        request.cookies.set({ name, value: '', ...options })
+        response.cookies.set({ name, value: '', ...options })
+      },
+    },
+  })
 
   const {
     data: { user },

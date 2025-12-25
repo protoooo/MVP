@@ -1,3 +1,4 @@
+import path from 'path'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
@@ -59,6 +60,12 @@ const nextConfig = {
         tls: false,
         crypto: false,
       }
+    }
+    
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@supabase/supabase-js/dist/esm/wrapper.mjs': path.resolve('./lib/supabase-wrapper.js'),
+      '@supabase/ssr': path.resolve('./lib/supabase-ssr-stub.js'),
     }
     
     config.ignoreWarnings = [
