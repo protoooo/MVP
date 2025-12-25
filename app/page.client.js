@@ -2839,6 +2839,108 @@ export default function Page() {
           -webkit-backdrop-filter: blur(16px) saturate(120%);
         }
 
+        .hero-overlay-block {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          padding: 6px;
+        }
+
+        .hero-overlay-glass {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          max-width: 560px;
+          width: 100%;
+          color: rgba(15, 23, 42, 0.92);
+          background: linear-gradient(140deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+          border: 1px solid rgba(255, 255, 255, 0.32);
+          box-shadow: 0 18px 48px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(16px) saturate(125%);
+          -webkit-backdrop-filter: blur(16px) saturate(125%);
+          border-radius: 20px;
+          padding: 16px 18px;
+        }
+
+        .hero-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 12px;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.28);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          color: rgba(15, 23, 42, 0.85);
+          font-size: 12px;
+          font-weight: 750;
+          letter-spacing: -0.01em;
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
+          box-shadow: 0 10px 26px rgba(5, 7, 13, 0.14);
+        }
+
+        .hero-overlay-title {
+          margin: 0;
+          font-size: clamp(28px, 5vw, 44px);
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: rgba(15, 23, 42, 0.95);
+          text-align: left;
+        }
+
+        .hero-underline {
+          height: 3px;
+          width: 64px;
+          border-radius: 9999px;
+          background: linear-gradient(90deg, #38bdf8, #6366f1, #a855f7);
+        }
+
+        .hero-overlay-text {
+          margin: 0;
+          font-size: 16px;
+          line-height: 1.7;
+          color: rgba(30, 41, 59, 0.78);
+          max-width: 46ch;
+        }
+
+        .hero-cta-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .hero-cta-note {
+          margin: 0;
+          font-size: 13px;
+          font-weight: 700;
+          color: rgba(239, 68, 68, 0.9);
+        }
+
+        @media (min-width: 768px) {
+          .hero-overlay-block {
+            justify-content: flex-start;
+            padding-left: 10px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .hero-overlay-glass {
+            text-align: center;
+            align-items: center;
+          }
+
+          .hero-overlay-title {
+            text-align: center;
+          }
+
+          .hero-overlay-text {
+            text-align: center;
+          }
+        }
+
         /* ✅ Frosted glass card for chat conversation - fixed height, scrollable content */
         .chat-history-card {
           max-width: 960px; /* Align with widened chat input */
@@ -3538,29 +3640,30 @@ export default function Page() {
                 <div className="chat-empty-state">
                   {/* ✅ Marketing content for logged-out users, simple prompt for logged-in */}
                   {!isAuthenticated ? (
-                    <LiquidGlass variant="main" className="tool-welcome-card">
-                      <div className="tool-welcome-content">
-                        <h1 className={`tool-welcome-title ${plusJakarta.className}`}>
-                          <span className="tool-welcome-line1">CATCH VIOLATIONS,</span>
-                          <span className="tool-welcome-line2">NOT FINES.</span>
+                    <div className="hero-overlay-block">
+                      <div className="hero-overlay-glass">
+                        <div className="hero-chip">Michigan Food Safety · ProtocolLM</div>
+                        <h1 className={`hero-overlay-title ${plusJakarta.className}`}>
+                          CATCH VIOLATIONS, NOT FINES.
                         </h1>
-                        <p className="tool-welcome-text">
+                        <div className="hero-underline" aria-hidden="true" />
+                        <p className="hero-overlay-text">
                           Take a photo of your restaurant to scan for visible violations and get fast, Michigan-specific guidance.
                         </p>
-                        {deviceUsageBlocked || deviceUsageRemaining <= 0 ? (
-                          <div className="tool-usage-blocked">
-                            <p className="tool-usage-blocked-text">Free usage limit reached.</p>
-                            <button 
-                              className="btn-primary tool-cta" 
-                              onClick={() => setShowPricingModal(true)} 
+                        {(deviceUsageBlocked || deviceUsageRemaining <= 0) && (
+                          <div className="hero-cta-inline">
+                            <p className="hero-cta-note">Free usage limit reached.</p>
+                            <button
+                              className="btn-primary tool-cta"
+                              onClick={() => setShowPricingModal(true)}
                               type="button"
                             >
                               Start 7-day free trial
                             </button>
                           </div>
-                        ) : null}
+                        )}
                       </div>
-                    </LiquidGlass>
+                    </div>
                   ) : (
                     <p className="chat-empty-text">
                       Upload a photo or ask a question about Michigan food safety regulations.
