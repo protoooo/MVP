@@ -11,7 +11,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 - **Rationale**: per-location is intuitive for operators; device add-ons keep fairness for high-usage sites without per-scan complexity. Pricing stays in the $30–$50 band for small restaurants while scaling down for volume.
 - **Trial & free usage**: keep 14-day free trial + limited free usage (N scans/day) on unlicensed locations to drive adoption.
 > Default inclusion is 2 devices/location; enterprise can intentionally move to 3 included devices via config to simplify rollout. Document deviations in the pricing config table.
-> Current implementation still charges $50/location in `create-multi-location-checkout`. When adopting this model, update the config/Price ids and keep a transition note for legacy customers.
+> Current implementation still charges $50/location via `PRICE_PER_LOCATION` in `create-multi-location-checkout`. When adopting this model, update the config/Price ids (or that constant) and keep a transition note for legacy customers.
 - **Pricing migration (high level)**: 
   1) Create new Stripe Prices (do **not** delete the $50 Price). 
   2) Ship a feature flag to switch the checkout route to the new Price ids for new customers only. 
@@ -73,7 +73,7 @@ This document defines a minimal, scalable pricing and licensing approach for Pro
 // On checkout.session.completed or customer.subscription.updated
 const session = event.data.object
 const sub = await stripe.subscriptions.retrieve(session.subscription, { expand: ['items'] })
-const orgId = session.metadata.org_id || session.metadata.pendingPurchaseId // fallback to current flow until org is provisioned pre-checkout
+const orgId = session.metadata.org_id || await lookupOrgFromPending(session.metadata.pendingPurchaseId) // fallback to legacy flow; validate that the pending purchase maps to an org stub before proceeding
 const locCount = Number(session.metadata.location_count)
 const includedPerLoc = Number(session.metadata.included_devices_per_location || 2)
 const extraDevices = Number(session.metadata.extra_devices || 0)
@@ -97,8 +97,8 @@ await db.transaction(async (tx) => {
   await allocateDeviceSlots(tx, orgId, includedPerLoc * locCount + extraDevices) // ensure enough device entitlements; disable overage devices on downgrade
 })
 ```
-- **ensureLocations(tx, orgId, locCount)**: creates missing location rows + invite codes up to `locCount`, reactivates inactive ones, and if downsizing, marks surplus locations inactive (do not hard delete). Should be idempotent and raise a typed `LocationConflictError` on conflicting external refs; webhook should log, alert, and leave subscription active but mark provisioning as `failed`.
-- **allocateDeviceSlots(tx, orgId, totalDevices)**: guarantees there are `totalDevices` active device entitlements across the org; on downgrade, marks excess devices inactive and revokes tokens. Should be idempotent, return which devices were disabled, and throw `DeviceAllocationError` on failure so the webhook can roll back and retry.
+- **ensureLocations(tx, orgId, locCount)**: creates missing location rows + invite codes up to `locCount`, reactivates inactive ones, and if downsizing, marks surplus locations inactive (do not hard delete). Should be idempotent and raise a typed `LocationConflictError` (custom error class to add) on conflicting external refs; webhook should log, alert, and leave subscription active but mark provisioning as `failed`.
+- **allocateDeviceSlots(tx, orgId, totalDevices)**: guarantees there are `totalDevices` active device entitlements across the org; on downgrade, marks excess devices inactive and revokes tokens. Should be idempotent, return which devices were disabled, and throw `DeviceAllocationError` (custom error class) on failure so the webhook can roll back and retry.
 > The current webhook flow provisions locations from `pending_multi_location_purchases` and invite codes. The above helpers represent the target state; implement them incrementally and keep compatibility with the existing invite-based provisioning until data is migrated.
 
 ## 8) Adding locations/devices later
@@ -116,7 +116,7 @@ await db.transaction(async (tx) => {
   1) Add request params: `devicesPerLocation` (default 2) or `extra_devices`.
   2) Update pricing calc: derive `extra_devices = max(0, devicesPerLocation - included) * locationCount`.
   3) Modify Stripe line items: include base Price (quantity = `locationCount`) and optional device add-on Price (quantity = `extra_devices`).
-  4) Add compatibility layer: when the new Prices are not configured, fall back to the current single line item ($50 * locations) and existing metadata (`userId`, `pendingPurchaseId`).
+  4) Add compatibility layer: when the new Prices are not configured, fall back to the current single line item (`PRICE_PER_LOCATION` * locations) and existing metadata (`userId`, `pendingPurchaseId`).
 - Store `subscription_items` rows per Stripe item id to track quantities for audit.
 - Device auth middleware should check `licenses.location_limit` and device allocations before serving scans.
 
