@@ -2521,7 +2521,11 @@ export default function Page() {
           margin: 0 auto;
         }
 
-        /* ✅ Override LiquidGlass with exact info-highlight style from terms page */
+        /* ✅ Override LiquidGlass with exact info-highlight style from terms page
+         * Source: components/InfoPageLayout.js - .info-highlight class
+         * Maintains visual consistency between landing hero and terms page highlights
+         * Note: Using !important to override LiquidGlass component styles without modifying
+         * the shared component itself (minimal change approach) */
         .landing-hero-card.landing-hero-card--terms-style {
           background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)) !important;
           border: 1px solid rgba(255, 255, 255, 0.22) !important;
