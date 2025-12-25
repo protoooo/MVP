@@ -14,11 +14,8 @@ export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Multi-location pricing constants
-const PRICE_PER_LOCATION = 50
 const MIN_LOCATIONS = 2
 const MAX_LOCATIONS = 500
-const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 
 function getClientIp(request) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -52,7 +49,7 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { locationCount, captchaToken, organizationName } = body
+    const { locationCount, captchaToken, organizationName, devicesPerLocation: rawDevicesPerLocation } = body
 
     // Validate location count
     const count = parseInt(locationCount, 10)
@@ -61,6 +58,16 @@ export async function POST(request) {
       return NextResponse.json({ 
         error: `Location count must be between ${MIN_LOCATIONS} and ${MAX_LOCATIONS}` 
       }, { status: 400 })
+    }
+
+    const devicesPerLocation = Math.max(1, Math.min(20, parseInt(rawDevicesPerLocation || '1', 10)))
+
+    const pricingTier = count >= 20 ? 'enterprise' : count >= 5 ? 'multi' : 'single'
+    const pricePerLocation = pricingTier === 'enterprise' ? 35 : pricingTier === 'multi' ? 40 : 50
+    const devicePrice = pricingTier === 'single' ? 20 : 15
+
+    if (pricingTier === 'enterprise') {
+      return NextResponse.json({ requiresContact: true, tier: pricingTier })
     }
 
     // CAPTCHA verification
@@ -145,13 +152,16 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Generate invite codes for each location
+    // Generate invite codes for each device at each location
     const inviteCodes = []
     for (let i = 1; i <= count; i++) {
-      inviteCodes.push({
-        code: generateInviteCode(),
-        location_number: i,
-      })
+      for (let device = 1; device <= devicesPerLocation; device++) {
+        inviteCodes.push({
+          code: generateInviteCode(),
+          location_number: i,
+          device_number: device,
+        })
+      }
     }
 
     // Create pending multi-location purchase record
@@ -162,6 +172,7 @@ export async function POST(request) {
         buyer_email: user.email,
         organization_name: organizationName || null,
         location_count: count,
+        devices_per_location: devicesPerLocation,
         invite_codes: inviteCodes,
         status: 'pending',
         created_at: new Date().toISOString(),
@@ -175,7 +186,9 @@ export async function POST(request) {
     }
 
     // Calculate total price
-    const totalMonthlyPrice = PRICE_PER_LOCATION * count
+    const totalDevices = count * devicesPerLocation
+    const additionalDevices = Math.max(0, totalDevices - count)
+    const totalMonthlyPrice = (pricePerLocation * count) + (additionalDevices * devicePrice)
 
     // Create Stripe checkout session with quantity
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -183,10 +196,30 @@ export async function POST(request) {
       payment_method_types: ['card'],
       customer_email: user.email,
       client_reference_id: user.id,
-      line_items: [{ 
-        price: UNLIMITED_MONTHLY, 
-        quantity: count 
-      }],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'protocolLM Location License' },
+            recurring: { interval: 'month' },
+            unit_amount: pricePerLocation * 100,
+          },
+          quantity: count,
+        },
+        ...(additionalDevices > 0
+          ? [
+              {
+                price_data: {
+                  currency: 'usd',
+                  product_data: { name: 'Additional Device License' },
+                  recurring: { interval: 'month' },
+                  unit_amount: devicePrice * 100,
+                },
+                quantity: additionalDevices,
+              },
+            ]
+          : []),
+      ],
       subscription_data: {
         trial_period_days: 14,
         metadata: {
@@ -194,6 +227,11 @@ export async function POST(request) {
           userEmail: user.email,
           isMultiLocation: 'true',
           locationCount: count.toString(),
+          devicesPerLocation: devicesPerLocation.toString(),
+          basePricePerLocation: pricePerLocation.toString(),
+          deviceAddonPrice: devicePrice.toString(),
+          totalDevices: totalDevices.toString(),
+          pricingTier,
           organizationName: organizationName || '',
           pendingPurchaseId: pendingPurchase.id,
         },
@@ -209,6 +247,11 @@ export async function POST(request) {
         userEmail: user.email,
         isMultiLocation: 'true',
         locationCount: count.toString(),
+        devicesPerLocation: devicesPerLocation.toString(),
+        basePricePerLocation: pricePerLocation.toString(),
+        deviceAddonPrice: devicePrice.toString(),
+        totalDevices: totalDevices.toString(),
+        pricingTier,
         organizationName: organizationName || '',
         pendingPurchaseId: pendingPurchase.id,
         timestamp: Date.now().toString(),
@@ -222,6 +265,7 @@ export async function POST(request) {
       userId: user.id,
       email: user.email,
       locationCount: count,
+      devicesPerLocation,
       totalMonthlyPrice,
       pendingPurchaseId: pendingPurchase.id,
       ip,
@@ -230,7 +274,10 @@ export async function POST(request) {
     return NextResponse.json({ 
       url: checkoutSession.url,
       locationCount: count,
-      pricePerLocation: PRICE_PER_LOCATION,
+      devicesPerLocation,
+      pricingTier,
+      pricePerLocation,
+      devicePrice,
       totalMonthly: totalMonthlyPrice,
     })
   } catch (error) {
