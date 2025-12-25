@@ -3547,15 +3547,7 @@ export default function Page() {
               <header className="chat-topbar">
                 <BrandLink variant="chat" />
                 <nav className="chat-top-actions" aria-label="Tool actions">
-                  {!isAuthenticated ? (
-                    <button
-                      onClick={handleShowSignIn}
-                      className="btn-nav landing-signin-btn"
-                      type="button"
-                    >
-                      Sign in
-                    </button>
-                  ) : (
+                  {isAuthenticated && (
                     <div className="chat-settings-wrap" ref={settingsRef}>
                       <button
                         type="button"
@@ -3684,7 +3676,7 @@ export default function Page() {
                         className="plm-icon-btn chat-camera-btn"
                         aria-label="Upload photo"
                         type="button"
-                        disabled={!isAuthenticated}
+                        disabled={!hasPaidAccess}
                       >
                         <Icons.Camera />
                       </button>
@@ -3700,10 +3692,10 @@ export default function Page() {
                               textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                             }
                           }}
-                          placeholder={!isAuthenticated ? 'Sign up to continue...' : 'Ask a question…'}
+                          placeholder={!hasPaidAccess ? 'Sign up to continue...' : 'Ask a question…'}
                           rows={1}
                           className="chat-textarea"
-                          disabled={!isAuthenticated}
+                          disabled={!hasPaidAccess}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault()
@@ -3715,7 +3707,7 @@ export default function Page() {
                         <button
                           type="button"
                           onClick={handleSend}
-                          disabled={(!safeTrim(input) && !selectedImage) || isSending || !isAuthenticated}
+                          disabled={(!safeTrim(input) && !selectedImage) || isSending || !hasPaidAccess}
                           className="plm-icon-btn primary chat-send-btn"
                           aria-label="Send"
                         >
