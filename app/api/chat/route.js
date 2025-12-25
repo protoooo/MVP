@@ -10,6 +10,7 @@ import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics, checkAccess, logModelUsageDetail } from '@/lib/usage'
 import { validateDeviceLicense } from '@/lib/licenseValidation'
 import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
+import { checkDeviceFreeUsage, incrementDeviceUsage, getSessionInfoFromRequest, FREE_USAGE_LIMIT } from '@/lib/deviceUsage'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -1430,11 +1431,14 @@ export async function POST(request) {
     const includeFines = wantsFineInfo(effectivePrompt) || Boolean(body?.includeFines)
 
     // ========================================================================
-    // AUTH + LICENSE VALIDATION
+    // AUTH + LICENSE VALIDATION (supports anonymous free usage)
     // ========================================================================
 
     let userId = null
     let userMemory = null
+    let isAnonymous = false
+    let deviceUsageRemaining = FREE_USAGE_LIMIT
+    const sessionInfo = getSessionInfoFromRequest(request)
 
     try {
       const cookieStore = await cookies()
@@ -1458,89 +1462,153 @@ export async function POST(request) {
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
+      // ========================================================================
+      // ANONYMOUS FREE USAGE PATH
+      // ========================================================================
       if (!userId || !data?.user) {
-        return NextResponse.json({ error: 'Authentication required.', code: 'UNAUTHORIZED' }, { status: 401 })
-      }
+        isAnonymous = true
+        logger.info('Anonymous chat request - checking device free usage')
 
-      if (!data.user.email_confirmed_at) {
-        return NextResponse.json(
-          { error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' },
-          { status: 403 }
-        )
-      }
+        // Check device free usage limit
+        const deviceCheck = await checkDeviceFreeUsage(sessionInfo)
+        
+        if (!deviceCheck.allowed) {
+          logger.info('Anonymous device free usage exhausted', { 
+            fingerprint: deviceCheck.fingerprint?.substring(0, 8) + '***',
+            blocked: deviceCheck.blocked
+          })
+          return NextResponse.json({ 
+            error: 'Free usage limit reached. Sign up to continue using protocolLM.',
+            code: 'FREE_USAGE_EXHAUSTED',
+            remaining: 0,
+            limit: FREE_USAGE_LIMIT
+          }, { status: 402 })
+        }
 
-      const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}`
-      const MAX_REQUESTS_PER_MINUTE = 20
+        deviceUsageRemaining = deviceCheck.remaining
+        logger.info('Anonymous device has free uses remaining', { remaining: deviceUsageRemaining })
 
-      try {
-        const rateLimitMap = global.chatRateLimits || (global.chatRateLimits = new Map())
-        const count = rateLimitMap.get(rateLimitKey) || 0
+        // Increment usage atomically BEFORE processing (decrement before use)
+        const incrementResult = await incrementDeviceUsage(sessionInfo)
+        if (!incrementResult.success) {
+          logger.info('Anonymous device usage increment failed - limit may have been reached', {
+            fingerprint: deviceCheck.fingerprint?.substring(0, 8) + '***'
+          })
+          return NextResponse.json({ 
+            error: 'Free usage limit reached. Sign up to continue using protocolLM.',
+            code: 'FREE_USAGE_EXHAUSTED',
+            remaining: 0,
+            limit: FREE_USAGE_LIMIT
+          }, { status: 402 })
+        }
 
-        if (count >= MAX_REQUESTS_PER_MINUTE) {
-          logger.security('Chat rate limit exceeded', { userId, count, limit: MAX_REQUESTS_PER_MINUTE })
+        deviceUsageRemaining = incrementResult.remaining
+
+        // Rate limit for anonymous users (stricter)
+        const anonRateLimitKey = `anon_${deviceCheck.fingerprint}_${Math.floor(Date.now() / 60000)}`
+        const MAX_ANON_REQUESTS_PER_MINUTE = 5
+
+        try {
+          const rateLimitMap = global.chatRateLimits || (global.chatRateLimits = new Map())
+          const count = rateLimitMap.get(anonRateLimitKey) || 0
+
+          if (count >= MAX_ANON_REQUESTS_PER_MINUTE) {
+            logger.security('Anonymous chat rate limit exceeded', { count, limit: MAX_ANON_REQUESTS_PER_MINUTE })
+            return NextResponse.json(
+              { error: 'Too many requests. Please wait a moment and try again.', code: 'RATE_LIMIT_EXCEEDED' },
+              { status: 429 }
+            )
+          }
+
+          rateLimitMap.set(anonRateLimitKey, count + 1)
+        } catch (rateLimitError) {
+          logger.warn('Anonymous rate limit check failed', { error: rateLimitError?.message })
+        }
+
+        // Skip to document retrieval for anonymous users (no subscription/license checks)
+      } else {
+        // ========================================================================
+        // AUTHENTICATED USER PATH
+        // ========================================================================
+        
+        if (!data.user.email_confirmed_at) {
           return NextResponse.json(
-            { error: 'Too many requests. Please wait a moment and try again.', code: 'RATE_LIMIT_EXCEEDED' },
-            { status: 429 }
+            { error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' },
+            { status: 403 }
           )
         }
 
-        rateLimitMap.set(rateLimitKey, count + 1)
+        const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}`
+        const MAX_REQUESTS_PER_MINUTE = 20
 
-        if (rateLimitMap.size > 1000) {
-          const currentMinute = Math.floor(Date.now() / 60000)
-          for (const [key] of rateLimitMap.entries()) {
-            const keyMinute = parseInt(key.split('_').pop(), 10)
-            if (Number.isFinite(keyMinute) && currentMinute - keyMinute > 5) rateLimitMap.delete(key)
+        try {
+          const rateLimitMap = global.chatRateLimits || (global.chatRateLimits = new Map())
+          const count = rateLimitMap.get(rateLimitKey) || 0
+
+          if (count >= MAX_REQUESTS_PER_MINUTE) {
+            logger.security('Chat rate limit exceeded', { userId, count, limit: MAX_REQUESTS_PER_MINUTE })
+            return NextResponse.json(
+              { error: 'Too many requests. Please wait a moment and try again.', code: 'RATE_LIMIT_EXCEEDED' },
+              { status: 429 }
+            )
           }
-        }
-      } catch (rateLimitError) {
-        logger.warn('Rate limit check failed', { error: rateLimitError?.message })
-      }
 
-      try {
-        const accessCheck = await checkAccess(userId)
-        if (!accessCheck?.valid) {
-          logger.warn('Access denied - trial expired or no subscription', { userId })
+          rateLimitMap.set(rateLimitKey, count + 1)
+
+          if (rateLimitMap.size > 1000) {
+            const currentMinute = Math.floor(Date.now() / 60000)
+            for (const [key] of rateLimitMap.entries()) {
+              const keyMinute = parseInt(key.split('_').pop(), 10)
+              if (Number.isFinite(keyMinute) && currentMinute - keyMinute > 5) rateLimitMap.delete(key)
+            }
+          }
+        } catch (rateLimitError) {
+          logger.warn('Rate limit check failed', { error: rateLimitError?.message })
+        }
+
+        try {
+          const accessCheck = await checkAccess(userId)
+          if (!accessCheck?.valid) {
+            logger.warn('Access denied - trial expired or no subscription', { userId })
+            return NextResponse.json(
+              { error: 'Your trial has ended. Please subscribe to continue using protocolLM.', code: 'TRIAL_EXPIRED' },
+              { status: 402 }
+            )
+          }
+        } catch (error) {
+          logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
           return NextResponse.json(
-            { error: 'Your trial has ended. Please subscribe to continue using protocolLM.', code: 'TRIAL_EXPIRED' },
+            { error: 'Unable to verify subscription. Please sign in again or contact support.', code: 'ACCESS_CHECK_FAILED' },
             { status: 402 }
           )
         }
-      } catch (error) {
-        logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
-        return NextResponse.json(
-          { error: 'Unable to verify subscription. Please sign in again or contact support.', code: 'ACCESS_CHECK_FAILED' },
-          { status: 402 }
-        )
-      }
 
-      const sessionInfo = getSessionInfo(request)
+        const deviceCheck = await validateDeviceLicense(userId, sessionInfo)
+        if (!deviceCheck.valid) {
+          logger.security('License validation failed', {
+            userId,
+            code: deviceCheck.code,
+            error: deviceCheck.error,
+          })
 
-      const deviceCheck = await validateDeviceLicense(userId, sessionInfo)
-      if (!deviceCheck.valid) {
-        logger.security('License validation failed', {
-          userId,
-          code: deviceCheck.code,
-          error: deviceCheck.error,
-        })
+          return NextResponse.json(
+            {
+              error: deviceCheck.error || 'Device validation failed',
+              code: deviceCheck.code || 'DEVICE_VALIDATION_FAILED',
+              message:
+                deviceCheck.error ||
+                'This license is already active on another device. Please purchase an additional device license.',
+              suggestedPrice: deviceCheck.suggestedPrice || 79,
+            },
+            { status: 403 }
+          )
+        }
 
-        return NextResponse.json(
-          {
-            error: deviceCheck.error || 'Device validation failed',
-            code: deviceCheck.code || 'DEVICE_VALIDATION_FAILED',
-            message:
-              deviceCheck.error ||
-              'This license is already active on another device. Please purchase an additional device license.',
-            suggestedPrice: deviceCheck.suggestedPrice || 79,
-          },
-          { status: 403 }
-        )
-      }
-
-      try {
-        userMemory = await getUserMemory(userId)
-      } catch (e) {
-        logger.warn('Memory load failed', { error: e?.message })
+        try {
+          userMemory = await getUserMemory(userId)
+        } catch (e) {
+          logger.warn('Memory load failed', { error: e?.message })
+        }
       }
     } catch (e) {
       logger.error('Auth/license check failed', { error: e?.message })
@@ -1835,25 +1903,28 @@ Examples:
       rerankUsed,
     })
 
-    await logModelUsageDetail({
-      userId,
-      provider: 'cohere',
-      model: usedModel,
-      mode: imageMode,
-      inputTokens: tokenUsage.input_tokens ?? tokenUsage.prompt_tokens,
-      outputTokens: tokenUsage.output_tokens ?? tokenUsage.completion_tokens,
-      billedInputTokens: billedUnits.input_tokens,
-      billedOutputTokens: billedUnits.output_tokens,
-      rerankUsed,
-      rerankCandidates,
-    })
+    // Only log usage for authenticated users
+    if (userId && !isAnonymous) {
+      await logModelUsageDetail({
+        userId,
+        provider: 'cohere',
+        model: usedModel,
+        mode: imageMode,
+        inputTokens: tokenUsage.input_tokens ?? tokenUsage.prompt_tokens,
+        outputTokens: tokenUsage.output_tokens ?? tokenUsage.completion_tokens,
+        billedInputTokens: billedUnits.input_tokens,
+        billedOutputTokens: billedUnits.output_tokens,
+        rerankUsed,
+        rerankCandidates,
+      })
 
-    await safeLogUsage({
-      userId,
-      mode: hasImage ? 'vision' : 'chat',
-      success: true,
-      durationMs: Date.now() - startedAt,
-    })
+      await safeLogUsage({
+        userId,
+        mode: hasImage ? 'vision' : 'chat',
+        success: true,
+        durationMs: Date.now() - startedAt,
+      })
+    }
 
     return NextResponse.json(
       {
@@ -1869,6 +1940,10 @@ Examples:
           pinnedPolicyDocs: pinnedPolicyDocs.length,
           durationMs: Date.now() - startedAt,
           visionFallbackUsed,
+          // Include device usage info for anonymous users
+          isAnonymous,
+          deviceUsageRemaining: isAnonymous ? deviceUsageRemaining : undefined,
+          freeUsageLimit: isAnonymous ? FREE_USAGE_LIMIT : undefined,
         },
       },
       { status: 200 }

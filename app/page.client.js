@@ -190,6 +190,20 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
+/**
+ * ✅ Free Usage Counter - Subtle display showing remaining free uses
+ */
+function FreeUsageCounter({ remaining, limit }) {
+  if (remaining <= 0) return null
+  
+  return (
+    <div className="free-usage-counter">
+      <span className="free-usage-dot" />
+      <span className="free-usage-text">{remaining} free {remaining === 1 ? 'scan' : 'scans'} remaining</span>
+    </div>
+  )
+}
+
 /* ✅ AuthModal now uses LiquidGlass so it matches landing + chat glass */
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
@@ -777,6 +791,11 @@ export default function Page() {
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
 
+  // ✅ Device free usage state for anonymous users
+  const [deviceUsageRemaining, setDeviceUsageRemaining] = useState(5)
+  const [deviceUsageBlocked, setDeviceUsageBlocked] = useState(false)
+  const FREE_USAGE_LIMIT = 5
+
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
@@ -820,12 +839,42 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
+    // ✅ Tool-first UI: Always use 'chat' view since tool interface is shown for everyone
+    document.documentElement.dataset.view = 'chat'
     const splineContainer = document.getElementById('plm-spline-bg')
     if (splineContainer) {
-      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
+      // Show background for all users in tool-first UI
+      splineContainer.style.display = 'block'
     }
   }, [isAuthenticated])
+
+  // ✅ Fetch device usage status for anonymous users
+  useEffect(() => {
+    async function fetchDeviceUsage() {
+      if (isAuthenticated) {
+        // Authenticated users don't need device tracking
+        setDeviceUsageRemaining(FREE_USAGE_LIMIT)
+        setDeviceUsageBlocked(false)
+        return
+      }
+
+      try {
+        const res = await fetch('/api/device-usage')
+        if (res.ok) {
+          const data = await res.json()
+          setDeviceUsageRemaining(data.remaining ?? FREE_USAGE_LIMIT)
+          setDeviceUsageBlocked(data.blocked ?? false)
+        }
+      } catch (error) {
+        // On error, allow access (fail open for better UX)
+        console.warn('Device usage check failed:', error)
+      }
+    }
+
+    if (!isLoading) {
+      fetchDeviceUsage()
+    }
+  }, [isAuthenticated, isLoading])
 
   // ✅ Prevent background scroll when a modal is open (also helps iOS)
   useEffect(() => {
@@ -840,20 +889,19 @@ export default function Page() {
     }
   }, [showAuthModal, showPricingModal])
 
-  // ✅ When authenticated: lock the page scroll so the chat input is ALWAYS reachable (no “scroll page to reach dock”)
+  // ✅ Tool-first UI: Always lock the page scroll so the tool input is reachable
   useEffect(() => {
     if (typeof document === 'undefined') return
     const prev = document.body.style.overflow
     const prevHtml = document.documentElement.style.overflow
-    if (isAuthenticated) {
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = prev
-        document.documentElement.style.overflow = prevHtml
-      }
+    // Lock scroll for tool-first UI (all users)
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+      document.documentElement.style.overflow = prevHtml
     }
-  }, [isAuthenticated])
+  }, [])
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
@@ -1297,6 +1345,17 @@ export default function Page() {
     if (e) e.preventDefault()
     if (isSending) return
 
+    // ✅ Check device usage for anonymous users before sending
+    if (!isAuthenticated && deviceUsageBlocked) {
+      setShowPricingModal(true)
+      return
+    }
+
+    if (!isAuthenticated && deviceUsageRemaining <= 0) {
+      setShowPricingModal(true)
+      return
+    }
+
     const rawQuestion = safeTrim(input)
     const image = selectedImage || null
 
@@ -1369,8 +1428,14 @@ export default function Page() {
 
       if (!res.ok) {
         if (res.status === 402) {
+          const data = await readAsJsonSafe(res)
+          // Check if it's a free usage exhaustion
+          if (data.code === 'FREE_USAGE_EXHAUSTED') {
+            setDeviceUsageRemaining(0)
+            setDeviceUsageBlocked(true)
+          }
           setShowPricingModal(true)
-          throw new Error('Subscription required for additional questions.')
+          throw new Error(data.error || 'Subscription required for additional questions.')
         }
         if (res.status === 429) {
           const data = await readAsJsonSafe(res)
@@ -1412,6 +1477,14 @@ export default function Page() {
       // ✅ JSON response support (current route)
       const data = await res.json().catch(() => ({}))
 
+      // ✅ Update device usage from response for anonymous users
+      if (data._meta?.isAnonymous && typeof data._meta?.deviceUsageRemaining === 'number') {
+        setDeviceUsageRemaining(data._meta.deviceUsageRemaining)
+        if (data._meta.deviceUsageRemaining <= 0) {
+          setDeviceUsageBlocked(true)
+        }
+      }
+
       // Common shapes: { message }, { text }, { output }, { response }
       const msg =
         data?.message ||
@@ -1435,7 +1508,7 @@ export default function Page() {
       console.error('Chat error:', error)
 
       const msg = String(error?.message || '')
-      if (msg.toLowerCase().includes('trial has ended') || msg.toLowerCase().includes('subscription')) {
+      if (msg.toLowerCase().includes('trial has ended') || msg.toLowerCase().includes('subscription') || msg.toLowerCase().includes('free usage')) {
         setShowPricingModal(true)
       }
 
@@ -3001,6 +3074,125 @@ export default function Page() {
           margin-top: 8px;
         }
 
+        .chat-disclaimer .inline-link {
+          background: none;
+          border: none;
+          padding: 0;
+          color: rgba(95, 168, 255, 0.95);
+          font-weight: 700;
+          cursor: pointer;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+
+        .chat-disclaimer .inline-link:hover {
+          color: rgba(95, 168, 255, 1);
+        }
+
+        /* ✅ Tool-First UI Styles */
+        .tool-first-ui .chat-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        /* Free usage counter */
+        .free-usage-counter {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 12px;
+          border-radius: 9999px;
+          border: 1px solid rgba(95, 168, 255, 0.22);
+          background: rgba(95, 168, 255, 0.12);
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
+        }
+
+        .free-usage-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 9999px;
+          background: rgba(95, 168, 255, 0.95);
+        }
+
+        .free-usage-text {
+          font-size: 11px;
+          font-weight: 700;
+          color: rgba(15, 23, 42, 0.82);
+        }
+
+        /* Tool welcome card (for anonymous users) */
+        .tool-welcome-card {
+          max-width: 640px;
+          margin: 0 auto;
+          padding: 32px 28px;
+        }
+
+        .tool-welcome-content {
+          text-align: center;
+        }
+
+        .tool-welcome-title {
+          font-size: clamp(22px, 4vw, 32px);
+          font-weight: 800;
+          color: rgba(15, 23, 42, 0.92);
+          letter-spacing: -0.02em;
+          margin: 0 0 12px 0;
+        }
+
+        .tool-welcome-text {
+          font-size: 14px;
+          line-height: 1.6;
+          color: rgba(30, 41, 59, 0.74);
+          margin: 0 0 20px 0;
+        }
+
+        .tool-usage-available {
+          margin-top: 16px;
+        }
+
+        .tool-usage-text {
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(95, 168, 255, 0.95);
+          margin: 0;
+        }
+
+        .tool-usage-blocked {
+          margin-top: 16px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .tool-usage-blocked-text {
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(239, 68, 68, 0.9);
+          margin: 0;
+        }
+
+        .tool-cta {
+          height: 44px;
+          padding: 0 20px;
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          background: linear-gradient(180deg, rgba(95, 168, 255, 0.98), rgba(95, 168, 255, 0.78));
+          color: #fff;
+          font-weight: 800;
+          font-size: 14px;
+          cursor: pointer;
+          box-shadow: 0 16px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          transition: transform 0.12s ease, box-shadow 0.15s ease;
+        }
+
+        .tool-cta:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 18px 48px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
           :root {
@@ -3218,20 +3410,29 @@ export default function Page() {
 
       <div className="app-container">
         <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          {!isAuthenticated ? (
-            <LandingPage
-              onShowPricing={() => setShowPricingModal(true)}
-              onShowAuth={() => {
-                setSelectedPriceId(null)
-                setAuthInitialMode('signin')
-                setShowAuthModal(true)
-              }}
-            />
-          ) : (
-            <div className={`${plusJakarta.className} chat-root`}>
-              <header className="chat-topbar">
-                <BrandLink variant="chat" />
-                <nav className="chat-top-actions" aria-label="Chat actions">
+          {/* ✅ Tool-first UI: Show tool interface for everyone */}
+          <div className={`${plusJakarta.className} chat-root tool-first-ui`}>
+            <header className="chat-topbar">
+              <BrandLink variant="chat" />
+              <nav className="chat-top-actions" aria-label="Tool actions">
+                {/* ✅ Free usage counter for anonymous users */}
+                {!isAuthenticated && deviceUsageRemaining > 0 && (
+                  <FreeUsageCounter remaining={deviceUsageRemaining} limit={FREE_USAGE_LIMIT} />
+                )}
+                
+                {!isAuthenticated ? (
+                  <button 
+                    onClick={() => {
+                      setSelectedPriceId(null)
+                      setAuthInitialMode('signin')
+                      setShowAuthModal(true)
+                    }} 
+                    className="btn-nav landing-signin-btn" 
+                    type="button"
+                  >
+                    Sign in
+                  </button>
+                ) : (
                   <div className="chat-settings-wrap" ref={settingsRef}>
                     <button
                       type="button"
@@ -3277,134 +3478,175 @@ export default function Page() {
                       </div>
                     )}
                   </div>
-                </nav>
-              </header>
+                )}
+              </nav>
+            </header>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
-                {messages.length === 0 ? (
-                  <div className="chat-empty-state">
+            <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+            >
+              {messages.length === 0 ? (
+                <div className="chat-empty-state">
+                  {/* ✅ Marketing content for logged-out users, simple prompt for logged-in */}
+                  {!isAuthenticated ? (
+                    <LiquidGlass variant="main" className="tool-welcome-card">
+                      <div className="tool-welcome-content">
+                        <h1 className={`tool-welcome-title ${plusJakarta.className}`}>
+                          Food Safety Compliance Scanner
+                        </h1>
+                        <p className="tool-welcome-text">
+                          Take a photo or ask a question about Michigan Food Safety Regulations.
+                          Get instant violation detection and guidance.
+                        </p>
+                        {deviceUsageBlocked || deviceUsageRemaining <= 0 ? (
+                          <div className="tool-usage-blocked">
+                            <p className="tool-usage-blocked-text">Free usage limit reached.</p>
+                            <button 
+                              className="btn-primary tool-cta" 
+                              onClick={() => setShowPricingModal(true)} 
+                              type="button"
+                            >
+                              Start 7-day free trial
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="tool-usage-available">
+                            <p className="tool-usage-text">
+                              {deviceUsageRemaining} free {deviceUsageRemaining === 1 ? 'scan' : 'scans'} remaining • No account needed
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </LiquidGlass>
+                  ) : (
                     <p className="chat-empty-text">
                       Upload a photo or ask a question about Michigan food safety regulations.
                     </p>
-                  </div>
-                ) : (
-                  <LiquidGlass variant="main" className="chat-history-card">
-                    <div className="chat-history">
-                      {messages.map((msg, idx) => (
+                  )}
+                </div>
+              ) : (
+                <LiquidGlass variant="main" className="chat-history-card">
+                  <div className="chat-history">
+                    {messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                      >
                         <div
-                          key={idx}
-                          className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                          className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
                         >
-                          <div
-                            className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
-                          >
-                            {msg.image && (
-                              <div className="chat-bubble-image">
-                                <img src={msg.image} alt="Uploaded" />
-                              </div>
-                            )}
+                          {msg.image && (
+                            <div className="chat-bubble-image">
+                              <img src={msg.image} alt="Uploaded" />
+                            </div>
+                          )}
 
-                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                              <div className="chat-thinking">Analyzing…</div>
-                            ) : msg.role === 'assistant' ? (
-                              formatAssistantContent(msg.content)
-                            ) : (
-                              <div className="chat-content">{msg.content}</div>
-                            )}
-                          </div>
+                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                            <div className="chat-thinking">Analyzing…</div>
+                          ) : msg.role === 'assistant' ? (
+                            formatAssistantContent(msg.content)
+                          ) : (
+                            <div className="chat-content">{msg.content}</div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </LiquidGlass>
-                )}
-              </div>
+                      </div>
+                    ))}
+                  </div>
+                </LiquidGlass>
+              )}
+            </div>
 
-              <div className="chat-input-area">
-                <div className="chat-input-inner">
-                  <LiquidGlass variant="main" className="chat-dock">
-                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+            <div className="chat-input-area">
+              <div className="chat-input-inner">
+                <LiquidGlass variant="main" className="chat-dock">
+                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                    {selectedImage && (
-                      <LiquidGlass variant="side" className="chat-attachment">
-                        <span className="chat-attachment-icon">
-                          <Icons.Camera />
-                        </span>
-                        <span>Image attached</span>
-                        <button
-                          onClick={() => setSelectedImage(null)}
-                          className="chat-attachment-remove"
-                          aria-label="Remove"
-                          type="button"
-                        >
-                          <Icons.X />
-                        </button>
-                      </LiquidGlass>
-                    )}
+                  {selectedImage && (
+                    <LiquidGlass variant="side" className="chat-attachment">
+                      <span className="chat-attachment-icon">
+                        <Icons.Camera />
+                      </span>
+                      <span>Image attached</span>
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="chat-attachment-remove"
+                        aria-label="Remove"
+                        type="button"
+                      >
+                        <Icons.X />
+                      </button>
+                    </LiquidGlass>
+                  )}
 
-                    <div className="chat-input-row">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={handleImageChange}
+                  <div className="chat-input-row">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleImageChange}
+                    />
+
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="plm-icon-btn chat-camera-btn"
+                      aria-label="Upload photo"
+                      type="button"
+                      disabled={!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0)}
+                    >
+                      <Icons.Camera />
+                    </button>
+
+                    <div className="chat-input-wrapper">
+                      <textarea
+                        ref={textAreaRef}
+                        value={input}
+                        onChange={(e) => {
+                          setInput(e.target.value)
+                          if (textAreaRef.current) {
+                            textAreaRef.current.style.height = 'auto'
+                            textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
+                          }
+                        }}
+                        placeholder={!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0) 
+                          ? "Sign up to continue..." 
+                          : "Ask a question…"}
+                        rows={1}
+                        className="chat-textarea"
+                        disabled={!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSend(e)
+                          }
+                        }}
                       />
 
                       <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="plm-icon-btn chat-camera-btn"
-                        aria-label="Upload photo"
                         type="button"
+                        onClick={handleSend}
+                        disabled={(!safeTrim(input) && !selectedImage) || isSending || (!isAuthenticated && (deviceUsageBlocked || deviceUsageRemaining <= 0))}
+                        className="plm-icon-btn primary chat-send-btn"
+                        aria-label="Send"
                       >
-                        <Icons.Camera />
+                        {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
                       </button>
-
-                      <div className="chat-input-wrapper">
-                        <textarea
-                          ref={textAreaRef}
-                          value={input}
-                          onChange={(e) => {
-                            setInput(e.target.value)
-                            if (textAreaRef.current) {
-                              textAreaRef.current.style.height = 'auto'
-                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                            }
-                          }}
-                          placeholder="Ask a question…"
-                          rows={1}
-                          className="chat-textarea"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSend(e)
-                            }
-                          }}
-                        />
-
-                        <button
-                          type="button"
-                          onClick={handleSend}
-                          disabled={(!safeTrim(input) && !selectedImage) || isSending}
-                          className="plm-icon-btn primary chat-send-btn"
-                          aria-label="Send"
-                        >
-                          {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
-                        </button>
-                      </div>
                     </div>
+                  </div>
 
-                    <p className="chat-disclaimer">
-                      protocolLM may make mistakes. Verify critical decisions with official regulations.
-                    </p>
-                  </LiquidGlass>
-                </div>
+                  <p className="chat-disclaimer">
+                    {!isAuthenticated && !deviceUsageBlocked && deviceUsageRemaining > 0 ? (
+                      <>protocolLM may make mistakes. <button type="button" className="inline-link" onClick={() => setShowPricingModal(true)}>Start free trial</button> for unlimited access.</>
+                    ) : (
+                      'protocolLM may make mistakes. Verify critical decisions with official regulations.'
+                    )}
+                  </p>
+                </LiquidGlass>
               </div>
             </div>
-          )}
+          </div>
         </main>
       </div>
     </>
