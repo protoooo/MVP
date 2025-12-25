@@ -27,6 +27,7 @@ const PRICE_PER_LOCATION = 50
 const MIN_MULTI_LOCATIONS = 2
 const MAX_MULTI_LOCATIONS = 500
 const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
+const TRIAL_CTA_TEXT = 'Start 14-Day Free Trial'
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -1292,6 +1293,12 @@ export default function Page() {
         if (loadingToast) document.body.removeChild(loadingToast)
       } catch {}
     }
+  }
+
+  const handleShowSignIn = () => {
+    setSelectedPriceId(null)
+    setAuthInitialMode('signin')
+    setShowAuthModal(true)
   }
 
   const handleSignOut = async () => {
@@ -3543,11 +3550,7 @@ export default function Page() {
                 <nav className="chat-top-actions" aria-label="Tool actions">
                   {!isAuthenticated ? (
                     <button
-                      onClick={() => {
-                        setSelectedPriceId(null)
-                        setAuthInitialMode('signin')
-                        setShowAuthModal(true)
-                      }}
+                      onClick={handleShowSignIn}
                       className="btn-nav landing-signin-btn"
                       type="button"
                     >
@@ -3618,7 +3621,7 @@ export default function Page() {
                           </h1>
                           <div className="hero-underline" aria-hidden="true" />
                           <p className="hero-overlay-text">
-                            Start 14-Day Free Trial
+                            {TRIAL_CTA_TEXT}
                           </p>
                           <button
                             className="btn-primary tool-cta"
@@ -3629,7 +3632,7 @@ export default function Page() {
                             }}
                             type="button"
                           >
-                            Start 14-Day Free Trial
+                            {TRIAL_CTA_TEXT}
                           </button>
                         </div>
                       </div>
@@ -3762,11 +3765,7 @@ export default function Page() {
               setSelectedPriceId(null)
               setShowPricingModal(true)
             }}
-            onShowAuth={() => {
-              setSelectedPriceId(null)
-              setAuthInitialMode('signin')
-              setShowAuthModal(true)
-            }}
+            onShowAuth={handleShowSignIn}
           />
         )}
       </div>
