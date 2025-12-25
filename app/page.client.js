@@ -26,6 +26,7 @@ const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 const PRICE_PER_LOCATION = 50
 const MIN_MULTI_LOCATIONS = 2
 const MAX_MULTI_LOCATIONS = 500
+const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -791,7 +792,7 @@ export default function Page() {
   const shouldAutoScrollRef = useRef(true)
 
   const isAuthenticated = !!session
-  const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === 'trialing')
+  const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === SUBSCRIPTION_STATUS_TRIALING)
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
@@ -3617,7 +3618,7 @@ export default function Page() {
                           </h1>
                           <div className="hero-underline" aria-hidden="true" />
                           <p className="hero-overlay-text">
-                            Start 14-day free trial
+                            Start 14-Day Free Trial
                           </p>
                           <button
                             className="btn-primary tool-cta"
