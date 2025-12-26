@@ -75,8 +75,9 @@ const Icons = {
     </svg>
   ),
   Send: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3.5 4.5 20.5 12 3.5 19.5 6 13.5 12.5 12 6 10.5 3.5 4.5Z" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
+      <path d="M12 19V6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.5 11.5 12 6l5.5 5.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 
@@ -1734,7 +1735,7 @@ export default function Page() {
           justify-content: center;
           padding: 22px;
           background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 32%),
-            rgba(8, 13, 26, 0.4);
+            rgba(8, 13, 26, 0.32);
           backdrop-filter: blur(14px) saturate(140%);
           -webkit-backdrop-filter: blur(14px) saturate(140%);
           animation: modal-fade 0.14s ease;
@@ -1764,13 +1765,13 @@ export default function Page() {
           border-radius: 18px;
           padding: 22px;
 
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)) !important;
-          border: 1px solid rgba(255, 255, 255, 0.72) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 24px 70px rgba(10, 18, 35, 0.26) !important;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)) !important;
+          border: 1px solid rgba(255, 255, 255, 0.7) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 22px 65px rgba(10, 18, 35, 0.22) !important;
 
           /* lift clarity to match landing + accept-terms glass */
-          backdrop-filter: blur(14px) saturate(145%) !important;
-          -webkit-backdrop-filter: blur(14px) saturate(145%) !important;
+          backdrop-filter: blur(18px) saturate(165%) !important;
+          -webkit-backdrop-filter: blur(18px) saturate(165%) !important;
 
           color: var(--glass-ink) !important;
           color-scheme: light !important;
@@ -1791,10 +1792,10 @@ export default function Page() {
         /* ✅ Auth + Pricing cards: brighten glass to match landing hero clarity */
         .glass-modal.modal-card.auth-modal,
         .glass-modal.modal-card.pricing-modal {
-          background: linear-gradient(150deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.12)) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 30px 90px rgba(10, 18, 35, 0.28) !important;
-          backdrop-filter: blur(18px) saturate(165%) !important;
-          -webkit-backdrop-filter: blur(18px) saturate(165%) !important;
+          background: linear-gradient(150deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58), 0 28px 82px rgba(10, 18, 35, 0.22) !important;
+          backdrop-filter: blur(20px) saturate(180%) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
         }
 
         .glass-modal.modal-card::before {
@@ -2803,21 +2804,21 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 14px;
-          padding: 12px 16px 4px;
+          padding: 10px 16px calc(env(safe-area-inset-bottom) + 4px);
           flex-wrap: wrap;
           pointer-events: auto;
           position: fixed;
           left: 0;
           right: 0;
-          bottom: calc(env(safe-area-inset-bottom) + 10px);
+          bottom: env(safe-area-inset-bottom);
           z-index: var(--footer-links-z);
         }
 
         .chat-root .plm-footer-links {
           position: static;
           bottom: auto;
-          margin-top: 6px;
-          padding: 10px 16px calc(env(safe-area-inset-bottom) + 12px);
+          margin-top: 4px;
+          padding: 8px 12px calc(env(safe-area-inset-bottom) + 4px);
           align-self: center;
         }
 
@@ -3280,11 +3281,11 @@ export default function Page() {
           max-width: 980px;
           width: 100%;
           margin: 0 auto;
-          padding: 10px 18px;
-          padding-bottom: calc(env(safe-area-inset-bottom) + 22px);
+          padding: 8px 18px;
+          padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
         }
 
         /* ✅ FIX: DO NOT override LiquidGlass with transparent/none (this was causing the “matte white” bar) */
@@ -3488,9 +3489,9 @@ export default function Page() {
         /* ✅ Send button inside input wrapper */
         .chat-send-btn {
           flex-shrink: 0;
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
+          width: 52px;
+          height: 52px;
+          border-radius: 14px;
           margin: 0;
           align-self: center;
           display: inline-flex;
