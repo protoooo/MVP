@@ -4590,8 +4590,8 @@ export default function Page() {
         .panel-container {
           width: 100%;
           max-width: 540px;
-          max-height: calc(100vh - 24px);
-          max-height: calc(100dvh - 24px);
+          max-height: calc(100vh - 24px - env(safe-area-inset-bottom, 0px));
+          max-height: calc(100dvh - 24px - env(safe-area-inset-bottom, 0px));
           display: flex;
           flex-direction: column;
           animation: panel-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -4603,8 +4603,8 @@ export default function Page() {
           }
 
           .panel-container {
-            max-height: calc(100vh - 40px);
-            max-height: calc(100dvh - 40px);
+            max-height: calc(100vh - 40px - env(safe-area-inset-bottom, 0px));
+            max-height: calc(100dvh - 40px - env(safe-area-inset-bottom, 0px));
           }
         }
 
@@ -4627,7 +4627,7 @@ export default function Page() {
           max-height: calc(100vh - 32px);
           max-height: calc(100dvh - 32px);
           overflow: hidden;
-          padding: 20px !important;
+          padding: 20px 20px 14px !important;
         }
 
         .panel-card.text-panel,
@@ -4646,7 +4646,7 @@ export default function Page() {
           .panel-card {
             max-height: calc(100vh - 40px);
             max-height: calc(100dvh - 40px);
-            padding: 24px !important;
+            padding: 24px 24px 16px !important;
           }
 
           .panel-card.text-panel,
