@@ -1870,10 +1870,10 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           padding: 22px;
-          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 32%),
-            rgba(8, 13, 26, 0.32);
-          backdrop-filter: blur(14px) saturate(140%);
-          -webkit-backdrop-filter: blur(14px) saturate(140%);
+          background: rgba(0, 0, 0, 0.3);
+            
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
           animation: modal-fade 0.14s ease;
         }
 
@@ -1951,9 +1951,9 @@ export default function Page() {
           width: 36px;
           height: 36px;
           border-radius: 12px;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          border: 1px solid var(--border);
           background: rgba(255, 255, 255, 0.78);
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           cursor: pointer;
           display: inline-flex;
           align-items: center;
@@ -1982,7 +1982,7 @@ export default function Page() {
           font-size: 18px;
           font-weight: 850;
           letter-spacing: -0.02em;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         /* Auth form styling (light glass) */
@@ -2017,9 +2017,9 @@ export default function Page() {
           height: 44px;
           padding: 0 12px;
           border-radius: 12px;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          border: 1px solid var(--border);
           background: rgba(255, 255, 255, 0.74);
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           font-size: 14px;
           font-weight: 650;
           transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -2145,7 +2145,7 @@ export default function Page() {
           transition: color 0.15s ease;
         }
         .modal-link:hover {
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         /* Pricing */
@@ -2214,7 +2214,7 @@ export default function Page() {
         .pricing-plan-name {
           font-size: 14px;
           font-weight: 900;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           letter-spacing: -0.01em;
         }
 
@@ -2239,7 +2239,7 @@ export default function Page() {
         .pricing-price-amount {
           font-size: 22px;
           font-weight: 950;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           letter-spacing: -0.03em;
         }
 
@@ -2327,7 +2327,7 @@ export default function Page() {
         .pricing-secondary {
           height: 42px;
           border-radius: 9999px;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          border: 1px solid var(--border);
           background: rgba(255, 255, 255, 0.64);
           color: rgba(15, 23, 42, 0.86);
           font-weight: 900;
@@ -2386,7 +2386,7 @@ export default function Page() {
           width: 36px;
           height: 36px;
           border-radius: 10px;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          border: 1px solid var(--border);
           background: rgba(255, 255, 255, 0.8);
           color: rgba(15, 23, 42, 0.86);
           font-size: 18px;
@@ -2408,10 +2408,10 @@ export default function Page() {
           text-align: center;
           font-size: 18px;
           font-weight: 700;
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          border: 1px solid var(--border);
           border-radius: 10px;
           background: rgba(255, 255, 255, 0.9);
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         .multi-location-input:focus {
@@ -2424,7 +2424,7 @@ export default function Page() {
           text-align: center;
           font-size: 16px;
           font-weight: 800;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         /* App */
@@ -2533,12 +2533,12 @@ export default function Page() {
           justify-content: center;
           border-radius: 14px;
           cursor: pointer;
-          border: 1px solid rgba(15, 23, 42, 0.14);
-          color: rgba(15, 23, 42, 0.92);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
+          border: 1px solid var(--border);
+          color: var(--ink);
+          background: var(--surface);
           backdrop-filter: blur(10px) saturate(125%);
           -webkit-backdrop-filter: blur(10px) saturate(125%);
-          box-shadow: 0 14px 36px rgba(5, 7, 13, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          box-shadow: var(--shadow-sm);
           transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease,
             color 0.15s ease;
           user-select: none;
@@ -2597,7 +2597,7 @@ export default function Page() {
             max(18px, env(safe-area-inset-left) + 10px);
           display: flex;
           align-items: stretch;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
+          background: var(--surface);
           backdrop-filter: blur(12px) saturate(125%);
           -webkit-backdrop-filter: blur(12px) saturate(125%);
           box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
@@ -2769,7 +2769,7 @@ export default function Page() {
         .hero-title {
           font-size: clamp(28px, 5vw, 42px);
           font-weight: 800;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           letter-spacing: -0.03em;
           margin: 0;
         }
@@ -3192,7 +3192,7 @@ export default function Page() {
           gap: 10px;
           max-width: 560px;
           width: 100%;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           background: linear-gradient(140deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
           border: 1px solid rgba(255, 255, 255, 0.32);
           box-shadow: 0 18px 48px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55);
@@ -3369,7 +3369,7 @@ export default function Page() {
           font-size: 13px;
           font-weight: 800;
           letter-spacing: -0.01em;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         .chat-history-item-preview {
@@ -3560,7 +3560,7 @@ export default function Page() {
           min-width: 240px;
           max-width: 320px;
           background: rgba(255, 255, 255, 0.98);
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 12px;
           box-shadow: 0 18px 44px rgba(5, 7, 13, 0.22);
@@ -3578,7 +3578,7 @@ export default function Page() {
         }
 
         .citation-popover-source {
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         .citation-popover-page {
@@ -3703,7 +3703,7 @@ export default function Page() {
           background: linear-gradient(180deg, rgba(95, 168, 255, 0.14), rgba(95, 168, 255, 0.06));
           border-color: rgba(95, 168, 255, 0.45);
           box-shadow: 0 18px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         .chat-mode-btn.active::after {
@@ -3811,7 +3811,7 @@ export default function Page() {
           padding-right: 6px;
 
           background: rgba(255, 255, 255, 0.46);
-          border: 1px solid rgba(15, 23, 42, 0.14);
+          border: 1px solid var(--border);
           box-shadow: 0 16px 44px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
           backdrop-filter: blur(14px) saturate(130%);
           -webkit-backdrop-filter: blur(14px) saturate(130%);
@@ -3985,7 +3985,7 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: 14px;
           padding: 16px;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           box-shadow: 0 20px 50px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.26);
         }
 
@@ -4257,7 +4257,7 @@ export default function Page() {
         .tool-welcome-title {
           font-size: clamp(22px, 4vw, 32px);
           font-weight: 800;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           letter-spacing: -0.02em;
           margin: 0 0 12px 0;
           display: flex;

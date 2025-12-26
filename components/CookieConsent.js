@@ -46,13 +46,21 @@ export default function CookieConsent() {
       role="dialog"
       aria-label="Cookie consent"
     >
-      <div className="pointer-events-auto glass-surface w-full max-w-4xl border border-white/25 shadow-[0_18px_60px_rgba(5,7,13,0.42)] px-5 sm:px-8 py-4 sm:py-5">
+      <div 
+        className="pointer-events-auto w-full max-w-4xl px-5 sm:px-8 py-4 sm:py-5"
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: 'var(--shadow-lg)'
+        }}
+      >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex-1">
-            <p className="text-sm leading-relaxed text-slate-100/85">
+            <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--ink-80)' }}>
               We use essential cookies to provide authentication and core functionality. By continuing to use
               protocolLM, you agree to our use of cookies as described in our{' '}
-              <a href="/privacy" className="text-sky-200 hover:text-white font-semibold underline decoration-white/40">
+              <a href="/privacy" style={{ color: 'var(--accent)', fontWeight: '600', textDecoration: 'underline' }}>
                 Privacy Policy
               </a>.
             </p>
@@ -60,14 +68,32 @@ export default function CookieConsent() {
           <div className="flex gap-3">
             <button
               onClick={decline}
-              className="px-4 py-2 text-sm font-semibold text-slate-100/85 hover:text-white transition-colors"
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'var(--ink-60)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer'
+              }}
               aria-label="Decline cookies"
             >
               Decline
             </button>
             <button
               onClick={accept}
-              className="px-6 py-2 text-sm font-semibold bg-gradient-to-r from-sky-400/90 to-blue-500/90 text-slate-900 rounded-full shadow-[0_10px_30px_rgba(95,168,255,0.35)] hover:from-sky-300 hover:to-blue-400 transition-colors"
+              style={{
+                padding: '8px 24px',
+                fontSize: '14px',
+                fontWeight: '600',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                boxShadow: 'var(--shadow-sm)',
+                cursor: 'pointer'
+              }}
               aria-label="Accept cookies"
             >
               Accept
