@@ -4599,6 +4599,7 @@ export default function Page() {
           max-height: calc(100vh - 32px);
           max-height: calc(100dvh - 32px);
           overflow: hidden;
+          padding: 20px !important;
         }
 
         .panel-card.text-panel,
@@ -4617,6 +4618,7 @@ export default function Page() {
           .panel-card {
             max-height: calc(100vh - 40px);
             max-height: calc(100dvh - 40px);
+            padding: 24px !important;
           }
 
           .panel-card.text-panel,
@@ -4700,8 +4702,7 @@ export default function Page() {
           flex: 1;
           display: flex;
           flex-direction: column;
-          /* gap: 0 to allow messages area to expand fully between header and input */
-          gap: 0;
+          gap: 12px;
           overflow: hidden;
           min-height: 0;
         }
@@ -4784,9 +4785,9 @@ export default function Page() {
 
         /* ✅ Input area */
         .panel-input-area {
-          margin-top: auto;
-          padding-top: 16px;
+          flex-shrink: 0;
           border-top: 1px solid rgba(255, 255, 255, 0.12);
+          padding-top: 12px;
         }
 
         .panel-input-row {
@@ -5251,7 +5252,7 @@ export default function Page() {
                                   textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`
                                 }
                               }}
-                              placeholder="Ask about Michigan food safety regulations..."
+                              placeholder="Ask about food safety..."
                               rows={1}
                               className="panel-textarea"
                               onKeyDown={(e) => {
@@ -5382,7 +5383,7 @@ export default function Page() {
                                   textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`
                                 }
                               }}
-                              placeholder={selectedImage ? "Ask about this image..." : "Upload a photo to analyze..."}
+                              placeholder={selectedImage ? "Ask about this image..." : "Upload a photo..."}
                               rows={1}
                               className="panel-textarea"
                               onKeyDown={(e) => {
