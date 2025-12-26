@@ -164,9 +164,8 @@ export default function RadialMenu({
                 tabIndex={wheelOpen ? 0 : -1}
               >
                 <span className="radial-item-icon">
-                  <Icon size={20} strokeWidth={1.8} />
+                  <Icon size={22} strokeWidth={2.2} />
                 </span>
-                <span className="radial-item-label">{action.label}</span>
               </button>
             )
           })}
@@ -279,30 +278,25 @@ export default function RadialMenu({
           position: absolute;
           top: 0;
           left: 0;
-          width: 64px;
-          height: 64px;
-          border-radius: 16px;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
           border: none;
-          background: rgba(255, 255, 255, 0.18);
-          backdrop-filter: blur(16px) saturate(130%);
-          -webkit-backdrop-filter: blur(16px) saturate(130%);
-          box-shadow: 
-            0 8px 24px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.25);
+          background: transparent;
+          box-shadow: none;
           cursor: pointer;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 4px;
-          color: rgba(15, 23, 42, 0.9);
+          color: rgba(15, 23, 42, 0.92);
           opacity: 0;
-          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(0.5);
+          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(0.45);
           transition: 
             opacity 0.25s ease,
             transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
             background 0.15s ease,
-            box-shadow 0.15s ease;
+            box-shadow 0.15s ease,
+            color 0.15s ease;
           transition-delay: var(--item-delay);
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
@@ -310,44 +304,37 @@ export default function RadialMenu({
 
         .radial-wheel.open .radial-item {
           opacity: 1;
-          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(1);
+          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(1);
         }
 
         .radial-item:hover {
-          background: rgba(255, 255, 255, 0.28);
-          box-shadow: 
-            0 12px 32px rgba(0, 0, 0, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.35);
-          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(1.08);
+          background: rgba(255, 255, 255, 0.18);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(1.05);
+          color: rgba(15, 23, 42, 1);
         }
 
         .radial-item:active {
-          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(0.95);
-          background: rgba(255, 255, 255, 0.35);
+          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(0.94);
+          background: rgba(255, 255, 255, 0.24);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         .radial-item-icon {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: rgba(15, 23, 42, 0.85);
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.14);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.08);
+          color: rgba(15, 23, 42, 0.9);
         }
 
         .radial-item-icon :global(svg) {
-          width: 18px;
-          height: 18px;
-        }
-
-        .radial-item-label {
-          font-size: 8px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.02em;
-          color: rgba(15, 23, 42, 0.7);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 50px;
+          width: 22px;
+          height: 22px;
         }
 
         /* Tablet and larger screens - keep sizing consistent */
@@ -362,13 +349,8 @@ export default function RadialMenu({
             height: 80px;
           }
           .radial-item-icon :global(svg) {
-            width: 20px;
-            height: 20px;
-          }
-
-          .radial-item-label {
-            font-size: 9px;
-            max-width: 58px;
+            width: 22px;
+            height: 22px;
           }
         }
 
