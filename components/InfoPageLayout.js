@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import appleIcon from '@/app/apple-icon.png'
-import bg from '@/app/assets/background/protocolLM-bg.png'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
