@@ -189,21 +189,20 @@ export default function RadialMenu({
           margin: 0 auto;
         }
 
-        /* Center button - squishy pressable (mobile-first) */
+        /* Center button - glass effect ALLOWED per requirements */
         .radial-center-btn {
           position: relative;
           z-index: 10;
           width: 88px;
           height: 88px;
           border-radius: 50%;
-          border: none;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(20px) saturate(140%);
-          -webkit-backdrop-filter: blur(20px) saturate(140%);
+          border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
           box-shadow: 
-            0 8px 32px rgba(0, 0, 0, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.25),
-            0 0 0 1px rgba(255, 255, 255, 0.1);
+            0 4px 16px rgba(0, 0, 0, 0.08),
+            0 0 0 1px rgba(0, 0, 0, 0.05);
           cursor: pointer;
           transition: 
             transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -219,26 +218,23 @@ export default function RadialMenu({
 
         .radial-center-btn:hover {
           box-shadow: 
-            0 12px 40px rgba(0, 0, 0, 0.16),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3),
-            0 0 0 1px rgba(255, 255, 255, 0.15);
+            0 8px 24px rgba(0, 0, 0, 0.1),
+            0 0 0 1px rgba(0, 0, 0, 0.08);
         }
 
         /* Squishy press effect */
         .radial-center-btn.pressed {
           transform: scale(0.92);
           box-shadow: 
-            0 4px 16px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2),
-            0 0 0 1px rgba(255, 255, 255, 0.08);
+            0 2px 8px rgba(0, 0, 0, 0.06),
+            0 0 0 1px rgba(0, 0, 0, 0.05);
         }
 
         .radial-center-btn.open {
           transform: scale(1.05);
           box-shadow: 
-            0 16px 48px rgba(95, 168, 255, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.35),
-            0 0 0 2px rgba(95, 168, 255, 0.3);
+            0 8px 32px rgba(35, 131, 226, 0.15),
+            0 0 0 2px rgba(35, 131, 226, 0.3);
         }
 
         .radial-center-btn.open.pressed {
@@ -287,14 +283,14 @@ export default function RadialMenu({
           height: var(--item-size);
           aspect-ratio: 1 / 1;
           border-radius: 50%;
-          border: none;
-          background: transparent;
-          box-shadow: none;
+          border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+          background: var(--surface, #ffffff);
+          box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink, #1a1a1a);
           opacity: 0;
           transform: translate(
               calc(var(--item-x) - (var(--item-size) / 2)),
@@ -323,14 +319,13 @@ export default function RadialMenu({
         }
 
         .radial-item:hover {
-          background: rgba(255, 255, 255, 0.18);
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+          background: var(--clay, #f1f1ef);
+          box-shadow: var(--shadow-md, 0 2px 4px rgba(0, 0, 0, 0.06));
           transform: translate(
               calc(var(--item-x) - (var(--item-size) / 2)),
               calc(var(--item-y) - (var(--item-size) / 2))
             )
             scale(1.05);
-          color: rgba(15, 23, 42, 1);
         }
 
         .radial-item:active {
@@ -339,8 +334,7 @@ export default function RadialMenu({
               calc(var(--item-y) - (var(--item-size) / 2))
             )
             scale(0.94);
-          background: rgba(255, 255, 255, 0.24);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+          background: var(--clay, #f1f1ef);
         }
 
         .radial-item-icon {
@@ -351,9 +345,9 @@ export default function RadialMenu({
           height: var(--item-icon-size);
           aspect-ratio: 1 / 1;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.14);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.08);
-          color: rgba(15, 23, 42, 0.9);
+          background: var(--surface, #ffffff);
+          box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+          color: var(--ink, #1a1a1a);
         }
 
         .radial-item-icon :global(svg) {
