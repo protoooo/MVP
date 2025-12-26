@@ -1897,14 +1897,14 @@ export default function Page() {
           -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ✅ Auth + Pricing cards: brighten glass to match landing hero clarity */
+        /* ✅ Auth + Pricing cards: brighten glass + reduce blur for text clarity */
         .glass-modal.modal-card.auth-modal,
         .glass-modal.modal-card.pricing-modal {
-          background: linear-gradient(150deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.14)) !important;
+          background: linear-gradient(150deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.18)) !important;
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64), 0 24px 70px rgba(10, 18, 35, 0.2) !important;
           border: 1px solid rgba(255, 255, 255, 0.72) !important;
-          backdrop-filter: blur(14px) saturate(160%) !important;
-          -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+          backdrop-filter: blur(10px) saturate(140%) !important;
+          -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
         }
 
         .glass-modal.modal-card::before {
@@ -1914,33 +1914,6 @@ export default function Page() {
         .glass-modal.modal-card > * {
           position: relative;
           z-index: 1;
-        }
-
-        .glass-modal.modal-card.auth-modal::after,
-        .glass-modal.modal-card.pricing-modal::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 18px;
-          padding: 1.5px;
-          background: linear-gradient(
-            135deg,
-            rgba(95, 168, 255, 0.5) 0%,
-            rgba(148, 163, 184, 0.38) 30%,
-            rgba(251, 146, 60, 0.42) 60%,
-            rgba(134, 179, 148, 0.36) 85%,
-            rgba(95, 168, 255, 0.5) 100%
-          );
-          -webkit-mask:
-            linear-gradient(#fff 0 0) content-box,
-            linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask:
-            linear-gradient(#fff 0 0) content-box,
-            linear-gradient(#fff 0 0);
-          mask-composite: exclude;
-          pointer-events: none;
-          z-index: 0;
         }
 
         .modal-close {
@@ -2507,18 +2480,20 @@ export default function Page() {
           margin-right: 4px;
         }
 
-        /* ✅ UPDATED LOGO TRANSFORM (desktop) - 5% larger */
+        /* ✅ UPDATED LOGO TRANSFORM (desktop) - 10% larger than before */
         .landing-topbar .plm-logo-img {
-          transform: translateY(2px) scale(1.18);
+          transform: translateY(2px) scale(1.30);
           transform-origin: center;
         }
 
         .landing-topbar .plm-brand-text {
-          line-height: 1.4;
+          line-height: 1.5;
           position: relative;
-          top: 0px;
+          top: 1px;
           font-size: 18px;
-          padding-bottom: 7px;
+          padding-bottom: 0;
+          display: flex;
+          align-items: center;
         }
 
         /* Shared icon button styling */
@@ -2920,13 +2895,13 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 14px;
-          padding: 10px 16px calc(env(safe-area-inset-bottom) + 4px);
+          padding: 10px 16px calc(env(safe-area-inset-bottom) + 12px);
           flex-wrap: wrap;
           pointer-events: auto;
           position: fixed;
           left: 0;
           right: 0;
-          bottom: env(safe-area-inset-bottom);
+          bottom: 0;
           z-index: var(--footer-links-z);
         }
 
@@ -4355,9 +4330,7 @@ export default function Page() {
           }
 
           .hero-arrow-icon {
-            width: 32px;
-            height: 32px;
-            align-self: center;
+            display: none;
           }
 
           .hero-cta {
@@ -4452,16 +4425,16 @@ export default function Page() {
             margin-right: 4px;
           }
 
-          /* ✅ UPDATED LOGO TRANSFORM (mobile) - 5% larger */
+          /* ✅ UPDATED LOGO TRANSFORM (mobile) - 10% larger than before */
           .landing-topbar .plm-logo-img {
-            transform: translateY(2px) scale(1.16);
+            transform: translateY(2px) scale(1.28);
             transform-origin: center;
           }
 
           .plm-brand-text {
             font-size: 16.5px;
             max-width: 220px;
-            padding-bottom: 6px;
+            padding-bottom: 0;
           }
 
           .landing-signin-btn {
@@ -4488,7 +4461,7 @@ export default function Page() {
 
           .plm-brand-text {
             font-size: 15.5px;
-            padding-bottom: 6px;
+            padding-bottom: 0;
           }
 
           .plm-brand.chat .plm-brand-mark {
@@ -4502,9 +4475,9 @@ export default function Page() {
             margin-right: 4px;
           }
 
-          /* ✅ UPDATED LOGO TRANSFORM (smallest mobile) - 5% larger */
+          /* ✅ UPDATED LOGO TRANSFORM (smallest mobile) - 10% larger than before */
           .landing-topbar .plm-logo-img {
-            transform: translateY(1px) scale(1.13);
+            transform: translateY(1px) scale(1.24);
             transform-origin: center;
           }
 
@@ -4565,14 +4538,14 @@ export default function Page() {
           z-index: 10;
         }
 
-        /* ✅ Panel overlay (for all panels) */
+        /* ✅ Panel overlay (for all panels) - mobile-first */
         .panel-overlay {
           position: fixed;
           inset: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 20px;
+          padding: 12px;
           z-index: 100;
           background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 35%),
             rgba(8, 13, 26, 0.25);
@@ -4589,11 +4562,22 @@ export default function Page() {
         .panel-container {
           width: 100%;
           max-width: 540px;
-          max-height: calc(100vh - 40px);
-          max-height: calc(100dvh - 40px);
+          max-height: calc(100vh - 24px);
+          max-height: calc(100dvh - 24px);
           display: flex;
           flex-direction: column;
           animation: panel-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @media (min-width: 768px) {
+          .panel-overlay {
+            padding: 20px;
+          }
+
+          .panel-container {
+            max-height: calc(100vh - 40px);
+            max-height: calc(100dvh - 40px);
+          }
         }
 
         @keyframes panel-slide-up {
@@ -4607,34 +4591,53 @@ export default function Page() {
           }
         }
 
-        /* ✅ Glass panel card */
+        /* ✅ Glass panel card (mobile-first) */
         .panel-card {
           position: relative;
           display: flex;
           flex-direction: column;
-          max-height: calc(100vh - 40px);
-          max-height: calc(100dvh - 40px);
+          max-height: calc(100vh - 32px);
+          max-height: calc(100dvh - 32px);
           overflow: hidden;
         }
 
         .panel-card.text-panel,
         .panel-card.image-panel {
-          min-height: 400px;
+          min-height: 350px;
+          height: auto;
         }
 
         .panel-card.history-panel,
         .panel-card.settings-panel {
-          min-height: 300px;
+          min-height: 280px;
         }
 
-        /* ✅ Close button */
+        /* Larger screens get taller panels */
+        @media (min-width: 768px) {
+          .panel-card {
+            max-height: calc(100vh - 40px);
+            max-height: calc(100dvh - 40px);
+          }
+
+          .panel-card.text-panel,
+          .panel-card.image-panel {
+            min-height: 420px;
+          }
+
+          .panel-card.history-panel,
+          .panel-card.settings-panel {
+            min-height: 320px;
+          }
+        }
+
+        /* ✅ Close button (mobile-first with good touch target) */
         .panel-close-btn {
           position: absolute;
-          top: 16px;
-          right: 16px;
+          top: 12px;
+          right: 12px;
           z-index: 10;
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
           border: 1px solid rgba(255, 255, 255, 0.25);
           background: rgba(255, 255, 255, 0.15);
@@ -4647,6 +4650,8 @@ export default function Page() {
           justify-content: center;
           transition: all 0.15s ease;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
         }
 
         .panel-close-btn:hover {
@@ -4657,6 +4662,16 @@ export default function Page() {
 
         .panel-close-btn:active {
           transform: scale(0.95);
+          background: rgba(255, 255, 255, 0.35);
+        }
+
+        @media (min-width: 768px) {
+          .panel-close-btn {
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+          }
         }
 
         /* ✅ Panel header */
@@ -4685,8 +4700,9 @@ export default function Page() {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 0;
           overflow: hidden;
+          min-height: 0;
         }
 
         /* ✅ Messages area */
@@ -4697,7 +4713,23 @@ export default function Page() {
           flex-direction: column;
           gap: 16px;
           padding-right: 8px;
-          max-height: 300px;
+          min-height: 120px;
+        }
+
+        .panel-empty-state {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 40px 20px;
+        }
+
+        .panel-empty-state p {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: rgba(15, 23, 42, 0.5);
         }
 
         .panel-message {
@@ -4806,9 +4838,9 @@ export default function Page() {
         .panel-send-btn,
         .panel-camera-btn {
           flex-shrink: 0;
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.3);
           background: linear-gradient(180deg, rgba(95, 168, 255, 0.95), rgba(95, 168, 255, 0.8));
           color: #fff;
@@ -4818,6 +4850,8 @@ export default function Page() {
           justify-content: center;
           box-shadow: 0 8px 20px rgba(95, 168, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
           transition: all 0.15s ease;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
         }
 
         .panel-send-btn:hover:not(:disabled),
@@ -4829,6 +4863,7 @@ export default function Page() {
         .panel-send-btn:active:not(:disabled),
         .panel-camera-btn:active:not(:disabled) {
           transform: scale(0.95);
+          background: linear-gradient(180deg, rgba(95, 168, 255, 1), rgba(95, 168, 255, 0.9));
         }
 
         .panel-send-btn:disabled,
@@ -4838,15 +4873,28 @@ export default function Page() {
         }
 
         .panel-camera-btn {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.25);
-          color: rgba(15, 23, 42, 0.8);
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+          background: rgba(255, 255, 255, 0.25);
+          border-color: rgba(255, 255, 255, 0.3);
+          color: rgba(15, 23, 42, 0.85);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
         }
 
         .panel-camera-btn:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.3);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+          background: rgba(255, 255, 255, 0.35);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .panel-camera-btn:active:not(:disabled) {
+          background: rgba(255, 255, 255, 0.45);
+        }
+
+        @media (min-width: 768px) {
+          .panel-send-btn,
+          .panel-camera-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+          }
         }
 
         .panel-spinner {
@@ -5066,54 +5114,11 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.5);
         }
 
-        /* ✅ Responsive adjustments */
-        @media (max-width: 600px) {
+        /* ✅ Mobile-first responsive - defaults are already mobile-friendly */
+        /* Larger screens get more padding */
+        @media (min-width: 601px) {
           .panel-overlay {
-            padding: 16px;
-          }
-
-          .panel-container {
-            max-height: calc(100vh - 32px);
-            max-height: calc(100dvh - 32px);
-          }
-
-          .panel-card {
-            max-height: calc(100vh - 32px);
-            max-height: calc(100dvh - 32px);
-          }
-
-          .panel-title {
-            font-size: 18px;
-          }
-
-          .panel-messages {
-            max-height: 250px;
-          }
-
-          .panel-history-list {
-            max-height: 300px;
-          }
-        }
-
-        @media (max-width: 400px) {
-          .panel-overlay {
-            padding: 12px;
-          }
-
-          .panel-input-row {
-            gap: 8px;
-          }
-
-          .panel-send-btn,
-          .panel-camera-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-          }
-
-          .panel-textarea {
-            font-size: 14px;
-            padding: 8px 10px;
+            padding: 20px;
           }
         }
       `}</style>
@@ -5197,10 +5202,10 @@ export default function Page() {
                     </div>
 
                     <div className="panel-body">
-                      {/* Messages display */}
-                      {messages.length > 0 && (
-                        <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
-                          {messages.map((msg, idx) => {
+                      {/* Messages display - always rendered for flex layout */}
+                      <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
+                        {messages.length > 0 ? (
+                          messages.map((msg, idx) => {
                             const isAssistant = msg.role === 'assistant'
                             const isPending = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
 
@@ -5222,9 +5227,13 @@ export default function Page() {
                                 )}
                               </div>
                             )
-                          })}
-                        </div>
-                      )}
+                          })
+                        ) : (
+                          <div className="panel-empty-state">
+                            <p>Your conversation will appear here.</p>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Input area */}
                       <div className="panel-input-area">
@@ -5294,25 +5303,25 @@ export default function Page() {
                     </div>
 
                     <div className="panel-body">
-                      {/* Image preview */}
-                      {selectedImage && (
-                        <div className="panel-image-preview">
-                          <img src={selectedImage} alt="Selected for analysis" />
-                          <button
-                            type="button"
-                            className="panel-image-remove"
-                            onClick={() => setSelectedImage(null)}
-                            aria-label="Remove image"
-                          >
-                            <Icons.X />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Messages display */}
-                      {messages.length > 0 && (
-                        <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
-                          {messages.map((msg, idx) => {
+                      {/* Messages display - always rendered for flex layout */}
+                      <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
+                        {/* Image preview at top of messages area */}
+                        {selectedImage && (
+                          <div className="panel-image-preview">
+                            <img src={selectedImage} alt="Selected for analysis" />
+                            <button
+                              type="button"
+                              className="panel-image-remove"
+                              onClick={() => setSelectedImage(null)}
+                              aria-label="Remove image"
+                            >
+                              <Icons.X />
+                            </button>
+                          </div>
+                        )}
+                        
+                        {messages.length > 0 ? (
+                          messages.map((msg, idx) => {
                             const isAssistant = msg.role === 'assistant'
                             const isPending = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
                             const hasImage = Boolean(msg.image) || msg.hasImage
@@ -5340,9 +5349,13 @@ export default function Page() {
                                 )}
                               </div>
                             )
-                          })}
-                        </div>
-                      )}
+                          })
+                        ) : !selectedImage && (
+                          <div className="panel-empty-state">
+                            <p>Upload a photo to scan for violations.</p>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Input area */}
                       <div className="panel-input-area">
@@ -5505,11 +5518,6 @@ export default function Page() {
 
                       <div className="panel-settings-info">
                         <p className="panel-settings-email">{session?.user?.email}</p>
-                        {subscription && (
-                          <p className="panel-settings-status">
-                            Status: {subscription.status === 'trialing' ? 'Free Trial' : subscription.status}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </LiquidGlass>
