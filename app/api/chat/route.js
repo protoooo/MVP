@@ -81,6 +81,9 @@ const SPAN_V_CLOSE = '</span>'
 const SPAN_F_OPEN = '<span class="plm-f">'
 const SPAN_F_CLOSE = '</span>'
 
+// Guardrails
+const MAX_PREAMBLE_CHARS = 14000
+
 // ============================================================================
 // SMALL UTILS
 // ============================================================================
@@ -95,6 +98,13 @@ function safeText(x) {
 }
 function safeLine(x) {
   return safeText(x).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim()
+}
+
+function clampText(str, maxChars) {
+  const s = safeText(str || '')
+  if (!s) return ''
+  if (s.length <= maxChars) return s
+  return s.slice(0, maxChars).trimEnd() + '…'
 }
 
 function getSessionInfoFromRequest(request) {
@@ -233,32 +243,46 @@ function validateImageData(imageInput) {
 }
 
 // ============================================================================
-// COHERE v2/chat (REST)
+// COHERE v2/chat (REST) — FIXED PAYLOAD (preamble + structured content parts)
 // ============================================================================
 
 function cohereResponseToText(resp) {
   const msg = resp?.message
-  const content = Array.isArray(msg?.content) ? msg.content : []
-  for (const c of content) {
-    if (typeof c?.text === 'string' && c.text.trim()) return c.text
+  const content = msg?.content
+
+  // Some responses may be a string
+  if (typeof content === 'string' && content.trim()) return content
+
+  // v2 usually returns array of parts
+  if (Array.isArray(content)) {
+    for (const c of content) {
+      if (typeof c?.text === 'string' && c.text.trim()) return c.text
+    }
   }
+
   if (typeof resp?.text === 'string' && resp.text.trim()) return resp.text
   if (typeof resp?.output_text === 'string' && resp.output_text.trim()) return resp.output_text
   return ''
 }
 
-async function callCohereChatV2Rest({ model, messages, documents }) {
+async function callCohereChatV2Rest({ model, preamble, messages }) {
   const apiKey = process.env.COHERE_API_KEY
   if (!apiKey) throw new Error('COHERE_API_KEY not configured')
 
-  const payload = { model, messages }
-  if (documents && Array.isArray(documents) && documents.length) payload.documents = documents
+  const payload = {
+    model,
+    messages,
+  }
+
+  const p = safeText(preamble)
+  if (p) payload.preamble = clampText(p, MAX_PREAMBLE_CHARS)
 
   const res = await fetch('https://api.cohere.com/v2/chat', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
     body: JSON.stringify(payload),
   })
@@ -279,15 +303,15 @@ async function callCohereChatV2Rest({ model, messages, documents }) {
   }
 }
 
-function buildV2Messages({ system, chatHistory, userMessage, imageDataUrls }) {
+function buildV2Messages({ chatHistory, userMessage, imageDataUrls }) {
   const messages = []
-  if (safeText(system)) messages.push({ role: 'system', content: safeText(system) })
 
   const hist = Array.isArray(chatHistory) ? chatHistory : []
   for (const h of hist) {
     const roleRaw = String(h?.role || '').toUpperCase()
     const text = safeText(h?.message || '')
     if (!text) continue
+
     if (roleRaw === 'USER') {
       messages.push({ role: 'user', content: [{ type: 'text', text }] })
     } else if (roleRaw === 'CHATBOT' || roleRaw === 'ASSISTANT') {
@@ -310,24 +334,14 @@ function buildV2Messages({ system, chatHistory, userMessage, imageDataUrls }) {
   return messages
 }
 
-async function callCohereChat({ model, system, userMessage, chatHistory, documents, imageDataUrls, allowDocuments }) {
-  const messages = buildV2Messages({ system, chatHistory, userMessage, imageDataUrls })
+async function callCohereChat({ model, preamble, userMessage, chatHistory, imageDataUrls }) {
+  const messages = buildV2Messages({ chatHistory, userMessage, imageDataUrls })
 
-  // Some vision models are strict—only attach documents when allowed.
-  let docs
-  if (allowDocuments) {
-    docs = (documents || []).map((doc) => ({
-      id: doc?.id || 'internal',
-      title: doc?.title || doc?.source || 'Policy',
-      snippet: doc?.snippet || doc?.text || '',
-      text: doc?.text || '',
-    }))
-  }
-
+  // If Cohere rejects something transiently, we still want the raw body in logs.
   const resp = await callCohereChatV2Rest({
     model,
+    preamble,
     messages,
-    documents: docs && docs.length ? docs : undefined,
   })
 
   return { raw: resp, text: cohereResponseToText(resp) }
@@ -519,10 +533,14 @@ function coerceViolationBullet(text) {
 
   // If no fix, try to derive from common patterns
   if (!fixPart) {
-    // ultra-light mapping (not hardcoding any one example):
-    // if chemical mentioned -> store away from food-contact surfaces
     const lower = t.toLowerCase()
-    if (lower.includes('windex') || lower.includes('bleach') || lower.includes('degreaser') || lower.includes('cleaner') || lower.includes('spray bottle')) {
+    if (
+      lower.includes('windex') ||
+      lower.includes('bleach') ||
+      lower.includes('degreaser') ||
+      lower.includes('cleaner') ||
+      lower.includes('spray bottle')
+    ) {
       fixPart = 'Remove chemicals from dish/food-contact areas and store in a labeled chemical area away from food and clean utensils.'
     } else if (lower.includes('dirty dishes') || lower.includes('soiled') || lower.includes('food residue')) {
       fixPart = 'Wash, rinse, sanitize, and air-dry; keep dirty and clean items separated.'
@@ -545,10 +563,19 @@ function coerceViolationBullet(text) {
 function inferTypeAndCategory(text) {
   const lower = String(text || '').toLowerCase()
   let type = 'Sanitation'
-  if (lower.includes('chemical') || lower.includes('windex') || lower.includes('bleach') || lower.includes('cleaner') || lower.includes('spray bottle')) type = 'Chemical Handling'
+  if (
+    lower.includes('chemical') ||
+    lower.includes('windex') ||
+    lower.includes('bleach') ||
+    lower.includes('cleaner') ||
+    lower.includes('spray bottle')
+  )
+    type = 'Chemical Handling'
   else if (lower.includes('handwash') || lower.includes('hand wash')) type = 'Handwashing'
-  else if (lower.includes('temperature') || lower.includes('cool') || lower.includes('reheat') || lower.includes('hot hold') || lower.includes('cold hold')) type = 'Time/Temperature'
-  else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') || lower.includes('ready-to-eat')) type = 'Cross-Contamination'
+  else if (lower.includes('temperature') || lower.includes('cool') || lower.includes('reheat') || lower.includes('hot hold') || lower.includes('cold hold'))
+    type = 'Time/Temperature'
+  else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') || lower.includes('ready-to-eat'))
+    type = 'Cross-Contamination'
   else if (lower.includes('pest') || lower.includes('flies') || lower.includes('droppings')) type = 'Pest Control'
 
   // Conservative category: never overstate; use Core unless clearly riskier
@@ -613,7 +640,7 @@ function buildChemicalViolationBullet(foundItem) {
 async function runChemicalScan({ imageDataUrls }) {
   if (!FEATURE_CHEMICAL_SCAN) return { found: false }
 
-  const system = `You are a visual checker. Return ONLY valid JSON. No extra text.
+  const preamble = `You are a visual checker. Return ONLY valid JSON. No extra text.
 
 Schema:
 {
@@ -634,12 +661,10 @@ Rules:
     const resp = await withTimeout(
       callCohereChat({
         model: COHERE_VISION_MODEL,
-        system,
+        preamble,
         userMessage,
         chatHistory: [],
-        documents: [],
         imageDataUrls,
-        allowDocuments: false,
       }),
       CHEM_SCAN_TIMEOUT_MS,
       'CHEM_SCAN_TIMEOUT'
@@ -733,8 +758,8 @@ function safeErrorDetails(err) {
     if (!err) return 'Unknown error'
     if (typeof err === 'string') return safeLine(err).slice(0, 400) || 'Unknown error'
     const msg = safeLine(err?.message || '')
-    const body = err?.body ? safeLine(String(err.body)).slice(0, 400) : ''
-    return safeLine([msg, body].filter(Boolean).join(' | ')).slice(0, 700) || 'Unknown error'
+    const body = err?.body ? safeLine(String(err.body)).slice(0, 600) : ''
+    return safeLine([msg, body].filter(Boolean).join(' | ')).slice(0, 900) || 'Unknown error'
   } catch {
     return 'Unknown error'
   }
@@ -832,7 +857,7 @@ export async function POST(request) {
     const sessionInfo = getSessionInfoFromRequest(request)
 
     try {
-      const cookieStore = await cookies()
+      const cookieStore = cookies()
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -926,7 +951,7 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // RETRIEVE DOCS (grounding via excerptBlock)
+    // RETRIEVE DOCS (grounding via excerptBlock inserted into preamble)
     // ========================================================================
 
     const searchDocumentsFn = await getSearchDocuments()
@@ -1029,14 +1054,17 @@ export async function POST(request) {
 
     const maxBullets = fullAudit ? MAX_BULLETS_FULL_AUDIT : MAX_BULLETS_DEFAULT
 
-    const systemPrompt = [
-      buildSystemPrompt({ fullAudit }),
-      memoryContext ? `\n\nMEMORY CONTEXT:\n${memoryContext}` : '',
-      excerptBlock ? `\n\n${excerptBlock}` : '',
-      '\n\nReminder: Do not mention any internal documents or sources.',
-    ]
-      .filter(Boolean)
-      .join('')
+    const preamble = clampText(
+      [
+        buildSystemPrompt({ fullAudit }),
+        memoryContext ? `\n\nMEMORY CONTEXT:\n${memoryContext}` : '',
+        excerptBlock ? `\n\n${excerptBlock}` : '',
+        '\n\nReminder: Do not mention any internal documents or sources.',
+      ]
+        .filter(Boolean)
+        .join(''),
+      MAX_PREAMBLE_CHARS
+    )
 
     const usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
     const mode = hasImage ? 'vision' : 'text'
@@ -1050,18 +1078,10 @@ export async function POST(request) {
       const resp = await withTimeout(
         callCohereChat({
           model: usedModel,
-          system: systemPrompt,
+          preamble,
           userMessage,
           chatHistory: cohereChatHistory,
-          documents: contextDocs.map((doc) => ({
-            id: 'internal',
-            title: doc?.source || doc?.title || 'Policy',
-            snippet: docTextForExcerpt(doc, 700),
-            text: docTextForExcerpt(doc, 900),
-          })),
           imageDataUrls: hasImage ? normalizedImageUrls : [],
-          // ✅ Vision models are stricter — rely on excerptBlock for grounding.
-          allowDocuments: !hasImage,
         }),
         ANSWER_TIMEOUT_MS,
         'ANSWER_TIMEOUT'
@@ -1105,10 +1125,7 @@ export async function POST(request) {
         }
       } else if (hasImage && chemScan?.found && !chemScan?.actionable) {
         if ((assistantMessage || '').toUpperCase().startsWith(HDR_NO)) {
-          assistantMessage = [
-            HDR_INFO,
-            '• Is that a cleaner/spray bottle placed in or next to the sink/dish area?',
-          ].join('\n')
+          assistantMessage = [HDR_INFO, '• Is that a cleaner/spray bottle placed in or next to the sink/dish area?'].join('\n')
         }
       }
 
