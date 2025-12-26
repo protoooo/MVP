@@ -4786,7 +4786,6 @@ export default function Page() {
         /* ✅ Input area */
         .panel-input-area {
           flex-shrink: 0;
-          padding-top: 0;
           border-top: 1px solid rgba(255, 255, 255, 0.12);
           padding-top: 12px;
         }
