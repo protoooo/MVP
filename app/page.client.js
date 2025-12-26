@@ -128,7 +128,7 @@ function Portal({ children }) {
 
 function BrandLink({ variant = 'landing' }) {
   const isChat = variant === 'chat'
-  const size = isChat ? 116 : 147
+  const size = isChat ? 116 : 162
 
   return (
     <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
@@ -136,7 +136,7 @@ function BrandLink({ variant = 'landing' }) {
         <span className="plm-brand-mark" aria-hidden="true">
           <Image src={appleIcon} alt="" width={size} height={size} priority className="plm-logo-img" />
         </span>
-        {!isChat && <span className="plm-brand-text"></span>}
+        {!isChat && <span className="plm-brand-text">protocolLM</span>}
       </span>
     </Link>
   )
@@ -1662,13 +1662,13 @@ export default function Page() {
           border-radius: 18px;
           padding: 22px;
 
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.75)) !important;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08)) !important;
           border: 1px solid var(--glass-border) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 30px 90px rgba(10, 18, 35, 0.26) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 26px 78px rgba(10, 18, 35, 0.32) !important;
 
-          /* reduce nested blur strength a touch (helps iOS crispness) */
-          backdrop-filter: blur(10px) saturate(125%) !important;
-          -webkit-backdrop-filter: blur(10px) saturate(125%) !important;
+          /* lift clarity to match landing + accept-terms glass */
+          backdrop-filter: blur(14px) saturate(145%) !important;
+          -webkit-backdrop-filter: blur(14px) saturate(145%) !important;
 
           color: var(--glass-ink) !important;
           color-scheme: light !important;
@@ -1689,10 +1689,10 @@ export default function Page() {
         /* ✅ Auth + Pricing cards: brighten glass to match landing hero clarity */
         .glass-modal.modal-card.auth-modal,
         .glass-modal.modal-card.pricing-modal {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.48)) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 32px 95px rgba(10, 18, 35, 0.3) !important;
-          backdrop-filter: blur(18px) saturate(145%) !important;
-          -webkit-backdrop-filter: blur(18px) saturate(145%) !important;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.1)) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), 0 30px 90px rgba(10, 18, 35, 0.3) !important;
+          backdrop-filter: blur(16px) saturate(150%) !important;
+          -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
         }
 
         .glass-modal.modal-card::before {
@@ -1890,6 +1890,8 @@ export default function Page() {
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
+          justify-content: center;
+          text-align: center;
         }
 
         .modal-link {
@@ -1899,7 +1901,7 @@ export default function Page() {
           font-weight: 850;
           font-size: 12px;
           cursor: pointer;
-          padding: 0;
+          padding: 0 2px;
           transition: color 0.15s ease;
         }
         .modal-link:hover {
@@ -2211,12 +2213,12 @@ export default function Page() {
         .plm-brand-inner {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
         .plm-brand-mark {
-          width: 140px;
-          height: 140px;
+          width: 148px;
+          height: 148px;
           flex-shrink: 0;
         }
 
@@ -2233,15 +2235,13 @@ export default function Page() {
         }
 
         .plm-brand-text {
-          font-size: 18px;
-          font-weight: 650;
+          font-size: 18.5px;
+          font-weight: 750;
           letter-spacing: -0.02em;
           white-space: nowrap;
           overflow: visible;
-
-          /* ✅ FIX: prevents clipping of descenders (bottom of "p") */
           padding-left: 2px;
-          padding-bottom: 8px;
+          padding-bottom: 7px;
           line-height: 1.4;
         }
 
@@ -2255,12 +2255,12 @@ export default function Page() {
 
         .landing-topbar .plm-brand-inner {
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
         .landing-topbar .plm-brand-mark {
-          width: 69px;
-          height: 69px;
+          width: 76px;
+          height: 76px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
@@ -2278,7 +2278,7 @@ export default function Page() {
           line-height: 1.4;
           position: relative;
           top: 0px;
-          font-size: 17.5px;
+          font-size: 18px;
           padding-bottom: 7px;
         }
 
@@ -2723,14 +2723,19 @@ export default function Page() {
         }
 
         .chat-topbar {
+          --chat-topbar-pad: max(20px, env(safe-area-inset-top) + 18px);
+          --chat-topbar-side: max(
+            var(--chat-topbar-pad),
+            env(safe-area-inset-left) + 18px,
+            env(safe-area-inset-right) + 18px
+          );
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           z-index: 20;
           width: 100%;
-          padding: max(18px, env(safe-area-inset-top) + 18px) max(22px, env(safe-area-inset-right) + 22px) 0
-            max(18px, env(safe-area-inset-left) + 18px);
+          padding: var(--chat-topbar-pad) var(--chat-topbar-side) 0 var(--chat-topbar-side);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -3445,8 +3450,13 @@ export default function Page() {
           }
 
           .chat-topbar {
-            padding: max(18px, env(safe-area-inset-top) + 18px) max(22px, env(safe-area-inset-right) + 22px) 0
-              max(18px, env(safe-area-inset-left) + 18px);
+            --chat-topbar-pad: max(18px, env(safe-area-inset-top) + 16px);
+            --chat-topbar-side: max(
+              var(--chat-topbar-pad),
+              env(safe-area-inset-left) + 16px,
+              env(safe-area-inset-right) + 16px
+            );
+            padding: var(--chat-topbar-pad) var(--chat-topbar-side) 0 var(--chat-topbar-side);
           }
 
           .chat-messages {
@@ -3498,8 +3508,8 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 126px;
-            height: 126px;
+            width: 134px;
+            height: 134px;
           }
 
           .plm-brand.chat .plm-brand-mark {
@@ -3508,8 +3518,8 @@ export default function Page() {
           }
 
           .landing-topbar .plm-brand-mark {
-            width: 65px;
-            height: 65px;
+            width: 72px;
+            height: 72px;
             margin-right: 4px;
           }
 
@@ -3543,8 +3553,8 @@ export default function Page() {
           }
 
           .plm-brand-mark {
-            width: 116px;
-            height: 116px;
+            width: 124px;
+            height: 124px;
           }
 
           .plm-brand-text {
@@ -3558,8 +3568,8 @@ export default function Page() {
           }
 
           .landing-topbar .plm-brand-mark {
-            width: 61px;
-            height: 61px;
+            width: 67px;
+            height: 67px;
             margin-right: 4px;
           }
 
