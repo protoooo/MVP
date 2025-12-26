@@ -554,6 +554,74 @@ function safeTrim(s) {
  * - "NEED INFO:" -> amber header with questions
  */
 
+function normalizeAssistantText(content) {
+  const text = safeTrim(content)
+  if (!text) return ''
+
+  let normalized = text.replace(/<br\s*\/?>/gi, '\n')
+  normalized = normalized.replace(/<\/p>/gi, '\n').replace(/<p[^>]*>/gi, '')
+  normalized = normalized.replace(/<\/?span[^>]*>/gi, '')
+  normalized = normalized.replace(/<\/?(strong|em|b|i)[^>]*>/gi, '')
+  normalized = normalized.replace(/&nbsp;/gi, ' ')
+  return normalized.trim()
+}
+
+function extractCitationIds(text) {
+  const ids = new Set()
+  const matches = text.match(/\[(\d+)\]/g) || []
+  matches.forEach((m) => {
+    const num = Number(m.replace(/\D/g, ''))
+    if (num) ids.add(num)
+  })
+  return Array.from(ids)
+}
+
+function buildCitationLookup(citations) {
+  const lookup = {}
+  ;(Array.isArray(citations) ? citations : []).forEach((c) => {
+    const id = Number(c?.id)
+    if (!id) return
+    lookup[id] = {
+      id,
+      source: safeTrim(c?.source || 'Policy'),
+      page: safeTrim(c?.page || 'N/A'),
+      snippet: safeTrim(c?.snippet || ''),
+      county: safeTrim(c?.county || ''),
+    }
+  })
+  return lookup
+}
+
+function CitationChip({ citation, id }) {
+  const [open, setOpen] = useState(false)
+  if (!citation) return null
+
+  const label = `Source ${id}`
+  return (
+    <div className="citation-chip">
+      <button
+        type="button"
+        className="citation-pill"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={`${label}: ${citation.source}`}
+        aria-expanded={open}
+      >
+        [{id}]
+      </button>
+      {open && (
+        <div className="citation-popover" role="dialog" aria-label={`${label} details`}>
+          <div className="citation-popover-header">
+            <span className="citation-popover-source">{citation.source}</span>
+            {citation.page ? <span className="citation-popover-page">p.{citation.page}</span> : null}
+          </div>
+          {citation.county && <div className="citation-popover-county">County: {citation.county}</div>}
+          {citation.snippet ? <p className="citation-popover-text">{citation.snippet}</p> : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Helper to parse bullet point lines from text
 function parseBulletItems(text, skipLines = 1) {
   const lines = text.split('\n').filter(l => l.trim())
@@ -568,9 +636,20 @@ function parseBulletItems(text, skipLines = 1) {
   return items
 }
 
-function formatAssistantContent(content) {
-  const text = safeTrim(content)
+function formatAssistantContent(content, citations = []) {
+  const text = normalizeAssistantText(content)
   if (!text) return null
+  const citationLookup = buildCitationLookup(citations)
+  const renderCitations = (ids) => {
+    if (!ids?.length) return null
+    return (
+      <div className="chat-citations" aria-label="Supporting evidence">
+        {ids.map((id) => (
+          <CitationChip key={id} id={id} citation={citationLookup[id]} />
+        ))}
+      </div>
+    )
+  }
   
   // Check for "NO VIOLATIONS" pattern
   if (/^NO VIOLATIONS/i.test(text)) {
@@ -585,15 +664,18 @@ function formatAssistantContent(content) {
   if (/^VIOLATIONS:/i.test(text)) {
     const items = parseBulletItems(text, 1)
     const violations = items.map(item => {
+      const citations = extractCitationIds(item)
+      const cleanItem = item.replace(/\s*\[\d+\]/g, '').trim()
       // Try to split by "FIX:"
-      const fixMatch = item.match(/^(.+?)\.\s*FIX:\s*(.+)$/i)
+      const fixMatch = cleanItem.match(/^(.+?)\.\s*FIX:\s*(.+)$/i)
       if (fixMatch) {
         return {
           issue: fixMatch[1].trim(),
-          fix: fixMatch[2].trim()
+          fix: fixMatch[2].trim(),
+          citations,
         }
       } else {
-        return { issue: item, fix: null }
+        return { issue: cleanItem, fix: null, citations }
       }
     })
     
@@ -609,6 +691,7 @@ function formatAssistantContent(content) {
                 <span className="chat-violation-fix">Fix: {v.fix}</span>
               </>
             )}
+            {renderCitations(v.citations)}
           </div>
         ))}
       </div>
@@ -632,7 +715,14 @@ function formatAssistantContent(content) {
   }
   
   // Default: return as plain text
-  return <div className="chat-content">{text}</div>
+  const ids = extractCitationIds(text)
+  const clean = text.replace(/\s*\[\d+\]/g, '').trim()
+  return (
+    <div>
+      <div className="chat-content">{clean}</div>
+      {renderCitations(ids)}
+    </div>
+  )
 }
 
 function normalizeOutgoingMessages(msgs) {
@@ -1313,6 +1403,7 @@ export default function Page() {
 
       // ✅ JSON response support (current route)
       const data = await res.json().catch(() => ({}))
+      const citations = Array.isArray(data?.citations) ? data.citations : []
 
       // Common shapes: { message }, { text }, { output }, { response }
       const msg =
@@ -1334,7 +1425,7 @@ export default function Page() {
 
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: String(msg) }
+        updated[updated.length - 1] = { role: 'assistant', content: String(msg), citations }
         return updated
       })
     } catch (error) {
@@ -2716,7 +2807,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 12px);
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 32px);
           background: transparent;
         }
 
@@ -2852,7 +2943,7 @@ export default function Page() {
           overflow-y: auto;
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
-          margin-bottom: 18px;
+          margin-bottom: 28px;
         }
 
         .chat-history {
@@ -2950,6 +3041,83 @@ export default function Page() {
           font-weight: 700;
           font-size: 16px;
           margin-bottom: 8px;
+        }
+
+        .chat-citations {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 8px;
+        }
+
+        .citation-chip {
+          position: relative;
+        }
+
+        .citation-pill {
+          border: 1px solid rgba(15, 23, 42, 0.18);
+          background: rgba(95, 168, 255, 0.12);
+          color: rgba(15, 23, 42, 0.82);
+          border-radius: 999px;
+          font-weight: 700;
+          padding: 4px 8px;
+          cursor: pointer;
+          font-size: 12px;
+          box-shadow: 0 10px 24px rgba(5, 7, 13, 0.08);
+          transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .citation-pill:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 14px 32px rgba(5, 7, 13, 0.12);
+        }
+
+        .citation-popover {
+          position: absolute;
+          z-index: 40;
+          top: calc(100% + 8px);
+          left: 0;
+          min-width: 240px;
+          max-width: 320px;
+          background: rgba(255, 255, 255, 0.98);
+          border: 1px solid rgba(15, 23, 42, 0.14);
+          border-radius: 12px;
+          padding: 12px;
+          box-shadow: 0 18px 44px rgba(5, 7, 13, 0.22);
+          color: rgba(15, 23, 42, 0.9);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+
+        .citation-popover-header {
+          display: flex;
+          align-items: baseline;
+          gap: 6px;
+          margin-bottom: 6px;
+          font-weight: 700;
+        }
+
+        .citation-popover-source {
+          color: rgba(15, 23, 42, 0.92);
+        }
+
+        .citation-popover-page {
+          color: rgba(15, 23, 42, 0.7);
+          font-size: 12px;
+        }
+
+        .citation-popover-county {
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.7);
+          margin: 4px 0;
+        }
+
+        .citation-popover-text {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.55;
+          color: rgba(15, 23, 42, 0.86);
         }
 
         .chat-thinking {
@@ -3283,7 +3451,7 @@ export default function Page() {
 
           .chat-messages {
             padding: calc(max(120px, env(safe-area-inset-top) + 105px)) 16px
-              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 12px);
+              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 28px);
           }
 
           .chat-input-inner {
@@ -3546,7 +3714,7 @@ export default function Page() {
                             {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                               <div className="chat-thinking">Analyzing…</div>
                             ) : msg.role === 'assistant' ? (
-                              formatAssistantContent(msg.content)
+                              formatAssistantContent(msg.content, msg.citations)
                             ) : (
                               <div className="chat-content">{msg.content}</div>
                             )}
