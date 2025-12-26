@@ -31,10 +31,20 @@ export default function RadialMenu({
   const [wheelRadius, setWheelRadius] = useState(120)
   const containerRef = useRef(null)
 
-  // Set wheel radius based on screen size (avoid hydration mismatch)
+  // Mobile-first wheel radius configuration
+  const WHEEL_RADIUS_MOBILE = 90
+  const WHEEL_RADIUS_DESKTOP = 120
+  const DESKTOP_BREAKPOINT = 768
+
+  // Set wheel radius based on screen size (mobile-first: smaller default)
   useEffect(() => {
     const updateRadius = () => {
-      setWheelRadius(window.innerWidth < 400 ? 100 : 120)
+      // Mobile-first: default to smaller radius, increase for larger screens
+      if (window.innerWidth >= DESKTOP_BREAKPOINT) {
+        setWheelRadius(WHEEL_RADIUS_DESKTOP)
+      } else {
+        setWheelRadius(WHEEL_RADIUS_MOBILE)
+      }
     }
     updateRadius()
     window.addEventListener('resize', updateRadius)
@@ -165,6 +175,8 @@ export default function RadialMenu({
 
       <style jsx>{`
         .radial-menu-container {
+          /* CSS custom property for logo scale - 80% larger than default */
+          --logo-scale: 1.8;
           position: relative;
           display: flex;
           align-items: center;
@@ -173,12 +185,12 @@ export default function RadialMenu({
           height: 100%;
         }
 
-        /* Center button - squishy pressable */
+        /* Center button - squishy pressable (mobile-first) */
         .radial-center-btn {
           position: relative;
           z-index: 10;
-          width: 100px;
-          height: 100px;
+          width: 88px;
+          height: 88px;
           border-radius: 50%;
           border: none;
           background: rgba(255, 255, 255, 0.15);
@@ -197,6 +209,8 @@ export default function RadialMenu({
           justify-content: center;
           padding: 0;
           overflow: hidden;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
         }
 
         .radial-center-btn:hover {
@@ -236,10 +250,13 @@ export default function RadialMenu({
         }
 
         .radial-center-btn :global(.radial-logo-img) {
-          width: 80px;
-          height: 80px;
+          width: 70px;
+          height: 70px;
           object-fit: contain;
           pointer-events: none;
+          /* Scale up logo to fill the button circle nicely (80% larger) */
+          transform: scale(var(--logo-scale, 1.8));
+          transform-origin: center;
         }
 
         /* Wheel container */
@@ -257,29 +274,29 @@ export default function RadialMenu({
           pointer-events: auto;
         }
 
-        /* Individual wheel items */
+        /* Individual wheel items (mobile-first) */
         .radial-item {
           position: absolute;
           top: 50%;
           left: 50%;
-          width: 64px;
-          height: 64px;
-          margin-left: -32px;
-          margin-top: -32px;
-          border-radius: 16px;
+          width: 56px;
+          height: 56px;
+          margin-left: -28px;
+          margin-top: -28px;
+          border-radius: 14px;
           border: none;
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.18);
           backdrop-filter: blur(16px) saturate(130%);
           -webkit-backdrop-filter: blur(16px) saturate(130%);
           box-shadow: 
             0 8px 24px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            inset 0 1px 0 rgba(255, 255, 255, 0.25);
           cursor: pointer;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 4px;
+          gap: 3px;
           color: rgba(15, 23, 42, 0.9);
           opacity: 0;
           transform: translate(0, 0) scale(0.5);
@@ -289,6 +306,8 @@ export default function RadialMenu({
             background 0.15s ease,
             box-shadow 0.15s ease;
           transition-delay: var(--item-delay);
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
         }
 
         .radial-wheel.open .radial-item {
@@ -297,15 +316,16 @@ export default function RadialMenu({
         }
 
         .radial-item:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.28);
           box-shadow: 
             0 12px 32px rgba(0, 0, 0, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
           transform: translate(var(--item-x), var(--item-y)) scale(1.08);
         }
 
         .radial-item:active {
           transform: translate(var(--item-x), var(--item-y)) scale(0.95);
+          background: rgba(255, 255, 255, 0.35);
         }
 
         .radial-item-icon {
@@ -315,8 +335,13 @@ export default function RadialMenu({
           color: rgba(15, 23, 42, 0.85);
         }
 
+        .radial-item-icon :global(svg) {
+          width: 18px;
+          height: 18px;
+        }
+
         .radial-item-label {
-          font-size: 9px;
+          font-size: 8px;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.02em;
@@ -324,37 +349,38 @@ export default function RadialMenu({
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-width: 58px;
+          max-width: 50px;
         }
 
-        /* Responsive adjustments for smaller screens */
-        @media (max-width: 400px) {
+        /* Tablet and larger screens */
+        @media (min-width: 768px) {
           .radial-center-btn {
-            width: 88px;
-            height: 88px;
+            width: 100px;
+            height: 100px;
           }
 
           .radial-center-btn :global(.radial-logo-img) {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
           }
 
           .radial-item {
-            width: 56px;
-            height: 56px;
-            margin-left: -28px;
-            margin-top: -28px;
-            border-radius: 14px;
+            width: 64px;
+            height: 64px;
+            margin-left: -32px;
+            margin-top: -32px;
+            border-radius: 16px;
+            gap: 4px;
           }
 
           .radial-item-icon :global(svg) {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
           }
 
           .radial-item-label {
-            font-size: 8px;
-            max-width: 50px;
+            font-size: 9px;
+            max-width: 58px;
           }
         }
 
