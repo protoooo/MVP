@@ -176,12 +176,17 @@ export default function RadialMenu({
         .radial-menu-container {
           /* CSS custom property for logo scale - 80% larger than default */
           --logo-scale: 1.8;
+          --item-size: 56px;
+          --item-icon-size: 44px;
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
           width: 100%;
           height: 100%;
+          max-width: 540px;
+          max-height: 540px;
+          margin: 0 auto;
         }
 
         /* Center button - squishy pressable (mobile-first) */
@@ -263,7 +268,7 @@ export default function RadialMenu({
           position: absolute;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%) translateZ(0);
           width: 0;
           height: 0;
           pointer-events: none;
@@ -278,8 +283,9 @@ export default function RadialMenu({
           position: absolute;
           top: 0;
           left: 0;
-          width: 56px;
-          height: 56px;
+          width: var(--item-size);
+          height: var(--item-size);
+          aspect-ratio: 1 / 1;
           border-radius: 50%;
           border: none;
           background: transparent;
@@ -290,7 +296,12 @@ export default function RadialMenu({
           justify-content: center;
           color: rgba(15, 23, 42, 0.92);
           opacity: 0;
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(0.45);
+          transform: translate(
+              calc(var(--item-x) - (var(--item-size) / 2)),
+              calc(var(--item-y) - (var(--item-size) / 2))
+            )
+            scale(0.45);
+          transform-origin: center;
           transition: 
             opacity 0.25s ease,
             transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -304,18 +315,30 @@ export default function RadialMenu({
 
         .radial-wheel.open .radial-item {
           opacity: 1;
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(1);
+          transform: translate(
+              calc(var(--item-x) - (var(--item-size) / 2)),
+              calc(var(--item-y) - (var(--item-size) / 2))
+            )
+            scale(1);
         }
 
         .radial-item:hover {
           background: rgba(255, 255, 255, 0.18);
           box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(1.05);
+          transform: translate(
+              calc(var(--item-x) - (var(--item-size) / 2)),
+              calc(var(--item-y) - (var(--item-size) / 2))
+            )
+            scale(1.05);
           color: rgba(15, 23, 42, 1);
         }
 
         .radial-item:active {
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(0.94);
+          transform: translate(
+              calc(var(--item-x) - (var(--item-size) / 2)),
+              calc(var(--item-y) - (var(--item-size) / 2))
+            )
+            scale(0.94);
           background: rgba(255, 255, 255, 0.24);
           box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
@@ -324,8 +347,9 @@ export default function RadialMenu({
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
+          width: var(--item-icon-size);
+          height: var(--item-icon-size);
+          aspect-ratio: 1 / 1;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.14);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px rgba(0, 0, 0, 0.08);
@@ -351,6 +375,22 @@ export default function RadialMenu({
           .radial-item-icon :global(svg) {
             width: 22px;
             height: 22px;
+          }
+        }
+
+        /* Mobile adjustments to keep the wheel centered & circular */
+        @media (max-width: 767px) {
+          .radial-menu-container {
+            max-width: 420px;
+            max-height: 420px;
+          }
+
+          .radial-item {
+            --item-size: 52px;
+          }
+
+          .radial-item-icon {
+            --item-icon-size: 40px;
           }
         }
 
