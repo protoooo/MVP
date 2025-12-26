@@ -163,5 +163,6 @@ if __name__ == "__main__":
             ("public/icon-192.png", 192),
             ("public/icon-512.png", 512),
             ("public/apple-touch-icon.png", 180),
+            ("app/apple-icon.png", 512),
         ]
 )
