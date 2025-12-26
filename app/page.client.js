@@ -3454,7 +3454,6 @@ export default function Page() {
           isOpen={showPricingModal}
           onClose={() => setShowPricingModal(false)}
           onCheckout={handleCheckout}
-          onMultiLocation={handleMultiLocationCheckout}
           loading={checkoutLoading}
         />
       </Portal>
