@@ -34,8 +34,8 @@ const cohereClient = new CohereClient({ token: process.env.COHERE_API_KEY })
 
 async function getSearchDocuments() {
   if (!searchDocuments) {
-    const module = await import('@/lib/searchDocs')
-    searchDocuments = module.searchDocuments
+    const searchDocsModule = await import('@/lib/searchDocs')
+    searchDocuments = searchDocsModule.searchDocuments
   }
   return searchDocuments
 }
@@ -127,11 +127,6 @@ function stripDocLikeRefs(text) {
     .replace(/\bDOCS?[_\s-]*\d+\b/gi, '')
     .replace(/\(p\.\s*\d+\)/gi, '')
     .replace(/\bp\.\s*\d+\b/gi, '')
-    .replace(/\bMichigan Modified Food Code\b/gi, '')
-    .replace(/\bAct\s*92\s*of\s*2000\b/gi, '')
-    .replace(/\bMCL\b/gi, '')
-    .replace(/\bViolation Types\s*\|\s*Washtenaw County.*?\b/gi, '')
-    .replace(/\bEnforcement Action\s*\|\s*Washtenaw County.*?\b/gi, '')
 }
 
 // IMPORTANT: We do NOT remove HTML spans; we DO remove markdown-ish formatting.
@@ -439,6 +434,19 @@ function docTextForExcerpt(doc, maxChars = 520) {
   return t.slice(0, maxChars).trimEnd() + '…'
 }
 
+function buildExcerptBlock(contextDocs, maxChars = 520) {
+  if (!contextDocs?.length) return ''
+
+  return contextDocs
+    .map(
+      (doc, idx) =>
+        `POLICY EXCERPT [${idx + 1}] — ${safeLine(doc?.source || 'Policy')} (p.${safeLine(
+          doc?.page || 'N/A'
+        )}):\n${docTextForExcerpt(doc, maxChars)}`
+    )
+    .join('\n\n')
+}
+
 async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
   try {
     const tasks = PINNED_POLICY_QUERIES.map((q) =>
@@ -713,13 +721,15 @@ function buildSystemPrompt({ fullAudit }) {
   return `You are ProtocolLM — a Michigan food service compliance tool. Be concise and actionable.
 
 CRITICAL OUTPUT RULES:
-- Output MUST be plain text (no markdown). No citations. No source mentions.
+- Output MUST be plain text (no markdown).
 - Output MUST start with EXACTLY one header:
   "${HDR_NO}" OR "${HDR_VIOL}" OR "${HDR_INFO}"
 - If "${HDR_VIOL}", output up to ${maxBullets} bullets, each EXACTLY like:
   "• VIOLATION (Type | Category): <what is visible>. FIX: <one clear instruction>."
 - If "${HDR_INFO}", output up to 2 bullets, each a short question.
 - For photos: ONLY report what you can directly see. Do NOT assume temps/times/missing items.
+- Add citations by appending bracketed IDs that match the provided POLICY EXCERPT list (e.g., [1] or [1][3]).
+- Only cite when an excerpt supports the bullet. If no excerpts are available, omit citations.
 
 IMPORTANT STYLE:
 - Do NOT write long explanations.
@@ -998,15 +1008,9 @@ export async function POST(request) {
       MAX_CONTEXT_DOCS
     )
 
-    const excerptBlockFull =
-      contextDocs.length === 0
-        ? ''
-        : contextDocs.map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 520)}`).join('\n\n')
+    const excerptBlockFull = buildExcerptBlock(contextDocs, 520)
 
-    const excerptBlockLite =
-      contextDocs.length === 0
-        ? ''
-        : contextDocs.slice(0, 3).map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 320)}`).join('\n\n')
+    const excerptBlockLite = buildExcerptBlock(contextDocs.slice(0, 3), 320)
 
     let memoryContext = ''
     try {
@@ -1045,7 +1049,7 @@ export async function POST(request) {
 
     const maxBullets = fullAudit ? MAX_BULLETS_FULL_AUDIT : MAX_BULLETS_DEFAULT
     const base = buildSystemPrompt({ fullAudit })
-    const reminder = 'Reminder: Do not mention any internal documents or sources.'
+    const reminder = 'Reminder: Use only the provided policy excerpts for citations. Do not invent sources.'
 
     const preambles = [
       {
@@ -1188,6 +1192,13 @@ export async function POST(request) {
     return NextResponse.json(
       {
         message: assistantMessage,
+        citations: contextDocs.map((doc, idx) => ({
+          id: idx + 1,
+          source: safeLine(doc?.source || 'Policy'),
+          page: safeLine(doc?.page || 'N/A'),
+          county: safeLine(doc?.county || county),
+          snippet: docTextForExcerpt(doc, 320),
+        })),
         _meta: {
           model: usedModel,
           modelLabel: MODEL_LABEL,
