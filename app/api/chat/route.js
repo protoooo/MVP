@@ -287,9 +287,20 @@ async function callCohereChatV2Rest({ model, preamble, messages }) {
   const apiKey = process.env.COHERE_API_KEY
   if (!apiKey) throw new Error('COHERE_API_KEY not configured')
 
-  const payload = { model, messages }
-  const p = safeText(preamble)
-  if (p) payload.preamble = p
+  const baseMessages = Array.isArray(messages) ? messages : []
+  const system = safeText(preamble)
+  const payload = {
+    model,
+    messages: system
+      ? [
+          {
+            role: 'system',
+            content: [{ type: 'text', text: system }],
+          },
+          ...baseMessages,
+        ]
+      : baseMessages,
+  }
 
   const res = await fetch('https://api.cohere.com/v2/chat', {
     method: 'POST',
