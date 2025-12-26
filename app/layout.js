@@ -2,8 +2,6 @@ import './globals.css'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import CookieConsent from '@/components/CookieConsent'
 import SessionGuard from '@/components/SessionGuard'
-import Image from 'next/image'
-import bg from '@/app/assets/background/protocolLM-bg.png'
 import Analytics from '@/components/Analytics'
 import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
@@ -33,18 +31,8 @@ export default function RootLayout({ children }) {
       </head>
       <body className={appFont.className}>
         <Analytics />
-        {/* ✅ fixed, crisp background layer */}
-        <div className="plm-bg" aria-hidden="true">
-          <Image
-            src={bg}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="plm-bg-img"
-          />
-          <div className="plm-bg-vignette" />
-        </div>
+        {/* ✅ Flat background - NO IMAGE, just off-white color via CSS */}
+        <div className="plm-bg" aria-hidden="true" />
 
         {/* ✅ App content wrapper above background */}
         <div className="plm-app">
@@ -52,11 +40,11 @@ export default function RootLayout({ children }) {
             <div
               role="alert"
               style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.16)',
-                color: '#f6f9ff',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                color: 'var(--ink)',
                 padding: '12px 14px',
-                borderRadius: '12px',
+                borderRadius: '8px',
                 margin: '12px',
                 fontWeight: 600,
               }}

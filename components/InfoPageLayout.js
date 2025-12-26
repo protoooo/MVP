@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import appleIcon from '@/app/apple-icon.png'
-import bg from '@/app/assets/background/protocolLM-bg.png'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
@@ -29,72 +28,17 @@ export default function InfoPageLayout({
   return (
     <>
       <style jsx global>{`
-        :root {
-          --bg-0: rgba(5, 7, 13, 0.72);
-          --bg-1: rgba(7, 10, 18, 0.78);
-          --bg-2: rgba(9, 13, 22, 0.82);
-          --bg-3: rgba(255, 255, 255, 0.1);
-
-          --ink-0: #f6f9ff;
-          --ink-1: rgba(240, 244, 255, 0.86);
-          --ink-2: rgba(214, 222, 240, 0.76);
-          --ink-3: rgba(178, 190, 215, 0.6);
-
-          --accent: #5fa8ff;
-          --accent-hover: #7bc2ff;
-          --accent-dim: rgba(95, 168, 255, 0.2);
-
-          --border-subtle: rgba(255, 255, 255, 0.18);
-          --border-default: rgba(255, 255, 255, 0.32);
-
-          --radius-sm: 8px;
-          --radius-md: 12px;
-          --radius-lg: 16px;
-        }
-
-        html, body {
-          height: 100%;
-          margin: 0;
-          background: transparent;
-          color: var(--ink-0);
-        }
-
+        /* ✅ Notion-inspired flat design - NO GRADIENTS, NO IMAGES */
         .info-page-root {
           position: relative;
           min-height: 100vh;
           min-height: 100dvh;
-          background: transparent;
+          background: var(--paper);
           isolation: isolate;
         }
 
-        .info-page-root::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(130% 80% at 18% 18%, rgba(255, 255, 255, 0.14), transparent 48%),
-            radial-gradient(120% 70% at 82% 6%, rgba(95, 168, 255, 0.18), transparent 52%),
-            linear-gradient(135deg, rgba(5, 7, 13, 0.74), rgba(5, 7, 13, 0.5)),
-            url(${bg.src});
-          background-size: 140% 140%, 140% 140%, cover, cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-attachment: fixed, fixed, fixed, fixed;
-          pointer-events: none;
-          z-index: 0;
-          filter: saturate(120%);
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-        }
-
-        .info-content,
-        .info-hero-card {
-          position: relative;
-          z-index: 1;
-        }
-
         .info-brand {
-          color: var(--ink-0);
+          color: var(--ink);
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -125,17 +69,18 @@ export default function InfoPageLayout({
           font-size: 17px;
           font-weight: 600;
           letter-spacing: -0.02em;
+          color: var(--ink);
         }
 
         .info-back-link {
           font-size: 13px;
-          color: var(--ink-1);
+          color: var(--ink-60);
           text-decoration: none;
           transition: color 0.15s ease;
         }
 
         .info-back-link:hover {
-          color: var(--ink-0);
+          color: var(--ink);
         }
 
         .info-actions {
@@ -147,19 +92,19 @@ export default function InfoPageLayout({
         .info-action-button {
           font-size: 13px;
           font-weight: 600;
-          color: var(--ink-0);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
-          border-radius: 10px;
+          color: var(--ink);
+          background: var(--surface);
+          border: 1px solid var(--border);
+          box-shadow: var(--shadow-sm);
+          border-radius: var(--radius-sm);
           padding: 8px 12px;
           cursor: pointer;
           transition: background 0.15s ease, border-color 0.15s ease;
         }
 
         .info-action-button:hover:not(:disabled) {
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.12));
-          border-color: var(--border-default);
+          background: var(--clay);
+          border-color: var(--border-strong);
         }
 
         .info-action-button:disabled {
@@ -168,23 +113,24 @@ export default function InfoPageLayout({
         }
 
         .info-content {
+          position: relative;
+          z-index: 1;
           max-width: 760px;
           margin: 0 auto;
           padding: 32px 24px 80px;
         }
 
+        /* ✅ Hero card - flat Notion style with subtle border */
         .info-hero-card {
+          position: relative;
+          z-index: 1;
           width: 100%;
           margin-bottom: 24px;
           padding: 20px;
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.28);
+          background: var(--surface);
+          border: 1px solid var(--border);
           border-radius: var(--radius-md);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.45),
-            0 18px 48px rgba(5, 7, 13, 0.32);
-          backdrop-filter: blur(14px) saturate(125%);
-          -webkit-backdrop-filter: blur(14px) saturate(125%);
+          box-shadow: var(--shadow-sm);
         }
 
         .info-hero-top {
@@ -221,26 +167,23 @@ export default function InfoPageLayout({
           font-size: 32px;
           font-weight: 700;
           letter-spacing: -0.03em;
-          color: var(--ink-0);
+          color: var(--ink);
           margin: 0 0 12px;
         }
 
         .info-subtitle {
           font-size: 15px;
           line-height: 1.7;
-          color: var(--ink-1);
+          color: var(--ink-60);
           margin: 0;
         }
 
+        /* ✅ Section card - flat Notion style */
         .info-section {
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.46),
-            0 26px 70px rgba(5, 7, 13, 0.4);
-          backdrop-filter: blur(14px) saturate(125%);
-          -webkit-backdrop-filter: blur(14px) saturate(125%);
+          background: var(--surface);
+          border: 1px solid var(--border);
           border-radius: var(--radius-md);
+          box-shadow: var(--shadow-sm);
           padding: 24px;
           margin-bottom: 20px;
         }
@@ -248,14 +191,14 @@ export default function InfoPageLayout({
         .info-section-title {
           font-size: 18px;
           font-weight: 600;
-          color: var(--ink-0);
+          color: var(--ink);
           margin: 0 0 16px;
         }
 
         .info-section p {
           font-size: 15px;
           line-height: 1.7;
-          color: var(--ink-1);
+          color: var(--ink-80);
           margin: 0 0 16px;
         }
 
@@ -276,7 +219,7 @@ export default function InfoPageLayout({
         .info-section li {
           font-size: 15px;
           line-height: 1.7;
-          color: var(--ink-1);
+          color: var(--ink-80);
           margin-bottom: 8px;
         }
 
@@ -285,7 +228,7 @@ export default function InfoPageLayout({
         }
 
         .info-section strong {
-          color: var(--ink-0);
+          color: var(--ink);
         }
 
         .info-section a {
@@ -296,17 +239,18 @@ export default function InfoPageLayout({
         }
 
         .info-section a:hover {
-          color: var(--accent-hover);
+          color: var(--accent);
+          opacity: 0.8;
         }
 
+        /* ✅ Highlight box - flat Notion style with left accent border */
         .info-highlight {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.22);
+          background: var(--clay);
+          border: 1px solid var(--border);
           border-left: 3px solid var(--accent);
           border-radius: var(--radius-sm);
           padding: 16px;
           margin: 16px 0;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
         }
 
         .info-highlight-title {
@@ -320,6 +264,7 @@ export default function InfoPageLayout({
 
         .info-highlight p {
           margin: 0;
+          color: var(--ink-80);
         }
 
         @media (max-width: 768px) {

@@ -1715,7 +1715,7 @@ export default function Page() {
     <>
       <style jsx global>{`
         :root {
-          color-scheme: dark;
+          color-scheme: light;
 
           --bg-0: rgba(5, 7, 13, 0.72);
           --bg-1: rgba(7, 10, 18, 0.78);
@@ -1727,8 +1727,8 @@ export default function Page() {
           --ink-2: rgba(214, 222, 240, 0.76);
           --ink-3: rgba(178, 190, 215, 0.6);
 
-          --accent: #5fa8ff;
-          --accent-hover: #7bc2ff;
+          --accent: #2383e2;
+          --accent-hover: #1a73d2;
           --accent-dim: rgba(95, 168, 255, 0.2);
           --footer-links-z: 15;
 

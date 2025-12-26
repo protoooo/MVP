@@ -65,34 +65,34 @@ export default function Contact() {
         <div style={{ display: 'grid', gap: '12px', marginTop: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
           <div style={{ 
             padding: '16px', 
-            background: 'var(--bg-3)', 
-            border: '1px solid var(--border-subtle)', 
+            background: 'var(--clay)', 
+            border: '1px solid var(--border)', 
             borderRadius: 'var(--radius-sm)' 
           }}>
             <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
               Email
             </div>
-            <a href="mailto:support@protocollm.org" style={{ display: 'block', fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
+            <a href="mailto:support@protocollm.org" style={{ display: 'block', fontSize: '15px', fontWeight: '600', marginBottom: '4px', color: 'var(--ink)' }}>
               support@protocollm.org
             </a>
-            <p style={{ fontSize: '13px', color: 'var(--ink-2)', margin: 0 }}>
+            <p style={{ fontSize: '13px', color: 'var(--ink-60)', margin: 0 }}>
               Responses within 24-48 hours.
             </p>
           </div>
 
           <div style={{ 
             padding: '16px', 
-            background: 'var(--bg-3)', 
-            border: '1px solid var(--border-subtle)', 
+            background: 'var(--clay)', 
+            border: '1px solid var(--border)', 
             borderRadius: 'var(--radius-sm)' 
           }}>
             <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
               Business Hours
             </div>
-            <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
+            <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px', color: 'var(--ink)' }}>
               Mon - Fri, 9AM - 6PM EST
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--ink-2)', margin: 0 }}>
+            <p style={{ fontSize: '13px', color: 'var(--ink-60)', margin: 0 }}>
               We monitor urgent production issues after hours.
             </p>
           </div>
@@ -100,18 +100,18 @@ export default function Contact() {
 
         <div style={{ 
           padding: '16px', 
-          background: 'var(--bg-3)', 
-          border: '1px solid var(--border-subtle)', 
+          background: 'var(--clay)', 
+          border: '1px solid var(--border)', 
           borderRadius: 'var(--radius-sm)',
           marginTop: '12px'
         }}>
           <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px' }}>
             Location
           </div>
-          <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
+          <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px', color: 'var(--ink)' }}>
             Michigan
           </div>
-          <p style={{ fontSize: '13px', color: 'var(--ink-2)', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--ink-60)', margin: 0 }}>
             Serving restaurants and food operators statewide.
           </p>
         </div>
@@ -131,15 +131,15 @@ export default function Contact() {
           <div style={{ 
             padding: '24px', 
             textAlign: 'center', 
-            background: 'var(--bg-3)', 
+            background: 'var(--clay)', 
             border: '1px solid var(--accent)', 
             borderRadius: 'var(--radius-md)',
             marginTop: '20px'
           }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink-0)', margin: '0 0 8px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)', margin: '0 0 8px' }}>
               Message Sent!
             </h3>
-            <p style={{ fontSize: '15px', color: 'var(--ink-1)', margin: 0 }}>
+            <p style={{ fontSize: '15px', color: 'var(--ink-80)', margin: 0 }}>
               We've received your message and will respond within 24-48 hours.
             </p>
           </div>
@@ -147,7 +147,7 @@ export default function Contact() {
           <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
             <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-60)', marginBottom: '8px' }}>
                   Name
                 </label>
                 <input
@@ -160,16 +160,16 @@ export default function Contact() {
                     width: '100%',
                     height: '42px',
                     padding: '0 12px',
-                    background: 'var(--bg-3)',
-                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
                     borderRadius: 'var(--radius-sm)',
-                    color: 'var(--ink-0)',
+                    color: 'var(--ink)',
                     fontSize: '14px'
                   }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-60)', marginBottom: '8px' }}>
                   Email
                 </label>
                 <input
@@ -182,10 +182,10 @@ export default function Contact() {
                     width: '100%',
                     height: '42px',
                     padding: '0 12px',
-                    background: 'var(--bg-3)',
-                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
                     borderRadius: 'var(--radius-sm)',
-                    color: 'var(--ink-0)',
+                    color: 'var(--ink)',
                     fontSize: '14px'
                   }}
                 />
@@ -193,7 +193,7 @@ export default function Contact() {
             </div>
 
             <div style={{ marginTop: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-60)', marginBottom: '8px' }}>
                 Subject
               </label>
               <input
@@ -206,17 +206,17 @@ export default function Contact() {
                   width: '100%',
                   height: '42px',
                   padding: '0 12px',
-                  background: 'var(--bg-3)',
-                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-sm)',
-                  color: 'var(--ink-0)',
+                  color: 'var(--ink)',
                   fontSize: '14px'
                 }}
               />
             </div>
 
             <div style={{ marginTop: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-1)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--ink-60)', marginBottom: '8px' }}>
                 Message
               </label>
               <textarea
@@ -228,10 +228,10 @@ export default function Contact() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: 'var(--bg-3)',
-                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-sm)',
-                  color: 'var(--ink-0)',
+                  color: 'var(--ink)',
                   fontSize: '14px',
                   fontFamily: 'inherit',
                   resize: 'vertical'
@@ -243,10 +243,10 @@ export default function Contact() {
               <p style={{ 
                 marginTop: '16px', 
                 padding: '12px', 
-                background: 'rgba(239, 68, 68, 0.1)', 
-                border: '1px solid rgba(239, 68, 68, 0.3)',
+                background: 'rgba(212, 76, 71, 0.1)', 
+                border: '1px solid rgba(212, 76, 71, 0.2)',
                 borderRadius: 'var(--radius-sm)',
-                color: '#ef4444', 
+                color: 'var(--accent-red)', 
                 fontSize: '14px' 
               }}>
                 {error}
@@ -260,7 +260,7 @@ export default function Contact() {
                 width: '100%',
                 height: '44px',
                 marginTop: '20px',
-                background: loading || !isLoaded ? 'var(--bg-3)' : 'var(--accent)',
+                background: loading || !isLoaded ? 'var(--clay)' : 'var(--accent)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
@@ -274,7 +274,7 @@ export default function Contact() {
               {loading ? 'Sending…' : 'Send Message'}
             </button>
 
-            <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--ink-2)', textAlign: 'center' }}>
+            <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--ink-40)', textAlign: 'center' }}>
               We use reCAPTCHA to protect this form.
             </p>
 

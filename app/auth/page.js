@@ -3,6 +3,12 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Plus_Jakarta_Sans } from 'next/font/google'
+import appleIcon from '@/app/apple-icon.png'
+
+const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
 export default function Auth() {
   const [email, setEmail] = useState('')
@@ -55,106 +61,254 @@ export default function Auth() {
   }
 
   return (
-    <div style={{
-      height: '100vh',
-      width: '100vw',
-      backgroundColor: '#121212',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      margin: 0,
-      color: 'white'
-    }}>
-      <div style={{
-        backgroundColor: '#1C1C1C',
-        padding: '40px',
-        borderRadius: '24px',
-        width: '100%',
-        maxWidth: '400px',
-        textAlign: 'center',
-        boxShadow: '0 4px 60px rgba(0,0,0,0.5)',
-        border: '1px solid #333'
-      }}>
-        <h1 style={{ color: 'white', marginBottom: '10px', fontSize: '24px', fontWeight: '600' }}>
-          protocol LM
-        </h1>
-        <p style={{ color: '#A1A1AA', marginBottom: '25px', fontSize: '14px', lineHeight: '1.5' }}>
-          Access food safety compliance resources for Michigan restaurants.
-        </p>
-        
-        <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
-            required
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '14px',
-              border: '1px solid #333',
-              borderRadius: '12px',
-              marginBottom: '16px',
-              color: 'white',
-              backgroundColor: '#0A0A0A',
-              boxSizing: 'border-box',
-              outline: 'none'
-            }}
-          />
-          
-          <button 
-            type="submit" 
-            disabled={loading || !isLoaded}
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '14px',
-              backgroundColor: '#3E7BFA',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontWeight: '600',
-              cursor: (loading || !isLoaded) ? 'not-allowed' : 'pointer',
-              opacity: (loading || !isLoaded) ? 0.7 : 1
-            }}
-          >
-            {loading ? 'Sending...' : !isLoaded ? 'Loading...' : 'Continue with Email'}
-          </button>
-        </form>
+    <>
+      <style jsx global>{`
+        .auth-page {
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          flex-direction: column;
+          background: var(--paper);
+        }
 
-        {message && (
-          <p style={{ 
-            marginTop: '16px', 
-            color: message.includes('Error') ? '#F87171' : '#34D399',
-            fontSize: '13px',
-            padding: '10px',
-            backgroundColor: message.includes('Error') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-            borderRadius: '8px'
-          }}>
-            {message}
-          </p>
-        )}
+        .auth-topbar {
+          width: 100%;
+          max-width: 880px;
+          margin: 0 auto;
+          padding: 16px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
 
-        <RecaptchaBadge />
+        .auth-brand {
+          color: var(--ink);
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          transition: opacity 0.15s ease;
+        }
 
-        <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #333' }}>
-          <button
-            onClick={() => router.push('/')}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '13px',
-              color: '#A1A1AA',
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
-          >
-            Back to Home
-          </button>
+        .auth-brand:hover { opacity: 0.7; }
+
+        .auth-brand-inner {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .auth-brand-mark {
+          width: 48px;
+          height: 48px;
+        }
+
+        .auth-brand-text {
+          font-size: 17px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+
+        .auth-back {
+          font-size: 13px;
+          color: var(--ink-60);
+          text-decoration: none;
+          font-weight: 600;
+        }
+
+        .auth-back:hover {
+          color: var(--ink);
+        }
+
+        .auth-content {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 24px;
+        }
+
+        .auth-card {
+          width: 100%;
+          max-width: 400px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-md);
+          padding: 32px;
+          text-align: center;
+        }
+
+        .auth-title {
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: var(--ink);
+          margin: 0 0 10px;
+        }
+
+        .auth-subtitle {
+          font-size: 14px;
+          line-height: 1.5;
+          color: var(--ink-60);
+          margin: 0 0 25px;
+        }
+
+        .auth-input {
+          width: 100%;
+          height: 44px;
+          padding: 0 14px;
+          font-size: 14px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          margin-bottom: 16px;
+          color: var(--ink);
+          background: var(--surface);
+          box-sizing: border-box;
+          outline: none;
+          transition: border-color 0.15s ease;
+        }
+
+        .auth-input:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+        .auth-btn {
+          width: 100%;
+          height: 44px;
+          font-size: 14px;
+          background: var(--accent);
+          color: #fff;
+          border: none;
+          border-radius: var(--radius-sm);
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s ease, opacity 0.15s ease;
+        }
+
+        .auth-btn:hover:not(:disabled) {
+          opacity: 0.9;
+        }
+
+        .auth-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .auth-message {
+          margin-top: 16px;
+          font-size: 13px;
+          padding: 10px;
+          border-radius: var(--radius-sm);
+        }
+
+        .auth-message.error {
+          color: var(--accent-red);
+          background: rgba(212, 76, 71, 0.1);
+          border: 1px solid rgba(212, 76, 71, 0.2);
+        }
+
+        .auth-message.success {
+          color: var(--accent-green);
+          background: rgba(15, 123, 108, 0.1);
+          border: 1px solid rgba(15, 123, 108, 0.2);
+        }
+
+        .auth-footer {
+          margin-top: 24px;
+          padding-top: 20px;
+          border-top: 1px solid var(--border);
+        }
+
+        .auth-footer-link {
+          background: none;
+          border: none;
+          font-size: 13px;
+          color: var(--ink-60);
+          cursor: pointer;
+          text-decoration: underline;
+        }
+
+        .auth-footer-link:hover {
+          color: var(--ink);
+        }
+
+        @media (max-width: 768px) {
+          .auth-brand-mark {
+            width: 40px;
+            height: 40px;
+          }
+
+          .auth-brand-text {
+            font-size: 15px;
+          }
+
+          .auth-card {
+            padding: 24px;
+          }
+        }
+      `}</style>
+
+      <div className={`${plusJakarta.className} auth-page`}>
+        <header className="auth-topbar">
+          <Link href="/" className="auth-brand">
+            <span className="auth-brand-inner">
+              <span className="auth-brand-mark">
+                <Image src={appleIcon} alt="" width={48} height={48} priority />
+              </span>
+              <span className="auth-brand-text">protocolLM</span>
+            </span>
+          </Link>
+          <Link href="/" className="auth-back">
+            ← Back
+          </Link>
+        </header>
+
+        <div className="auth-content">
+          <div className="auth-card">
+            <h1 className="auth-title">Sign in</h1>
+            <p className="auth-subtitle">
+              Access food safety compliance resources for Michigan restaurants.
+            </p>
+            
+            <form onSubmit={handleLogin}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                className="auth-input"
+              />
+              
+              <button 
+                type="submit" 
+                disabled={loading || !isLoaded}
+                className="auth-btn"
+              >
+                {loading ? 'Sending...' : !isLoaded ? 'Loading...' : 'Continue with Email'}
+              </button>
+            </form>
+
+            {message && (
+              <p className={`auth-message ${message.includes('Error') ? 'error' : 'success'}`}>
+                {message}
+              </p>
+            )}
+
+            <RecaptchaBadge />
+
+            <div className="auth-footer">
+              <button
+                onClick={() => router.push('/')}
+                className="auth-footer-link"
+              >
+                Back to Home
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

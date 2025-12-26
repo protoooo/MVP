@@ -23,103 +23,122 @@ input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 textarea:-webkit-autofill:hover,
 textarea:-webkit-autofill:focus {
-  -webkit-text-fill-color: #0f172a;
-  box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
-  -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.14) inset;
+  -webkit-text-fill-color: #1a1a1a;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
   transition: background-color 9999s ease-out 0s;
-  caret-color: #0f172a;
+  caret-color: #1a1a1a;
   border-radius: inherit;
 }
 
+/* ✅ NOTION-INSPIRED GLOBAL DESIGN SYSTEM */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --paper: #05070d;
-  --surface: rgba(255, 255, 255, 0.08);
-  --clay: rgba(255, 255, 255, 0.14);
-  --accent: #5fa8ff;
+  /* Base colors - Notion-inspired flat enterprise palette */
+  --paper: #f7f7f5;           /* Off-white background - Notion style */
+  --surface: #ffffff;          /* White surface for cards */
+  --clay: #f1f1ef;            /* Subtle secondary surface */
+  
+  /* Text colors - near-black hierarchy */
+  --ink: #1a1a1a;             /* Primary text - near black */
+  --ink-80: rgba(26, 26, 26, 0.8);
+  --ink-60: rgba(26, 26, 26, 0.6);
+  --ink-40: rgba(26, 26, 26, 0.4);
 
-  --ink: #f6f9ff;
-  --ink-80: rgba(246, 249, 255, 0.8);
-  --ink-60: rgba(246, 249, 255, 0.6);
+  /* Border colors - light neutral gray */
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.15);
+  --border-subtle: rgba(0, 0, 0, 0.06);
 
-  --border: rgba(255, 255, 255, 0.2);
-  --border-strong: rgba(255, 255, 255, 0.32);
+  /* Accent colors - enterprise but colorful (used sparingly) */
+  --accent: #2383e2;           /* Blue - primary accent */
+  --accent-green: #0f7b6c;     /* Green - success */
+  --accent-yellow: #c29243;    /* Yellow - warning */
+  --accent-purple: #6940a5;    /* Purple - info */
+  --accent-red: #d44c47;       /* Red - error/danger */
+  --accent-orange: #cc5d27;    /* Orange - attention */
 
+  /* Focus state */
   --focus: var(--accent);
+  --focus-ring: rgba(35, 131, 226, 0.2);
+  
+  /* Shadows - minimal, no heavy shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.08);
+  
+  /* Radius - soft but not excessive */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
-/* âœ… Apple-like glass (use on CARDS only, never on full-screen wrappers) */
-.glass-surface {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 18px 55px rgba(5, 7, 13, 0.28);
-  border-radius: 18px;
+/* ✅ Notion-inspired flat card styling - minimal shadows, clean borders */
+.notion-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
-/* âœ… Liquid glass utility (main + side variants) - Updated to match terms/privacy page styling */
-:root {
-  --glass-bg: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-  --glass-border: rgba(255, 255, 255, 0.28);
-  --glass-shadow: 0 26px 70px rgba(5, 7, 13, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.46);
-  --glass-highlight: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02));
-  --glass-shine: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
-  --glass-grain: repeating-radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0.08) 1px, transparent 2px, transparent 4px);
+.notion-card--elevated {
+  box-shadow: var(--shadow-md);
 }
 
+/* ✅ Liquid glass - ONLY for: central wheel button, radial menu cards, active modals */
+/* Keep minimal and subtle */
 .glass {
   position: relative;
   isolation: isolate;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(14px) saturate(125%);
-  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
   overflow: hidden;
-  color: inherit;
+  color: var(--ink);
 }
 
 .glass--main {
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   padding: 24px;
 }
 
 .glass--side {
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   padding: 16px 14px;
 }
 
+/* Glass decorative layers - simplified for Notion look */
 .glass__innerHighlight,
 .glass__shine,
 .glass__grain {
+  display: none; /* Hidden by default - flat Notion style */
+}
+
+/* Only show glass effects on specific allowed elements */
+.glass--with-effects .glass__innerHighlight,
+.glass--with-effects .glass__shine {
+  display: block;
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
 }
 
-.glass__innerHighlight {
-  background: var(--glass-highlight);
-  opacity: 0.55;
-  mix-blend-mode: screen;
+.glass--with-effects .glass__innerHighlight {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent);
+  opacity: 0.5;
 }
 
-.glass__shine {
-  inset: 6px 8px auto 8px;
+.glass--with-effects .glass__shine {
+  inset: 4px 8px auto 8px;
   height: 1px;
-  background: var(--glass-shine);
-  opacity: 0.7;
-}
-
-.glass__grain {
-  background-image: var(--glass-grain);
-  opacity: 0.06;
-  mix-blend-mode: soft-light;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  opacity: 0.5;
 }
 
 html,
@@ -132,17 +151,18 @@ body {
   width: 100%;
   height: 100%;
 
-  /* âœ… IMPORTANT: no page-wide background/tint here */
-  background: transparent;
-  background-color: transparent;
+  /* ✅ Notion-inspired flat off-white background - SAME ON EVERY PAGE */
+  background: var(--paper);
+  background-color: var(--paper);
 
   color: var(--ink);
 }
 
+/* ✅ Remove view-specific background overrides - consistent everywhere */
 html[data-view='chat'] body,
 html[data-view='landing'] body {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: var(--paper) !important;
+  background-color: var(--paper) !important;
   color: var(--ink);
 }
 
@@ -150,7 +170,7 @@ body {
   position: relative;
   z-index: 0;
   isolation: isolate;
-  background: transparent;
+  background: var(--paper);
 
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
     'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -160,39 +180,29 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* âœ… App router doesn't rely on #__next, but harmless */
+/* ✅ App router doesn't rely on #__next, but harmless */
 #__next {
   min-height: 100%;
   width: 100%;
-  background: transparent;
+  background: var(--paper);
 }
 
-/* âœ… Fixed background layer (set in layout) */
+/* ✅ Background layer - NO IMAGES, just flat color */
 .plm-bg {
   position: fixed;
   inset: 0;
   z-index: -10;
   pointer-events: none;
   overflow: hidden;
-  background: var(--paper); /* fallback */
+  background: var(--paper); /* Flat off-white, no image */
 }
 
-.plm-bg-img {
-  object-fit: cover;
-  transform: translateZ(0);
-}
-
-/* âœ… VERY subtle vignette for readability (not a gray film) */
+/* ✅ Remove vignette - flat Notion style */
 .plm-bg-vignette {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(120% 80% at 20% 20%, rgba(255,255,255,0.07), transparent 55%),
-    radial-gradient(120% 80% at 80% 10%, rgba(95,168,255,0.06), transparent 60%),
-    radial-gradient(140% 100% at 50% 100%, rgba(0,0,0,0.06), transparent 55%);
+  display: none;
 }
 
-/* âœ… Content wrapper above background */
+/* ✅ Content wrapper above background */
 .plm-app {
   position: relative;
   z-index: 1;
@@ -352,58 +362,37 @@ html[data-view='chat'] .chat-upload-preview img {
   .plm-image-plain img { display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
 }
 
-/* âœ… Empty state components (for chat view) */
-html[data-view='chat'] .ui-emptyicon {
+/* ✅ Empty state components - consistent Notion-inspired light theme */
+html[data-view='chat'] .ui-emptyicon,
+html[data-view='landing'] .ui-emptyicon,
+.ui-emptyicon {
   width: 48px;
   height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
-  color: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-60);
   margin-bottom: 16px;
 }
 
-html[data-view='chat'] .ui-emptytitle {
+html[data-view='chat'] .ui-emptytitle,
+html[data-view='landing'] .ui-emptytitle,
+.ui-emptytitle {
   font-size: 16px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
   margin-bottom: 8px;
 }
 
-html[data-view='chat'] .ui-emptytext {
+html[data-view='chat'] .ui-emptytext,
+html[data-view='landing'] .ui-emptytext,
+.ui-emptytext {
   font-size: 13px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* âœ… Landing page empty state (light theme) */
-html[data-view='landing'] .ui-emptyicon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px;
-  border: 1px solid rgba(47, 93, 138, 0.2);
-  background: rgba(85, 214, 178, 0.05);
-  color: #2F5D8A;
-  margin-bottom: 16px;
-}
-
-html[data-view='landing'] .ui-emptytitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: #0B1220;
-  margin-bottom: 8px;
-}
-
-html[data-view='landing'] .ui-emptytext {
-  font-size: 13px;
-  line-height: 1.6;
-  color: #52637A;
+  color: var(--ink-60);
 }
 
 /* Reduced motion support */

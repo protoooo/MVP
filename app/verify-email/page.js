@@ -1,4 +1,4 @@
-// app/verify-email/page.js - UPDATED: Light UI with Liquid Glass
+// app/verify-email/page.js - Notion-inspired flat UI
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,7 +8,6 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from '@/app/apple-icon.png'
-import LiquidGlass from '@/components/ui/LiquidGlass'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 
@@ -84,8 +83,8 @@ export default function VerifyEmailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center">
-        <div style={{ color: 'rgba(15, 23, 42, 0.7)', fontSize: '15px', fontWeight: '600' }}>Loading…</div>
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: 'var(--paper)' }}>
+        <div style={{ color: 'var(--ink-60)', fontSize: '15px', fontWeight: '600' }}>Loading…</div>
       </div>
     )
   }
@@ -93,14 +92,10 @@ export default function VerifyEmailPage() {
   return (
     <>
       <style jsx global>{`
-        html[data-view='landing'] body {
-          background: transparent;
-        }
-
         .verify-page {
           min-height: 100vh;
           min-height: 100dvh;
-          background: transparent;
+          background: var(--paper);
           display: flex;
           flex-direction: column;
         }
@@ -116,7 +111,7 @@ export default function VerifyEmailPage() {
         }
 
         .verify-brand {
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -140,6 +135,7 @@ export default function VerifyEmailPage() {
           font-size: 17px;
           font-weight: 600;
           letter-spacing: -0.02em;
+          color: var(--ink);
         }
 
         .verify-content {
@@ -153,6 +149,11 @@ export default function VerifyEmailPage() {
         .verify-card {
           width: 100%;
           max-width: 500px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-md);
+          padding: 32px;
         }
 
         .verify-header {
@@ -164,26 +165,26 @@ export default function VerifyEmailPage() {
           width: 64px;
           height: 64px;
           margin: 0 auto 16px;
-          border-radius: 16px;
-          background: rgba(95, 168, 255, 0.14);
-          border: 1px solid rgba(95, 168, 255, 0.22);
+          border-radius: var(--radius-md);
+          background: rgba(35, 131, 226, 0.1);
+          border: 1px solid rgba(35, 131, 226, 0.2);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: rgba(15, 23, 42, 0.82);
+          color: var(--accent);
         }
 
         .verify-title {
           font-size: 28px;
           font-weight: 700;
           letter-spacing: -0.03em;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           margin: 0 0 8px;
         }
 
         .verify-subtitle {
           font-size: 14px;
-          color: rgba(30, 41, 59, 0.74);
+          color: var(--ink-60);
           margin: 0 0 8px;
           font-weight: 600;
         }
@@ -191,29 +192,29 @@ export default function VerifyEmailPage() {
         .verify-email {
           font-size: 15px;
           font-weight: 700;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           margin: 0 0 24px;
         }
 
         .verify-message {
           margin-bottom: 16px;
           padding: 12px 16px;
-          border-radius: 12px;
+          border-radius: var(--radius-sm);
           font-size: 14px;
           font-weight: 600;
           text-align: center;
         }
 
         .verify-message.error {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #dc2626;
+          background: rgba(212, 76, 71, 0.1);
+          border: 1px solid rgba(212, 76, 71, 0.2);
+          color: var(--accent-red);
         }
 
         .verify-message.success {
-          background: rgba(34, 197, 94, 0.1);
-          border: 1px solid rgba(34, 197, 94, 0.3);
-          color: #16a34a;
+          background: rgba(15, 123, 108, 0.1);
+          border: 1px solid rgba(15, 123, 108, 0.2);
+          color: var(--accent-green);
         }
 
         .verify-steps {
@@ -225,9 +226,9 @@ export default function VerifyEmailPage() {
 
         .verify-step {
           padding: 16px;
-          background: rgba(255, 255, 255, 0.5);
-          border: 1px solid rgba(15, 23, 42, 0.1);
-          border-radius: 12px;
+          background: var(--clay);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
           display: flex;
           gap: 12px;
           align-items: flex-start;
@@ -245,13 +246,13 @@ export default function VerifyEmailPage() {
         .verify-step-title {
           font-size: 14px;
           font-weight: 700;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           margin: 0 0 4px;
         }
 
         .verify-step-text {
           font-size: 13px;
-          color: rgba(30, 41, 59, 0.74);
+          color: var(--ink-60);
           margin: 0;
           line-height: 1.5;
         }
@@ -268,48 +269,44 @@ export default function VerifyEmailPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 9999px;
+          border-radius: var(--radius-sm);
           font-size: 14px;
-          font-weight: 800;
+          font-weight: 700;
           cursor: pointer;
           transition: all 0.15s ease;
         }
 
         .verify-btn-primary {
-          background: rgba(15, 23, 42, 0.92);
+          background: var(--accent);
           color: #fff;
           border: none;
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+          box-shadow: var(--shadow-sm);
         }
 
         .verify-btn-primary:hover:not(:disabled) {
-          background: rgba(15, 23, 42, 1);
-          transform: translateY(-1px);
-          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.22);
+          opacity: 0.9;
         }
 
         .verify-btn-primary:disabled {
-          opacity: 0.7;
+          opacity: 0.6;
           cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
         }
 
         .verify-btn-secondary {
-          background: rgba(255, 255, 255, 0.8);
-          color: rgba(15, 23, 42, 0.86);
-          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: var(--surface);
+          color: var(--ink-80);
+          border: 1px solid var(--border);
         }
 
         .verify-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.95);
+          background: var(--clay);
         }
 
         .verify-note {
           margin-top: 16px;
           text-align: center;
           font-size: 12px;
-          color: rgba(100, 116, 139, 0.74);
+          color: var(--ink-40);
           font-weight: 600;
         }
 
@@ -331,6 +328,10 @@ export default function VerifyEmailPage() {
             width: 56px;
             height: 56px;
           }
+
+          .verify-card {
+            padding: 24px;
+          }
         }
       `}</style>
 
@@ -347,7 +348,7 @@ export default function VerifyEmailPage() {
         </header>
 
         <div className="verify-content">
-          <LiquidGlass variant="main" className="verify-card">
+          <div className="verify-card">
             <div className="verify-header">
               <div className="verify-icon">
                 <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -414,7 +415,7 @@ export default function VerifyEmailPage() {
             <p className="verify-note">
              After verifying, you'll be redirected to start your 14-day free trial
             </p>
-          </LiquidGlass>
+          </div>
         </div>
       </div>
     </>
