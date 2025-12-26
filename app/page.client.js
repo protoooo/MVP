@@ -650,16 +650,22 @@ function formatAssistantContent(content, citations = []) {
       </div>
     )
   }
-  
+
   // Check for "NO VIOLATIONS" pattern
   if (/^NO VIOLATIONS/i.test(text)) {
     return (
-      <div className="chat-no-violations">
-        No violations! ✓
+      <div className="chat-analysis-summary positive">
+        <span className="chat-summary-icon" aria-hidden="true">
+          ✓
+        </span>
+        <div>
+          <div className="chat-summary-title">No violations detected</div>
+          <div className="chat-summary-detail">Keep up the safe practices.</div>
+        </div>
       </div>
     )
   }
-  
+
   // Check for "VIOLATIONS:" pattern
   if (/^VIOLATIONS:/i.test(text)) {
     const items = parseBulletItems(text, 1)
@@ -680,20 +686,22 @@ function formatAssistantContent(content, citations = []) {
     })
     
     return (
-      <div>
-        <div className="chat-violations-header">Violations:</div>
-        {violations.map((v, idx) => (
-          <div key={idx} className="chat-violation-item">
-            <span className="chat-violation-type">{v.issue}</span>
-            {v.fix && (
-              <>
-                <br />
-                <span className="chat-violation-fix">Fix: {v.fix}</span>
-              </>
-            )}
-            {renderCitations(v.citations)}
-          </div>
-        ))}
+      <div className="chat-analysis-section">
+        <div className="chat-analysis-subtitle">Violations</div>
+        <ul className="chat-violations-list">
+          {violations.map((v, idx) => (
+            <li key={idx} className="chat-violation-row">
+              <span className="chat-violation-icon" aria-hidden="true">
+                ⚠️
+              </span>
+              <div className="chat-violation-content">
+                <div className="chat-violation-title">{v.issue}</div>
+                {v.fix && <div className="chat-violation-fix">Fix: {v.fix}</div>}
+                {renderCitations(v.citations)}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     )
   }
@@ -703,13 +711,18 @@ function formatAssistantContent(content, citations = []) {
     const questions = parseBulletItems(text, 1)
     
     return (
-      <div>
-        <div className="chat-need-info-header">Need more info:</div>
-        {questions.map((q, idx) => (
-          <div key={idx} style={{ marginBottom: '6px', paddingLeft: '12px' }}>
-            • {q}
-          </div>
-        ))}
+      <div className="chat-analysis-section">
+        <div className="chat-analysis-subtitle">Need more info</div>
+        <ul className="chat-violations-list">
+          {questions.map((q, idx) => (
+            <li key={idx} className="chat-violation-row">
+              <span className="chat-violation-icon" aria-hidden="true">
+                ?
+              </span>
+              <div className="chat-violation-content">{q}</div>
+            </li>
+          ))}
+        </ul>
       </div>
     )
   }
@@ -718,7 +731,7 @@ function formatAssistantContent(content, citations = []) {
   const ids = extractCitationIds(text)
   const clean = text.replace(/\s*\[\d+\]/g, '').trim()
   return (
-    <div>
+    <div className="chat-analysis-text">
       <div className="chat-content">{clean}</div>
       {renderCitations(ids)}
     </div>
@@ -1457,6 +1470,71 @@ export default function Page() {
       alert('Failed to process image.')
     }
   }
+
+  const buildReportText = useCallback((message) => {
+    if (!message || message.role !== 'assistant') return ''
+    const normalized = normalizeAssistantText(message.content || '')
+    if (!normalized) return ''
+
+    const citationLines = Array.isArray(message.citations)
+      ? message.citations
+          .map((c) => {
+            const source = safeTrim(c?.source)
+            const page = safeTrim(c?.page)
+            const county = safeTrim(c?.county)
+            const snippet = safeTrim(c?.snippet)
+            const label = [source, page ? `p.${page}` : null].filter(Boolean).join(' ')
+            const extras = [county ? `County: ${county}` : null, snippet].filter(Boolean).join(' — ')
+            const line = [label, extras].filter(Boolean).join(' | ')
+            return line ? `• ${line}` : ''
+          })
+          .filter(Boolean)
+      : []
+
+    return citationLines.length ? `${normalized}\n\nSources:\n${citationLines.join('\n')}` : normalized
+  }, [])
+
+  const handleDownloadReport = useCallback(
+    (message) => {
+      const text = buildReportText(message)
+      if (!text) return
+
+      const blob = new Blob([text], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'analysis-report.txt'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(url), 1500)
+    },
+    [buildReportText]
+  )
+
+  const handleShareResults = useCallback(
+    async (message) => {
+      const text = buildReportText(message)
+      if (!text || typeof navigator === 'undefined') return
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'Food Safety Analysis', text })
+          return
+        }
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text)
+          alert('Analysis copied to clipboard.')
+          return
+        }
+        alert('Sharing is not supported on this device.')
+      } catch (error) {
+        console.error('Share failed', error)
+        alert('Unable to share results right now.')
+      }
+    },
+    [buildReportText]
+  )
 
   if (isLoading) {
     return (
@@ -3322,6 +3400,321 @@ export default function Page() {
           gap: 12px;
         }
 
+        .tool-first-ui .chat-messages {
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.04), transparent 35%),
+            radial-gradient(circle at 80% 0%, rgba(95, 168, 255, 0.06), transparent 42%);
+        }
+
+        .tool-first-ui .chat-history-card {
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 0 20px 60px rgba(5, 7, 13, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+          padding: 18px;
+          border-radius: 18px;
+        }
+
+        .tool-first-ui .chat-history {
+          gap: 22px;
+        }
+
+        .tool-first-ui .chat-message {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .tool-first-ui .chat-message-user {
+          justify-content: flex-start;
+        }
+
+        .tool-first-ui .chat-input-row {
+          justify-content: center;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .tool-first-ui .chat-camera-btn {
+          width: 52px;
+          height: 52px;
+          margin-right: 2px;
+          border-radius: 16px;
+        }
+
+        .tool-first-ui .chat-input-wrapper {
+          flex: 0 1 340px;
+          min-height: 42px;
+        }
+
+        .tool-first-ui .chat-textarea {
+          font-size: 14px;
+          padding: 10px 12px;
+        }
+
+        .tool-first-ui .chat-send-btn {
+          display: none;
+        }
+
+        .chat-analyze-btn {
+          height: 46px;
+          padding: 0 18px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.34);
+          background: linear-gradient(180deg, rgba(95, 168, 255, 0.95), rgba(95, 168, 255, 0.78));
+          color: #fff;
+          font-weight: 800;
+          font-size: 14px;
+          cursor: pointer;
+          box-shadow: 0 14px 40px rgba(95, 168, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+
+        .chat-analyze-btn:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 18px 48px rgba(95, 168, 255, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+
+        .chat-analyze-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .chat-analysis-result {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: 14px;
+          padding: 16px;
+          color: rgba(15, 23, 42, 0.92);
+          box-shadow: 0 20px 50px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+        }
+
+        .chat-analysis-header-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .chat-analysis-title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+        }
+
+        .chat-analysis-subtitle {
+          margin: 0;
+          font-size: 13px;
+          color: rgba(15, 23, 42, 0.82);
+          font-weight: 700;
+        }
+
+        .chat-analysis-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6px 10px;
+          border-radius: 9999px;
+          background: rgba(95, 168, 255, 0.18);
+          color: rgba(15, 23, 42, 0.82);
+          font-weight: 800;
+          font-size: 11px;
+          border: 1px solid rgba(95, 168, 255, 0.35);
+        }
+
+        .chat-analysis-body {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .chat-analysis-summary {
+          display: grid;
+          grid-template-columns: auto 1fr;
+          gap: 10px;
+          align-items: center;
+          padding: 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(22, 163, 74, 0.12);
+        }
+
+        .chat-analysis-summary.positive {
+          border-color: rgba(34, 197, 94, 0.35);
+        }
+
+        .chat-summary-icon {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          background: rgba(34, 197, 94, 0.16);
+          color: #16a34a;
+          font-weight: 800;
+          font-size: 18px;
+        }
+
+        .chat-summary-title {
+          font-weight: 800;
+          font-size: 15px;
+          margin-bottom: 2px;
+        }
+
+        .chat-summary-detail {
+          margin: 0;
+          font-size: 13px;
+          color: rgba(15, 23, 42, 0.78);
+        }
+
+        .chat-analysis-section {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: 10px 0 4px 0;
+        }
+
+        .chat-violations-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .chat-violation-row {
+          display: grid;
+          grid-template-columns: auto 1fr;
+          gap: 10px;
+          align-items: flex-start;
+          padding: 10px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-violations-list .chat-violation-row:last-child {
+          border-bottom: none;
+        }
+
+        .chat-violation-icon {
+          width: 28px;
+          height: 28px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 9px;
+          background: rgba(239, 68, 68, 0.14);
+          color: #ef4444;
+          font-size: 14px;
+          font-weight: 800;
+        }
+
+        .chat-violation-content {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .chat-violation-title {
+          font-weight: 800;
+          color: rgba(15, 23, 42, 0.9);
+        }
+
+        .chat-violation-fix {
+          color: rgba(15, 23, 42, 0.86);
+        }
+
+        .chat-analysis-text .chat-content {
+          font-weight: 700;
+          color: rgba(15, 23, 42, 0.9);
+        }
+
+        .chat-analysis-actions {
+          margin-top: 14px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .chat-action-btn {
+          height: 38px;
+          padding: 0 14px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+          color: rgba(15, 23, 42, 0.9);
+          font-weight: 750;
+          font-size: 13px;
+          cursor: pointer;
+          transition: transform 0.12s ease, box-shadow 0.12s ease;
+          box-shadow: 0 12px 30px rgba(5, 7, 13, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        .chat-action-btn.secondary {
+          background: rgba(95, 168, 255, 0.14);
+          border-color: rgba(95, 168, 255, 0.3);
+          color: rgba(15, 23, 42, 0.9);
+        }
+
+        .chat-action-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 14px 38px rgba(5, 7, 13, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .chat-upload-preview {
+          width: 100%;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+
+        .chat-upload-preview img {
+          display: block;
+          width: 100%;
+          max-height: 320px;
+          object-fit: contain;
+          background: #f8fafc;
+        }
+
+        .chat-upload-label {
+          display: block;
+          padding: 10px 12px;
+          font-size: 12px;
+          font-weight: 700;
+          color: rgba(15, 23, 42, 0.78);
+          background: rgba(255, 255, 255, 0.9);
+          border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-user-note {
+          width: 100%;
+          padding: 12px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: rgba(15, 23, 42, 0.9);
+          box-shadow: 0 12px 34px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        }
+
+        .chat-user-note-title {
+          margin: 0 0 6px 0;
+          font-weight: 800;
+          font-size: 13px;
+          color: rgba(15, 23, 42, 0.82);
+          letter-spacing: -0.01em;
+        }
+
+        .chat-user-note-text {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.6;
+          color: rgba(15, 23, 42, 0.82);
+        }
+
         /* Free usage counter */
         .free-usage-counter {
           display: inline-flex;
@@ -3723,42 +4116,82 @@ export default function Page() {
 
               <div
                 ref={scrollRef}
-              onScroll={handleScroll}
-              className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-            >
-              {messages.length === 0 ? (
-                <div className="chat-empty-state">
-                  <p className="chat-empty-text">
-                    Upload a photo or ask a question about Michigan food safety regulations.
-                  </p>
-                </div>
-              ) : (
+                onScroll={handleScroll}
+                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+              >
+                {messages.length === 0 ? (
+                  <div className="chat-empty-state">
+                    <p className="chat-empty-text">Upload a photo to analyze for food safety violations.</p>
+                  </div>
+                ) : (
                   <LiquidGlass variant="main" className="chat-history-card">
                     <div className="chat-history">
-                      {messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
-                        >
+                      {messages.map((msg, idx) => {
+                        const isAssistant = msg.role === 'assistant'
+                        const isPendingAssistant = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
+
+                        return (
                           <div
-                            className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
+                            key={idx}
+                            className={`chat-message ${isAssistant ? 'chat-message-assistant' : 'chat-message-user'}`}
                           >
                             {msg.image && (
-                              <div className="chat-bubble-image">
+                              <div className="chat-upload-preview">
                                 <img src={msg.image} alt="Uploaded" />
+                                <span className="chat-upload-label">Photo ready for analysis</span>
                               </div>
                             )}
 
-                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                              <div className="chat-thinking">Analyzing…</div>
-                            ) : msg.role === 'assistant' ? (
-                              formatAssistantContent(msg.content, msg.citations)
+                            {isAssistant ? (
+                              <div className="chat-analysis-result">
+                                <div className="chat-analysis-header-row">
+                                  <div>
+                                    <p className="chat-analysis-title">Analysis Results</p>
+                                    <p className="chat-analysis-subtitle">Structured findings for your upload</p>
+                                  </div>
+                                  <span className="chat-analysis-pill">Report</span>
+                                </div>
+
+                                <div className="chat-analysis-body">
+                                  {isPendingAssistant ? (
+                                    <div className="chat-thinking">Analyzing…</div>
+                                  ) : (
+                                    formatAssistantContent(msg.content, msg.citations)
+                                  )}
+                                </div>
+
+                                {!isPendingAssistant && (
+                                  <div className="chat-analysis-actions">
+                                    <button
+                                      type="button"
+                                      className="chat-action-btn"
+                                      onClick={() => handleDownloadReport(msg)}
+                                    >
+                                      Download report
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="chat-action-btn secondary"
+                                      onClick={() => handleShareResults(msg)}
+                                    >
+                                      Share results
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             ) : (
-                              <div className="chat-content">{msg.content}</div>
+                              (msg.content || msg.image) && (
+                                <div className="chat-user-note">
+                                  <div className="chat-user-note-title">Notes for this scan</div>
+                                  <p className="chat-user-note-text">
+                                    {msg.content ? msg.content : 'Image uploaded for inspection.'}
+                                  </p>
+                                </div>
+                              )
                             )}
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </LiquidGlass>
                 )}
@@ -3815,7 +4248,7 @@ export default function Page() {
                               textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
                             }
                           }}
-                          placeholder="Ask a question…"
+                          placeholder="Add notes (optional)..."
                           rows={1}
                           className="chat-textarea"
                           onKeyDown={(e) => {
@@ -3825,17 +4258,17 @@ export default function Page() {
                             }
                           }}
                         />
-
-                        <button
-                          type="button"
-                          onClick={handleSend}
-                          disabled={(!safeTrim(input) && !selectedImage) || isSending}
-                          className="plm-icon-btn primary chat-send-btn"
-                          aria-label="Send"
-                        >
-                          {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
-                        </button>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSend}
+                        disabled={(!safeTrim(input) && !selectedImage) || isSending}
+                        className="chat-analyze-btn"
+                        aria-label="Analyze upload"
+                      >
+                        {isSending ? 'Analyzing…' : 'Analyze'}
+                      </button>
                     </div>
 
                     <p className="chat-disclaimer">
