@@ -1,4 +1,4 @@
-// app/register-location/page.js - UPDATED: Light UI with Liquid Glass
+// app/register-location/page.js - Notion-inspired flat UI
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,7 +8,6 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from '@/app/apple-icon.png'
-import LiquidGlass from '@/components/ui/LiquidGlass'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 
@@ -102,8 +101,8 @@ export default function RegisterLocationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center">
-        <div style={{ color: 'rgba(15, 23, 42, 0.7)', fontSize: '15px', fontWeight: '600' }}>Loading...</div>
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: 'var(--paper)' }}>
+        <div style={{ color: 'var(--ink-60)', fontSize: '15px', fontWeight: '600' }}>Loading...</div>
       </div>
     )
   }
@@ -114,7 +113,7 @@ export default function RegisterLocationPage() {
         .register-page {
           min-height: 100vh;
           min-height: 100dvh;
-          background: transparent;
+          background: var(--paper);
           display: flex;
           flex-direction: column;
         }
@@ -130,7 +129,7 @@ export default function RegisterLocationPage() {
         }
 
         .register-brand {
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -154,6 +153,7 @@ export default function RegisterLocationPage() {
           font-size: 17px;
           font-weight: 600;
           letter-spacing: -0.02em;
+          color: var(--ink);
         }
 
         .register-content {
@@ -167,6 +167,11 @@ export default function RegisterLocationPage() {
         .register-card {
           width: 100%;
           max-width: 500px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-md);
+          padding: 32px;
         }
 
         .register-header {
@@ -182,7 +187,7 @@ export default function RegisterLocationPage() {
           font-weight: 600;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #5fa8ff;
+          color: var(--accent);
           margin-bottom: 12px;
         }
 
@@ -191,20 +196,20 @@ export default function RegisterLocationPage() {
           font-weight: 700;
           letter-spacing: -0.03em;
           margin: 0 0 12px;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
         }
 
         .register-subtitle {
           font-size: 15px;
-          color: rgba(30, 41, 59, 0.74);
+          color: var(--ink-60);
           margin: 0;
           line-height: 1.6;
         }
 
         .register-info-box {
-          background: rgba(255, 255, 255, 0.5);
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          border-radius: 12px;
+          background: var(--clay);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
           padding: 20px;
           margin-bottom: 24px;
         }
@@ -212,13 +217,13 @@ export default function RegisterLocationPage() {
         .register-info-title {
           font-size: 14px;
           font-weight: 700;
-          color: rgba(15, 23, 42, 0.92);
+          color: var(--ink);
           margin: 0 0 12px;
         }
 
         .register-info-list {
           font-size: 13px;
-          color: rgba(30, 41, 59, 0.74);
+          color: var(--ink-60);
           line-height: 1.7;
           margin: 0;
           padding-left: 20px;
@@ -226,22 +231,23 @@ export default function RegisterLocationPage() {
         }
 
         .register-warning {
-          background: rgba(239, 68, 68, 0.1);
-          border-left: 4px solid #ef4444;
-          border-radius: 8px;
+          background: rgba(212, 76, 71, 0.08);
+          border: 1px solid rgba(212, 76, 71, 0.2);
+          border-left: 3px solid var(--accent-red);
+          border-radius: var(--radius-sm);
           padding: 16px;
           margin-bottom: 24px;
         }
 
         .register-warning-title {
-          color: #991b1b;
+          color: var(--accent-red);
           font-size: 14px;
           font-weight: 700;
           margin: 0 0 8px;
         }
 
         .register-warning-text {
-          color: #991b1b;
+          color: var(--accent-red);
           font-size: 14px;
           margin: 0;
           line-height: 1.6;
@@ -249,22 +255,22 @@ export default function RegisterLocationPage() {
 
         .register-alert {
           padding: 12px 16px;
-          border-radius: 12px;
+          border-radius: var(--radius-sm);
           margin-bottom: 20px;
           font-size: 14px;
           font-weight: 600;
         }
 
         .register-alert.error {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #dc2626;
+          background: rgba(212, 76, 71, 0.1);
+          border: 1px solid rgba(212, 76, 71, 0.2);
+          color: var(--accent-red);
         }
 
         .register-alert.success {
-          background: rgba(34, 197, 94, 0.1);
-          border: 1px solid rgba(34, 197, 94, 0.3);
-          color: #16a34a;
+          background: rgba(15, 123, 108, 0.1);
+          border: 1px solid rgba(15, 123, 108, 0.2);
+          color: var(--accent-green);
         }
 
         .register-btn {
@@ -273,46 +279,46 @@ export default function RegisterLocationPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(15, 23, 42, 0.92);
+          background: var(--accent);
           color: #fff;
           border: none;
-          border-radius: 9999px;
+          border-radius: var(--radius-sm);
           font-size: 14px;
-          font-weight: 800;
+          font-weight: 700;
           cursor: pointer;
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+          box-shadow: var(--shadow-sm);
           transition: all 0.15s ease;
         }
 
         .register-btn:hover:not(:disabled) {
-          background: rgba(15, 23, 42, 1);
-          transform: translateY(-1px);
-          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.22);
+          opacity: 0.9;
         }
 
         .register-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
         }
 
         .register-note {
           margin-top: 20px;
           font-size: 12px;
-          color: rgba(100, 116, 139, 0.74);
+          color: var(--ink-40);
           text-align: center;
           font-weight: 600;
         }
 
         .register-note a {
-          color: #5fa8ff;
+          color: var(--accent);
           text-decoration: none;
         }
 
         @media (max-width: 768px) {
           .register-title {
             font-size: 24px;
+          }
+
+          .register-card {
+            padding: 24px;
           }
         }
       `}</style>
@@ -330,7 +336,7 @@ export default function RegisterLocationPage() {
         </header>
 
         <div className="register-content">
-          <LiquidGlass variant="main" className="register-card">
+          <div className="register-card">
             <div className="register-header">
               <div className="register-eyebrow">One More Step</div>
               <h1 className="register-title">Register Your Device</h1>
@@ -386,7 +392,7 @@ export default function RegisterLocationPage() {
                 support@protocollm.org
               </a>
             </p>
-          </LiquidGlass>
+          </div>
         </div>
       </div>
     </>
