@@ -28,7 +28,18 @@ export default function RadialMenu({
 }) {
   const [wheelOpen, setWheelOpen] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
+  const [wheelRadius, setWheelRadius] = useState(120)
   const containerRef = useRef(null)
+
+  // Set wheel radius based on screen size (avoid hydration mismatch)
+  useEffect(() => {
+    const updateRadius = () => {
+      setWheelRadius(window.innerWidth < 400 ? 100 : 120)
+    }
+    updateRadius()
+    window.addEventListener('resize', updateRadius)
+    return () => window.removeEventListener('resize', updateRadius)
+  }, [])
 
   // Define the 5 actions for the wheel
   const actions = [
@@ -67,7 +78,7 @@ export default function RadialMenu({
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside, { passive: true })
     document.addEventListener('touchstart', handleClickOutside, { passive: true })
     document.addEventListener('keydown', handleEscape)
 
@@ -88,9 +99,6 @@ export default function RadialMenu({
     }
     setWheelOpen(false)
   }, [])
-
-  // Wheel radius - responsive
-  const wheelRadius = typeof window !== 'undefined' && window.innerWidth < 400 ? 100 : 120
 
   return (
     <>
@@ -354,7 +362,7 @@ export default function RadialMenu({
         @media (prefers-reduced-motion: reduce) {
           .radial-center-btn,
           .radial-item {
-            transition-duration: 0.01ms !important;
+            transition: none !important;
           }
         }
       `}</style>
