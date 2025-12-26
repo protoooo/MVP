@@ -849,6 +849,9 @@ export default function Page() {
   const [chatHistory, setChatHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
   const [historyReady, setHistoryReady] = useState(false)
+  
+  // ✅ Panel state: null = show radial menu, 'text' | 'image' | 'history' | 'settings'
+  const [activePanel, setActivePanel] = useState(null)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -1348,6 +1351,7 @@ export default function Page() {
     setInput('')
     setSelectedImage(null)
     setSelectedPriceId(null)
+    setActivePanel(null)
   }, [])
 
   const handleLoadHistory = useCallback(
@@ -1365,9 +1369,9 @@ export default function Page() {
       )
       setInput('')
       setSelectedImage(null)
-      if (typeof window !== 'undefined' && window.innerWidth < 1100) {
-        setShowHistory(false)
-      }
+      // Switch to the appropriate panel based on if it has an image
+      const hasImageInConvo = (entry.messages || []).some(m => m.hasImage)
+      setActivePanel(hasImageInConvo ? 'image' : 'text')
     },
     []
   )
@@ -4536,6 +4540,578 @@ export default function Page() {
             transition-duration: 0.01ms !important;
           }
         }
+
+        /* ✅ Panel Centered UI - New Radial Menu Based Design */
+        .panel-centered-ui {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        /* ✅ Fullscreen centered radial menu */
+        .radial-menu-fullscreen {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+        }
+
+        /* ✅ Panel overlay (for all panels) */
+        .panel-overlay {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          z-index: 100;
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 35%),
+            rgba(8, 13, 26, 0.25);
+          backdrop-filter: blur(8px) saturate(120%);
+          -webkit-backdrop-filter: blur(8px) saturate(120%);
+          animation: panel-fade-in 0.2s ease;
+        }
+
+        @keyframes panel-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .panel-container {
+          width: 100%;
+          max-width: 540px;
+          max-height: calc(100vh - 40px);
+          max-height: calc(100dvh - 40px);
+          display: flex;
+          flex-direction: column;
+          animation: panel-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes panel-slide-up {
+          from { 
+            opacity: 0; 
+            transform: translateY(20px) scale(0.96); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+          }
+        }
+
+        /* ✅ Glass panel card */
+        .panel-card {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          max-height: calc(100vh - 40px);
+          max-height: calc(100dvh - 40px);
+          overflow: hidden;
+        }
+
+        .panel-card.text-panel,
+        .panel-card.image-panel {
+          min-height: 400px;
+        }
+
+        .panel-card.history-panel,
+        .panel-card.settings-panel {
+          min-height: 300px;
+        }
+
+        /* ✅ Close button */
+        .panel-close-btn {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          z-index: 10;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          color: rgba(15, 23, 42, 0.8);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .panel-close-btn:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: scale(1.05);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .panel-close-btn:active {
+          transform: scale(0.95);
+        }
+
+        /* ✅ Panel header */
+        .panel-header {
+          padding: 0 0 16px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+          margin-bottom: 16px;
+        }
+
+        .panel-title {
+          margin: 0 0 4px 0;
+          font-size: 20px;
+          font-weight: 800;
+          color: rgba(15, 23, 42, 0.95);
+          letter-spacing: -0.02em;
+        }
+
+        .panel-subtitle {
+          margin: 0;
+          font-size: 13px;
+          color: rgba(15, 23, 42, 0.6);
+        }
+
+        /* ✅ Panel body */
+        .panel-body {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          overflow: hidden;
+        }
+
+        /* ✅ Messages area */
+        .panel-messages {
+          flex: 1;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          padding-right: 8px;
+          max-height: 300px;
+        }
+
+        .panel-message {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .panel-message.assistant .panel-response {
+          padding: 14px;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          color: rgba(15, 23, 42, 0.9);
+        }
+
+        .panel-message.user .panel-question {
+          padding: 12px 14px;
+          border-radius: 14px;
+          background: rgba(95, 168, 255, 0.12);
+          border: 1px solid rgba(95, 168, 255, 0.25);
+        }
+
+        .panel-question-label {
+          display: block;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: rgba(15, 23, 42, 0.5);
+          margin-bottom: 4px;
+        }
+
+        .panel-question-text {
+          margin: 0;
+          font-size: 14px;
+          color: rgba(15, 23, 42, 0.85);
+          line-height: 1.5;
+        }
+
+        .panel-thinking {
+          color: rgba(15, 23, 42, 0.6);
+          font-style: italic;
+          animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+
+        /* ✅ Input area */
+        .panel-input-area {
+          margin-top: auto;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .panel-input-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 10px;
+        }
+
+        .panel-input-wrapper {
+          flex: 1;
+          display: flex;
+          align-items: flex-end;
+          background: rgba(255, 255, 255, 0.5);
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          border-radius: 14px;
+          padding: 4px;
+          box-shadow: 0 8px 24px rgba(5, 7, 13, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          transition: all 0.15s ease;
+        }
+
+        .panel-input-wrapper:focus-within {
+          border-color: rgba(95, 168, 255, 0.4);
+          box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.12), 0 8px 24px rgba(5, 7, 13, 0.1);
+        }
+
+        .panel-textarea {
+          flex: 1;
+          min-height: 40px;
+          max-height: 100px;
+          padding: 10px 12px;
+          border: none;
+          background: transparent;
+          color: rgba(15, 23, 42, 0.95);
+          font-size: 15px;
+          line-height: 1.4;
+          resize: none;
+          font-family: inherit;
+        }
+
+        .panel-textarea::placeholder {
+          color: rgba(15, 23, 42, 0.5);
+        }
+
+        .panel-textarea:focus {
+          outline: none;
+        }
+
+        .panel-send-btn,
+        .panel-camera-btn {
+          flex-shrink: 0;
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          background: linear-gradient(180deg, rgba(95, 168, 255, 0.95), rgba(95, 168, 255, 0.8));
+          color: #fff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 20px rgba(95, 168, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          transition: all 0.15s ease;
+        }
+
+        .panel-send-btn:hover:not(:disabled),
+        .panel-camera-btn:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 24px rgba(95, 168, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .panel-send-btn:active:not(:disabled),
+        .panel-camera-btn:active:not(:disabled) {
+          transform: scale(0.95);
+        }
+
+        .panel-send-btn:disabled,
+        .panel-camera-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .panel-camera-btn {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.25);
+          color: rgba(15, 23, 42, 0.8);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .panel-camera-btn:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.3);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.6s linear infinite;
+        }
+
+        /* ✅ Image panel specific */
+        .panel-image-preview {
+          position: relative;
+          width: 100%;
+          max-height: 200px;
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(0, 0, 0, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .panel-image-preview img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          max-height: 200px;
+          object-fit: contain;
+        }
+
+        .panel-image-remove {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(0, 0, 0, 0.6);
+          color: #fff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+        }
+
+        .panel-image-remove:hover {
+          background: rgba(0, 0, 0, 0.8);
+          transform: scale(1.1);
+        }
+
+        .panel-user-image {
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(0, 0, 0, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .panel-user-image img {
+          display: block;
+          width: 100%;
+          max-height: 150px;
+          object-fit: contain;
+        }
+
+        /* ✅ History panel specific */
+        .panel-history-list {
+          flex: 1;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          max-height: 350px;
+        }
+
+        .panel-history-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.08);
+          cursor: pointer;
+          transition: all 0.15s ease;
+          text-align: left;
+        }
+
+        .panel-history-item:hover {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.25);
+          transform: translateY(-1px);
+        }
+
+        .panel-history-content {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .panel-history-title {
+          margin: 0 0 4px 0;
+          font-size: 14px;
+          font-weight: 700;
+          color: rgba(15, 23, 42, 0.9);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .panel-history-preview {
+          margin: 0;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.6);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .panel-history-date {
+          flex-shrink: 0;
+          font-size: 11px;
+          font-weight: 600;
+          color: rgba(15, 23, 42, 0.5);
+          padding: 4px 8px;
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-history-empty {
+          text-align: center;
+          padding: 40px 20px;
+        }
+
+        .panel-history-empty p {
+          margin: 0;
+          font-size: 15px;
+          font-weight: 600;
+          color: rgba(15, 23, 42, 0.7);
+        }
+
+        .panel-history-empty-sub {
+          margin-top: 8px !important;
+          font-size: 13px !important;
+          font-weight: 400 !important;
+          color: rgba(15, 23, 42, 0.5) !important;
+        }
+
+        /* ✅ Settings panel specific */
+        .panel-settings-list {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .panel-settings-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.08);
+          cursor: pointer;
+          transition: all 0.15s ease;
+          color: rgba(15, 23, 42, 0.85);
+        }
+
+        .panel-settings-item:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateX(2px);
+        }
+
+        .panel-settings-item.danger {
+          border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .panel-settings-item.danger:hover {
+          background: rgba(239, 68, 68, 0.1);
+          border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .panel-settings-item.danger .panel-settings-label {
+          color: #ef4444;
+        }
+
+        .panel-settings-label {
+          font-size: 15px;
+          font-weight: 600;
+        }
+
+        .panel-settings-divider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.1);
+          margin: 8px 0;
+        }
+
+        .panel-settings-info {
+          margin-top: 24px;
+          padding: 16px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.06);
+          text-align: center;
+        }
+
+        .panel-settings-email {
+          margin: 0 0 4px 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: rgba(15, 23, 42, 0.8);
+        }
+
+        .panel-settings-status {
+          margin: 0;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.5);
+        }
+
+        /* ✅ Responsive adjustments */
+        @media (max-width: 600px) {
+          .panel-overlay {
+            padding: 16px;
+          }
+
+          .panel-container {
+            max-height: calc(100vh - 32px);
+            max-height: calc(100dvh - 32px);
+          }
+
+          .panel-card {
+            max-height: calc(100vh - 32px);
+            max-height: calc(100dvh - 32px);
+          }
+
+          .panel-title {
+            font-size: 18px;
+          }
+
+          .panel-messages {
+            max-height: 250px;
+          }
+
+          .panel-history-list {
+            max-height: 300px;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .panel-overlay {
+            padding: 12px;
+          }
+
+          .panel-input-row {
+            gap: 8px;
+          }
+
+          .panel-send-btn,
+          .panel-camera-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+          }
+
+          .panel-textarea {
+            font-size: 14px;
+            padding: 8px 10px;
+          }
+        }
       `}</style>
 
       {/* ✅ Render modals via Portal so they always overlay correctly */}
@@ -4559,317 +5135,98 @@ export default function Page() {
 
       <div className="app-container">
         {hasPaidAccess ? (
-          <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <div className={`${plusJakarta.className} chat-root tool-first-ui`}>
-              <header className="chat-topbar">
-                <div className="chat-top-meta">
-                  <p className="chat-top-title">protocolLM Assistant</p>
-                  <p className="chat-top-sub">Michigan food safety, photo + text tools</p>
-                </div>
-                <nav className="chat-top-actions" aria-label="Tool actions">
-                  <button
-                    type="button"
-                    className="chat-history-toggle"
-                    onClick={() => setShowHistory((v) => !v)}
-                    aria-pressed={showHistory}
-                  >
-                    History
-                  </button>
-                  {isAuthenticated && (
-                    <div className="chat-settings-wrap" ref={settingsRef}>
-                      <button
-                        type="button"
-                        className="plm-icon-btn chat-settings-btn"
-                        onClick={() => setShowSettingsMenu((v) => !v)}
-                        aria-expanded={showSettingsMenu}
-                        aria-label="Settings"
-                      >
-                        <Icons.Gear />
-                      </button>
+          <main className={`${plusJakarta.className} panel-centered-ui`}>
+            {/* Hidden file input for image upload */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleImageChange}
+            />
 
-                      {showSettingsMenu && (
-                        <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                          <button
-                            type="button"
-                            className="chat-settings-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowSettingsMenu(false)
-                              if (hasActiveSubscription) {
-                                handleManageBilling()
-                              } else {
-                                setShowPricingModal(true)
-                              }
-                            }}
-                          >
-                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                          </button>
+            {/* ✅ Centered Radial Menu (shown when no panel is active) */}
+            {activePanel === null && (
+              <div className="radial-menu-fullscreen">
+                <RadialMenu
+                  logoSrc={appleIcon}
+                  onChat={() => setActivePanel('text')}
+                  onImage={() => {
+                    setActivePanel('image')
+                    setTimeout(() => fileInputRef.current?.click(), 100)
+                  }}
+                  onPdfExport={() => {
+                    const lastAssistantMsg = [...messages].reverse().find((m) => m.role === 'assistant')
+                    if (lastAssistantMsg) {
+                      handleDownloadReport(lastAssistantMsg)
+                    } else {
+                      alert('No report available yet. Start a conversation first.')
+                    }
+                  }}
+                  onSettings={() => setActivePanel('settings')}
+                  onChatHistory={() => setActivePanel('history')}
+                />
+              </div>
+            )}
 
-                          <div className="chat-settings-sep" />
+            {/* ✅ Text Chat Panel */}
+            {activePanel === 'text' && (
+              <div className="panel-overlay">
+                <div className="panel-container">
+                  <LiquidGlass variant="main" className="panel-card text-panel">
+                    <button
+                      type="button"
+                      className="panel-close-btn"
+                      onClick={() => {
+                        setActivePanel(null)
+                        setMessages([])
+                        setInput('')
+                      }}
+                      aria-label="Close panel"
+                    >
+                      <Icons.X />
+                    </button>
 
-                          <button
-                            type="button"
-                            className="chat-settings-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowSettingsMenu(false)
-                              handleSignOut()
-                            }}
-                          >
-                            Log out
-                          </button>
-                        </div>
-                      )}
+                    <div className="panel-header">
+                      <h2 className="panel-title">Ask a Question</h2>
+                      <p className="panel-subtitle">Michigan food safety regulations</p>
                     </div>
-                  )}
-                </nav>
-              </header>
 
-              <div className={`chat-shell ${showHistory ? 'history-open' : ''}`}>
-                <aside className={`chat-history-panel ${showHistory ? 'open' : ''}`} aria-label="Chat history">
-                  <LiquidGlass variant="side" className="chat-history-surface">
-                    <div className="chat-history-shell">
-                      <div className="chat-history-head">
-                        <div>
-                          <p className="chat-history-title">Chat history</p>
-                          <p className="chat-history-sub">Revisit previous scans and questions</p>
-                        </div>
-                        <button type="button" className="chat-history-new" onClick={handleNewChat}>
-                          New chat
-                        </button>
-                      </div>
-
-                      <div className="chat-history-list">
-                        {chatHistory.length ? (
-                          chatHistory.map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className="chat-history-item"
-                              onClick={() => handleLoadHistory(item)}
-                            >
-                              <div>
-                                <p className="chat-history-item-title">{item.title || 'Chat'}</p>
-                                <p className="chat-history-item-preview">
-                                  {item.preview || 'Resume this thread with your food safety tools.'}
-                                </p>
-                              </div>
-                              <span className="chat-history-pill">
-                                {new Date(item.updatedAt || Date.now()).toLocaleDateString()}
-                              </span>
-                            </button>
-                          ))
-                        ) : (
-                          <p className="chat-history-empty">Your photo and text conversations will appear here.</p>
-                        )}
-                      </div>
-                    </div>
-                  </LiquidGlass>
-                </aside>
-
-                <div className="chat-main-area">
-                  <div
-                    ref={scrollRef}
-                    onScroll={handleScroll}
-                    className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-                  >
-                    {messages.length === 0 ? (
-                      <div className="chat-empty-state radial-menu-wrapper">
-                        <RadialMenu
-                          logoSrc={appleIcon}
-                          onChat={() => setInputMode('chat')}
-                          onImage={() => fileInputRef.current?.click()}
-                          onPdfExport={() => {
-                            const lastAssistantMsg = [...messages].reverse().find((m) => m.role === 'assistant')
-                            if (lastAssistantMsg) {
-                              handleDownloadReport(lastAssistantMsg)
-                            }
-                          }}
-                          onSettings={() => setShowSettingsMenu((v) => !v)}
-                          onChatHistory={() => setShowHistory((v) => !v)}
-                        />
-                      </div>
-                    ) : (
-                      <LiquidGlass variant="main" className="chat-history-card">
-                        <div className="chat-history">
+                    <div className="panel-body">
+                      {/* Messages display */}
+                      {messages.length > 0 && (
+                        <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
                           {messages.map((msg, idx) => {
                             const isAssistant = msg.role === 'assistant'
-                            const isPendingAssistant = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
-                            const hasImage = Boolean(msg.image) || msg.hasImage
+                            const isPending = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
 
                             return (
-                              <div
-                                key={idx}
-                                className={`chat-message ${isAssistant ? 'chat-message-assistant' : 'chat-message-user'}`}
-                              >
-                                {hasImage && (
-                                  <div className={`chat-upload-preview ${msg.image ? '' : 'placeholder'}`}>
-                                    {msg.image ? (
-                                      <img src={msg.image} alt="Uploaded" />
-                                    ) : (
-                                      <div className="chat-upload-ghost">
-                                        <Icons.Camera />
-                                      </div>
-                                    )}
-                                    <span className="chat-upload-label">
-                                      {msg.image ? 'Photo ready for analysis' : 'Photo used in prior scan'}
-                                    </span>
-                                  </div>
-                                )}
-
+                              <div key={idx} className={`panel-message ${isAssistant ? 'assistant' : 'user'}`}>
                                 {isAssistant ? (
-                                  <div className="chat-analysis-result">
-                                    <div className="chat-analysis-header-row">
-                                      <div>
-                                        <p className="chat-analysis-title">Analysis Results</p>
-                                        <p className="chat-analysis-subtitle">Structured findings for your upload</p>
-                                      </div>
-                                      <span className="chat-analysis-pill">Report</span>
-                                    </div>
-
-                                    <div className="chat-analysis-body">
-                                      {isPendingAssistant ? (
-                                        <div className="chat-thinking">Analyzing…</div>
-                                      ) : (
-                                        formatAssistantContent(msg.content, msg.citations)
-                                      )}
-                                    </div>
-
-                                    {!isPendingAssistant && (
-                                      <div className="chat-analysis-actions">
-                                        <button
-                                          type="button"
-                                          className="chat-action-btn"
-                                          onClick={() => handleDownloadReport(msg)}
-                                        >
-                                          Download report
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="chat-action-btn secondary"
-                                          onClick={() => handleShareResults(msg)}
-                                        >
-                                          Share results
-                                        </button>
-                                      </div>
+                                  <div className="panel-response">
+                                    {isPending ? (
+                                      <span className="panel-thinking">Thinking…</span>
+                                    ) : (
+                                      formatAssistantContent(msg.content, msg.citations)
                                     )}
                                   </div>
                                 ) : (
-                                  (msg.content || msg.image || msg.hasImage) && (
-                                    <div className="chat-user-note">
-                                      <div className="chat-user-note-title">Notes for this scan</div>
-                                      <p className="chat-user-note-text">
-                                        {msg.content
-                                          ? msg.content
-                                          : msg.hasImage
-                                            ? 'Image uploaded for inspection.'
-                                            : 'Image uploaded for inspection.'}
-                                      </p>
-                                    </div>
-                                  )
+                                  <div className="panel-question">
+                                    <span className="panel-question-label">You asked:</span>
+                                    <p className="panel-question-text">{msg.content}</p>
+                                  </div>
                                 )}
                               </div>
                             )
                           })}
                         </div>
-                      </LiquidGlass>
-                    )}
-                  </div>
-                </div>
-              </div>
+                      )}
 
-              <div className="chat-input-area">
-                <div className="chat-input-inner">
-                  <LiquidGlass variant="main" className="chat-dock">
-                    <div className="chat-dock-head">
-                      <div>
-                        <p className="chat-dock-title">Tools</p>
-                        <p className="chat-dock-sub">Image analysis &amp; regulation questions</p>
-                      </div>
-                    </div>
-
-                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-
-                    <div className="chat-mode-toggle" role="tablist" aria-label="Choose input mode">
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={inputMode === 'photo'}
-                        className={`chat-mode-btn ${inputMode === 'photo' ? 'active' : ''}`}
-                        onClick={() => setInputMode('photo')}
-                      >
-                        <span className="chat-mode-label">Photo</span>
-                        <span className="chat-mode-sub">Scan for violations</span>
-                      </button>
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={inputMode === 'chat'}
-                        className={`chat-mode-btn ${inputMode === 'chat' ? 'active' : ''}`}
-                        onClick={() => setInputMode('chat')}
-                      >
-                        <span className="chat-mode-label">Chat</span>
-                        <span className="chat-mode-sub">Ask about Michigan food safety regulations</span>
-                      </button>
-                    </div>
-
-                    {inputMode === 'photo' && selectedImage && (
-                      <LiquidGlass variant="side" className="chat-attachment">
-                        <span className="chat-attachment-icon">
-                          <Icons.Camera />
-                        </span>
-                        <span>Image attached</span>
-                        <button
-                          onClick={() => setSelectedImage(null)}
-                          className="chat-attachment-remove"
-                          aria-label="Remove"
-                          type="button"
-                        >
-                          <Icons.X />
-                        </button>
-                      </LiquidGlass>
-                    )}
-
-                    <div className={`chat-input-row ${inputMode === 'photo' ? 'photo-mode' : 'chat-mode'}`}>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={handleImageChange}
-                        disabled={inputMode !== 'photo'}
-                      />
-
-                      {inputMode === 'photo' ? (
-                        <>
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="plm-icon-btn chat-camera-btn"
-                            aria-label="Upload photo"
-                            type="button"
-                            disabled={isSending}
-                          >
-                            <Icons.Camera />
-                          </button>
-
-                          <div className="chat-photo-hint">
-                            <div className="chat-photo-title">Scan a photo</div>
-                            <p className="chat-photo-sub">Upload a picture to analyze for food safety issues.</p>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={handleSend}
-                            disabled={!selectedImage || isSending}
-                            className="chat-analyze-btn"
-                            aria-label="Analyze upload"
-                          >
-                            {isSending ? 'Analyzing…' : 'Analyze'}
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <div className="chat-input-wrapper">
+                      {/* Input area */}
+                      <div className="panel-input-area">
+                        <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+                        <div className="panel-input-row">
+                          <div className="panel-input-wrapper">
                             <textarea
                               ref={textAreaRef}
                               value={input}
@@ -4877,15 +5234,12 @@ export default function Page() {
                                 setInput(e.target.value)
                                 if (textAreaRef.current) {
                                   textAreaRef.current.style.height = 'auto'
-                                  textAreaRef.current.style.height = `${Math.min(
-                                    textAreaRef.current.scrollHeight,
-                                    160
-                                  )}px`
+                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 120)}px`
                                 }
                               }}
                               placeholder="Ask about Michigan food safety regulations..."
                               rows={1}
-                              className="chat-textarea"
+                              className="panel-textarea"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault()
@@ -4894,29 +5248,270 @@ export default function Page() {
                               }}
                             />
                           </div>
-
                           <button
                             type="button"
                             onClick={handleSend}
                             disabled={!safeTrim(input) || isSending}
-                            className="chat-analyze-btn chat-send-btn"
+                            className="panel-send-btn"
                             aria-label="Send message"
                           >
-                            {isSending ? 'Sending…' : <Icons.Send />}
+                            {isSending ? <span className="panel-spinner" /> : <Icons.Send />}
                           </button>
-                        </>
-                      )}
+                        </div>
+                      </div>
                     </div>
-
-                    <p className="chat-disclaimer">
-                      Upload a photo for instant analysis or switch to chat to ask about Michigan food safety
-                      regulations. Verify critical decisions with official regulations.
-                    </p>
                   </LiquidGlass>
-                  <FooterLinks />
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* ✅ Image Analysis Panel */}
+            {activePanel === 'image' && (
+              <div className="panel-overlay">
+                <div className="panel-container">
+                  <LiquidGlass variant="main" className="panel-card image-panel">
+                    <button
+                      type="button"
+                      className="panel-close-btn"
+                      onClick={() => {
+                        setActivePanel(null)
+                        setMessages([])
+                        setInput('')
+                        setSelectedImage(null)
+                      }}
+                      aria-label="Close panel"
+                    >
+                      <Icons.X />
+                    </button>
+
+                    <div className="panel-header">
+                      <h2 className="panel-title">Image Analysis</h2>
+                      <p className="panel-subtitle">Scan photos for food safety violations</p>
+                    </div>
+
+                    <div className="panel-body">
+                      {/* Image preview */}
+                      {selectedImage && (
+                        <div className="panel-image-preview">
+                          <img src={selectedImage} alt="Selected for analysis" />
+                          <button
+                            type="button"
+                            className="panel-image-remove"
+                            onClick={() => setSelectedImage(null)}
+                            aria-label="Remove image"
+                          >
+                            <Icons.X />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Messages display */}
+                      {messages.length > 0 && (
+                        <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
+                          {messages.map((msg, idx) => {
+                            const isAssistant = msg.role === 'assistant'
+                            const isPending = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
+                            const hasImage = Boolean(msg.image) || msg.hasImage
+
+                            return (
+                              <div key={idx} className={`panel-message ${isAssistant ? 'assistant' : 'user'}`}>
+                                {!isAssistant && hasImage && msg.image && (
+                                  <div className="panel-user-image">
+                                    <img src={msg.image} alt="Uploaded" />
+                                  </div>
+                                )}
+                                {isAssistant ? (
+                                  <div className="panel-response">
+                                    {isPending ? (
+                                      <span className="panel-thinking">Analyzing image…</span>
+                                    ) : (
+                                      formatAssistantContent(msg.content, msg.citations)
+                                    )}
+                                  </div>
+                                ) : msg.content && (
+                                  <div className="panel-question">
+                                    <span className="panel-question-label">Your question:</span>
+                                    <p className="panel-question-text">{msg.content}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                      {/* Input area */}
+                      <div className="panel-input-area">
+                        <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+                        <div className="panel-input-row">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="panel-camera-btn"
+                            aria-label="Upload photo"
+                            disabled={isSending}
+                          >
+                            <Icons.Camera />
+                          </button>
+                          <div className="panel-input-wrapper">
+                            <textarea
+                              ref={textAreaRef}
+                              value={input}
+                              onChange={(e) => {
+                                setInput(e.target.value)
+                                if (textAreaRef.current) {
+                                  textAreaRef.current.style.height = 'auto'
+                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 120)}px`
+                                }
+                              }}
+                              placeholder={selectedImage ? "Ask about this image..." : "Upload a photo to analyze..."}
+                              rows={1}
+                              className="panel-textarea"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault()
+                                  handleSend(e)
+                                }
+                              }}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={(!safeTrim(input) && !selectedImage) || isSending}
+                            className="panel-send-btn"
+                            aria-label="Analyze"
+                          >
+                            {isSending ? <span className="panel-spinner" /> : <Icons.Send />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </LiquidGlass>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ Chat History Panel */}
+            {activePanel === 'history' && (
+              <div className="panel-overlay">
+                <div className="panel-container">
+                  <LiquidGlass variant="main" className="panel-card history-panel">
+                    <button
+                      type="button"
+                      className="panel-close-btn"
+                      onClick={() => setActivePanel(null)}
+                      aria-label="Close panel"
+                    >
+                      <Icons.X />
+                    </button>
+
+                    <div className="panel-header">
+                      <h2 className="panel-title">Chat History</h2>
+                      <p className="panel-subtitle">Your previous conversations</p>
+                    </div>
+
+                    <div className="panel-body">
+                      <div className="panel-history-list">
+                        {chatHistory.length > 0 ? (
+                          chatHistory.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="panel-history-item"
+                              onClick={() => handleLoadHistory(item)}
+                            >
+                              <div className="panel-history-content">
+                                <p className="panel-history-title">{item.title || 'Chat'}</p>
+                                <p className="panel-history-preview">
+                                  {item.preview || 'Resume this conversation'}
+                                </p>
+                              </div>
+                              <span className="panel-history-date">
+                                {new Date(item.updatedAt || Date.now()).toLocaleDateString()}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="panel-history-empty">
+                            <p>No conversations yet</p>
+                            <p className="panel-history-empty-sub">Start a chat or scan an image to see your history here.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </LiquidGlass>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ Settings Panel */}
+            {activePanel === 'settings' && (
+              <div className="panel-overlay">
+                <div className="panel-container">
+                  <LiquidGlass variant="main" className="panel-card settings-panel">
+                    <button
+                      type="button"
+                      className="panel-close-btn"
+                      onClick={() => setActivePanel(null)}
+                      aria-label="Close panel"
+                    >
+                      <Icons.X />
+                    </button>
+
+                    <div className="panel-header">
+                      <h2 className="panel-title">Settings</h2>
+                      <p className="panel-subtitle">Manage your account</p>
+                    </div>
+
+                    <div className="panel-body">
+                      <div className="panel-settings-list">
+                        <button
+                          type="button"
+                          className="panel-settings-item"
+                          onClick={() => {
+                            setActivePanel(null)
+                            if (hasActiveSubscription) {
+                              handleManageBilling()
+                            } else {
+                              setShowPricingModal(true)
+                            }
+                          }}
+                        >
+                          <span className="panel-settings-label">
+                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                          </span>
+                          <Icons.ArrowRight />
+                        </button>
+
+                        <div className="panel-settings-divider" />
+
+                        <button
+                          type="button"
+                          className="panel-settings-item danger"
+                          onClick={() => {
+                            setActivePanel(null)
+                            handleSignOut()
+                          }}
+                        >
+                          <span className="panel-settings-label">Log Out</span>
+                          <Icons.ArrowRight />
+                        </button>
+                      </div>
+
+                      <div className="panel-settings-info">
+                        <p className="panel-settings-email">{session?.user?.email}</p>
+                        {subscription && (
+                          <p className="panel-settings-status">
+                            Status: {subscription.status === 'trialing' ? 'Free Trial' : subscription.status}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </LiquidGlass>
+                </div>
+              </div>
+            )}
           </main>
         ) : (
           <LandingPage
