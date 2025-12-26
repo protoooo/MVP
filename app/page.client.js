@@ -404,36 +404,12 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 }
 
 /**
- * ✅ Pricing modal now matches your LiquidGlass exactly (outer card AND inner plan card)
+ * Simplified pricing modal: $25 per device / month
  */
-function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocation }) {
-  const [showMultiLocation, setShowMultiLocation] = useState(false)
-  const [locationCount, setLocationCount] = useState(5)
-  const [devicesPerLocation, setDevicesPerLocation] = useState(1)
-  const [singleDevices, setSingleDevices] = useState(1)
-  const [multiLocationLoading, setMultiLocationLoading] = useState(false)
-  const multiPricing = calculatePricing(locationCount, devicesPerLocation)
-  const singlePricing = calculatePricing(1, singleDevices)
-  const displayPricePerLocation = showMultiLocation ? multiPricing.pricePerLocation : singlePricing.pricePerLocation
-  const requiresEnterpriseContact = multiPricing.tier === 'enterprise'
-  
+function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
+  const [quantity, setQuantity] = useState(1)
+
   if (!isOpen) return null
-
-  const priceId = UNLIMITED_MONTHLY
-  const planName = 'Unlimited'
-
-  const handleMultiLocationCheckout = async () => {
-    if (multiLocationLoading) return
-    setMultiLocationLoading(true)
-    
-    try {
-      if (onMultiLocation) {
-        await onMultiLocation({ locationCount, devicesPerLocation })
-      }
-    } finally {
-      setMultiLocationLoading(false)
-    }
-  }
 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Pricing">
@@ -451,21 +427,19 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
               <span className="pricing-pill-dot" aria-hidden="true" />
               <span>14-day free trial</span>
             </div>
-            <h2 className="modal-title pricing-title">Start your trial</h2>
-            <p className="pricing-sub">
-              Unlimited questions + photo scans for your location. Built for Michigan compliance workflows.
-            </p>
+            <h2 className="modal-title pricing-title">Device licenses</h2>
+            <p className="pricing-sub">Unlimited questions + photo scans. $25 per device per month.</p>
           </div>
 
           <div className="pricing-content">
             <div className="pricing-card-head">
               <div className="pricing-plan">
-                <span className="pricing-plan-name">{planName}</span>
-                <span className="pricing-plan-badge">Recommended</span>
+                <span className="pricing-plan-name">Device License</span>
+                <span className="pricing-plan-badge">Monthly</span>
               </div>
               <div className="pricing-price">
-                <span className="pricing-price-amount">${displayPricePerLocation}</span>
-                <span className="pricing-price-term">/ month per location</span>
+                <span className="pricing-price-amount">$25</span>
+                <span className="pricing-price-term">/ device / month</span>
               </div>
             </div>
 
@@ -492,201 +466,57 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading, onMultiLocati
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Email support
-              </li>
-              <li>
-                <span className="pricing-check" aria-hidden="true">
-                  ✓
-                </span>
                 One registered device per license
               </li>
             </ul>
 
-            {!showMultiLocation ? (
-              <div className="pricing-actions">
-                <div className="multi-location-selector">
-                  <label className="multi-location-label">Devices for this location:</label>
-                  <div className="multi-location-input-row">
-                    <button
-                      type="button"
-                      className="multi-location-btn"
-                      onClick={() => setSingleDevices(Math.max(1, singleDevices - 1))}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={MAX_DEVICES_PER_LOCATION}
-                      value={singleDevices}
-                      onChange={(e) =>
-                        setSingleDevices(
-                          Math.max(1, Math.min(MAX_DEVICES_PER_LOCATION, parseInt(e.target.value) || 1))
-                        )
-                      }
-                      className="multi-location-input"
-                    />
-                    <button
-                      type="button"
-                      className="multi-location-btn"
-                      onClick={() => setSingleDevices(Math.min(MAX_DEVICES_PER_LOCATION, singleDevices + 1))}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="multi-location-total">
-                    {`Total: $${singlePricing.total}/month (${singlePricing.pricePerLocation}/location${singleDevices > 1 ? `, $${singlePricing.devicePrice}/add-on device` : ', first device included'})`}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="pricing-primary"
-                  disabled={!!loading}
-                  onClick={() => {
-                    if (!priceId) {
-                      alert('Missing Stripe price id (NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY).')
-                      return
-                    }
-                    onCheckout({ priceId, planName, locationCount: 1, devicesPerLocation: singleDevices })
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner" /> Starting…
-                    </>
-                  ) : (
-                    <>
-                      Start trial ({singleDevices} device{singleDevices > 1 ? 's' : ''}) <span aria-hidden="true">→</span>
-                    </>
-                  )}
-                </button>
-
-                <button 
-                  type="button" 
-                  className="pricing-secondary"
-                  onClick={() => setShowMultiLocation(true)}
-                >
-                  Buy for multiple locations
-                </button>
-              </div>
-            ) : (
-              <div className="pricing-actions">
-                <div className="multi-location-selector">
-                  <label className="multi-location-label">Number of locations:</label>
-                  <div className="multi-location-input-row">
-                    <button 
-                      type="button" 
-                      className="multi-location-btn"
-                      onClick={() => setLocationCount(Math.max(MIN_MULTI_LOCATIONS, locationCount - 1))}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min={MIN_MULTI_LOCATIONS}
-                      max={MAX_MULTI_LOCATIONS}
-                      value={locationCount}
-                      onChange={(e) => setLocationCount(Math.max(MIN_MULTI_LOCATIONS, Math.min(MAX_MULTI_LOCATIONS, parseInt(e.target.value) || MIN_MULTI_LOCATIONS)))}
-                      className="multi-location-input"
-                    />
-                    <button 
-                      type="button" 
-                      className="multi-location-btn"
-                      onClick={() => setLocationCount(Math.min(MAX_MULTI_LOCATIONS, locationCount + 1))}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="multi-location-selector">
-                  <label className="multi-location-label">Devices per location:</label>
-                  <div className="multi-location-input-row">
-                    <button
-                      type="button"
-                      className="multi-location-btn"
-                      onClick={() => setDevicesPerLocation(Math.max(1, devicesPerLocation - 1))}
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={MAX_DEVICES_PER_LOCATION}
-                      value={devicesPerLocation}
-                      onChange={(e) =>
-                        setDevicesPerLocation(
-                          Math.max(1, Math.min(MAX_DEVICES_PER_LOCATION, parseInt(e.target.value) || 1))
-                        )
-                      }
-                      className="multi-location-input"
-                    />
-                    <button
-                      type="button"
-                      className="multi-location-btn"
-                      onClick={() => setDevicesPerLocation(Math.min(MAX_DEVICES_PER_LOCATION, devicesPerLocation + 1))}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="multi-location-total">
-                  <div>{`Base: ${locationCount} locations × $${multiPricing.pricePerLocation}/mo = $${multiPricing.baseTotal}`}</div>
-                  {multiPricing.additionalDevices > 0 && (
-                    <div style={{ marginTop: 6 }}>
-                      {`Devices: ${multiPricing.additionalDevices} × $${multiPricing.devicePrice}/mo = $${multiPricing.deviceTotal}`}
-                    </div>
-                  )}
-                  <div className="total">{`Total: $${multiPricing.total}/month`}</div>
-                  {requiresEnterpriseContact && (
-                    <div style={{ marginTop: 8, color: '#f97316', fontWeight: 600 }}>
-                      20+ locations requires custom enterprise pricing.
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  className="pricing-primary"
-                  disabled={multiLocationLoading || requiresEnterpriseContact}
-                  onClick={handleMultiLocationCheckout}
-                >
-                  {multiLocationLoading ? (
-                    <>
-                      <span className="spinner" /> Processing…
-                    </>
-                  ) : requiresEnterpriseContact ? (
-                    <>Contact us for enterprise</>
-                  ) : (
-                    <>
-                      Start trial ({locationCount} locations) <span aria-hidden="true">→</span>
-                    </>
-                  )}
-                </button>
-
-                {requiresEnterpriseContact && (
+            <div className="pricing-actions">
+              <div className="multi-location-selector">
+                <label className="multi-location-label">Number of devices:</label>
+                <div className="multi-location-input-row">
                   <button
                     type="button"
-                    className="pricing-secondary"
-                    onClick={() => {
-                      window.location.href = '/contact'
-                    }}
+                    className="multi-location-btn"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   >
-                    Contact for custom pricing
+                    −
                   </button>
-                )}
-
-                <button 
-                  type="button" 
-                  className="pricing-secondary"
-                  onClick={() => setShowMultiLocation(false)}
-                >
-                  Back to single location
-                </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, Math.min(500, parseInt(e.target.value) || 1)))}
+                    className="multi-location-input"
+                  />
+                  <button
+                    type="button"
+                    className="multi-location-btn"
+                    onClick={() => setQuantity(Math.min(500, quantity + 1))}
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="multi-location-total">Total: ${25 * quantity}/month</div>
               </div>
-            )}
+
+              <button
+                type="button"
+                className="pricing-primary"
+                disabled={!!loading}
+                onClick={() => onCheckout({ quantity })}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner" /> Starting…
+                  </>
+                ) : (
+                  <>
+                    Start ({quantity} device{quantity > 1 ? 's' : ''}) <span aria-hidden="true">→</span>
+                  </>
+                )}
+              </button>
+            </div>
 
             <p className="pricing-fineprint">
               By starting your trial, you agree to our{' '}
@@ -1035,25 +865,11 @@ export default function Page() {
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
   const handleCheckout = useCallback(
-    async ({ priceId, planName, locationCount = 1, devicesPerLocation = 1 }) => {
+    async ({ quantity = 1 }) => {
       try {
-        if (!priceId) {
-          alert('Invalid price selected.')
-          return
-        }
-
-        const validPrices = [UNLIMITED_MONTHLY].filter(Boolean)
-        if (validPrices.length > 0 && !validPrices.includes(priceId)) {
-          console.error('Invalid price ID:', priceId)
-          alert('Invalid plan selected. Please try again.')
-          return
-        }
-
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
-          console.log('💾 Storing selected plan:', String(priceId).substring(0, 15) + '***')
-          setSelectedPriceId(priceId)
           setShowPricingModal(false)
           setAuthInitialMode('signup')
           setShowAuthModal(true)
@@ -1072,20 +888,20 @@ export default function Page() {
           return
         }
 
-        setCheckoutLoading(planName || 'checkout')
+        setCheckoutLoading('checkout')
 
         const captchaToken = await executeRecaptcha('checkout')
         if (!captchaToken || captchaToken === 'turnstile_unavailable') {
           throw new Error('Security verification failed. Please refresh and try again.')
         }
 
-        const res = await fetch('/api/create-checkout-session', {
+        const res = await fetch('/api/billing/create-checkout-session', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${data.session.access_token}`,
           },
-          body: JSON.stringify({ priceId, captchaToken, locationCount, devicesPerLocation }),
+          body: JSON.stringify({ quantity, captchaToken }),
           credentials: 'include',
         })
 
@@ -1108,8 +924,7 @@ export default function Page() {
         }
 
         if (payload.requiresContact) {
-          alert('For 20+ locations, please contact us for custom pricing.')
-          router.push('/contact')
+          alert('Contact support for enterprise.')
           return
         }
 
@@ -1120,90 +935,6 @@ export default function Page() {
         }
       } catch (error) {
         console.error('Checkout error:', error)
-        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
-      } finally {
-        setCheckoutLoading(null)
-      }
-    },
-    [supabase, captchaLoaded, executeRecaptcha, router]
-  )
-
-  const handleMultiLocationCheckout = useCallback(
-    async ({ locationCount, devicesPerLocation }) => {
-      try {
-        const { data } = await supabase.auth.getSession()
-
-        if (!data.session) {
-          setShowPricingModal(false)
-          setAuthInitialMode('signup')
-          setShowAuthModal(true)
-          return
-        }
-
-        if (!data.session.user.email_confirmed_at) {
-          alert('Please verify your email before starting a trial. Check your inbox.')
-          setShowPricingModal(false)
-          router.push('/verify-email')
-          return
-        }
-
-        if (!captchaLoaded) {
-          alert('Security verification is still loading. Please try again in a moment.')
-          return
-        }
-
-        setCheckoutLoading('multi-location')
-
-        const captchaToken = await executeRecaptcha('multi_location_checkout')
-        if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-          throw new Error('Security verification failed. Please refresh and try again.')
-        }
-
-        const res = await fetch('/api/create-multi-location-checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${data.session.access_token}`,
-          },
-          body: JSON.stringify({ 
-            locationCount,
-            devicesPerLocation,
-            captchaToken 
-          }),
-          credentials: 'include',
-        })
-
-        const payload = await res.json().catch(() => ({}))
-
-        if (!res.ok) {
-          if (payload.code === 'EMAIL_NOT_VERIFIED') {
-            alert('Please verify your email before starting a trial.')
-            router.push('/verify-email')
-            return
-          }
-
-          if (payload.code === 'ALREADY_SUBSCRIBED') {
-            alert('You already have an active subscription. Contact support to add locations.')
-            setShowPricingModal(false)
-            return
-          }
-
-          throw new Error(payload.error || 'Checkout failed')
-        }
-
-        if (payload.requiresContact) {
-          alert('For 20+ locations, please contact us for custom enterprise pricing.')
-          router.push('/contact')
-          return
-        }
-
-        if (payload.url) {
-          window.location.href = payload.url
-        } else {
-          throw new Error('No checkout URL returned')
-        }
-      } catch (error) {
-        console.error('Multi-location checkout error:', error)
         alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       } finally {
         setCheckoutLoading(null)
