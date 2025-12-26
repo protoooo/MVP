@@ -17,6 +17,7 @@ import SmartProgress from '@/components/SmartProgress'
 // because it’s rendering “in flow” on iOS/Safari due to containing-block issues.
 // import PricingModal from '@/components/PricingModal'
 import LiquidGlass from '@/components/ui/LiquidGlass'
+import RadialMenu from '@/components/RadialMenu'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
@@ -3155,6 +3156,16 @@ export default function Page() {
           -webkit-backdrop-filter: blur(16px) saturate(120%);
         }
 
+        /* Radial menu wrapper for centered positioning */
+        .radial-menu-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+          min-height: 300px;
+        }
+
         .hero-overlay-block {
           width: 100%;
           display: flex;
@@ -4663,8 +4674,20 @@ export default function Page() {
                     className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
                   >
                     {messages.length === 0 ? (
-                      <div className="chat-empty-state">
-                        <p className="chat-empty-text">Upload a photo to analyze for food safety violations.</p>
+                      <div className="chat-empty-state radial-menu-wrapper">
+                        <RadialMenu
+                          logoSrc={appleIcon}
+                          onChat={() => setInputMode('chat')}
+                          onImage={() => fileInputRef.current?.click()}
+                          onPdfExport={() => {
+                            const lastAssistantMsg = [...messages].reverse().find((m) => m.role === 'assistant')
+                            if (lastAssistantMsg) {
+                              handleDownloadReport(lastAssistantMsg)
+                            }
+                          }}
+                          onSettings={() => setShowSettingsMenu((v) => !v)}
+                          onChatHistory={() => setShowHistory((v) => !v)}
+                        />
                       </div>
                     ) : (
                       <LiquidGlass variant="main" className="chat-history-card">
