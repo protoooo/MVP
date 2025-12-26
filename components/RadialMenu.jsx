@@ -31,14 +31,19 @@ export default function RadialMenu({
   const [wheelRadius, setWheelRadius] = useState(120)
   const containerRef = useRef(null)
 
+  // Mobile-first wheel radius configuration
+  const WHEEL_RADIUS_MOBILE = 90
+  const WHEEL_RADIUS_DESKTOP = 120
+  const DESKTOP_BREAKPOINT = 768
+
   // Set wheel radius based on screen size (mobile-first: smaller default)
   useEffect(() => {
     const updateRadius = () => {
       // Mobile-first: default to smaller radius, increase for larger screens
-      if (window.innerWidth >= 768) {
-        setWheelRadius(120) // Desktop/tablet
+      if (window.innerWidth >= DESKTOP_BREAKPOINT) {
+        setWheelRadius(WHEEL_RADIUS_DESKTOP)
       } else {
-        setWheelRadius(90) // Mobile
+        setWheelRadius(WHEEL_RADIUS_MOBILE)
       }
     }
     updateRadius()
@@ -170,6 +175,8 @@ export default function RadialMenu({
 
       <style jsx>{`
         .radial-menu-container {
+          /* CSS custom property for logo scale - 80% larger than default */
+          --logo-scale: 1.8;
           position: relative;
           display: flex;
           align-items: center;
@@ -247,7 +254,8 @@ export default function RadialMenu({
           height: 70px;
           object-fit: contain;
           pointer-events: none;
-          transform: scale(1.8);
+          /* Scale up logo to fill the button circle nicely (80% larger) */
+          transform: scale(var(--logo-scale, 1.8));
           transform-origin: center;
         }
 

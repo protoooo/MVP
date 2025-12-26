@@ -4700,6 +4700,7 @@ export default function Page() {
           flex: 1;
           display: flex;
           flex-direction: column;
+          /* gap: 0 to allow messages area to expand fully between header and input */
           gap: 0;
           overflow: hidden;
           min-height: 0;
