@@ -67,6 +67,12 @@ sentry.properties
 *.bak
 *.tmp
 
+# Generated branding assets
+public/icon-192.png
+public/icon-512.png
+public/apple-touch-icon.png
+app/apple-icon.png
+
 # Local test data
 test-uploads/
 temp/
