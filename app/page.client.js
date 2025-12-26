@@ -1632,9 +1632,10 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           padding: 22px;
-          background: rgba(5, 7, 13, 0.52);
-          backdrop-filter: blur(10px) saturate(120%);
-          -webkit-backdrop-filter: blur(10px) saturate(120%);
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 32%),
+            rgba(8, 13, 26, 0.4);
+          backdrop-filter: blur(14px) saturate(140%);
+          -webkit-backdrop-filter: blur(14px) saturate(140%);
           animation: modal-fade 0.14s ease;
         }
 
@@ -1662,9 +1663,9 @@ export default function Page() {
           border-radius: 18px;
           padding: 22px;
 
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08)) !important;
-          border: 1px solid var(--glass-border) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 26px 78px rgba(10, 18, 35, 0.32) !important;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)) !important;
+          border: 1px solid rgba(255, 255, 255, 0.72) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 24px 70px rgba(10, 18, 35, 0.26) !important;
 
           /* lift clarity to match landing + accept-terms glass */
           backdrop-filter: blur(14px) saturate(145%) !important;
@@ -1689,10 +1690,10 @@ export default function Page() {
         /* ✅ Auth + Pricing cards: brighten glass to match landing hero clarity */
         .glass-modal.modal-card.auth-modal,
         .glass-modal.modal-card.pricing-modal {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.1)) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), 0 30px 90px rgba(10, 18, 35, 0.3) !important;
-          backdrop-filter: blur(16px) saturate(150%) !important;
-          -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
+          background: linear-gradient(150deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.12)) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 30px 90px rgba(10, 18, 35, 0.28) !important;
+          backdrop-filter: blur(18px) saturate(165%) !important;
+          -webkit-backdrop-filter: blur(18px) saturate(165%) !important;
         }
 
         .glass-modal.modal-card::before {
@@ -1702,6 +1703,33 @@ export default function Page() {
         .glass-modal.modal-card > * {
           position: relative;
           z-index: 1;
+        }
+
+        .glass-modal.modal-card.auth-modal::after,
+        .glass-modal.modal-card.pricing-modal::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 18px;
+          padding: 1.5px;
+          background: linear-gradient(
+            135deg,
+            rgba(95, 168, 255, 0.5) 0%,
+            rgba(148, 163, 184, 0.38) 30%,
+            rgba(251, 146, 60, 0.42) 60%,
+            rgba(134, 179, 148, 0.36) 85%,
+            rgba(95, 168, 255, 0.5) 100%
+          );
+          -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          pointer-events: none;
+          z-index: 0;
         }
 
         .modal-close {
@@ -2747,7 +2775,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 6px;
-          margin-right: 0;
+          margin-right: 4px; /* Pull settings off the edge to match top padding */
         }
 
         .chat-settings-wrap {
