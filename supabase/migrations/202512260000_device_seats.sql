@@ -15,6 +15,10 @@ create table if not exists public.device_seats (
   updated_at timestamptz default now()
 );
 
+alter table public.device_seats
+  add constraint device_seats_last4_check
+  check (invite_code_last4 is null or char_length(invite_code_last4) = 4);
+
 create index if not exists device_seats_purchaser_idx on public.device_seats(purchaser_user_id);
 create index if not exists device_seats_claimer_idx on public.device_seats(claimed_user_id);
 create index if not exists device_seats_hash_idx on public.device_seats(invite_code_hash);

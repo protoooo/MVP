@@ -5,6 +5,7 @@ import Stripe from 'stripe'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
 import { verifyCaptcha } from '@/lib/captchaVerification'
+import { MAX_DEVICE_QUANTITY } from '@/lib/deviceConstants'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -34,7 +35,7 @@ export async function POST(request) {
 
   const body = await request.json().catch(() => ({}))
   const { quantity: rawQuantity, captchaToken } = body
-  const quantity = Math.max(1, Math.min(500, parseInt(rawQuantity || '1', 10)))
+  const quantity = Math.max(1, Math.min(MAX_DEVICE_QUANTITY, parseInt(rawQuantity || '1', 10)))
 
   if (!captchaToken) {
     return NextResponse.json({ error: 'Security verification required.' }, { status: 403 })

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-browser'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
+import { MAX_DEVICE_QUANTITY } from '@/lib/deviceConstants'
 
 function SeatRow({ seat, onRevoke, revealedCode }) {
   const statusLabel = seat.status === 'claimed' ? 'Claimed' : 'Available'
@@ -141,9 +142,9 @@ export default function SeatsClient() {
             <input
               type="number"
               min={1}
-              max={500}
+              max={MAX_DEVICE_QUANTITY}
               value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, Math.min(500, parseInt(e.target.value) || 1)))}
+              onChange={(e) => setQuantity(Math.max(1, Math.min(MAX_DEVICE_QUANTITY, parseInt(e.target.value) || 1)))}
               className="w-24 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white"
             />
             <button
