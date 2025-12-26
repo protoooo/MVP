@@ -51,6 +51,11 @@ const nextConfig = {
   reactStrictMode: true,
   
   webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@supabase/supabase-js': '@supabase/supabase-js/dist/module/index.js',
+    }
+
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
