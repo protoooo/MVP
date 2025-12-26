@@ -16,7 +16,8 @@
     "test-search": "node scripts/test-search.js",
     "send-reminders": "node scripts/send-trial-reminders.js",
     "test-emails": "node scripts/test-emails.js",
-    "cleanup-webhooks": "node scripts/cleanup-webhook-events.js"
+    "cleanup-webhooks": "node scripts/cleanup-webhook-events.js",
+    "postinstall": "python scripts/generate_icons.py"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
