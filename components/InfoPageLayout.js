@@ -15,8 +15,12 @@ export default function InfoPageLayout({
   eyebrow, 
   children,
   backHref = '/',
-  headerAction = null
+  headerAction = null,
+  brandSize = 48,
+  brandSizeMobile
 }) {
+  const mobileBrandSize = brandSizeMobile ?? Math.round(brandSize * 0.75)
+
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.dataset.view = 'landing'
@@ -106,8 +110,8 @@ export default function InfoPageLayout({
         }
 
         .info-brand-mark {
-          width: 48px;
-          height: 48px;
+          width: ${brandSize}px;
+          height: ${brandSize}px;
           flex-shrink: 0;
         }
 
@@ -332,8 +336,8 @@ export default function InfoPageLayout({
           }
 
           .info-brand-mark {
-            width: 40px;
-            height: 40px;
+            width: ${mobileBrandSize}px;
+            height: ${mobileBrandSize}px;
           }
 
           .info-brand-text {
@@ -349,7 +353,7 @@ export default function InfoPageLayout({
               <Link href="/" className="info-brand">
                 <span className="info-brand-inner">
                   <span className="info-brand-mark">
-                    <Image src={appleIcon} alt="" width={64} height={64} priority />
+                    <Image src={appleIcon} alt="" width={brandSize} height={brandSize} priority />
                   </span>
                   <span className="info-brand-text">protocolLM</span>
                 </span>

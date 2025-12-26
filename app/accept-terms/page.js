@@ -140,6 +140,7 @@ export default function AcceptTermsPage() {
       title="Accept Updated Policies"
       subtitle="To continue using protocolLM, please confirm you have read and agree to our Terms of Service and Privacy Policy."
       eyebrow="Action Required"
+      brandSize={96}
       backHref="/auth"
       headerAction={
         <button
