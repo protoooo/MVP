@@ -5,6 +5,7 @@ import SessionGuard from '@/components/SessionGuard'
 import Image from 'next/image'
 import bg from '@/app/assets/background/protocolLM-bg.png'
 import Analytics from '@/components/Analytics'
+import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 const appFont = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -37,7 +38,23 @@ export default function RootLayout({ children }) {
 
         {/* ✅ App content wrapper above background */}
         <div className="plm-app">
-          <SessionGuard />
+          {!isSupabaseConfigured && (
+            <div
+              role="alert"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                color: '#f6f9ff',
+                padding: '12px 14px',
+                borderRadius: '12px',
+                margin: '12px',
+                fontWeight: 600,
+              }}
+            >
+              {missingSupabaseConfigMessage}
+            </div>
+          )}
+          {isSupabaseConfigured && <SessionGuard />}
           {children}
           <CookieConsent />
         </div>
