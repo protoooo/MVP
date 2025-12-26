@@ -608,11 +608,12 @@ function coerceViolationBullet(text) {
     return defaultFixText
   }
 
-  const dedupViolationPrefix = (str) =>
-    str.replace(
+  const dedupViolationPrefix = (str) => {
+    return str.replace(
       /VIOLATION\s*\(([^)]*)\):\s*VIOLATION\s*\([^)]*\):\s*/i,
       (_m, first) => `VIOLATION (${safeLine(first)}): `
-    );
+    )
+  }
 
   const fixIdx = t.toUpperCase().indexOf('FIX:')
   if (fixIdx !== -1) {
@@ -621,7 +622,7 @@ function coerceViolationBullet(text) {
   }
 
   const alreadyHasSpan = t.includes('class="plm-v"')
-  const startsWithViolation = /^\s*VIOLATION\s*\(/i.test(t) || t.includes(`${SPAN_V_OPEN}VIOLATION (`))
+  const startsWithViolation = /^\s*VIOLATION\s*\(/i.test(t) || t.includes(`${SPAN_V_OPEN}VIOLATION (`)
 
   if (alreadyHasSpan || startsWithViolation) {
     let cleanedIssue = dedupViolationPrefix(issuePart || t)
