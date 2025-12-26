@@ -2,12 +2,17 @@
 // ProtocolLM - Michigan Food Safety Compliance Engine (STATEWIDE)
 // Cohere v2/chat (REST) — Aya Vision for images, Command for text
 //
-// FIX (CRITICAL):
-// - DO NOT send `documents` param to /v2/chat when using Aya Vision (hasImage=true).
-//   Aya Vision frequently returns 422 on document-object payloads.
-// - Instead: keep retrieval grounding by embedding excerpts into the system prompt (already done via excerptBlock).
+// GOAL OUTPUT (always):
+// - NO VIOLATIONS ✓   OR   VIOLATIONS:   OR   NEED INFO:
+// - If violations:
+//    • <span class="plm-v">VIOLATION (Type | Category): What we can see.</span> <span class="plm-f">FIX: What to do.</span>
+// - If no violations: just header line
+// - If need info: up to 2 short questions
 //
-// This file preserves your existing auth, subscription, and device-license logic.
+// Styling notes:
+// - We return tiny HTML spans only for styling control (not markdown).
+// - Only the VIOLATION label line is red/bold; fix is green.
+// - Everything else stays normal text.
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -25,7 +30,6 @@ export const runtime = 'nodejs'
 export const maxDuration = 60
 
 let searchDocuments = null
-
 const cohereClient = new CohereClient({ token: process.env.COHERE_API_KEY })
 
 async function getSearchDocuments() {
@@ -63,13 +67,19 @@ const MAX_CONTEXT_DOCS = 7
 const PINNED_POLICY_TARGET = 3
 
 // Tool output constraints
-const MAX_BULLETS_DEFAULT = 2
+const MAX_BULLETS_DEFAULT = 3
 const MAX_BULLETS_FULL_AUDIT = 6
 
 // Output headers (THE ONLY ALLOWED HEADERS)
 const HDR_NO = 'NO VIOLATIONS ✓'
 const HDR_VIOL = 'VIOLATIONS:'
 const HDR_INFO = 'NEED INFO:'
+
+// Tiny HTML spans for styling control (frontend should style these classes)
+const SPAN_V_OPEN = '<span class="plm-v">'
+const SPAN_V_CLOSE = '</span>'
+const SPAN_F_OPEN = '<span class="plm-f">'
+const SPAN_F_CLOSE = '</span>'
 
 // ============================================================================
 // SMALL UTILS
@@ -94,11 +104,6 @@ function getSessionInfoFromRequest(request) {
   return { ip, userAgent }
 }
 
-function stripStarsAndHashes(text) {
-  if (!text) return ''
-  return String(text).replace(/[*#]/g, '')
-}
-
 function stripDocLikeRefs(text) {
   if (!text) return ''
   return String(text)
@@ -113,26 +118,32 @@ function stripDocLikeRefs(text) {
     .replace(/\bEnforcement Action\s*\|\s*Washtenaw County.*?\b/gi, '')
 }
 
+// IMPORTANT: We do NOT remove HTML spans; we DO remove markdown-ish formatting.
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
+  // Remove code fences / headings
   out = out.replace(/```/g, '')
   out = out.replace(/^\s*#{1,6}\s+/gm, '')
 
+  // Remove emojis (best effort)
   try {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
+  // Remove confidence language
   out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
+  // Strip doc/source-like refs (no citations in UX)
   out = stripDocLikeRefs(out)
-  out = stripStarsAndHashes(out)
 
+  // Collapse excessive newlines
   out = out.replace(/\n{3,}/g, '\n\n')
 
+  // Hard cap
   const HARD_LIMIT = 1800
   if (out.length > HARD_LIMIT) out = out.slice(0, HARD_LIMIT).trimEnd()
 
@@ -241,7 +252,6 @@ async function callCohereChatV2Rest({ model, messages, documents }) {
   if (!apiKey) throw new Error('COHERE_API_KEY not configured')
 
   const payload = { model, messages }
-  // IMPORTANT: only include documents if explicitly allowed by caller
   if (documents && Array.isArray(documents) && documents.length) payload.documents = documents
 
   const res = await fetch('https://api.cohere.com/v2/chat', {
@@ -255,17 +265,10 @@ async function callCohereChatV2Rest({ model, messages, documents }) {
 
   const raw = await res.text().catch(() => '')
   if (!res.ok) {
-    const snippet = safeLine(raw).slice(0, 1200)
+    const snippet = safeLine(raw).slice(0, 900)
     const err = new Error(`COHERE_V2_CHAT_${res.status}: ${snippet || 'Request failed'}`)
     err.status = res.status
     err.body = raw
-    // helpful debug (Railway logs)
-    logger.error('Cohere v2/chat error', {
-      status: res.status,
-      model,
-      hasDocuments: Boolean(payload.documents?.length),
-      rawSnippet: snippet,
-    })
     throw err
   }
 
@@ -286,15 +289,9 @@ function buildV2Messages({ system, chatHistory, userMessage, imageDataUrls }) {
     const text = safeText(h?.message || '')
     if (!text) continue
     if (roleRaw === 'USER') {
-      messages.push({
-        role: 'user',
-        content: [{ type: 'text', text }],
-      })
+      messages.push({ role: 'user', content: [{ type: 'text', text }] })
     } else if (roleRaw === 'CHATBOT' || roleRaw === 'ASSISTANT') {
-      messages.push({
-        role: 'assistant',
-        content: [{ type: 'text', text }],
-      })
+      messages.push({ role: 'assistant', content: [{ type: 'text', text }] })
     }
   }
 
@@ -313,28 +310,24 @@ function buildV2Messages({ system, chatHistory, userMessage, imageDataUrls }) {
   return messages
 }
 
-/**
- * callCohereChat
- * allowDocuments:
- * - MUST be false for Aya Vision calls (hasImage=true) to avoid 422s.
- */
 async function callCohereChat({ model, system, userMessage, chatHistory, documents, imageDataUrls, allowDocuments }) {
   const messages = buildV2Messages({ system, chatHistory, userMessage, imageDataUrls })
 
-  let docs = []
+  // Some vision models are strict—only attach documents when allowed.
+  let docs
   if (allowDocuments) {
     docs = (documents || []).map((doc) => ({
-      // Cohere accepts string or object; object shape varies by model.
-      // Keep it minimal to reduce schema mismatch risk.
+      id: doc?.id || 'internal',
       title: doc?.title || doc?.source || 'Policy',
-      text: doc?.text || doc?.snippet || '',
+      snippet: doc?.snippet || doc?.text || '',
+      text: doc?.text || '',
     }))
   }
 
   const resp = await callCohereChatV2Rest({
     model,
     messages,
-    documents: allowDocuments && docs.length ? docs : undefined,
+    documents: docs && docs.length ? docs : undefined,
   })
 
   return { raw: resp, text: cohereResponseToText(resp) }
@@ -363,7 +356,7 @@ function dedupeByText(items) {
   return out
 }
 
-function docTextForExcerpt(doc, maxChars = 1100) {
+function docTextForExcerpt(doc, maxChars = 900) {
   const t = safeText(doc?.text || '')
   if (!t) return ''
   if (t.length <= maxChars) return t
@@ -410,75 +403,163 @@ function extractSearchKeywords(text) {
 }
 
 // ============================================================================
-// TOOL OUTPUT NORMALIZER
+// OUTPUT NORMALIZER (FORCES "TOOL" FORMAT)
 // ============================================================================
 
-function normalizeToToolFormat(rawText, { maxBullets }) {
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n))
+}
+
+function normalizeHeader(line0) {
+  const up = safeLine(line0 || '').toUpperCase()
+  if (up.startsWith('NO VIOLATIONS')) return HDR_NO
+  if (up.startsWith('VIOLATIONS')) return HDR_VIOL
+  if (up.startsWith('NEED')) return HDR_INFO
+  return null
+}
+
+// Take any messy model output and force:
+// • <span class="plm-v">VIOLATION (Type | Category): ...</span> <span class="plm-f">FIX: ...</span>
+function forceToolBullets(rawText, { maxBullets }) {
   let out = sanitizeOutput(rawText || '')
+  if (!out) return HDR_INFO + '\n• Can you re-send a clearer photo (closer + better lighting)?'
 
-  if (!out) return HDR_INFO + '\n• Re-send your question or upload a clearer photo.'
+  // Remove common “essay openers”
+  out = out.replace(/^Based on the (image|photo) provided[,:\s]*/i, '')
+  out = out.replace(/^Here are (some|several) (violations|issues)[,:\s]*/i, '')
 
-  const firstLine = out.split('\n').find((l) => l.trim())?.trim() || ''
-  const startsOK =
-    firstLine.toUpperCase().startsWith(HDR_NO) ||
-    firstLine.toUpperCase().startsWith(HDR_VIOL) ||
-    firstLine.toUpperCase().startsWith(HDR_INFO)
+  // Detect header or infer
+  const lines0 = out.split('\n').map((l) => l.trim()).filter(Boolean)
+  const header = normalizeHeader(lines0[0])
+  let bodyLines = header ? lines0.slice(1) : lines0
 
-  if (!startsOK) {
-    const upper = out.toUpperCase()
-    if (upper.includes('VIOLATION') || upper.includes('ISSUE') || upper.includes('FIX:')) {
-      out = `${HDR_VIOL}\n${out}`
-    } else if (out.includes('?')) {
-      out = `${HDR_INFO}\n${out}`
+  // If no header, infer from content
+  if (!header) {
+    const u = out.toUpperCase()
+    const inferred =
+      u.includes('VIOLATION') || u.includes('IMPROPER') || u.includes('UNSANITARY') || u.includes('CHEMICAL')
+        ? HDR_VIOL
+        : out.includes('?')
+          ? HDR_INFO
+          : HDR_NO
+    return buildFinalToolOutput(inferred, bodyLines.join('\n'), maxBullets)
+  }
+
+  return buildFinalToolOutput(header, bodyLines.join('\n'), maxBullets)
+}
+
+function buildFinalToolOutput(header, bodyText, maxBullets) {
+  const h = header || HDR_INFO
+  const maxB = clamp(Number(maxBullets || 3), 1, 8)
+
+  if (h === HDR_NO) return HDR_NO
+
+  // Split into candidate bullets from common formats:
+  // - numbered list, dash bullets, or paragraphs
+  let chunks = String(bodyText || '')
+    .split(/\n+/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+
+  // If it’s one mega paragraph, try splitting on "1." "2." etc
+  if (chunks.length <= 1) {
+    chunks = String(bodyText || '')
+      .split(/\s(?=\d+\.)/g)
+      .map((x) => x.trim())
+      .filter(Boolean)
+  }
+
+  // Normalize into simple bullet strings
+  const bullets = []
+  for (const c of chunks) {
+    let t = c
+      .replace(/^\d+\.\s*/g, '')
+      .replace(/^[-•]\s*/g, '')
+      .trim()
+    if (!t) continue
+    bullets.push(t)
+  }
+
+  if (h === HDR_INFO) {
+    const qs = bullets
+      .map((b) => b.replace(/^(Question|Need info|Clarification)[:\-]\s*/i, '').trim())
+      .filter((b) => b.includes('?') || b.length <= 120)
+      .slice(0, 2)
+
+    if (!qs.length) return HDR_INFO + '\n• Can you re-send a clearer photo of the area?'
+    return [HDR_INFO, ...qs.map((q) => `• ${safeLine(q)}`)].join('\n')
+  }
+
+  // VIOLATIONS: force each bullet into “Type | Category” + “What we see” + FIX.
+  const cleaned = bullets.slice(0, maxB).map((b) => coerceViolationBullet(b))
+  if (!cleaned.length) return HDR_INFO + '\n• Can you re-send the photo a bit closer?'
+
+  return [HDR_VIOL, ...cleaned.map((b) => `• ${b}`)].join('\n')
+}
+
+// Heuristic coercion: if model rambles, we extract a short “what we see” + one FIX.
+// If it already contains FIX:, keep it but shorten.
+function coerceViolationBullet(text) {
+  const t = safeLine(text || '')
+  if (!t) return null
+
+  // If model includes “FIX:” keep only first sentence after it
+  let issuePart = t
+  let fixPart = ''
+
+  const fixIdx = t.toUpperCase().indexOf('FIX:')
+  if (fixIdx !== -1) {
+    issuePart = safeLine(t.slice(0, fixIdx))
+    fixPart = safeLine(t.slice(fixIdx + 4))
+  }
+
+  // Trim issue to first sentence-ish
+  issuePart = issuePart.split(/(?<=[.!?])\s+/)[0] || issuePart
+  issuePart = issuePart.replace(/^Violation[:\-]\s*/i, '').trim()
+
+  // If no fix, try to derive from common patterns
+  if (!fixPart) {
+    // ultra-light mapping (not hardcoding any one example):
+    // if chemical mentioned -> store away from food-contact surfaces
+    const lower = t.toLowerCase()
+    if (lower.includes('windex') || lower.includes('bleach') || lower.includes('degreaser') || lower.includes('cleaner') || lower.includes('spray bottle')) {
+      fixPart = 'Remove chemicals from dish/food-contact areas and store in a labeled chemical area away from food and clean utensils.'
+    } else if (lower.includes('dirty dishes') || lower.includes('soiled') || lower.includes('food residue')) {
+      fixPart = 'Wash, rinse, sanitize, and air-dry; keep dirty and clean items separated.'
     } else {
-      out = `${HDR_NO}`
+      fixPart = 'Correct the issue immediately and keep the area clean, organized, and protected from contamination.'
     }
+  } else {
+    fixPart = fixPart.split(/(?<=[.!?])\s+/)[0] || fixPart
   }
 
-  const lines = out.split('\n').map((l) => l.trimEnd())
-  const rebuilt = []
-  for (let i = 0; i < lines.length; i++) {
-    let l = lines[i].trim()
-    if (!l) continue
+  // Try to infer a simple Type + Category
+  const { type, category } = inferTypeAndCategory(t)
 
-    if (rebuilt.length === 0) {
-      const up = l.toUpperCase()
-      if (up.startsWith('NO VIOLATIONS')) l = HDR_NO
-      else if (up.startsWith('VIOLATIONS')) l = HDR_VIOL
-      else if (up.startsWith('NEED')) l = HDR_INFO
-      rebuilt.push(l)
-      continue
-    }
+  const label = `${SPAN_V_OPEN}VIOLATION (${type} | ${category}): ${issuePart}.${SPAN_V_CLOSE}`
+  const fix = `${SPAN_F_OPEN}FIX: ${fixPart}.${SPAN_F_CLOSE}`
 
-    l = l.replace(/^[-•]\s*/g, '• ')
-    if (!l.startsWith('• ')) {
-      const prevIdx = rebuilt.length - 1
-      if (prevIdx >= 1 && rebuilt[prevIdx].startsWith('• ')) {
-        rebuilt[prevIdx] = safeLine(`${rebuilt[prevIdx]} ${l}`)
-        continue
-      }
-      l = `• ${l}`
-    }
-    rebuilt.push(l)
-  }
+  return `${label} ${fix}`.replace(/\.\./g, '.')
+}
 
-  const header = rebuilt[0] || HDR_INFO
-  const bullets = rebuilt.slice(1).filter((l) => l.startsWith('• '))
-  const limited = bullets.slice(0, Math.max(1, maxBullets))
+function inferTypeAndCategory(text) {
+  const lower = String(text || '').toLowerCase()
+  let type = 'Sanitation'
+  if (lower.includes('chemical') || lower.includes('windex') || lower.includes('bleach') || lower.includes('cleaner') || lower.includes('spray bottle')) type = 'Chemical Handling'
+  else if (lower.includes('handwash') || lower.includes('hand wash')) type = 'Handwashing'
+  else if (lower.includes('temperature') || lower.includes('cool') || lower.includes('reheat') || lower.includes('hot hold') || lower.includes('cold hold')) type = 'Time/Temperature'
+  else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') || lower.includes('ready-to-eat')) type = 'Cross-Contamination'
+  else if (lower.includes('pest') || lower.includes('flies') || lower.includes('droppings')) type = 'Pest Control'
 
-  const finalHeader =
-    header === HDR_NO && limited.length ? HDR_VIOL : header === HDR_VIOL && !limited.length ? HDR_NO : header
-
-  if (finalHeader === HDR_VIOL && !limited.length) return HDR_INFO + '\n• Can you re-send the photo a bit closer?'
-  if (finalHeader === HDR_INFO && !limited.length) return HDR_INFO + '\n• Can you share a clearer photo of the area?'
-  if (finalHeader === HDR_NO) return HDR_NO
-
-  return [finalHeader, ...limited].join('\n').trim()
+  // Conservative category: never overstate; use Core unless clearly riskier
+  let category = 'Core'
+  if (type === 'Chemical Handling' || type === 'Time/Temperature' || type === 'Cross-Contamination') category = 'Priority'
+  return { type, category }
 }
 
 function hasChemicalBullet(toolText) {
   const t = (toolText || '').toLowerCase()
-  return t.includes('chemical') || t.includes('windex') || t.includes('cleaner') || t.includes('spray bottle')
+  return t.includes('chemical handling') || t.includes('windex') || t.includes('cleaner') || t.includes('spray bottle')
 }
 
 // ============================================================================
@@ -524,7 +605,9 @@ function locationRisky(loc = '') {
 function buildChemicalViolationBullet(foundItem) {
   const name = safeLine(foundItem?.name || 'Cleaner bottle')
   const loc = safeLine(foundItem?.location || 'in the sink/dish area')
-  return `• Chemical Handling: ${name} stored ${loc}. FIX: Remove it now and store chemicals in a designated, labeled chemical area away from dishes and food-contact surfaces.`
+  const label = `${SPAN_V_OPEN}VIOLATION (Chemical Handling | Priority): ${name} stored ${loc}.${SPAN_V_CLOSE}`
+  const fix = `${SPAN_F_OPEN}FIX: Move chemicals to a labeled chemical storage area away from food, clean dishes, and utensils.${SPAN_F_CLOSE}`
+  return `${label} ${fix}`
 }
 
 async function runChemicalScan({ imageDataUrls }) {
@@ -541,8 +624,8 @@ Schema:
 }
 
 Rules:
-- "found" is true if you can SEE any cleaner/chemical container (e.g., Windex, bleach, degreaser, sanitizer spray bottle).
-- "location" describes where it is (e.g., "in the sink basin with dishes", "on the drainboard near plates", "on counter by prep area").
+- "found" true if you can SEE any cleaner/chemical container (Windex/bleach/degreaser/sanitizer spray bottle/etc.)
+- "location" must describe where it is (sink basin with dishes / drainboard near plates / counter by prep / etc.)
 - If you cannot tell, set found=false.`
 
   const userMessage = 'Scan the photo for any visible cleaning chemicals / spray bottles and where they are placed.'
@@ -556,7 +639,6 @@ Rules:
         chatHistory: [],
         documents: [],
         imageDataUrls,
-        // CRITICAL: never send documents to Aya Vision
         allowDocuments: false,
       }),
       CHEM_SCAN_TIMEOUT_MS,
@@ -590,27 +672,32 @@ Rules:
 }
 
 // ============================================================================
-// PROMPTS (CONSISTENT WITH TOOL OUTPUT)
+// PROMPTS (FORCES CONCISE TOOL OUTPUT)
 // ============================================================================
 
 function buildSystemPrompt({ fullAudit }) {
   const maxBullets = fullAudit ? MAX_BULLETS_FULL_AUDIT : MAX_BULLETS_DEFAULT
 
-  return `You are ProtocolLM — a Michigan food service compliance tool. Be extremely concise and tool-like.
+  return `You are ProtocolLM — a Michigan food service compliance tool. Be concise and actionable.
 
 CRITICAL OUTPUT RULES:
-- Output MUST be plain text. No markdown. No citations. No source mentions.
+- Output MUST be plain text (no markdown). No citations. No source mentions.
 - Output MUST start with EXACTLY one header:
   "${HDR_NO}" OR "${HDR_VIOL}" OR "${HDR_INFO}"
-- If "${HDR_VIOL}", output up to ${maxBullets} bullets, each like:
-  "• [Type]: [What is visible]. FIX: [One sentence remediation]"
+- If "${HDR_VIOL}", output up to ${maxBullets} bullets, each EXACTLY like:
+  "• VIOLATION (Type | Category): <what is visible>. FIX: <one clear instruction>."
 - If "${HDR_INFO}", output up to 2 bullets, each a short question.
 - For photos: ONLY report what you can directly see. Do NOT assume temps/times/missing items.
 
-SPECIAL: Chemical handling
-- If you can see a cleaner/spray bottle (Windex/bleach/degreaser/etc.) in a sink basin, on drainboards, with/above dishes/utensils, or on food-contact surfaces, that IS a violation.
+IMPORTANT STYLE:
+- Do NOT write long explanations.
+- Do NOT list 10+ items.
+- Each bullet should be 1–2 short sentences max.
 
-Keep it short.`
+SPECIAL (visual):
+- If you can SEE a cleaner/spray bottle (Windex/bleach/degreaser/etc.) in/near a sink with dishes or on food-contact surfaces, that IS a violation.
+
+Keep it short and useful for an entry-level employee and a GM.`
 }
 
 function wantsFullAudit(text) {
@@ -839,7 +926,7 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // RETRIEVE DOCS (for grounding) — do NOT send as `documents` to Aya Vision
+    // RETRIEVE DOCS (grounding via excerptBlock)
     // ========================================================================
 
     const searchDocumentsFn = await getSearchDocuments()
@@ -901,7 +988,9 @@ export async function POST(request) {
     const excerptBlock =
       contextDocs.length === 0
         ? ''
-        : contextDocs.map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 1100)}`).join('\n\n')
+        : contextDocs
+            .map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 900)}`)
+            .join('\n\n')
 
     let memoryContext = ''
     try {
@@ -926,7 +1015,7 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // 1) CHEMICAL SCAN (vision)
+    // 1) CHEMICAL SCAN
     // ========================================================================
 
     let chemScan = { found: false }
@@ -953,38 +1042,38 @@ export async function POST(request) {
     const mode = hasImage ? 'vision' : 'text'
 
     let modelText = ''
-    let assistantMessage = HDR_INFO + '\n• Unable to process request. Please try again.'
+    let assistantMessage = HDR_INFO + '\n• Can you try again?'
     let billedUnits = {}
     let tokenUsage = {}
 
     try {
-      // CRITICAL: allowDocuments MUST be false for vision calls (Aya)
-      const allowDocuments = !hasImage
-
       const resp = await withTimeout(
         callCohereChat({
           model: usedModel,
           system: systemPrompt,
           userMessage,
           chatHistory: cohereChatHistory,
-          // still pass documents for internal shaping; function will only include when allowDocuments=true
           documents: contextDocs.map((doc) => ({
+            id: 'internal',
             title: doc?.source || doc?.title || 'Policy',
-            text: docTextForExcerpt(doc, 1100),
-            snippet: docTextForExcerpt(doc, 900),
+            snippet: docTextForExcerpt(doc, 700),
+            text: docTextForExcerpt(doc, 900),
           })),
           imageDataUrls: hasImage ? normalizedImageUrls : [],
-          allowDocuments,
+          // ✅ Vision models are stricter — rely on excerptBlock for grounding.
+          allowDocuments: !hasImage,
         }),
         ANSWER_TIMEOUT_MS,
         'ANSWER_TIMEOUT'
       )
 
-      billedUnits = resp?.raw?.usage?.billed_units || resp?.raw?.meta?.billed_units || resp?.raw?.billed_units || {}
-      tokenUsage = resp?.raw?.usage?.tokens || resp?.raw?.meta?.tokens || resp?.raw?.tokens || {}
+      billedUnits = resp?.raw?.meta?.billed_units || resp?.raw?.billed_units || {}
+      tokenUsage = resp?.raw?.meta?.tokens || resp?.raw?.tokens || {}
 
       modelText = resp?.text || ''
-      assistantMessage = normalizeToToolFormat(modelText, { maxBullets })
+
+      // Force tool output no matter what the model wrote:
+      assistantMessage = forceToolBullets(modelText, { maxBullets })
     } catch (e) {
       logger.error('Generation failed', { error: e?.message, detail: safeErrorDetails(e), hasImage, model: usedModel })
       const status = e?.message?.includes('TIMEOUT') ? 408 : 500
@@ -1003,29 +1092,31 @@ export async function POST(request) {
         const chemBullet = buildChemicalViolationBullet(chemScan.item)
 
         if ((assistantMessage || '').toUpperCase().startsWith(HDR_NO)) {
-          assistantMessage = [HDR_VIOL, chemBullet].join('\n')
+          assistantMessage = [HDR_VIOL, `• ${chemBullet}`].join('\n')
         } else if ((assistantMessage || '').toUpperCase().startsWith(HDR_VIOL)) {
           if (!hasChemicalBullet(assistantMessage)) {
             const lines = assistantMessage.split('\n').filter(Boolean)
             const bullets = lines.slice(1).filter((l) => l.trim().startsWith('•'))
-            const merged = [chemBullet, ...bullets].slice(0, maxBullets)
+            const merged = [`• ${chemBullet}`, ...bullets].slice(0, maxBullets)
             assistantMessage = [HDR_VIOL, ...merged].join('\n')
           }
         } else if ((assistantMessage || '').toUpperCase().startsWith(HDR_INFO)) {
-          assistantMessage = [HDR_VIOL, chemBullet].join('\n')
+          assistantMessage = [HDR_VIOL, `• ${chemBullet}`].join('\n')
         }
       } else if (hasImage && chemScan?.found && !chemScan?.actionable) {
         if ((assistantMessage || '').toUpperCase().startsWith(HDR_NO)) {
-          const q =
-            '• Is that a cleaner/spray bottle placed in or next to the sink/dish area? If yes, store it away from dishes and food-contact surfaces.'
-          assistantMessage = [HDR_INFO, q].join('\n')
+          assistantMessage = [
+            HDR_INFO,
+            '• Is that a cleaner/spray bottle placed in or next to the sink/dish area?',
+          ].join('\n')
         }
       }
 
-      assistantMessage = normalizeToToolFormat(assistantMessage, { maxBullets })
+      // Re-force tool format to keep it tight
+      assistantMessage = forceToolBullets(assistantMessage, { maxBullets })
     } catch (mergeErr) {
       logger.warn('Chemical merge failed (non-blocking)', { error: mergeErr?.message })
-      assistantMessage = normalizeToToolFormat(assistantMessage, { maxBullets })
+      assistantMessage = forceToolBullets(assistantMessage, { maxBullets })
     }
 
     // ========================================================================
@@ -1061,8 +1152,6 @@ export async function POST(request) {
       rerankUsed,
       chemScanFound: Boolean(chemScan?.found),
       chemScanActionable: Boolean(chemScan?.actionable),
-      // this should always be false for hasImage now
-      documentsSentToModel: !hasImage,
     })
 
     if (userId) {
