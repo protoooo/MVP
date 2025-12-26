@@ -4599,7 +4599,7 @@ export default function Page() {
           max-height: calc(100vh - 32px);
           max-height: calc(100dvh - 32px);
           overflow: hidden;
-          padding: 20px 20px 20px 20px !important;
+          padding: 20px !important;
         }
 
         .panel-card.text-panel,
@@ -4618,7 +4618,7 @@ export default function Page() {
           .panel-card {
             max-height: calc(100vh - 40px);
             max-height: calc(100dvh - 40px);
-            padding: 24px 24px 24px 24px !important;
+            padding: 24px !important;
           }
 
           .panel-card.text-panel,
