@@ -339,7 +339,7 @@ function buildV2Messages({ chatHistory, userMessage, imageDataUrls }) {
   if (msgText) parts.push({ type: 'text', text: msgText })
 
   const imgs = Array.isArray(imageDataUrls) ? imageDataUrls : []
-  for (const url of imgs) parts.push({ type: 'image_url', image_url: { url } })
+  for (const url of imgs) parts.push({ type: 'image_url', imageUrl: { url } })
 
   messages.push({
     role: 'user',
