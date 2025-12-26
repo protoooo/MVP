@@ -1,7 +1,7 @@
 // app/page.client.js
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -26,6 +26,7 @@ const MIN_MULTI_LOCATIONS = 2
 const MAX_MULTI_LOCATIONS = 500
 const MAX_DEVICES_PER_LOCATION = 20
 const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
+const HISTORY_KEY_BASE = 'plm_chat_history_v1'
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -844,6 +845,9 @@ export default function Page() {
   const [inputMode, setInputMode] = useState('photo') // 'photo' | 'chat'
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
+  const [chatHistory, setChatHistory] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [historyReady, setHistoryReady] = useState(false)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -852,6 +856,7 @@ export default function Page() {
 
   const isAuthenticated = !!session
   const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === SUBSCRIPTION_STATUS_TRIALING)
+  const historyStorageKey = useMemo(() => `${HISTORY_KEY_BASE}-${session?.user?.id || 'guest'}`, [session?.user?.id])
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
@@ -871,6 +876,40 @@ export default function Page() {
       document.removeEventListener('touchstart', onDown)
     }
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (window.innerWidth >= 1100) {
+      setShowHistory(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = localStorage.getItem(historyStorageKey)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) setChatHistory(parsed)
+      } else {
+        setChatHistory([])
+      }
+    } catch (err) {
+      console.warn('History load failed', err)
+    } finally {
+      setHistoryReady(true)
+    }
+  }, [historyStorageKey])
+
+  useEffect(() => {
+    if (!historyReady) return
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(historyStorageKey, JSON.stringify(chatHistory))
+    } catch (err) {
+      console.warn('History persist failed', err)
+    }
+  }, [chatHistory, historyReady, historyStorageKey])
 
   useEffect(() => {
     const handleOpenAuthModal = (event) => {
@@ -1302,6 +1341,36 @@ export default function Page() {
     }
   }
 
+  const handleNewChat = useCallback(() => {
+    setCurrentChatId(null)
+    setMessages([])
+    setInput('')
+    setSelectedImage(null)
+    setSelectedPriceId(null)
+  }, [])
+
+  const handleLoadHistory = useCallback(
+    (entry) => {
+      if (!entry) return
+      setCurrentChatId(entry.id === 'local' ? null : entry.id)
+      setMessages(
+        (entry.messages || []).map((m) => ({
+          role: m.role,
+          content: m.content,
+          citations: Array.isArray(m.citations) ? m.citations : [],
+          hasImage: m.hasImage,
+          image: m.hasImage ? null : undefined,
+        }))
+      )
+      setInput('')
+      setSelectedImage(null)
+      if (typeof window !== 'undefined' && window.innerWidth < 1100) {
+        setShowHistory(false)
+      }
+    },
+    []
+  )
+
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if (isSending) return
@@ -1325,7 +1394,7 @@ export default function Page() {
     setSendMode(image ? 'vision' : 'text')
     setSendKey((k) => k + 1)
 
-    const newUserMessage = { role: 'user', content: question, image }
+    const newUserMessage = { role: 'user', content: question, image, hasImage: !!image }
     trackEvent(image ? AnalyticsEvents.PHOTO_SCAN : AnalyticsEvents.TEXT_QUESTION, {
       mode: image ? 'vision' : 'text',
     })
@@ -1560,6 +1629,36 @@ export default function Page() {
     [buildReportText]
   )
 
+  useEffect(() => {
+    if (!historyReady) return
+    if (!hasPaidAccess) return
+    if (!messages.length) return
+
+    const entryId = currentChatId || 'local'
+    const firstUserMessage = messages.find((m) => m.role === 'user' && safeTrim(m.content))
+    const previewSource = [...messages].reverse().find((m) => safeTrim(m.content))
+
+    const title =
+      safeTrim(firstUserMessage?.content) ||
+      (messages.find((m) => m.hasImage || m.image) ? 'Photo analysis' : 'Chat session')
+    const preview = safeTrim(previewSource?.content || '')
+
+    const trimmedMessages = messages.map((m) => ({
+      role: m.role,
+      content: safeTrim(m.content || ''),
+      hasImage: Boolean(m.image || m.hasImage),
+      citations: Array.isArray(m.citations) ? m.citations : [],
+    }))
+
+    setChatHistory((prev) => {
+      const filtered = prev.filter((item) => item.id !== entryId)
+      return [
+        { id: entryId, title: title || 'Chat', preview, updatedAt: Date.now(), messages: trimmedMessages },
+        ...filtered,
+      ].slice(0, 25)
+    })
+  }, [messages, currentChatId, hasPaidAccess, historyReady])
+
   if (isLoading) {
     return (
       <div className={`loading-screen ${plusJakarta.className}`}>
@@ -1607,7 +1706,7 @@ export default function Page() {
           --landing-topbar-h: 74px;
 
           /* ✅ Chat dock sizing + safe room (prevents needing to scroll page to “reach” the dock) */
-          --chat-dock-room: 120px;
+          --chat-dock-room: 96px;
 
           /* ✅ Light “Apple frosted glass” tokens for modals + composer */
           --glass-ink: #0b1324;
@@ -1792,10 +1891,11 @@ export default function Page() {
         /* ✅ Auth + Pricing cards: brighten glass to match landing hero clarity */
         .glass-modal.modal-card.auth-modal,
         .glass-modal.modal-card.pricing-modal {
-          background: linear-gradient(150deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08)) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58), 0 28px 82px rgba(10, 18, 35, 0.22) !important;
-          backdrop-filter: blur(20px) saturate(180%) !important;
-          -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+          background: linear-gradient(150deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.14)) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64), 0 24px 70px rgba(10, 18, 35, 0.2) !important;
+          border: 1px solid rgba(255, 255, 255, 0.72) !important;
+          backdrop-filter: blur(14px) saturate(160%) !important;
+          -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
         }
 
         .glass-modal.modal-card::before {
@@ -2579,6 +2679,13 @@ export default function Page() {
           min-height: 0;
         }
 
+        @media (min-width: 1024px) {
+          .landing-hero {
+            align-items: flex-end;
+            padding: clamp(32px, 8vh, 72px) 32px clamp(46px, 11vh, 108px);
+          }
+        }
+
         .landing-hero-card {
           width: 100%;
           max-width: 880px;
@@ -2876,12 +2983,51 @@ export default function Page() {
           background: transparent;
         }
 
+        .chat-top-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .chat-top-title {
+          margin: 0;
+          font-size: 15px;
+          font-weight: 850;
+          letter-spacing: -0.01em;
+          color: rgba(15, 23, 42, 0.9);
+        }
+
+        .chat-top-sub {
+          margin: 0;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.62);
+        }
+
         .chat-top-actions {
           display: flex;
           align-items: center;
           gap: 6px;
           margin-right: 0;
           padding: 0 8px; /* keep equal breathing room left/right of the gear */
+        }
+
+        .chat-history-toggle {
+          height: 34px;
+          padding: 0 14px;
+          border-radius: 12px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: rgba(255, 255, 255, 0.82);
+          color: rgba(15, 23, 42, 0.82);
+          font-weight: 780;
+          cursor: pointer;
+          box-shadow: 0 12px 26px rgba(5, 7, 13, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .chat-history-toggle:hover {
+          transform: translateY(-1px);
+          border-color: rgba(15, 23, 42, 0.15);
+          box-shadow: 0 16px 34px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.62);
         }
 
         .chat-settings-wrap {
@@ -2931,29 +3077,68 @@ export default function Page() {
           margin: 6px 2px;
         }
 
-        .chat-messages {
+        .chat-shell {
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          overflow-y: hidden;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-
-          /* ✅ Updated: use flexbox to position the glass card with proper bounds */
-          display: flex;
-          flex-direction: column;
-          padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 32px);
+          inset: 0;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 14px;
+          padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 18px
+            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 28px);
           background: transparent;
         }
 
-        .chat-messages.empty {
+        .chat-shell.history-open {
+          grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 1100px) {
+          .chat-shell.history-open {
+            grid-template-columns: minmax(260px, 320px) 1fr;
+          }
+        }
+
+        .chat-history-panel {
+          display: none;
+          min-height: 0;
+        }
+
+        .chat-history-panel.open {
+          display: block;
+        }
+
+        @media (min-width: 1100px) {
+          .chat-history-panel {
+            display: block;
+          }
+        }
+
+        .chat-main-area {
+          min-height: 0;
           display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .chat-messages {
+          position: relative;
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .chat-messages.empty {
           align-items: center;
           justify-content: center;
+        }
+
+        .chat-messages:not(.empty) {
+          justify-content: flex-end;
         }
 
         .chat-empty-text {
@@ -3072,6 +3257,122 @@ export default function Page() {
           }
         }
 
+        .chat-history-shell {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          flex: 1;
+        }
+
+        .chat-history-surface {
+          border-radius: 18px !important;
+          padding: 18px 16px !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58), 0 18px 48px rgba(5, 7, 13, 0.16) !important;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .chat-history-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .chat-history-title {
+          font-size: 15px;
+          font-weight: 800;
+          color: rgba(15, 23, 42, 0.88);
+          margin: 0;
+        }
+
+        .chat-history-sub {
+          margin: 2px 0 0;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.65);
+        }
+
+        .chat-history-new {
+          height: 34px;
+          padding: 0 14px;
+          border-radius: 12px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          background: rgba(255, 255, 255, 0.78);
+          color: rgba(15, 23, 42, 0.9);
+          font-weight: 750;
+          cursor: pointer;
+          box-shadow: 0 12px 32px rgba(5, 7, 13, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+          transition: transform 0.12s ease, box-shadow 0.15s ease;
+        }
+
+        .chat-history-new:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 16px 40px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.64);
+        }
+
+        .chat-history-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+
+        .chat-history-item {
+          width: 100%;
+          text-align: left;
+          padding: 10px 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(15, 23, 42, 0.06);
+          background: rgba(255, 255, 255, 0.75);
+          color: rgba(15, 23, 42, 0.9);
+          cursor: pointer;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 6px;
+          box-shadow: 0 10px 28px rgba(5, 7, 13, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+          transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .chat-history-item:hover {
+          transform: translateY(-1px);
+          border-color: rgba(15, 23, 42, 0.12);
+          box-shadow: 0 14px 36px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .chat-history-item-title {
+          margin: 0;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          color: rgba(15, 23, 42, 0.92);
+        }
+
+        .chat-history-item-preview {
+          margin: 0;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.65);
+          grid-column: 1 / -1;
+        }
+
+        .chat-history-empty {
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.65);
+          margin: 0;
+        }
+
+        .chat-history-pill {
+          font-size: 11px;
+          font-weight: 800;
+          color: rgba(15, 23, 42, 0.7);
+          background: rgba(95, 168, 255, 0.15);
+          border: 1px solid rgba(95, 168, 255, 0.3);
+          padding: 4px 8px;
+          border-radius: 999px;
+        }
+
         /* ✅ Frosted glass card for chat conversation - fixed height, scrollable content */
         .chat-history-card {
           max-width: 960px; /* Align with widened chat input */
@@ -3134,6 +3435,23 @@ export default function Page() {
           max-width: 100%;
           max-height: 280px;
           object-fit: contain;
+        }
+
+        .chat-upload-preview.placeholder img {
+          display: none;
+        }
+
+        .chat-upload-ghost {
+          width: 64px;
+          height: 64px;
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(15, 23, 42, 0.1);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(15, 23, 42, 0.65);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         .chat-content {
@@ -3296,6 +3614,27 @@ export default function Page() {
           gap: 10px;
           padding: 12px 14px;
           color-scheme: light; /* helps iOS inputs render correctly */
+        }
+
+        .chat-dock-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .chat-dock-title {
+          margin: 0;
+          font-size: 13px;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          font-weight: 820;
+          color: rgba(15, 23, 42, 0.7);
+        }
+
+        .chat-dock-sub {
+          margin: 2px 0 0;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.58);
         }
 
         .chat-mode-toggle {
@@ -4212,8 +4551,19 @@ export default function Page() {
           <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <div className={`${plusJakarta.className} chat-root tool-first-ui`}>
               <header className="chat-topbar">
-                <BrandLink variant="chat" />
+                <div className="chat-top-meta">
+                  <p className="chat-top-title">protocolLM Assistant</p>
+                  <p className="chat-top-sub">Michigan food safety, photo + text tools</p>
+                </div>
                 <nav className="chat-top-actions" aria-label="Tool actions">
+                  <button
+                    type="button"
+                    className="chat-history-toggle"
+                    onClick={() => setShowHistory((v) => !v)}
+                    aria-pressed={showHistory}
+                  >
+                    History
+                  </button>
                   {isAuthenticated && (
                     <div className="chat-settings-wrap" ref={settingsRef}>
                       <button
@@ -4264,92 +4614,157 @@ export default function Page() {
                 </nav>
               </header>
 
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-              >
-                {messages.length === 0 ? (
-                  <div className="chat-empty-state">
-                    <p className="chat-empty-text">Upload a photo to analyze for food safety violations.</p>
-                  </div>
-                ) : (
-                  <LiquidGlass variant="main" className="chat-history-card">
-                    <div className="chat-history">
-                      {messages.map((msg, idx) => {
-                        const isAssistant = msg.role === 'assistant'
-                        const isPendingAssistant = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
+              <div className={`chat-shell ${showHistory ? 'history-open' : ''}`}>
+                <aside className={`chat-history-panel ${showHistory ? 'open' : ''}`} aria-label="Chat history">
+                  <LiquidGlass variant="side" className="chat-history-surface">
+                    <div className="chat-history-shell">
+                      <div className="chat-history-head">
+                        <div>
+                          <p className="chat-history-title">Chat history</p>
+                          <p className="chat-history-sub">Revisit previous scans and questions</p>
+                        </div>
+                        <button type="button" className="chat-history-new" onClick={handleNewChat}>
+                          New chat
+                        </button>
+                      </div>
 
-                        return (
-                          <div
-                            key={idx}
-                            className={`chat-message ${isAssistant ? 'chat-message-assistant' : 'chat-message-user'}`}
-                          >
-                            {msg.image && (
-                              <div className="chat-upload-preview">
-                                <img src={msg.image} alt="Uploaded" />
-                                <span className="chat-upload-label">Photo ready for analysis</span>
+                      <div className="chat-history-list">
+                        {chatHistory.length ? (
+                          chatHistory.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="chat-history-item"
+                              onClick={() => handleLoadHistory(item)}
+                            >
+                              <div>
+                                <p className="chat-history-item-title">{item.title || 'Chat'}</p>
+                                <p className="chat-history-item-preview">
+                                  {item.preview || 'Resume this thread with your food safety tools.'}
+                                </p>
                               </div>
-                            )}
-
-                            {isAssistant ? (
-                              <div className="chat-analysis-result">
-                                <div className="chat-analysis-header-row">
-                                  <div>
-                                    <p className="chat-analysis-title">Analysis Results</p>
-                                    <p className="chat-analysis-subtitle">Structured findings for your upload</p>
-                                  </div>
-                                  <span className="chat-analysis-pill">Report</span>
-                                </div>
-
-                                <div className="chat-analysis-body">
-                                  {isPendingAssistant ? (
-                                    <div className="chat-thinking">Analyzing…</div>
-                                  ) : (
-                                    formatAssistantContent(msg.content, msg.citations)
-                                  )}
-                                </div>
-
-                                {!isPendingAssistant && (
-                                  <div className="chat-analysis-actions">
-                                    <button
-                                      type="button"
-                                      className="chat-action-btn"
-                                      onClick={() => handleDownloadReport(msg)}
-                                    >
-                                      Download report
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="chat-action-btn secondary"
-                                      onClick={() => handleShareResults(msg)}
-                                    >
-                                      Share results
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              (msg.content || msg.image) && (
-                                <div className="chat-user-note">
-                                  <div className="chat-user-note-title">Notes for this scan</div>
-                                  <p className="chat-user-note-text">
-                                    {msg.content ? msg.content : 'Image uploaded for inspection.'}
-                                  </p>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        )
-                      })}
+                              <span className="chat-history-pill">
+                                {new Date(item.updatedAt || Date.now()).toLocaleDateString()}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="chat-history-empty">Your photo and text conversations will appear here.</p>
+                        )}
+                      </div>
                     </div>
                   </LiquidGlass>
-                )}
+                </aside>
+
+                <div className="chat-main-area">
+                  <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+                  >
+                    {messages.length === 0 ? (
+                      <div className="chat-empty-state">
+                        <p className="chat-empty-text">Upload a photo to analyze for food safety violations.</p>
+                      </div>
+                    ) : (
+                      <LiquidGlass variant="main" className="chat-history-card">
+                        <div className="chat-history">
+                          {messages.map((msg, idx) => {
+                            const isAssistant = msg.role === 'assistant'
+                            const isPendingAssistant = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
+                            const hasImage = Boolean(msg.image) || msg.hasImage
+
+                            return (
+                              <div
+                                key={idx}
+                                className={`chat-message ${isAssistant ? 'chat-message-assistant' : 'chat-message-user'}`}
+                              >
+                                {hasImage && (
+                                  <div className={`chat-upload-preview ${msg.image ? '' : 'placeholder'}`}>
+                                    {msg.image ? (
+                                      <img src={msg.image} alt="Uploaded" />
+                                    ) : (
+                                      <div className="chat-upload-ghost">
+                                        <Icons.Camera />
+                                      </div>
+                                    )}
+                                    <span className="chat-upload-label">
+                                      {msg.image ? 'Photo ready for analysis' : 'Photo used in prior scan'}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {isAssistant ? (
+                                  <div className="chat-analysis-result">
+                                    <div className="chat-analysis-header-row">
+                                      <div>
+                                        <p className="chat-analysis-title">Analysis Results</p>
+                                        <p className="chat-analysis-subtitle">Structured findings for your upload</p>
+                                      </div>
+                                      <span className="chat-analysis-pill">Report</span>
+                                    </div>
+
+                                    <div className="chat-analysis-body">
+                                      {isPendingAssistant ? (
+                                        <div className="chat-thinking">Analyzing…</div>
+                                      ) : (
+                                        formatAssistantContent(msg.content, msg.citations)
+                                      )}
+                                    </div>
+
+                                    {!isPendingAssistant && (
+                                      <div className="chat-analysis-actions">
+                                        <button
+                                          type="button"
+                                          className="chat-action-btn"
+                                          onClick={() => handleDownloadReport(msg)}
+                                        >
+                                          Download report
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="chat-action-btn secondary"
+                                          onClick={() => handleShareResults(msg)}
+                                        >
+                                          Share results
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  (msg.content || msg.image || msg.hasImage) && (
+                                    <div className="chat-user-note">
+                                      <div className="chat-user-note-title">Notes for this scan</div>
+                                      <p className="chat-user-note-text">
+                                        {msg.content
+                                          ? msg.content
+                                          : msg.hasImage
+                                            ? 'Image uploaded for inspection.'
+                                            : 'Image uploaded for inspection.'}
+                                      </p>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </LiquidGlass>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="chat-input-area">
                 <div className="chat-input-inner">
                   <LiquidGlass variant="main" className="chat-dock">
+                    <div className="chat-dock-head">
+                      <div>
+                        <p className="chat-dock-title">Tools</p>
+                        <p className="chat-dock-sub">Image analysis &amp; regulation questions</p>
+                      </div>
+                    </div>
+
                     <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                     <div className="chat-mode-toggle" role="tablist" aria-label="Choose input mode">
@@ -4371,7 +4786,7 @@ export default function Page() {
                         onClick={() => setInputMode('chat')}
                       >
                         <span className="chat-mode-label">Chat</span>
-                        <span className="chat-mode-sub">Ask about your documents</span>
+                        <span className="chat-mode-sub">Ask about Michigan food safety regulations</span>
                       </button>
                     </div>
 
@@ -4445,7 +4860,7 @@ export default function Page() {
                                   )}px`
                                 }
                               }}
-                              placeholder="Ask a question about your documents..."
+                              placeholder="Ask about Michigan food safety regulations..."
                               rows={1}
                               className="chat-textarea"
                               onKeyDown={(e) => {
@@ -4471,8 +4886,8 @@ export default function Page() {
                     </div>
 
                     <p className="chat-disclaimer">
-                      Upload a photo for instant analysis or switch to chat to ask about your documents. Verify critical
-                      decisions with official regulations.
+                      Upload a photo for instant analysis or switch to chat to ask about Michigan food safety
+                      regulations. Verify critical decisions with official regulations.
                     </p>
                   </LiquidGlass>
                   <FooterLinks />
