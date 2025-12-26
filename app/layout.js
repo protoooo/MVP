@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import CookieConsent from '@/components/CookieConsent'
 import SessionGuard from '@/components/SessionGuard'
 import Image from 'next/image'
+import bg from '@/app/assets/background/protocolLM-bg.png'
 import Analytics from '@/components/Analytics'
 import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
@@ -24,7 +25,14 @@ export default function RootLayout({ children }) {
         <Analytics />
         {/* ✅ fixed, crisp background layer */}
         <div className="plm-bg" aria-hidden="true">
-          <Image src="/backgrounds/protocol-field.png" alt="" fill priority sizes="100vw" className="plm-bg-img" />
+          <Image
+            src={bg}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="plm-bg-img"
+          />
           <div className="plm-bg-vignette" />
         </div>
 
