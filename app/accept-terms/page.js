@@ -269,8 +269,8 @@ export default function AcceptTermsPage() {
 
         .agreement-card {
           width: 100%;
-          border: 1px solid var(--border-subtle);
-          background: var(--bg-3);
+          border: 1px solid var(--border);
+          background: var(--clay);
           border-radius: var(--radius-sm);
           padding: 14px 16px;
           display: grid;
@@ -278,15 +278,14 @@ export default function AcceptTermsPage() {
           gap: 12px;
           align-items: center;
           text-align: left;
-          color: var(--ink-1);
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+          color: var(--ink-80);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           cursor: pointer;
         }
 
         .agreement-card[data-selected="true"] {
           border-color: var(--accent);
-          box-shadow: 0 12px 36px rgba(5, 7, 13, 0.32);
-          transform: translateY(-1px);
+          box-shadow: var(--shadow-md);
         }
 
         .agreement-card:focus-visible {
@@ -297,10 +296,10 @@ export default function AcceptTermsPage() {
         .agreement-status {
           width: 26px;
           height: 26px;
-          border-radius: 8px;
-          border: 2px solid var(--border-subtle);
-          background: rgba(255, 255, 255, 0.06);
-          color: var(--ink-0);
+          border-radius: var(--radius-sm);
+          border: 2px solid var(--border);
+          background: var(--surface);
+          color: var(--ink);
           font-weight: 700;
           font-size: 14px;
           display: inline-flex;
@@ -312,12 +311,13 @@ export default function AcceptTermsPage() {
         .agreement-card[data-selected="true"] .agreement-status {
           background: var(--accent);
           border-color: var(--accent);
+          color: #fff;
         }
 
         .agreement-text {
           font-size: 14px;
           line-height: 1.65;
-          color: var(--ink-1);
+          color: var(--ink-80);
         }
 
         .agreement-action {
@@ -325,15 +325,15 @@ export default function AcceptTermsPage() {
           font-weight: 700;
           color: var(--accent);
           border: 1px solid var(--accent);
-          background: rgba(95, 168, 255, 0.14);
+          background: rgba(35, 131, 226, 0.1);
           border-radius: 999px;
           padding: 8px 12px;
           transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
 
         .agreement-card[data-selected="true"] .agreement-action {
-          background: rgba(95, 168, 255, 0.24);
-          color: var(--ink-0);
+          background: rgba(35, 131, 226, 0.15);
+          color: var(--ink);
           border-color: var(--accent);
         }
 
