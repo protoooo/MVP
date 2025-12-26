@@ -182,25 +182,21 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-content">
             <div className="hero-headings">
               <h1 className={`hero-title ${plusJakarta.className}`}>
-                CATCH VIOLATIONS,
-                <span className="hero-break">
-                  <br />
-                </span>{' '}
-                <span className="hero-nowrap">NOT&nbsp;FINES.</span>
+                Inspection Surface for regulated operations
               </h1>
               <div className="hero-divider" aria-hidden="true" />
               <p className="hero-support">
-                Take pictures within your food establishment to catch violations and prepare for inspections.
+                Submit structured inspection requests and supporting images to receive procedural, audit-ready results.
               </p>
             </div>
 
             <div className="hero-cta-row">
-              <div className="hero-arrow-text">Get started in minutes</div>
+              <div className="hero-arrow-text">Run your first inspection request</div>
               <div className="hero-arrow-icon">
                 <Icons.ArrowRight />
               </div>
               <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
-                Start free trial
+                Start inspection trial
               </button>
             </div>
           </div>
@@ -556,83 +552,90 @@ function safeTrim(s) {
 
 // Helper to parse bullet point lines from text
 function parseBulletItems(text, skipLines = 1) {
-  const lines = text.split('\n').filter(l => l.trim())
+  const lines = text.split('\n').filter((l) => l.trim())
   const items = []
-  
+
   for (let i = skipLines; i < lines.length; i++) {
     const line = lines[i].trim()
     if (line.startsWith('•') || line.startsWith('-')) {
-      items.push(line.replace(/^[•\-]\s*/, ''))
+      items.push(line.replace(/^[•-]\s*/, ''))
     }
   }
   return items
 }
 
-function formatAssistantContent(content) {
+function parseInspectionResponse(content) {
   const text = safeTrim(content)
-  if (!text) return null
-  
-  // Check for "NO VIOLATIONS" pattern
-  if (/^NO VIOLATIONS/i.test(text)) {
-    return (
-      <div className="chat-no-violations">
-        No violations! ✓
-      </div>
-    )
+  if (!text) {
+    return { status: 'Clarification required', findings: [], clarifications: [], raw: '' }
   }
-  
-  // Check for "VIOLATIONS:" pattern
-  if (/^VIOLATIONS:/i.test(text)) {
+
+  const normalized = text.toUpperCase()
+  let status = 'Violations observed'
+  if (normalized.includes('NO VIOLATIONS')) status = 'No violations observed'
+  if (normalized.includes('NEED INFO') || normalized.includes('CLARIFICATION')) status = 'Clarification required'
+
+  const findings = []
+  const clarifications = []
+
+  if (status === 'Clarification required') {
+    const questions = parseBulletItems(text, 1)
+    if (questions.length) {
+      questions.forEach((q) => clarifications.push(q))
+    } else {
+      const questionLines = text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l)
+      questionLines.forEach((line) => {
+        if (line.endsWith('?') || line.toLowerCase().includes('clarify')) clarifications.push(line)
+      })
+    }
+  } else if (/^VIOLATIONS:/i.test(text)) {
     const items = parseBulletItems(text, 1)
-    const violations = items.map(item => {
-      // Try to split by "FIX:"
+    items.forEach((item) => {
       const fixMatch = item.match(/^(.+?)\.\s*FIX:\s*(.+)$/i)
-      if (fixMatch) {
-        return {
-          issue: fixMatch[1].trim(),
-          fix: fixMatch[2].trim()
-        }
+      findings.push({
+        violation: fixMatch ? fixMatch[1].trim() : item,
+        area: '',
+        observation: fixMatch ? fixMatch[1].trim() : item,
+        action: fixMatch ? fixMatch[2].trim() : '',
+      })
+    })
+  } else {
+    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
+    lines.forEach((line) => {
+      const violationMatch = line.match(/(?:Violation|Issue)\s*[:\-]\s*(.+)/i)
+      const areaMatch = line.match(/(?:Area|Location)\s*[:\-]\s*(.+)/i)
+      const actionMatch = line.match(/(?:Action|Fix|Required action)\s*[:\-]\s*(.+)/i)
+      if (violationMatch || actionMatch || areaMatch) {
+        findings.push({
+          violation: violationMatch ? violationMatch[1] : areaMatch ? 'Area noted' : 'Observation',
+          area: areaMatch ? areaMatch[1] : '',
+          observation: violationMatch ? violationMatch[1] : line,
+          action: actionMatch ? actionMatch[1] : '',
+        })
       } else {
-        return { issue: item, fix: null }
+        findings.push({
+          violation: status === 'Violations observed' ? 'Review required' : 'Inspection note',
+          area: '',
+          observation: line,
+          action: '',
+        })
       }
     })
-    
-    return (
-      <div>
-        <div className="chat-violations-header">Violations:</div>
-        {violations.map((v, idx) => (
-          <div key={idx} className="chat-violation-item">
-            <span className="chat-violation-type">{v.issue}</span>
-            {v.fix && (
-              <>
-                <br />
-                <span className="chat-violation-fix">Fix: {v.fix}</span>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-    )
   }
-  
-  // Check for "NEED INFO:" pattern
-  if (/^NEED INFO:/i.test(text)) {
-    const questions = parseBulletItems(text, 1)
-    
-    return (
-      <div>
-        <div className="chat-need-info-header">Need more info:</div>
-        {questions.map((q, idx) => (
-          <div key={idx} style={{ marginBottom: '6px', paddingLeft: '12px' }}>
-            • {q}
-          </div>
-        ))}
-      </div>
-    )
+
+  if (!findings.length && status === 'Violations observed') {
+    findings.push({
+      violation: 'Review required',
+      area: '',
+      observation: text,
+      action: '',
+    })
   }
-  
-  // Default: return as plain text
-  return <div className="chat-content">{text}</div>
+
+  return { status, findings, clarifications, raw: text }
 }
 
 function normalizeOutgoingMessages(msgs) {
@@ -725,6 +728,8 @@ export default function Page() {
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
   const [selectedPriceId, setSelectedPriceId] = useState(null)
+  const [deviceUsageRemaining, setDeviceUsageRemaining] = useState(null)
+  const [deviceUsageBlocked, setDeviceUsageBlocked] = useState(false)
 
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
@@ -735,10 +740,8 @@ export default function Page() {
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
 
-  const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const textAreaRef = useRef(null)
-  const shouldAutoScrollRef = useRef(true)
 
   const isAuthenticated = !!session
   const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === SUBSCRIPTION_STATUS_TRIALING)
@@ -779,7 +782,7 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = hasPaidAccess ? 'chat' : 'landing'
+    document.documentElement.dataset.view = hasPaidAccess ? 'inspection' : 'landing'
     const splineContainer = document.getElementById('plm-spline-bg')
     if (splineContainer) {
       splineContainer.style.display = hasPaidAccess ? 'block' : 'none'
@@ -817,28 +820,6 @@ export default function Page() {
       document.documentElement.style.overflow = prevHtml
     }
   }, [hasPaidAccess])
-
-  const scrollToBottom = useCallback((behavior = 'auto') => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior })
-  }, [])
-
-  const handleScroll = () => {
-    const el = scrollRef.current
-    if (!el) return
-    const threshold = 120
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
-    shouldAutoScrollRef.current = distanceFromBottom < threshold
-  }
-
-  useEffect(() => {
-    requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [scrollToBottom])
-
-  useEffect(() => {
-    if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [messages, scrollToBottom])
 
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
@@ -1192,7 +1173,7 @@ export default function Page() {
 
     // ✅ If user uploads an image only, give the API a sane default prompt
     const question =
-      rawQuestion || (image ? 'Analyze this photo for any visible food safety violations.' : '')
+      rawQuestion || (image ? 'Inspect the provided image for compliance violations and required actions.' : '')
 
     if (!question && !image) return
 
@@ -1219,7 +1200,6 @@ export default function Page() {
 
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
-    shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
 
@@ -1366,6 +1346,13 @@ export default function Page() {
       alert('Failed to process image.')
     }
   }
+
+  const completedAssistant = [...messages].reverse().find((m) => m.role === 'assistant' && safeTrim(m.content))
+  const activeAssistant =
+    isSending && messages[messages.length - 1]?.role === 'assistant' ? messages[messages.length - 1] : completedAssistant
+  const latestRequest = [...messages].reverse().find((m) => m.role === 'user')
+  const parsedResponse = parseInspectionResponse(activeAssistant?.content || '')
+  const hasResults = !!safeTrim(activeAssistant?.content || '')
 
   if (isLoading) {
     return (
@@ -2576,26 +2563,18 @@ export default function Page() {
           }
         }
 
-        /* ✅ Footer links pinned below chat bar */
+        /* Footer */
         .plm-footer-links {
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 14px;
-          padding: 12px 16px 4px;
+          padding: 16px 16px calc(env(safe-area-inset-bottom) + 12px);
           flex-wrap: wrap;
-          pointer-events: auto;
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: calc(env(safe-area-inset-bottom) + 10px);
-          z-index: var(--footer-links-z);
-        }
-
-        .chat-root .plm-footer-links {
-          position: static;
+          position: relative;
           bottom: auto;
+          z-index: var(--footer-links-z);
         }
 
         .plm-footer-link {
@@ -2615,59 +2594,51 @@ export default function Page() {
           color: rgba(15, 23, 42, 0.45);
         }
 
-        /* ✅ Chat: full-viewport, no page scroll, dock fixed to bottom */
-        .chat-root {
-          position: fixed; /* ✅ key fix: makes the whole chat a viewport app */
-          inset: 0;
+        /* Inspection layout */
+        .inspection-root {
+          min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
-          background: transparent;
+          gap: 16px;
+          padding: calc(env(safe-area-inset-top) + 18px) clamp(16px, 3vw, 32px)
+            calc(env(safe-area-inset-bottom) + 16px);
         }
 
-        @supports (-webkit-touch-callout: none) {
-          .chat-root {
-            height: -webkit-fill-available;
-          }
-        }
-
-        .chat-topbar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 20;
-          width: 100%;
-          padding: max(18px, env(safe-area-inset-top) + 18px) max(22px, env(safe-area-inset-right) + 22px) 0
-            max(18px, env(safe-area-inset-left) + 18px);
+        .inspection-topbar {
+          position: sticky;
+          top: env(safe-area-inset-top);
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 10px;
-          background: transparent;
+          padding: 6px 0;
+          z-index: 10;
         }
 
-        .chat-top-actions {
+        .inspection-actions {
           display: flex;
           align-items: center;
-          gap: 6px;
-          margin-right: 0;
+          gap: 8px;
         }
 
-        .chat-settings-wrap {
+        .inspection-settings {
           position: relative;
-          display: flex;
-          align-items: center;
         }
 
-        .chat-settings-menu {
+        .inspection-settings-btn {
+          width: 42px;
+          height: 42px;
+        }
+
+        .inspection-settings-menu {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
-          min-width: 180px;
-          background: rgba(255, 255, 255, 0.92);
+          min-width: 200px;
+          background: rgba(255, 255, 255, 0.94);
           border: 1px solid rgba(15, 23, 42, 0.12);
-          border-radius: var(--radius-md);
+          border-radius: 12px;
           padding: 8px;
           box-shadow: 0 16px 48px rgba(5, 7, 13, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
           backdrop-filter: blur(14px) saturate(120%);
@@ -2676,570 +2647,405 @@ export default function Page() {
           z-index: 50;
         }
 
-        .chat-settings-item {
+        .inspection-settings-item {
           width: 100%;
           text-align: left;
-          padding: 10px 10px;
+          padding: 10px 12px;
           background: transparent;
           border: none;
           border-radius: var(--radius-sm);
           color: #1f2937;
           font-size: 13px;
-          font-weight: 600;
+          font-weight: 650;
           cursor: pointer;
           font-family: inherit;
           transition: background 0.15s ease;
         }
 
-        .chat-settings-item:hover {
+        .inspection-settings-item:hover {
           background: rgba(15, 23, 42, 0.08);
         }
 
-        .chat-settings-sep {
+        .inspection-settings-sep {
           height: 1px;
           background: rgba(15, 23, 42, 0.12);
           margin: 6px 2px;
         }
 
-        .chat-messages {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          overflow-y: hidden;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-
-          /* ✅ Updated: use flexbox to position the glass card with proper bounds */
-          display: flex;
-          flex-direction: column;
-          padding: calc(max(130px, env(safe-area-inset-top) + 115px)) 24px
-            calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 12px);
-          background: transparent;
+        .inspection-shell {
+          flex: 1;
+          display: grid;
+          grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+          gap: 16px;
+          align-items: start;
         }
 
-        .chat-messages.empty {
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        .panel {
+          position: relative;
+          border-radius: 16px;
+          padding: 20px;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.75)) !important;
+          border: 1px solid rgba(255, 255, 255, 0.6) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 24px 72px rgba(5, 7, 13, 0.18) !important;
+          color: #0b1220 !important;
+          color-scheme: light;
+          min-height: 0;
         }
 
-        .chat-empty-text {
-          font-size: 15px;
-          color: rgba(15, 23, 42, 0.86);
-          line-height: 1.6;
+        .panel-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-bottom: 14px;
+        }
+
+        .panel-title {
+          margin: 2px 0 4px 0;
+          font-size: 20px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: #0b1220;
+        }
+
+        .panel-support {
           margin: 0;
-          text-align: center;
-          background: rgba(255, 255, 255, 0.18);
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          padding: 12px 8px 12px 14px;
-          border-radius: 14px;
-          backdrop-filter: blur(16px) saturate(120%);
-          -webkit-backdrop-filter: blur(16px) saturate(120%);
+          font-size: 14px;
+          color: rgba(11, 18, 32, 0.78);
         }
 
-        .hero-overlay-block {
-          width: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          padding: 6px;
+        .eyebrow {
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          font-size: 11px;
+          font-weight: 800;
+          color: rgba(11, 18, 32, 0.64);
+          margin: 0;
         }
 
-        .hero-overlay-glass {
+        .panel-meta {
           display: flex;
-          flex-direction: column;
-          align-items: flex-start;
           gap: 10px;
-          max-width: 560px;
-          width: 100%;
-          color: rgba(15, 23, 42, 0.92);
-          background: linear-gradient(140deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
-          border: 1px solid rgba(255, 255, 255, 0.32);
-          box-shadow: 0 18px 48px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(16px) saturate(125%);
-          -webkit-backdrop-filter: blur(16px) saturate(125%);
-          border-radius: 20px;
-          padding: 16px 18px;
+          align-items: center;
         }
 
-        .hero-chip {
+        .panel-meta.right {
+          justify-content: flex-end;
+          flex: 1;
+        }
+
+        .panel-pill {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 6px 12px;
+          padding: 6px 10px;
           border-radius: 9999px;
-          background: rgba(255, 255, 255, 0.28);
-          border: 1px solid rgba(255, 255, 255, 0.4);
-          color: rgba(15, 23, 42, 0.85);
+          border: 1px solid rgba(11, 18, 32, 0.08);
           font-size: 12px;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          backdrop-filter: blur(12px) saturate(120%);
-          -webkit-backdrop-filter: blur(12px) saturate(120%);
-          box-shadow: 0 10px 26px rgba(5, 7, 13, 0.14);
+          font-weight: 750;
+          color: rgba(11, 18, 32, 0.78);
+          background: rgba(255, 255, 255, 0.7);
         }
 
-        .hero-overlay-title {
-          margin: 0;
-          font-size: clamp(28px, 5vw, 44px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: rgba(15, 23, 42, 0.95);
-          text-align: left;
+        .panel-pill.danger {
+          border-color: rgba(239, 68, 68, 0.3);
+          color: #b91c1c;
+          background: rgba(239, 68, 68, 0.1);
         }
 
-        .hero-underline {
-          height: 3px;
-          width: 64px;
-          border-radius: 9999px;
-          background: linear-gradient(90deg, #38bdf8, #6366f1, #a855f7);
-        }
-
-        .hero-overlay-text {
-          margin: 0;
-          font-size: 16px;
-          line-height: 1.7;
-          color: rgba(30, 41, 59, 0.78);
-          max-width: 46ch;
-        }
-
-        .hero-cta-inline {
-          display: inline-flex;
-          align-items: center;
+        .tool-controls {
+          display: flex;
+          flex-direction: column;
           gap: 12px;
+        }
+
+        .upload-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
           flex-wrap: wrap;
         }
 
-        .hero-cta-note {
-          margin: 0;
-          font-size: 13px;
-          font-weight: 700;
-          color: rgba(239, 68, 68, 0.9);
-        }
-
-        @media (min-width: 768px) {
-          .hero-overlay-block {
-            justify-content: flex-start;
-            padding-left: 10px;
-          }
-        }
-
-        @media (max-width: 767px) {
-          .hero-overlay-glass {
-            text-align: center;
-            align-items: center;
-          }
-
-          .hero-overlay-title {
-            text-align: center;
-          }
-
-          .hero-overlay-text {
-            text-align: center;
-          }
-        }
-
-        /* ✅ Frosted glass card for chat conversation - fixed height, scrollable content */
-        .chat-history-card {
-          max-width: 960px; /* Align with widened chat input */
-          margin: 0 auto;
-          width: 100%;
-          flex: 1;
-          min-height: 0; /* Important for flex child to allow shrinking */
-          overflow-y: auto;
-          overflow-x: hidden;
-          -webkit-overflow-scrolling: touch;
-          margin-bottom: 18px;
-        }
-
-        .chat-history {
-          max-width: 100%;
-          margin: 0;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
-          padding-top: 8px;
-          padding-bottom: 8px;
-        }
-
-        .chat-message {
-          display: flex;
-          width: 100%;
-          align-items: flex-start;
-        }
-        .chat-message-user {
-          justify-content: flex-end;
-        }
-        .chat-message-assistant {
-          justify-content: flex-start;
-        }
-
-        .chat-bubble {
-          max-width: 70%;
-          font-size: 15px;
-          line-height: 1.7;
-          display: block;
-        }
-
-        .chat-bubble-user {
-          color: var(--ink-0);
-        }
-        .chat-bubble-assistant {
-          color: rgba(15, 23, 42, 0.86);
-        }
-
-        .chat-bubble-image {
-          border-radius: var(--radius-md);
-          overflow: hidden;
-          margin-bottom: 12px;
-          display: inline-block;
-        }
-
-        .chat-bubble-image img {
-          display: block;
-          max-width: 100%;
-          max-height: 280px;
-          object-fit: contain;
-        }
-
-        .chat-content {
-          display: block;
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
-          word-break: break-word;
-        }
-
-        /* ✅ Response styling - No violations (green) */
-        .chat-no-violations {
-          color: #16a34a;
-          font-weight: 700;
-          font-size: 16px;
-        }
-
-        /* ✅ Response styling - Violations header (red) */
-        .chat-violations-header {
-          color: #dc2626;
-          font-weight: 700;
-          font-size: 16px;
-          margin-bottom: 8px;
-        }
-
-        /* ✅ Response styling - Violation item */
-        .chat-violation-item {
-          margin-bottom: 12px;
-          padding-left: 12px;
-          border-left: 3px solid #dc2626;
-        }
-
-        .chat-violation-type {
-          color: #dc2626;
-          font-weight: 700;
-        }
-
-        .chat-violation-fix {
-          color: rgba(15, 23, 42, 0.86);
-        }
-
-        /* ✅ Response styling - Need info (amber) */
-        .chat-need-info-header {
-          color: #d97706;
-          font-weight: 700;
-          font-size: 16px;
-          margin-bottom: 8px;
-        }
-
-        .chat-thinking {
-          display: block;
-          color: rgba(15, 23, 42, 0.7);
-          font-style: italic;
-        }
-
-        /* ✅ Dock is fixed to viewport bottom (not sticky inside scroll) */
-        .chat-input-area {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 25;
-          background: transparent;
-          pointer-events: none; /* allows clicks only inside inner */
-        }
-
-        .chat-input-inner {
-          pointer-events: auto;
-          max-width: calc(960px + 48px); /* 960px + 24px padding on each side to match chat-messages */
-          width: 100%;
-          margin: 0 auto;
-          padding: 12px 24px;
-          padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
-        }
-
-        /* ✅ FIX: DO NOT override LiquidGlass with transparent/none (this was causing the “matte white” bar) */
-        .chat-dock {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          padding: 14px 16px;
-          color-scheme: light; /* helps iOS inputs render correctly */
-        }
-
-        .chat-attachment {
+        .upload-btn {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 8px 12px;
-          border-radius: var(--radius-sm);
-          margin-bottom: 12px;
-          font-size: 12px;
-          color: rgba(15, 23, 42, 0.86);
-        }
-
-        .chat-attachment-icon {
-          color: var(--accent);
-          display: flex;
-        }
-
-        .chat-attachment-remove {
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: none;
-          color: rgba(15, 23, 42, 0.72);
+          padding: 12px 14px;
+          border-radius: 12px;
+          border: 1px dashed rgba(11, 18, 32, 0.2);
+          background: rgba(255, 255, 255, 0.82);
           cursor: pointer;
+          font-weight: 750;
+          font-size: 13px;
+          color: #0b1220;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .chat-attachment-remove:hover {
-          color: rgba(15, 23, 42, 0.9);
+        .upload-btn:hover {
+          border-color: rgba(95, 168, 255, 0.6);
+          box-shadow: 0 10px 28px rgba(5, 7, 13, 0.12);
         }
 
-        .chat-input-row {
-          display: flex;
-          align-items: flex-end;
-          gap: 10px;
+        .upload-btn svg {
+          width: 18px;
+          height: 18px;
         }
 
-        /* ✅ Input wrapper: keep it frosted, but less “flat white” */
-        .chat-input-wrapper {
-          flex: 1;
-          display: flex;
-          align-items: flex-end;
-          border-radius: var(--radius-md);
-          min-width: 0;
-          min-height: 48px;
-          padding-right: 6px;
-
-          background: rgba(255, 255, 255, 0.46);
-          border: 1px solid rgba(15, 23, 42, 0.14);
-          box-shadow: 0 16px 44px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(14px) saturate(130%);
-          -webkit-backdrop-filter: blur(14px) saturate(130%);
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-        }
-
-        .chat-input-wrapper:focus-within {
-          border-color: rgba(15, 23, 42, 0.26);
-          box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.16), 0 18px 48px rgba(5, 7, 13, 0.14),
-            inset 0 1px 0 rgba(255, 255, 255, 0.6);
-          background: rgba(255, 255, 255, 0.56);
-        }
-
-        .chat-textarea {
-          flex: 1;
-          min-height: 44px;
-          max-height: 160px;
-          padding: 12px 8px 12px 14px;
-          background: transparent;
-          border: none;
-          color: rgba(15, 23, 42, 0.96);
-          font-size: 16px;
-          line-height: 1.4;
-          resize: none;
-          font-family: inherit;
-          min-width: 0;
-        }
-
-        .chat-textarea::placeholder {
-          color: rgba(15, 23, 42, 0.7);
-        }
-        .chat-textarea:focus {
-          outline: none;
-        }
-
-        /* ✅ Send button inside input wrapper */
-        .chat-send-btn {
-          flex-shrink: 0;
-          width: 38px;
-          height: 38px;
-          border-radius: 10px;
-          margin: 0 0 5px 0;
-          align-self: flex-end;
-        }
-
-        .chat-send-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.35);
-          border-top-color: #ffffff;
-          border-radius: var(--radius-full);
-          animation: spin 0.6s linear infinite;
-        }
-
-        .chat-disclaimer {
-          text-align: center;
-          font-size: 11px;
-          color: rgba(15, 23, 42, 0.72);
-          margin-top: 8px;
-        }
-
-        .chat-disclaimer .inline-link {
-          background: none;
-          border: none;
-          padding: 0;
-          color: rgba(95, 168, 255, 0.95);
-          font-weight: 700;
-          cursor: pointer;
-          text-decoration: underline;
-          text-underline-offset: 2px;
-        }
-
-        .chat-disclaimer .inline-link:hover {
-          color: rgba(95, 168, 255, 1);
-        }
-
-        /* ✅ Tool-First UI Styles */
-        .tool-first-ui .chat-top-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        /* Free usage counter */
-        .free-usage-counter {
+        .file-chip {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 6px 12px;
+          padding: 10px 12px;
           border-radius: 9999px;
-          border: 1px solid rgba(95, 168, 255, 0.22);
           background: rgba(95, 168, 255, 0.12);
-          backdrop-filter: blur(12px) saturate(120%);
-          -webkit-backdrop-filter: blur(12px) saturate(120%);
-        }
-
-        .free-usage-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 9999px;
-          background: rgba(95, 168, 255, 0.95);
-        }
-
-        .free-usage-text {
-          font-size: 11px;
+          border: 1px solid rgba(95, 168, 255, 0.25);
+          color: #0b1220;
           font-weight: 700;
-          color: rgba(15, 23, 42, 0.82);
         }
 
-        /* Tool welcome card (for anonymous users) */
-        .tool-welcome-card {
-          max-width: 640px;
-          margin: 0 auto;
-          padding: 32px 28px;
-        }
-
-        .tool-welcome-content {
-          text-align: center;
-        }
-
-        .tool-welcome-title {
-          font-size: clamp(22px, 4vw, 32px);
-          font-weight: 800;
-          color: rgba(15, 23, 42, 0.92);
-          letter-spacing: -0.02em;
-          margin: 0 0 12px 0;
-          display: flex;
-          flex-direction: column;
+        .chip-close {
+          width: 24px;
+          height: 24px;
+          border-radius: 8px;
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          background: #fff;
+          display: inline-flex;
           align-items: center;
+          justify-content: center;
+          cursor: pointer;
         }
 
-        .tool-welcome-line1,
-        .tool-welcome-line2 {
-          display: block;
-        }
-
-        /* On desktop, show on one line */
-        @media (min-width: 769px) {
-          .tool-welcome-title {
-            flex-direction: row;
-            justify-content: center;
-            gap: 0.3em;
-          }
-        }
-
-        .tool-welcome-text {
-          font-size: 15px;
-          line-height: 1.65;
-          color: rgba(15, 23, 42, 0.82);
-          margin: 0 0 20px 0;
-        }
-
-        .tool-usage-available {
-          margin-top: 16px;
-        }
-
-        .tool-usage-text {
-          font-size: 13px;
-          font-weight: 700;
-          color: #1d4ed8;
-          margin: 0;
-        }
-
-        .tool-usage-blocked {
-          margin-top: 16px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .tool-usage-blocked-text {
+        .field-label {
           font-size: 12px;
-          font-weight: 600;
-          color: rgba(239, 68, 68, 0.9);
-          margin: 0;
+          font-weight: 800;
+          color: rgba(11, 18, 32, 0.7);
+          margin: 2px 0 -2px;
         }
 
-        .tool-cta {
+        .text-field {
+          background: rgba(255, 255, 255, 0.86);
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          border-radius: 12px;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+          overflow: hidden;
+        }
+
+        .text-area {
+          width: 100%;
+          border: none;
+          background: transparent;
+          padding: 12px 14px;
+          color: #0b1220;
+          font-size: 15px;
+          line-height: 1.5;
+          resize: none;
+          min-height: 72px;
+          font-family: inherit;
+        }
+
+        .text-area:focus {
+          outline: none;
+        }
+
+        .tool-actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .primary-btn {
           height: 44px;
-          padding: 0 20px;
-          border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.28);
+          padding: 0 18px;
+          border-radius: 12px;
+          border: 1px solid rgba(95, 168, 255, 0.3);
           background: linear-gradient(180deg, rgba(95, 168, 255, 0.98), rgba(95, 168, 255, 0.78));
           color: #fff;
-          font-weight: 800;
+          font-weight: 850;
           font-size: 14px;
           cursor: pointer;
           box-shadow: 0 16px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
           transition: transform 0.12s ease, box-shadow 0.15s ease;
         }
 
-        .tool-cta:hover {
+        .primary-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .primary-btn:hover:not(:disabled) {
           transform: translateY(-1px);
           box-shadow: 0 18px 48px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .helper-text {
+          margin: 0;
+          font-size: 12px;
+          font-weight: 650;
+          color: rgba(11, 18, 32, 0.6);
+        }
+
+        .results-panel {
+          min-height: 420px;
+        }
+
+        .status-heading {
+          margin: 2px 0 0 0;
+          font-size: 22px;
+          font-weight: 850;
+          letter-spacing: -0.02em;
+          color: #0b1220;
+        }
+
+        .request-summary {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          max-width: 360px;
+        }
+
+        .summary-label {
+          font-size: 12px;
+          font-weight: 800;
+          color: rgba(11, 18, 32, 0.6);
+        }
+
+        .summary-value {
+          font-size: 13px;
+          font-weight: 750;
+          color: rgba(11, 18, 32, 0.9);
+          line-height: 1.5;
+          word-break: break-word;
+        }
+
+        .inline-image {
+          margin-top: 10px;
+        }
+
+        .image-frame {
+          margin-top: 6px;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          background: rgba(255, 255, 255, 0.8);
+        }
+
+        .image-frame img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+
+        .results-empty {
+          margin-top: 12px;
+          border: 1px dashed rgba(11, 18, 32, 0.16);
+          border-radius: 12px;
+          padding: 16px;
+          background: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-title {
+          margin: 0 0 4px 0;
+          font-size: 16px;
+          font-weight: 800;
+          color: #0b1220;
+        }
+
+        .empty-text {
+          margin: 0;
+          color: rgba(11, 18, 32, 0.7);
+          font-weight: 650;
+          font-size: 13px;
+        }
+
+        .findings-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 10px;
+        }
+
+        .clarification-block,
+        .clear-block {
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          border-radius: 12px;
+          padding: 14px;
+          background: rgba(255, 255, 255, 0.82);
+        }
+
+        .clarification-title,
+        .clear-title {
+          font-size: 14px;
+          font-weight: 850;
+          color: #0f172a;
+          margin-bottom: 6px;
+        }
+
+        .clear-text {
+          margin: 0;
+          color: rgba(11, 18, 32, 0.72);
+          font-weight: 650;
+        }
+
+        .clarification-list {
+          margin: 0;
+          padding-left: 16px;
+          display: grid;
+          gap: 6px;
+          color: rgba(11, 18, 32, 0.8);
+          font-weight: 650;
+        }
+
+        .findings-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 12px;
+        }
+
+        .finding-card {
+          border: 1px solid rgba(11, 18, 32, 0.12);
+          border-radius: 12px;
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.78);
+          display: grid;
+          gap: 8px;
+        }
+
+        .finding-row {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .finding-label {
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: rgba(11, 18, 32, 0.6);
+        }
+
+        .finding-value {
+          margin: 0;
+          color: rgba(11, 18, 32, 0.9);
+          font-weight: 750;
+          line-height: 1.4;
+        }
+
+        .panel-disclaimer {
+          margin: 12px 0 0;
+          font-size: 12px;
+          font-weight: 650;
+          color: rgba(11, 18, 32, 0.6);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
           :root {
             --landing-topbar-h: 68px;
-            --chat-dock-room: 150px; /* a touch more room on mobile */
           }
 
           .hero-break {
@@ -3276,46 +3082,6 @@ export default function Page() {
             margin: 0 auto;
           }
 
-          .chat-topbar {
-            padding: max(18px, env(safe-area-inset-top) + 18px) max(22px, env(safe-area-inset-right) + 22px) 0
-              max(18px, env(safe-area-inset-left) + 18px);
-          }
-
-          .chat-messages {
-            padding: calc(max(120px, env(safe-area-inset-top) + 105px)) 16px
-              calc(env(safe-area-inset-bottom) + var(--chat-dock-room) + 12px);
-          }
-
-          .chat-input-inner {
-            padding: 10px 16px;
-            padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
-          }
-
-          .chat-dock {
-            padding: 12px 12px;
-            gap: 10px;
-          }
-
-          .plm-icon-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 13px;
-          }
-
-          .chat-send-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 9px;
-          }
-
-          .chat-bubble {
-            max-width: 80%;
-          }
-
-          .chat-empty-text {
-            font-size: 13px;
-          }
-
           .landing-topbar {
             padding: env(safe-area-inset-top) max(14px, env(safe-area-inset-right) + 8px) 0
               max(14px, env(safe-area-inset-left) + 8px);
@@ -3329,49 +3095,27 @@ export default function Page() {
             padding: 28px 24px;
           }
 
-          .plm-brand-mark {
-            width: 126px;
-            height: 126px;
+          .inspection-shell {
+            grid-template-columns: 1fr;
           }
 
-          .plm-brand.chat .plm-brand-mark {
-            width: 107px;
-            height: 107px;
+          .panel {
+            padding: 18px;
           }
 
-          .landing-topbar .plm-brand-mark {
-            width: 65px;
-            height: 65px;
-            margin-right: 4px;
+          .panel-head {
+            flex-direction: column;
+            align-items: flex-start;
           }
 
-          /* ✅ UPDATED LOGO TRANSFORM (mobile) - 5% larger */
-          .landing-topbar .plm-logo-img {
-            transform: translateY(2px) scale(1.16);
-            transform-origin: center;
-          }
-
-          .plm-brand-text {
-            font-size: 16.5px;
-            max-width: 220px;
-            padding-bottom: 6px;
-          }
-
-          .landing-signin-btn {
-            height: 32px !important;
-            padding: 0 12px !important;
-            margin-right: 0;
-            font-size: 12px !important;
-            font-weight: 650 !important;
-            letter-spacing: 0.02em !important;
-            line-height: 1 !important;
+          .request-summary {
+            max-width: 100%;
           }
         }
 
         @media (max-width: 480px) {
           :root {
             --landing-topbar-h: 64px;
-            --chat-dock-room: 210px;
           }
 
           .plm-brand-mark {
@@ -3401,23 +3145,10 @@ export default function Page() {
             transform-origin: center;
           }
 
-          .chat-input-inner {
-            padding: 10px 16px;
-          }
-
-          .chat-dock {
-            padding: 12px 10px;
-          }
-
           .plm-icon-btn {
             width: 40px;
             height: 40px;
             border-radius: 12px;
-          }
-
-          .chat-textarea {
-            font-size: 15px;
-            padding: 10px 12px;
           }
 
           .hero-cta-row {
@@ -3426,6 +3157,10 @@ export default function Page() {
 
           .hero-arrow-text {
             font-size: 12.5px;
+          }
+
+          .inspection-root {
+            padding: calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 14px);
           }
         }
 
@@ -3460,186 +3195,245 @@ export default function Page() {
 
       <div className="app-container">
         {hasPaidAccess ? (
-          <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <div className={`${plusJakarta.className} chat-root tool-first-ui`}>
-              <header className="chat-topbar">
-                <BrandLink variant="chat" />
-                <nav className="chat-top-actions" aria-label="Tool actions">
-                  {isAuthenticated && (
-                    <div className="chat-settings-wrap" ref={settingsRef}>
-                      <button
-                        type="button"
-                        className="plm-icon-btn chat-settings-btn"
-                        onClick={() => setShowSettingsMenu((v) => !v)}
-                        aria-expanded={showSettingsMenu}
-                        aria-label="Settings"
-                      >
-                        <Icons.Gear />
-                      </button>
-
-                      {showSettingsMenu && (
-                        <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
-                          <button
-                            type="button"
-                            className="chat-settings-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowSettingsMenu(false)
-                              if (hasActiveSubscription) {
-                                handleManageBilling()
-                              } else {
-                                setShowPricingModal(true)
-                              }
-                            }}
-                          >
-                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                          </button>
-
-                          <div className="chat-settings-sep" />
-
-                          <button
-                            type="button"
-                            className="chat-settings-item"
-                            role="menuitem"
-                            onClick={() => {
-                              setShowSettingsMenu(false)
-                              handleSignOut()
-                            }}
-                          >
-                            Log out
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </nav>
-              </header>
-
-              <div
-                ref={scrollRef}
-              onScroll={handleScroll}
-              className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-            >
-              {messages.length === 0 ? (
-                <div className="chat-empty-state">
-                  <p className="chat-empty-text">
-                    Upload a photo or ask a question about Michigan food safety regulations.
-                  </p>
-                </div>
-              ) : (
-                  <LiquidGlass variant="main" className="chat-history-card">
-                    <div className="chat-history">
-                      {messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+          <main className={`${plusJakarta.className} inspection-root`}>
+            <header className="inspection-topbar">
+              <BrandLink variant="chat" />
+              <nav className="inspection-actions" aria-label="Tool actions">
+                {isAuthenticated && (
+                  <div className="inspection-settings" ref={settingsRef}>
+                    <button
+                      type="button"
+                      className="plm-icon-btn inspection-settings-btn"
+                      onClick={() => setShowSettingsMenu((v) => !v)}
+                      aria-expanded={showSettingsMenu}
+                      aria-label="Account"
+                    >
+                      <Icons.Gear />
+                    </button>
+                    {showSettingsMenu && (
+                      <div className="inspection-settings-menu" role="menu" aria-label="Account menu">
+                        <button
+                          type="button"
+                          className="inspection-settings-item"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            if (hasActiveSubscription) {
+                              handleManageBilling()
+                            } else {
+                              setShowPricingModal(true)
+                            }
+                          }}
                         >
-                          <div
-                            className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
-                          >
-                            {msg.image && (
-                              <div className="chat-bubble-image">
-                                <img src={msg.image} alt="Uploaded" />
-                              </div>
-                            )}
-
-                            {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                              <div className="chat-thinking">Analyzing…</div>
-                            ) : msg.role === 'assistant' ? (
-                              formatAssistantContent(msg.content)
-                            ) : (
-                              <div className="chat-content">{msg.content}</div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </LiquidGlass>
+                          {hasActiveSubscription ? 'Manage billing' : 'Start trial'}
+                        </button>
+                        <div className="inspection-settings-sep" />
+                        <button
+                          type="button"
+                          className="inspection-settings-item"
+                          role="menuitem"
+                          onClick={() => {
+                            setShowSettingsMenu(false)
+                            handleSignOut()
+                          }}
+                        >
+                          Log out
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </div>
+              </nav>
+            </header>
 
-              <div className="chat-input-area">
-                <div className="chat-input-inner">
-                  <LiquidGlass variant="main" className="chat-dock">
-                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+            <div className="inspection-shell">
+              <LiquidGlass variant="main" className="panel tool-panel">
+                <div className="panel-head">
+                  <div>
+                    <p className="eyebrow">Tool panel</p>
+                    <h2 className="panel-title">Inspection request</h2>
+                    <p className="panel-support">Upload image for analysis and specify the inspection request.</p>
+                  </div>
+                  <div className="panel-meta">
+                    {deviceUsageBlocked ? (
+                      <span className="panel-pill danger">Free usage exhausted</span>
+                    ) : (
+                      <span className="panel-pill neutral">
+                        {deviceUsageRemaining != null
+                          ? `${deviceUsageRemaining} free runs remaining`
+                          : 'Device license required for unlimited runs'}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
+                <div className="tool-controls">
+                  <div className="upload-row">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleImageChange}
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="upload-btn"
+                      type="button"
+                      aria-label="Upload image for analysis"
+                    >
+                      <Icons.Camera />
+                      <span>Upload image for analysis</span>
+                    </button>
                     {selectedImage && (
-                      <LiquidGlass variant="side" className="chat-attachment">
-                        <span className="chat-attachment-icon">
-                          <Icons.Camera />
-                        </span>
+                      <div className="file-chip">
                         <span>Image attached</span>
                         <button
                           onClick={() => setSelectedImage(null)}
-                          className="chat-attachment-remove"
-                          aria-label="Remove"
                           type="button"
+                          aria-label="Remove image"
+                          className="chip-close"
                         >
                           <Icons.X />
                         </button>
-                      </LiquidGlass>
+                      </div>
+                    )}
+                  </div>
+
+                  <label className="field-label" htmlFor="inspection-input">
+                    Request
+                  </label>
+                  <div className="text-field">
+                    <textarea
+                      id="inspection-input"
+                      ref={textAreaRef}
+                      value={input}
+                      onChange={(e) => {
+                        setInput(e.target.value)
+                        if (textAreaRef.current) {
+                          textAreaRef.current.style.height = 'auto'
+                          textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 200)}px`
+                        }
+                      }}
+                      placeholder="Enter inspection request"
+                      rows={3}
+                      className="text-area"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSend(e)
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="tool-actions">
+                    <button
+                      type="button"
+                      onClick={handleSend}
+                      disabled={(!safeTrim(input) && !selectedImage) || isSending}
+                      className="primary-btn"
+                    >
+                      {isSending ? 'Analyzing…' : 'Run analysis'}
+                    </button>
+                    <p className="helper-text">Provide area, observation, and required action to reduce rework.</p>
+                  </div>
+                </div>
+              </LiquidGlass>
+
+              <LiquidGlass variant="main" className="panel results-panel">
+                <div className="panel-head">
+                  <div>
+                    <p className="eyebrow">Results</p>
+                    {hasResults ? (
+                      <h2 className="status-heading">{parsedResponse.status}</h2>
+                    ) : (
+                      <h2 className="status-heading">Awaiting inspection request</h2>
+                    )}
+                  </div>
+                  <div className="panel-meta right">
+                    {latestRequest?.content && (
+                      <div className="request-summary">
+                        <span className="summary-label">Latest request</span>
+                        <span className="summary-value">{latestRequest.content}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+
+                {latestRequest?.image && (
+                  <div className="inline-image">
+                    <p className="field-label">Submitted image</p>
+                    <div className="image-frame">
+                      <img src={latestRequest.image} alt="Uploaded inspection context" />
+                    </div>
+                  </div>
+                )}
+
+                {!hasResults && (
+                  <div className="results-empty">
+                    <p className="empty-title">No inspection run yet.</p>
+                    <p className="empty-text">Submit an inspection request to generate structured results.</p>
+                  </div>
+                )}
+
+                {hasResults && (
+                  <div className="findings-stack">
+                    {parsedResponse.status === 'Clarification required' && (
+                      <div className="clarification-block">
+                        <div className="clarification-title">Clarification requested</div>
+                        <ul className="clarification-list">
+                          {(parsedResponse.clarifications.length ? parsedResponse.clarifications : [parsedResponse.raw]).map(
+                            (item, idx) => (
+                              <li key={idx}>{item}</li>
+                            )
+                          )}
+                        </ul>
+                      </div>
                     )}
 
-                    <div className="chat-input-row">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={handleImageChange}
-                      />
-
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="plm-icon-btn chat-camera-btn"
-                        aria-label="Upload photo"
-                        type="button"
-                      >
-                        <Icons.Camera />
-                      </button>
-
-                      <div className="chat-input-wrapper">
-                        <textarea
-                          ref={textAreaRef}
-                          value={input}
-                          onChange={(e) => {
-                            setInput(e.target.value)
-                            if (textAreaRef.current) {
-                              textAreaRef.current.style.height = 'auto'
-                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                            }
-                          }}
-                          placeholder="Ask a question…"
-                          rows={1}
-                          className="chat-textarea"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSend(e)
-                            }
-                          }}
-                        />
-
-                        <button
-                          type="button"
-                          onClick={handleSend}
-                          disabled={(!safeTrim(input) && !selectedImage) || isSending}
-                          className="plm-icon-btn primary chat-send-btn"
-                          aria-label="Send"
-                        >
-                          {isSending ? <div className="chat-send-spinner" /> : <Icons.ArrowUp />}
-                        </button>
+                    {parsedResponse.status === 'No violations observed' && (
+                      <div className="clear-block">
+                        <div className="clear-title">No violations observed</div>
+                        <p className="clear-text">Inspection completed with no noted violations.</p>
                       </div>
-                    </div>
+                    )}
 
-                    <p className="chat-disclaimer">
-                      protocolLM may make mistakes. Verify critical decisions with official regulations.
-                    </p>
-                  </LiquidGlass>
-                  <FooterLinks />
-                </div>
-              </div>
+                    {parsedResponse.findings.length > 0 && (
+                      <div className="findings-grid" role="list">
+                        {parsedResponse.findings.map((finding, idx) => (
+                          <div className="finding-card" key={idx} role="listitem">
+                            <div className="finding-row">
+                              <span className="finding-label">Violation</span>
+                              <p className="finding-value">{finding.violation || 'Not specified'}</p>
+                            </div>
+                            <div className="finding-row">
+                              <span className="finding-label">Area</span>
+                              <p className="finding-value">{finding.area || 'Not specified'}</p>
+                            </div>
+                            <div className="finding-row">
+                              <span className="finding-label">Observation</span>
+                              <p className="finding-value">{finding.observation || 'Not provided'}</p>
+                            </div>
+                            <div className="finding-row">
+                              <span className="finding-label">Required action</span>
+                              <p className="finding-value">{finding.action || 'Not provided'}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <p className="panel-disclaimer">
+                  Results are procedural outputs. Confirm corrective actions with applicable regulations before execution.
+                </p>
+              </LiquidGlass>
             </div>
+            <FooterLinks />
           </main>
         ) : (
           <LandingPage
