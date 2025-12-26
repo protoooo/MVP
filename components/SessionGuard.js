@@ -3,12 +3,18 @@
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 export default function SessionGuard() {
   const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      console.error(`[SessionGuard] ${missingSupabaseConfigMessage}`)
+      return
+    }
+
     if (typeof window === 'undefined') return
 
     // ✅ Ensure CSRF token is loaded before allowing requests
