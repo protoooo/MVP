@@ -2,6 +2,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { generateCSRFToken } from '@/lib/csrfProtection'
+import { isSupabaseConfigured, missingSupabaseConfigMessage, supabaseAnonKey, supabaseUrl } from '@/lib/supabaseConfig'
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl
@@ -54,12 +55,18 @@ export async function middleware(request) {
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
   if (isPublicRoute) return response
 
+  if (!isSupabaseConfigured) {
+    console.error(`[middleware] ${missingSupabaseConfigMessage}`)
+    response.headers.set('X-Supabase-Config', 'missing')
+    return response
+  }
+
   // ============================================================================
   // Authentication Check (for protected routes)
   // ============================================================================
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name) {
