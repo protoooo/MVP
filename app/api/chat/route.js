@@ -2,16 +2,14 @@
 // ProtocolLM - Michigan Food Safety Compliance Engine (STATEWIDE)
 // Cohere v2/chat (REST) — Aya Vision for images, Command for text
 //
-// KEY FIXES vs your current file:
-// 1) Output headers are now CONSISTENT end-to-end:
-//    - "NO VIOLATIONS ✓"  OR  "VIOLATIONS:"  OR  "NEED INFO:"
-//    No more "No violations observed." vs "VIOLATIONS:" mismatch.
-// 2) Always-run "CHEMICAL SCAN" (vision) in image mode.
-//    If it detects a cleaner/spray bottle in sink/dish area, we FORCE a violation line,
-//    even if the main compliance call says "NO VIOLATIONS ✓".
-// 3) Hard validator enforces: plain text, short, tool-like bullets, no citations/source refs.
+// FIXES INCLUDED (addresses your COHERE_V2_CHAT_400 errors):
+// ✅ Use `preamble` (top-level) instead of a {role:"system"} message.
+// ✅ Ensure ALL message `content` fields are arrays of parts (text/image_url).
+// ✅ Send `documents` in a minimal v2-safe shape: [{ id, text }] only.
+// ✅ Better error logging: includes status + raw body snippet to debug 400s fast.
+// ✅ Keeps your tool-output normalizer + chemical scan merge behavior.
 //
-// NOTE: This file preserves your existing auth, subscription, and device-license logic.
+// NOTE: This preserves your existing auth/subscription/device license logic.
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -135,7 +133,7 @@ function sanitizeOutput(text) {
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
-  // Strip doc/source-like refs (you don’t want citations in UX)
+  // Strip doc/source-like refs
   out = stripDocLikeRefs(out)
 
   // No stars/hashes
@@ -234,7 +232,7 @@ function validateImageData(imageInput) {
 }
 
 // ============================================================================
-// COHERE v2/chat (REST)
+// COHERE v2/chat (REST) — V2-SAFE PAYLOAD (preamble + parts arrays)
 // ============================================================================
 
 function cohereResponseToText(resp) {
@@ -248,11 +246,16 @@ function cohereResponseToText(resp) {
   return ''
 }
 
-async function callCohereChatV2Rest({ model, messages, documents }) {
+async function callCohereChatV2Rest({ model, messages, documents, preamble }) {
   const apiKey = process.env.COHERE_API_KEY
   if (!apiKey) throw new Error('COHERE_API_KEY not configured')
 
   const payload = { model, messages }
+
+  // ✅ v2-safe system instructions
+  if (safeText(preamble)) payload.preamble = safeText(preamble)
+
+  // ✅ v2-safe docs (only id + text)
   if (documents && Array.isArray(documents) && documents.length) payload.documents = documents
 
   const res = await fetch('https://api.cohere.com/v2/chat', {
@@ -266,7 +269,7 @@ async function callCohereChatV2Rest({ model, messages, documents }) {
 
   const raw = await res.text().catch(() => '')
   if (!res.ok) {
-    const snippet = safeLine(raw).slice(0, 900)
+    const snippet = safeLine(raw).slice(0, 1400)
     const err = new Error(`COHERE_V2_CHAT_${res.status}: ${snippet || 'Request failed'}`)
     err.status = res.status
     err.body = raw
@@ -276,29 +279,25 @@ async function callCohereChatV2Rest({ model, messages, documents }) {
   try {
     return JSON.parse(raw)
   } catch {
-    throw new Error('COHERE_V2_CHAT_BAD_JSON')
+    const err = new Error('COHERE_V2_CHAT_BAD_JSON')
+    err.body = raw
+    throw err
   }
 }
 
-function buildV2Messages({ system, chatHistory, userMessage, imageDataUrls }) {
+function buildV2Messages({ chatHistory, userMessage, imageDataUrls }) {
   const messages = []
-  if (safeText(system)) messages.push({ role: 'system', content: safeText(system) })
 
   const hist = Array.isArray(chatHistory) ? chatHistory : []
   for (const h of hist) {
     const roleRaw = String(h?.role || '').toUpperCase()
     const text = safeText(h?.message || '')
     if (!text) continue
+
     if (roleRaw === 'USER') {
-      messages.push({
-        role: 'user',
-        content: [{ type: 'text', text }],
-      })
+      messages.push({ role: 'user', content: [{ type: 'text', text }] })
     } else if (roleRaw === 'CHATBOT' || roleRaw === 'ASSISTANT') {
-      messages.push({
-        role: 'assistant',
-        content: [{ type: 'text', text }],
-      })
+      messages.push({ role: 'assistant', content: [{ type: 'text', text }] })
     }
   }
 
@@ -317,18 +316,31 @@ function buildV2Messages({ system, chatHistory, userMessage, imageDataUrls }) {
   return messages
 }
 
+function clampDocText(x, limit = 5000) {
+  const t = safeText(String(x || ''))
+  if (!t) return ''
+  if (t.length <= limit) return t
+  return t.slice(0, limit).trimEnd() + '…'
+}
+
 async function callCohereChat({ model, system, userMessage, chatHistory, documents, imageDataUrls }) {
-  const messages = buildV2Messages({ system, chatHistory, userMessage, imageDataUrls })
+  const messages = buildV2Messages({ chatHistory, userMessage, imageDataUrls })
 
-  // Best-effort docs (some models accept)
-  const docs = (documents || []).map((doc) => ({
-    id: doc?.id || 'internal',
-    title: doc?.title || doc?.source || 'Policy',
-    snippet: doc?.snippet || doc?.text || '',
-    text: doc?.text || '',
-  }))
+  // ✅ Minimal v2-safe docs
+  const docs = (documents || [])
+    .map((doc) => ({
+      id: doc?.id || 'internal',
+      text: clampDocText(doc?.text || doc?.snippet || '', 5000),
+    }))
+    .filter((d) => d.text && d.text.trim())
 
-  const resp = await callCohereChatV2Rest({ model, messages, documents: docs.length ? docs : undefined })
+  const resp = await callCohereChatV2Rest({
+    model,
+    messages,
+    documents: docs.length ? docs : undefined,
+    preamble: system, // ✅ system prompt goes here
+  })
+
   return { raw: resp, text: cohereResponseToText(resp) }
 }
 
@@ -402,23 +414,20 @@ function extractSearchKeywords(text) {
 }
 
 // ============================================================================
-// TOOL OUTPUT NORMALIZER (THE FIX)
+// TOOL OUTPUT NORMALIZER
 // ============================================================================
 
 function normalizeToToolFormat(rawText, { maxBullets }) {
   let out = sanitizeOutput(rawText || '')
 
-  // If model produced nothing useful
   if (!out) return HDR_INFO + '\n• Re-send your question or upload a clearer photo.'
 
-  // Accept if it already starts with allowed headers
   const firstLine = out.split('\n').find((l) => l.trim())?.trim() || ''
   const startsOK =
     firstLine.toUpperCase().startsWith(HDR_NO) ||
     firstLine.toUpperCase().startsWith(HDR_VIOL) ||
     firstLine.toUpperCase().startsWith(HDR_INFO)
 
-  // Heuristic: detect intent if header is wrong
   if (!startsOK) {
     const upper = out.toUpperCase()
     if (upper.includes('VIOLATION') || upper.includes('ISSUE') || upper.includes('FIX:')) {
@@ -430,16 +439,13 @@ function normalizeToToolFormat(rawText, { maxBullets }) {
     }
   }
 
-  // Convert "-" bullets to "•" bullets (and clean)
   const lines = out.split('\n').map((l) => l.trimEnd())
   const rebuilt = []
   for (let i = 0; i < lines.length; i++) {
     let l = lines[i].trim()
     if (!l) continue
 
-    // Keep header as-is
     if (i === 0) {
-      // Normalize header variants
       const up = l.toUpperCase()
       if (up.startsWith('NO VIOLATIONS')) l = HDR_NO
       else if (up.startsWith('VIOLATIONS')) l = HDR_VIOL
@@ -448,10 +454,8 @@ function normalizeToToolFormat(rawText, { maxBullets }) {
       continue
     }
 
-    // Normalize bullets
     l = l.replace(/^[-•]\s*/g, '• ')
     if (!l.startsWith('• ')) {
-      // If this is a continuation line, fold it into previous bullet when possible
       const prevIdx = rebuilt.length - 1
       if (prevIdx >= 1 && rebuilt[prevIdx].startsWith('• ')) {
         rebuilt[prevIdx] = safeLine(`${rebuilt[prevIdx]} ${l}`)
@@ -462,21 +466,15 @@ function normalizeToToolFormat(rawText, { maxBullets }) {
     rebuilt.push(l)
   }
 
-  // Enforce max bullets (after header)
   const header = rebuilt[0] || HDR_INFO
   const bullets = rebuilt.slice(1).filter((l) => l.startsWith('• '))
   const limited = bullets.slice(0, Math.max(1, maxBullets))
 
-  // If header is NO but we have bullets, switch to violations
   const finalHeader =
     header === HDR_NO && limited.length ? HDR_VIOL : header === HDR_VIOL && !limited.length ? HDR_NO : header
 
-  // If header is VIOLATIONS but no bullets, provide a safe fallback
   if (finalHeader === HDR_VIOL && !limited.length) return HDR_INFO + '\n• Can you re-send the photo a bit closer?'
-
-  // If header is NEED INFO but no bullets, add one
   if (finalHeader === HDR_INFO && !limited.length) return HDR_INFO + '\n• Can you share a clearer photo of the area?'
-
   if (finalHeader === HDR_NO) return HDR_NO
 
   return [finalHeader, ...limited].join('\n').trim()
@@ -496,7 +494,7 @@ function extractFirstJsonObject(text) {
   if (!s) return null
   const start = s.indexOf('{')
   if (start === -1) return null
-  // naive brace match (good enough for model JSON)
+
   let depth = 0
   for (let i = start; i < s.length; i++) {
     const ch = s[i]
@@ -518,7 +516,6 @@ function chemicalLikely(name = '') {
   const n = String(name || '').toLowerCase()
   const keys = ['windex', 'bleach', 'degreaser', 'cleaner', 'glass cleaner', 'sanitizer', 'disinfectant', 'ammonia']
   if (keys.some((k) => n.includes(k))) return true
-  // “spray bottle” alone counts as chemical when context says sink/dishes/food-contact area
   if (n.includes('spray') && n.includes('bottle')) return true
   return false
 }
@@ -530,7 +527,6 @@ function locationRisky(loc = '') {
 }
 
 function buildChemicalViolationBullet(foundItem) {
-  // Keep it short + tool-like
   const name = safeLine(foundItem?.name || 'Cleaner bottle')
   const loc = safeLine(foundItem?.location || 'in the sink/dish area')
   return `• Chemical Handling: ${name} stored ${loc}. FIX: Remove it now and store chemicals in a designated, labeled chemical area away from dishes and food-contact surfaces.`
@@ -545,10 +541,7 @@ Schema:
 {
   "found": boolean,
   "items": [
-    {
-      "name": string,
-      "location": string
-    }
+    { "name": string, "location": string }
   ]
 }
 
@@ -585,15 +578,12 @@ Rules:
       }))
       .filter((it) => it.name || it.location)
 
-    // Apply a strict “actionable” rule:
-    // chemicalLikely(name) AND locationRisky(location) => actionable violation
     for (const it of normalized) {
       const likely = chemicalLikely(it.name)
       const risky = locationRisky(it.location)
       if (likely && risky) return { found: true, actionable: true, item: it }
     }
 
-    // If it found chemicals but location not risky/unclear -> return found but not actionable
     if (json.found && normalized.length) return { found: true, actionable: false, item: normalized[0] }
 
     return { found: false }
@@ -604,7 +594,7 @@ Rules:
 }
 
 // ============================================================================
-// PROMPTS (CONSISTENT WITH TOOL OUTPUT)
+// PROMPTS
 // ============================================================================
 
 function buildSystemPrompt({ fullAudit }) {
@@ -660,8 +650,8 @@ function safeErrorDetails(err) {
     if (!err) return 'Unknown error'
     if (typeof err === 'string') return safeLine(err).slice(0, 400) || 'Unknown error'
     const msg = safeLine(err?.message || '')
-    const body = err?.body ? safeLine(String(err.body)).slice(0, 400) : ''
-    return safeLine([msg, body].filter(Boolean).join(' | ')).slice(0, 700) || 'Unknown error'
+    const body = err?.body ? safeLine(String(err.body)).slice(0, 600) : ''
+    return safeLine([msg, body].filter(Boolean).join(' | ')).slice(0, 900) || 'Unknown error'
   } catch {
     return 'Unknown error'
   }
@@ -702,7 +692,6 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const messages = Array.isArray(body?.messages) ? body.messages : []
 
-    // Collect image input (single or array)
     const imageInput =
       body?.image || body?.imageBase64 || body?.image_url || body?.imageDataUrl || body?.image_data || body?.images
     const hasImage = Boolean(imageInput)
@@ -753,7 +742,7 @@ export async function POST(request) {
     const includeFines = wantsFineInfo(effectivePrompt) || Boolean(body?.includeFines)
 
     // ========================================================================
-    // AUTH + LICENSE VALIDATION (auth required)
+    // AUTH + LICENSE VALIDATION
     // ========================================================================
 
     let userId = null
@@ -864,7 +853,7 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // RETRIEVE DOCS (for policy grounding) — still no citations shown to user
+    // RETRIEVE DOCS
     // ========================================================================
 
     const searchDocumentsFn = await getSearchDocuments()
@@ -936,7 +925,7 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // BUILD CHAT HISTORY (for continuity)
+    // BUILD CHAT HISTORY
     // ========================================================================
 
     const cohereChatHistory = []
@@ -949,12 +938,11 @@ export async function POST(request) {
         if (role === 'assistant') cohereChatHistory.push({ role: 'CHATBOT', message: text })
         if (role === 'user') cohereChatHistory.push({ role: 'USER', message: text })
       }
-      // Keep it short
       if (cohereChatHistory.length > 10) cohereChatHistory.splice(0, cohereChatHistory.length - 10)
     }
 
     // ========================================================================
-    // 1) CHEMICAL SCAN (vision) — catches Windex-in-sink misses
+    // 1) CHEMICAL SCAN
     // ========================================================================
 
     let chemScan = { found: false }
@@ -994,9 +982,7 @@ export async function POST(request) {
           chatHistory: cohereChatHistory,
           documents: contextDocs.map((doc) => ({
             id: 'internal',
-            title: doc?.source || doc?.title || 'Policy',
-            snippet: docTextForExcerpt(doc, 900),
-            text: docTextForExcerpt(doc, 1100),
+            text: docTextForExcerpt(doc, 1600), // upstream will clamp further
           })),
           imageDataUrls: hasImage ? normalizedImageUrls : [],
         }),
@@ -1004,14 +990,20 @@ export async function POST(request) {
         'ANSWER_TIMEOUT'
       )
 
-      // SDK meta tokens may not exist for REST response; keep safe
       billedUnits = resp?.raw?.meta?.billed_units || resp?.raw?.billed_units || {}
       tokenUsage = resp?.raw?.meta?.tokens || resp?.raw?.tokens || {}
 
       modelText = resp?.text || ''
       assistantMessage = normalizeToToolFormat(modelText, { maxBullets })
     } catch (e) {
-      logger.error('Generation failed', { error: e?.message, detail: safeErrorDetails(e), hasImage, model: usedModel })
+      logger.error('Generation failed', {
+        error: e?.message,
+        status: e?.status,
+        detail: safeErrorDetails(e),
+        rawBody: safeLine(String(e?.body || '')).slice(0, 2000),
+        hasImage,
+        model: usedModel,
+      })
       const status = e?.message?.includes('TIMEOUT') ? 408 : 500
       return NextResponse.json(
         { error: getUserFriendlyErrorMessage(e?.message?.includes('TIMEOUT') ? 'ANSWER_TIMEOUT' : 'GENERATION_FAILED') },
@@ -1027,26 +1019,22 @@ export async function POST(request) {
       if (hasImage && chemScan?.found && chemScan?.actionable) {
         const chemBullet = buildChemicalViolationBullet(chemScan.item)
 
-        // If model said NO VIOLATIONS, override to VIOLATIONS
         if ((assistantMessage || '').toUpperCase().startsWith(HDR_NO)) {
           assistantMessage = [HDR_VIOL, chemBullet].join('\n')
         } else if ((assistantMessage || '').toUpperCase().startsWith(HDR_VIOL)) {
-          // If already violations but no chemical bullet, prepend chemical bullet
           if (!hasChemicalBullet(assistantMessage)) {
             const lines = assistantMessage.split('\n').filter(Boolean)
-            const header = HDR_VIOL
             const bullets = lines.slice(1).filter((l) => l.trim().startsWith('•'))
             const merged = [chemBullet, ...bullets].slice(0, maxBullets)
-            assistantMessage = [header, ...merged].join('\n')
+            assistantMessage = [HDR_VIOL, ...merged].join('\n')
           }
         } else if ((assistantMessage || '').toUpperCase().startsWith(HDR_INFO)) {
-          // If model asked for info but we have an actionable chemical, prefer the violation
           assistantMessage = [HDR_VIOL, chemBullet].join('\n')
         }
       } else if (hasImage && chemScan?.found && !chemScan?.actionable) {
-        // If scan sees a chemical but can't confirm risky placement, ask ONE targeted question
         if ((assistantMessage || '').toUpperCase().startsWith(HDR_NO)) {
-          const q = '• Is that a cleaner/spray bottle placed in or next to the sink/dish area? If yes, store it away from dishes and food-contact surfaces.'
+          const q =
+            '• Is that a cleaner/spray bottle placed in or next to the sink/dish area? If yes, store it away from dishes and food-contact surfaces.'
           assistantMessage = [HDR_INFO, q].join('\n')
         }
       }
@@ -1058,7 +1046,7 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // UPDATE MEMORY (auth users only)
+    // UPDATE MEMORY
     // ========================================================================
 
     if (userId) {
@@ -1092,7 +1080,6 @@ export async function POST(request) {
       chemScanActionable: Boolean(chemScan?.actionable),
     })
 
-    // Only log model usage for authenticated users
     if (userId) {
       await logModelUsageDetail({
         userId,
