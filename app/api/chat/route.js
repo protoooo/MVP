@@ -475,6 +475,30 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n))
 }
 
+function textSaysNoViolations(text) {
+  const t = safeText(text || '').toLowerCase()
+  if (!t) return false
+  const phrases = [
+    'no violations',
+    'no visible violations',
+    'no apparent violations',
+    'no food safety violations',
+    'nothing observed',
+    'no issues observed',
+    'there are no visible',
+    'there are no violations',
+  ]
+  return phrases.some((p) => t.includes(p))
+}
+
+function hasActionableViolationIndicators(text) {
+  const t = String(text || '')
+  if (/FIX:/i.test(t)) return true
+  if (/class="plm-v"/i.test(t)) return true
+  if (/^\s*VIOLATION\s*\(/i.test(t)) return true
+  return false
+}
+
 function normalizeHeader(line0) {
   const up = safeLine(line0 || '').toUpperCase()
   if (up.startsWith('NO VIOLATIONS')) return HDR_NO
@@ -514,6 +538,11 @@ function buildFinalToolOutput(header, bodyText, maxBullets) {
 
   if (h === HDR_NO) return HDR_NO
 
+  const combinedBody = String(bodyText || '')
+  if (h === HDR_VIOL && textSaysNoViolations(combinedBody) && !hasActionableViolationIndicators(combinedBody)) {
+    return HDR_NO
+  }
+
   let chunks = String(bodyText || '')
     .split(/\n+/)
     .map((x) => x.trim())
@@ -543,8 +572,12 @@ function buildFinalToolOutput(header, bodyText, maxBullets) {
     return [HDR_INFO, ...qs.map((q) => `• ${safeLine(q)}`)].join('\n')
   }
 
-  const cleaned = bullets.slice(0, maxB).map((b) => coerceViolationBullet(b))
-  if (!cleaned.length) return HDR_INFO + '\n• Can you re-send the photo a bit closer?'
+  const cleaned = bullets
+    .slice(0, maxB)
+    .map((b) => coerceViolationBullet(b))
+    .filter(Boolean)
+
+  if (!cleaned.length) return h === HDR_VIOL ? HDR_NO : HDR_INFO + '\n• Can you re-send the photo a bit closer?'
 
   return [HDR_VIOL, ...cleaned.map((b) => `• ${b}`)].join('\n')
 }
@@ -552,9 +585,34 @@ function buildFinalToolOutput(header, bodyText, maxBullets) {
 function coerceViolationBullet(text) {
   const t = safeLine(text || '')
   if (!t) return null
+  if (textSaysNoViolations(t)) return null
 
   let issuePart = t
   let fixPart = ''
+
+  const chemicalFixText =
+    'Remove chemicals from dish/food-contact areas and store in a labeled chemical area away from food and clean utensils.'
+  const defaultFixText = 'Correct the issue immediately and keep the area clean, organized, and protected from contamination.'
+  const pickFixText = (source) => {
+    const lower = source.toLowerCase()
+    if (
+      lower.includes('windex') ||
+      lower.includes('bleach') ||
+      lower.includes('degreaser') ||
+      lower.includes('cleaner') ||
+      lower.includes('spray bottle') ||
+      lower.includes('chemical')
+    ) {
+      return chemicalFixText
+    }
+    return defaultFixText
+  }
+
+  const dedupViolationPrefix = (str) =>
+    str.replace(
+      /VIOLATION\s*\(([^)]*)\):\s*VIOLATION\s*\([^)]*\):\s*/i,
+      (_m, first) => `VIOLATION (${safeLine(first)}): `
+    );
 
   const fixIdx = t.toUpperCase().indexOf('FIX:')
   if (fixIdx !== -1) {
@@ -562,16 +620,40 @@ function coerceViolationBullet(text) {
     fixPart = safeLine(t.slice(fixIdx + 4))
   }
 
+  const alreadyHasSpan = t.includes('class="plm-v"')
+  const startsWithViolation = /^\s*VIOLATION\s*\(/i.test(t) || t.includes(`${SPAN_V_OPEN}VIOLATION (`))
+
+  if (alreadyHasSpan || startsWithViolation) {
+    let cleanedIssue = dedupViolationPrefix(issuePart || t)
+
+    if (!alreadyHasSpan) {
+      cleanedIssue = `${SPAN_V_OPEN}${cleanedIssue}${SPAN_V_CLOSE}`
+    }
+
+    let cleaned = cleanedIssue
+
+    if (/FIX:/i.test(t)) {
+      if (!/class="plm-f"/i.test(t)) {
+        const match = t.match(/FIX:\s*(.*)/i)
+        const fixText = safeLine(match?.[1] || pickFixText(t)).replace(/\.*$/, '')
+        cleaned = `${cleaned} ${SPAN_F_OPEN}FIX: ${fixText || pickFixText(t)}.${SPAN_F_CLOSE}`
+      } else {
+        cleaned = dedupViolationPrefix(t)
+      }
+    } else {
+      const fixText = pickFixText(t).replace(/\.*$/, '')
+      cleaned = `${cleaned} ${SPAN_F_OPEN}FIX: ${fixText}.${SPAN_F_CLOSE}`
+    }
+
+    return cleaned.replace(/\.\./g, '.')
+  }
+
   issuePart = issuePart.split(/(?<=[.!?])\s+/)[0] || issuePart
   issuePart = issuePart.replace(/^Violation[:\-]\s*/i, '').trim()
+  issuePart = dedupViolationPrefix(issuePart)
 
   if (!fixPart) {
-    const lower = t.toLowerCase()
-    if (lower.includes('windex') || lower.includes('bleach') || lower.includes('degreaser') || lower.includes('cleaner') || lower.includes('spray bottle')) {
-      fixPart = 'Remove chemicals from dish/food-contact areas and store in a labeled chemical area away from food and clean utensils.'
-    } else {
-      fixPart = 'Correct the issue immediately and keep the area clean, organized, and protected from contamination.'
-    }
+    fixPart = pickFixText(t)
   } else {
     fixPart = fixPart.split(/(?<=[.!?])\s+/)[0] || fixPart
   }
