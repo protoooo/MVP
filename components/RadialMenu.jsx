@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { MessageCircle, Camera, FileText, Settings, Clock } from 'lucide-react'
+import AgentIcon from './AgentIcon'
 
 /**
  * RadialMenu - A centered logo button that toggles a radial wheel menu
@@ -53,11 +53,11 @@ export default function RadialMenu({
 
   // Define the 5 actions for the wheel
   const actions = [
-    { key: 'chat', label: 'Chat', icon: MessageCircle, onClick: onChat },
-    { key: 'image', label: 'Image', icon: Camera, onClick: onImage },
-    { key: 'pdf', label: 'PDF', icon: FileText, onClick: onPdfExport },
-    { key: 'settings', label: 'Settings', icon: Settings, onClick: onSettings },
-    { key: 'history', label: 'History', icon: Clock, onClick: onChatHistory },
+    { key: 'chat', label: 'Chat', iconType: 'chat', onClick: onChat },
+    { key: 'image', label: 'Image', iconType: 'vision', onClick: onImage },
+    { key: 'pdf', label: 'PDF', iconType: 'pdf', onClick: onPdfExport },
+    { key: 'settings', label: 'Settings', iconType: 'settings', onClick: onSettings },
+    { key: 'history', label: 'History', iconType: 'history', onClick: onChatHistory },
   ]
 
   // Calculate radial positions for 5 items evenly spaced (72° apart)
@@ -147,13 +147,12 @@ export default function RadialMenu({
         <div className={`radial-wheel ${wheelOpen ? 'open' : ''}`}>
           {actions.map((action, index) => {
             const pos = getItemPosition(index, actions.length, wheelRadius)
-            const Icon = action.icon
             
             return (
               <button
                 key={action.key}
                 type="button"
-                className="radial-item"
+                className={`radial-item ${wheelOpen ? 'is-open' : ''}`}
                 onClick={() => handleActionClick(action)}
                 style={{
                   '--item-x': `${pos.x}px`,
@@ -163,8 +162,11 @@ export default function RadialMenu({
                 aria-label={action.label}
                 tabIndex={wheelOpen ? 0 : -1}
               >
-                <span className="radial-item-icon">
-                  <Icon size={22} strokeWidth={2.2} />
+                <span className="agent-card__inner">
+                  <span className="agent-card__icon" aria-hidden="true">
+                    <AgentIcon type={action.iconType} />
+                  </span>
+                  <span className="agent-card__label">{action.label}</span>
                 </span>
               </button>
             )
@@ -176,8 +178,8 @@ export default function RadialMenu({
         .radial-menu-container {
           /* CSS custom property for logo scale - 80% larger than default */
           --logo-scale: 1.8;
-          --item-size: 56px;
-          --item-icon-size: 44px;
+          --item-size: 108px;
+          --item-icon-size: 64px;
           position: relative;
           display: flex;
           align-items: center;
@@ -274,7 +276,7 @@ export default function RadialMenu({
           pointer-events: auto;
         }
 
-        /* Individual wheel items - glass cards on all breakpoints */
+        /* Agent wheel items */
         .radial-item {
           position: absolute;
           top: 0;
@@ -282,9 +284,9 @@ export default function RadialMenu({
           width: var(--item-size);
           height: var(--item-size);
           aspect-ratio: 1 / 1;
-          border-radius: 50%;
-          border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
-          background: var(--surface, #ffffff);
+          border-radius: 24px;
+          border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.06));
+          background: rgba(255, 255, 255, 0.92);
           box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
           cursor: pointer;
           display: flex;
@@ -296,17 +298,21 @@ export default function RadialMenu({
               calc(var(--item-x) - (var(--item-size) / 2)),
               calc(var(--item-y) - (var(--item-size) / 2))
             )
-            scale(0.45);
+            scale(0.82)
+            translateY(8px);
           transform-origin: center;
           transition: 
             opacity 0.25s ease,
             transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-            background 0.15s ease,
+            background 0.2s ease,
             box-shadow 0.15s ease,
-            color 0.15s ease;
+            color 0.15s ease,
+            border-color 0.2s ease;
           transition-delay: var(--item-delay);
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
+          will-change: transform, opacity;
+          pointer-events: none;
         }
 
         .radial-wheel.open .radial-item {
@@ -315,17 +321,27 @@ export default function RadialMenu({
               calc(var(--item-x) - (var(--item-size) / 2)),
               calc(var(--item-y) - (var(--item-size) / 2))
             )
-            scale(1);
+            scale(1)
+            translateY(0);
+          pointer-events: auto;
         }
 
-        .radial-item:hover {
-          background: var(--clay, #f1f1ef);
+        .radial-item:hover,
+        .radial-item:focus-visible {
+          background: rgba(255, 255, 255, 0.98);
+          border-color: var(--border-strong, rgba(0, 0, 0, 0.15));
           box-shadow: var(--shadow-md, 0 2px 4px rgba(0, 0, 0, 0.06));
           transform: translate(
               calc(var(--item-x) - (var(--item-size) / 2)),
               calc(var(--item-y) - (var(--item-size) / 2))
             )
-            scale(1.05);
+            scale(1.03)
+            translateY(-2px);
+        }
+
+        .radial-item:focus-visible {
+          outline: 2px solid var(--focus, #2383e2);
+          outline-offset: 4px;
         }
 
         .radial-item:active {
@@ -333,26 +349,70 @@ export default function RadialMenu({
               calc(var(--item-x) - (var(--item-size) / 2)),
               calc(var(--item-y) - (var(--item-size) / 2))
             )
-            scale(0.94);
+            scale(0.98)
+            translateY(0);
           background: var(--clay, #f1f1ef);
         }
 
-        .radial-item-icon {
+        .agent-card__inner {
           display: flex;
           align-items: center;
           justify-content: center;
+          flex-direction: column;
+          gap: 8px;
+          width: 100%;
+          height: 100%;
+        }
+
+        .agent-card__icon {
           width: var(--item-icon-size);
           height: var(--item-icon-size);
-          aspect-ratio: 1 / 1;
-          border-radius: 50%;
+          border-radius: 18px;
+          border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.06));
           background: var(--surface, #ffffff);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--ink, #1a1a1a);
+          transition: transform 0.25s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .radial-item:hover .agent-card__icon,
+        .radial-item:focus-visible .agent-card__icon {
+          transform: translateY(-2px);
+          border-color: var(--border-strong, rgba(0, 0, 0, 0.15));
+          box-shadow: var(--shadow-md, 0 2px 4px rgba(0, 0, 0, 0.08));
+        }
+
+        .radial-item:active .agent-card__icon {
+          transform: translateY(0) scale(0.98);
           box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+        }
+
+        .agent-card__label {
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: var(--ink-80, rgba(26, 26, 26, 0.8));
+        }
+
+        .agent-card__icon :global(.agent-icon) {
+          display: inline-flex;
+          width: 100%;
+          height: 100%;
+          align-items: center;
+          justify-content: center;
           color: var(--ink, #1a1a1a);
         }
 
-        .radial-item-icon :global(svg) {
-          width: 22px;
-          height: 22px;
+        .agent-card__icon :global(.agent-icon-svg) {
+          width: 80%;
+          height: 80%;
+        }
+
+        .agent-card__icon :global(.agent-icon),
+        .agent-card__icon :global(.agent-icon-svg) {
+          transition: transform 0.25s ease;
         }
 
         /* Tablet and larger screens - keep sizing consistent */
@@ -366,10 +426,6 @@ export default function RadialMenu({
             width: 80px;
             height: 80px;
           }
-          .radial-item-icon :global(svg) {
-            width: 22px;
-            height: 22px;
-          }
         }
 
         /* Mobile adjustments to keep the wheel centered & circular */
@@ -380,11 +436,11 @@ export default function RadialMenu({
           }
 
           .radial-item {
-            --item-size: 52px;
+            --item-size: 96px;
           }
 
-          .radial-item-icon {
-            --item-icon-size: 40px;
+          .agent-card__icon {
+            --item-icon-size: 56px;
           }
         }
 
