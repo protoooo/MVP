@@ -74,6 +74,11 @@ const Icons = {
       <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  Send: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3.5 4.5 20.5 12 3.5 19.5 6 13.5 12.5 12 6 10.5 3.5 4.5Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
 
   // ✅ FIX: iOS/Safari was rendering your old <line> X as a single slash sometimes.
   // Use a single <path> with round caps so it ALWAYS looks like an “X”.
@@ -2811,6 +2816,9 @@ export default function Page() {
         .chat-root .plm-footer-links {
           position: static;
           bottom: auto;
+          margin-top: 6px;
+          padding: 10px 16px calc(env(safe-area-inset-bottom) + 12px);
+          align-self: center;
         }
 
         .plm-footer-link {
@@ -2849,9 +2857,9 @@ export default function Page() {
         .chat-topbar {
           --chat-topbar-pad: max(20px, env(safe-area-inset-top) + 18px);
           --chat-topbar-side: max(
-            var(--chat-topbar-pad),
-            env(safe-area-inset-left) + 18px,
-            env(safe-area-inset-right) + 18px
+            calc(var(--chat-topbar-pad) + 8px),
+            env(safe-area-inset-left) + 22px,
+            env(safe-area-inset-right) + 22px
           );
           position: fixed;
           top: 0;
@@ -2871,7 +2879,8 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 6px;
-          margin-right: 4px; /* Pull settings off the edge to match top padding */
+          margin-right: 0;
+          padding: 0 8px; /* keep equal breathing room left/right of the gear */
         }
 
         .chat-settings-wrap {
@@ -3272,10 +3281,10 @@ export default function Page() {
           width: 100%;
           margin: 0 auto;
           padding: 10px 18px;
-          padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 22px);
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
         }
 
         /* ✅ FIX: DO NOT override LiquidGlass with transparent/none (this was causing the “matte white” bar) */
@@ -3297,9 +3306,9 @@ export default function Page() {
         .chat-mode-btn {
           position: relative;
           border-radius: 14px;
-          padding: 10px 12px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.16);
+          padding: 12px 14px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.18);
           color: rgba(15, 23, 42, 0.85);
           font-weight: 750;
           text-align: left;
@@ -3307,19 +3316,37 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 4px;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.12s ease;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), 0 12px 30px rgba(5, 7, 13, 0.12);
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.12s ease,
+            color 0.15s ease;
+        }
+
+        .chat-mode-btn::after {
+          content: '';
+          position: absolute;
+          inset: -3px;
+          border-radius: 16px;
+          border: 1px solid transparent;
+          box-shadow: 0 0 0 0 rgba(95, 168, 255, 0.14);
+          transition: border-color 0.18s ease, box-shadow 0.18s ease;
+          pointer-events: none;
         }
 
         .chat-mode-btn:hover {
           transform: translateY(-1px);
-          box-shadow: 0 12px 32px rgba(5, 7, 13, 0.16);
+          box-shadow: 0 12px 32px rgba(5, 7, 13, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
 
         .chat-mode-btn.active {
           background: linear-gradient(180deg, rgba(95, 168, 255, 0.14), rgba(95, 168, 255, 0.06));
-          border-color: rgba(95, 168, 255, 0.35);
-          box-shadow: 0 16px 40px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          border-color: rgba(95, 168, 255, 0.45);
+          box-shadow: 0 18px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
           color: rgba(15, 23, 42, 0.92);
+        }
+
+        .chat-mode-btn.active::after {
+          border-color: rgba(95, 168, 255, 0.5);
+          box-shadow: 0 0 0 4px rgba(95, 168, 255, 0.16);
         }
 
         .chat-mode-label {
@@ -3366,8 +3393,9 @@ export default function Page() {
 
         .chat-input-row {
           display: flex;
-          align-items: center;
+          align-items: stretch;
           gap: 12px;
+          width: 100%;
         }
 
         .chat-input-row.photo-mode {
@@ -3380,7 +3408,12 @@ export default function Page() {
         }
 
         .chat-input-row.chat-mode {
-          align-items: flex-end;
+          align-items: center;
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 16px 44px rgba(5, 7, 13, 0.12);
         }
 
         .chat-photo-hint {
@@ -3406,7 +3439,8 @@ export default function Page() {
 
         /* ✅ Input wrapper: keep it frosted, but less “flat white” */
         .chat-input-wrapper {
-          flex: 1;
+          flex: 1 1 100%;
+          width: 100%;
           display: flex;
           align-items: flex-end;
           border-radius: var(--radius-md);
@@ -3454,11 +3488,15 @@ export default function Page() {
         /* ✅ Send button inside input wrapper */
         .chat-send-btn {
           flex-shrink: 0;
-          width: 38px;
-          height: 38px;
-          border-radius: 10px;
-          margin: 0 0 5px 0;
-          align-self: flex-end;
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          margin: 0;
+          align-self: center;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
         }
 
         .chat-send-spinner {
@@ -3539,8 +3577,9 @@ export default function Page() {
         }
 
         .tool-first-ui .chat-input-wrapper {
-          flex: 0 1 340px;
-          min-height: 42px;
+          flex: 1 1 100%;
+          min-height: 48px;
+          max-width: none;
         }
 
         .tool-first-ui .chat-textarea {
@@ -3974,9 +4013,9 @@ export default function Page() {
           .chat-topbar {
             --chat-topbar-pad: max(18px, env(safe-area-inset-top) + 16px);
             --chat-topbar-side: max(
-              var(--chat-topbar-pad),
-              env(safe-area-inset-left) + 16px,
-              env(safe-area-inset-right) + 16px
+              calc(var(--chat-topbar-pad) + 8px),
+              env(safe-area-inset-left) + 20px,
+              env(safe-area-inset-right) + 20px
             );
             padding: var(--chat-topbar-pad) var(--chat-topbar-side) 0 var(--chat-topbar-side);
           }
@@ -4424,7 +4463,7 @@ export default function Page() {
                             className="chat-analyze-btn chat-send-btn"
                             aria-label="Send message"
                           >
-                            {isSending ? 'Sending…' : 'Ask'}
+                            {isSending ? 'Sending…' : <Icons.Send />}
                           </button>
                         </>
                       )}
