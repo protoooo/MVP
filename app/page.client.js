@@ -29,6 +29,10 @@ const MAX_DEVICES_PER_LOCATION = 20
 const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
 const HISTORY_KEY_BASE = 'plm_chat_history_v1'
 
+// ✅ Panel UI constants
+const MAX_TEXTAREA_HEIGHT = 120
+const FILE_PICKER_DELAY_MS = 100 // Small delay to allow panel transition before opening file picker
+
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
@@ -5153,7 +5157,7 @@ export default function Page() {
                   onChat={() => setActivePanel('text')}
                   onImage={() => {
                     setActivePanel('image')
-                    setTimeout(() => fileInputRef.current?.click(), 100)
+                    setTimeout(() => fileInputRef.current?.click(), FILE_PICKER_DELAY_MS)
                   }}
                   onPdfExport={() => {
                     const lastAssistantMsg = [...messages].reverse().find((m) => m.role === 'assistant')
@@ -5234,7 +5238,7 @@ export default function Page() {
                                 setInput(e.target.value)
                                 if (textAreaRef.current) {
                                   textAreaRef.current.style.height = 'auto'
-                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 120)}px`
+                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`
                                 }
                               }}
                               placeholder="Ask about Michigan food safety regulations..."
@@ -5361,7 +5365,7 @@ export default function Page() {
                                 setInput(e.target.value)
                                 if (textAreaRef.current) {
                                   textAreaRef.current.style.height = 'auto'
-                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 120)}px`
+                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`
                                 }
                               }}
                               placeholder={selectedImage ? "Ask about this image..." : "Upload a photo to analyze..."}
