@@ -55,7 +55,7 @@ export default function RadialMenu({
   const actions = [
     { key: 'chat', label: 'Chat', icon: MessageCircle, onClick: onChat },
     { key: 'image', label: 'Image', icon: Camera, onClick: onImage },
-    { key: 'pdf', label: 'PDF Export', icon: FileText, onClick: onPdfExport },
+    { key: 'pdf', label: 'PDF', icon: FileText, onClick: onPdfExport },
     { key: 'settings', label: 'Settings', icon: Settings, onClick: onSettings },
     { key: 'history', label: 'History', icon: Clock, onClick: onChatHistory },
   ]
@@ -274,25 +274,30 @@ export default function RadialMenu({
           pointer-events: auto;
         }
 
-        /* Individual wheel items (mobile-first: just icons, no cards) */
+        /* Individual wheel items - glass cards on all breakpoints */
         .radial-item {
           position: absolute;
           top: 0;
           left: 0;
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
           border: none;
-          background: transparent;
+          background: rgba(255, 255, 255, 0.18);
+          backdrop-filter: blur(16px) saturate(130%);
+          -webkit-backdrop-filter: blur(16px) saturate(130%);
+          box-shadow: 
+            0 8px 24px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25);
           cursor: pointer;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 3px;
+          gap: 4px;
           color: rgba(15, 23, 42, 0.9);
           opacity: 0;
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(0.5);
+          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(0.5);
           transition: 
             opacity 0.25s ease,
             transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -305,17 +310,20 @@ export default function RadialMenu({
 
         .radial-wheel.open .radial-item {
           opacity: 1;
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(1);
+          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(1);
         }
 
         .radial-item:hover {
-          background: rgba(255, 255, 255, 0.15);
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(1.08);
+          background: rgba(255, 255, 255, 0.28);
+          box-shadow: 
+            0 12px 32px rgba(0, 0, 0, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(1.08);
         }
 
         .radial-item:active {
-          transform: translate(calc(var(--item-x) - 28px), calc(var(--item-y) - 28px)) scale(0.95);
-          background: rgba(255, 255, 255, 0.25);
+          transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(0.95);
+          background: rgba(255, 255, 255, 0.35);
         }
 
         .radial-item-icon {
@@ -342,7 +350,7 @@ export default function RadialMenu({
           max-width: 50px;
         }
 
-        /* Tablet and larger screens - add card background on desktop */
+        /* Tablet and larger screens - keep sizing consistent */
         @media (min-width: 768px) {
           .radial-center-btn {
             width: 100px;
@@ -353,38 +361,6 @@ export default function RadialMenu({
             width: 80px;
             height: 80px;
           }
-
-          .radial-item {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(16px) saturate(130%);
-            -webkit-backdrop-filter: blur(16px) saturate(130%);
-            box-shadow: 
-              0 8px 24px rgba(0, 0, 0, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.25);
-            transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(0.5);
-          }
-
-          .radial-wheel.open .radial-item {
-            transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(1);
-          }
-
-          .radial-item:hover {
-            background: rgba(255, 255, 255, 0.28);
-            box-shadow: 
-              0 12px 32px rgba(0, 0, 0, 0.12),
-              inset 0 1px 0 rgba(255, 255, 255, 0.35);
-            transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(1.08);
-          }
-
-          .radial-item:active {
-            transform: translate(calc(var(--item-x) - 32px), calc(var(--item-y) - 32px)) scale(0.95);
-            background: rgba(255, 255, 255, 0.35);
-          }
-
           .radial-item-icon :global(svg) {
             width: 20px;
             height: 20px;

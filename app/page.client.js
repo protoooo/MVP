@@ -28,6 +28,29 @@ const MAX_MULTI_LOCATIONS = 500
 const MAX_DEVICES_PER_LOCATION = 20
 const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
 const HISTORY_KEY_BASE = 'plm_chat_history_v1'
+const POLICY_VERSION = '1'
+
+const getPolicyStorageKey = (userId) => `plm_policy_v${POLICY_VERSION}_${userId}`
+const hasCachedPolicyAcceptance = (userId) => {
+  if (typeof window === 'undefined' || !userId) return false
+  try {
+    return localStorage.getItem(getPolicyStorageKey(userId)) === 'true'
+  } catch {
+    return false
+  }
+}
+const cachePolicyAcceptance = (userId) => {
+  if (typeof window === 'undefined' || !userId) return
+  try {
+    localStorage.setItem(getPolicyStorageKey(userId), 'true')
+  } catch {}
+}
+const clearPolicyAcceptance = (userId) => {
+  if (typeof window === 'undefined' || !userId) return
+  try {
+    localStorage.removeItem(getPolicyStorageKey(userId))
+  } catch {}
+}
 
 // ✅ Panel UI constants
 const MAX_TEXTAREA_HEIGHT = 120
@@ -1143,32 +1166,34 @@ export default function Page() {
           return
         }
 
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('accepted_terms, accepted_privacy')
-          .eq('id', s.user.id)
-          .maybeSingle()
+        const cachedPolicyAccepted = hasCachedPolicyAcceptance(s.user.id)
+        let profile = null
+        let profileError = null
 
-        if (profileError) {
+        if (!cachedPolicyAccepted) {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('accepted_terms, accepted_privacy')
+            .eq('id', s.user.id)
+            .maybeSingle()
+          profile = data
+          profileError = error
+          if (!profileError && profile?.accepted_terms && profile?.accepted_privacy) {
+            cachePolicyAcceptance(s.user.id)
+          }
+        }
+
+        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy) || cachedPolicyAccepted
+
+        if (profileError && !accepted) {
           console.error('❌ Profile check error:', profileError)
           setSubscription(null)
           setHasActiveSubscription(false)
-
           setIsLoading(false)
           router.replace('/accept-terms')
           return
         }
 
-        if (!profile) {
-          setSubscription(null)
-          setHasActiveSubscription(false)
-
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        const accepted = !!(profile.accepted_terms && profile.accepted_privacy)
         if (!accepted) {
           setSubscription(null)
           setHasActiveSubscription(false)
@@ -1183,8 +1208,10 @@ export default function Page() {
         setHasActiveSubscription(false)
 
         setIsLoading(false)
-        router.replace('/accept-terms')
-        return
+        if (!hasCachedPolicyAcceptance(s?.user?.id)) {
+          router.replace('/accept-terms')
+          return
+        }
       }
 
       let active = false
@@ -1339,6 +1366,7 @@ export default function Page() {
   const handleSignOut = async () => {
     try {
       setShowSettingsMenu(false)
+      if (session?.user?.id) clearPolicyAcceptance(session.user.id)
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Sign out error', e)
@@ -4788,18 +4816,19 @@ export default function Page() {
           flex-shrink: 0;
           border-top: 1px solid rgba(255, 255, 255, 0.12);
           padding-top: 12px;
+          margin-top: auto;
         }
 
         .panel-input-row {
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           gap: 10px;
         }
 
         .panel-input-wrapper {
           flex: 1;
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           background: rgba(255, 255, 255, 0.5);
           border: 1px solid rgba(15, 23, 42, 0.12);
           border-radius: 14px;
