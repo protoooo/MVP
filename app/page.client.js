@@ -835,6 +835,7 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
+  const [inputMode, setInputMode] = useState('photo') // 'photo' | 'chat'
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
 
@@ -920,6 +921,22 @@ export default function Page() {
       document.documentElement.style.overflow = prevHtml
     }
   }, [hasPaidAccess])
+
+  useEffect(() => {
+    if (inputMode === 'chat') {
+      setSelectedImage(null)
+      if (textAreaRef.current) {
+        textAreaRef.current.style.height = 'auto'
+        textAreaRef.current.focus()
+      }
+      return
+    }
+
+    setInput('')
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = 'auto'
+    }
+  }, [inputMode])
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
@@ -1463,6 +1480,7 @@ export default function Page() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
+      if (inputMode !== 'photo') setInputMode('photo')
       const compressed = await compressImage(file)
       setSelectedImage(compressed)
     } catch (error) {
@@ -3250,11 +3268,14 @@ export default function Page() {
 
         .chat-input-inner {
           pointer-events: auto;
-          max-width: calc(960px + 48px); /* 960px + 24px padding on each side to match chat-messages */
+          max-width: 980px;
           width: 100%;
           margin: 0 auto;
-          padding: 12px 24px;
-          padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+          padding: 10px 18px;
+          padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
 
         /* ✅ FIX: DO NOT override LiquidGlass with transparent/none (this was causing the “matte white” bar) */
@@ -3262,9 +3283,53 @@ export default function Page() {
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          padding: 14px 16px;
+          gap: 10px;
+          padding: 12px 14px;
           color-scheme: light; /* helps iOS inputs render correctly */
+        }
+
+        .chat-mode-toggle {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 8px;
+        }
+
+        .chat-mode-btn {
+          position: relative;
+          border-radius: 14px;
+          padding: 10px 12px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.16);
+          color: rgba(15, 23, 42, 0.85);
+          font-weight: 750;
+          text-align: left;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.12s ease;
+        }
+
+        .chat-mode-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 12px 32px rgba(5, 7, 13, 0.16);
+        }
+
+        .chat-mode-btn.active {
+          background: linear-gradient(180deg, rgba(95, 168, 255, 0.14), rgba(95, 168, 255, 0.06));
+          border-color: rgba(95, 168, 255, 0.35);
+          box-shadow: 0 16px 40px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          color: rgba(15, 23, 42, 0.92);
+        }
+
+        .chat-mode-label {
+          font-size: 14px;
+          letter-spacing: -0.01em;
+        }
+
+        .chat-mode-sub {
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.7);
         }
 
         .chat-attachment {
@@ -3273,7 +3338,7 @@ export default function Page() {
           gap: 10px;
           padding: 8px 12px;
           border-radius: var(--radius-sm);
-          margin-bottom: 12px;
+          margin: 4px 0;
           font-size: 12px;
           color: rgba(15, 23, 42, 0.86);
         }
@@ -3301,8 +3366,42 @@ export default function Page() {
 
         .chat-input-row {
           display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .chat-input-row.photo-mode {
+          padding: 10px 12px;
+          background: rgba(255, 255, 255, 0.28);
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 16px 44px rgba(5, 7, 13, 0.12);
+          justify-content: flex-start;
+        }
+
+        .chat-input-row.chat-mode {
           align-items: flex-end;
-          gap: 10px;
+        }
+
+        .chat-photo-hint {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+          color: rgba(15, 23, 42, 0.9);
+        }
+
+        .chat-photo-title {
+          font-weight: 780;
+          font-size: 14px;
+          letter-spacing: -0.01em;
+        }
+
+        .chat-photo-sub {
+          margin: 0;
+          font-size: 12px;
+          color: rgba(15, 23, 42, 0.7);
         }
 
         /* ✅ Input wrapper: keep it frosted, but less “flat white” */
@@ -3450,7 +3549,9 @@ export default function Page() {
         }
 
         .tool-first-ui .chat-send-btn {
-          display: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .chat-analyze-btn {
@@ -3915,6 +4016,15 @@ export default function Page() {
             font-size: 13px;
           }
 
+          .chat-mode-toggle {
+            grid-template-columns: 1fr;
+          }
+
+          .chat-input-row.photo-mode {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
           .landing-topbar {
             padding: env(safe-area-inset-top) max(14px, env(safe-area-inset-right) + 8px) 0
               max(14px, env(safe-area-inset-left) + 8px);
@@ -4202,7 +4312,30 @@ export default function Page() {
                   <LiquidGlass variant="main" className="chat-dock">
                     <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-                    {selectedImage && (
+                    <div className="chat-mode-toggle" role="tablist" aria-label="Choose input mode">
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={inputMode === 'photo'}
+                        className={`chat-mode-btn ${inputMode === 'photo' ? 'active' : ''}`}
+                        onClick={() => setInputMode('photo')}
+                      >
+                        <span className="chat-mode-label">Photo</span>
+                        <span className="chat-mode-sub">Scan for violations</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={inputMode === 'chat'}
+                        className={`chat-mode-btn ${inputMode === 'chat' ? 'active' : ''}`}
+                        onClick={() => setInputMode('chat')}
+                      >
+                        <span className="chat-mode-label">Chat</span>
+                        <span className="chat-mode-sub">Ask about your documents</span>
+                      </button>
+                    </div>
+
+                    {inputMode === 'photo' && selectedImage && (
                       <LiquidGlass variant="side" className="chat-attachment">
                         <span className="chat-attachment-icon">
                           <Icons.Camera />
@@ -4219,60 +4352,87 @@ export default function Page() {
                       </LiquidGlass>
                     )}
 
-                    <div className="chat-input-row">
+                    <div className={`chat-input-row ${inputMode === 'photo' ? 'photo-mode' : 'chat-mode'}`}>
                       <input
                         type="file"
                         ref={fileInputRef}
                         accept="image/*"
                         style={{ display: 'none' }}
                         onChange={handleImageChange}
+                        disabled={inputMode !== 'photo'}
                       />
 
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="plm-icon-btn chat-camera-btn"
-                        aria-label="Upload photo"
-                        type="button"
-                      >
-                        <Icons.Camera />
-                      </button>
+                      {inputMode === 'photo' ? (
+                        <>
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="plm-icon-btn chat-camera-btn"
+                            aria-label="Upload photo"
+                            type="button"
+                            disabled={isSending}
+                          >
+                            <Icons.Camera />
+                          </button>
 
-                      <div className="chat-input-wrapper">
-                        <textarea
-                          ref={textAreaRef}
-                          value={input}
-                          onChange={(e) => {
-                            setInput(e.target.value)
-                            if (textAreaRef.current) {
-                              textAreaRef.current.style.height = 'auto'
-                              textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, 160)}px`
-                            }
-                          }}
-                          placeholder="Add notes (optional)..."
-                          rows={1}
-                          className="chat-textarea"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSend(e)
-                            }
-                          }}
-                        />
-                      </div>
+                          <div className="chat-photo-hint">
+                            <div className="chat-photo-title">Scan a photo</div>
+                            <p className="chat-photo-sub">Upload a picture to analyze for food safety issues.</p>
+                          </div>
 
-                      <button
-                        type="button"
-                        onClick={handleSend}
-                        disabled={(!safeTrim(input) && !selectedImage) || isSending}
-                        className="chat-analyze-btn"
-                        aria-label="Analyze upload"
-                      >
-                        {isSending ? 'Analyzing…' : 'Analyze'}
-                      </button>
+                          <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={!selectedImage || isSending}
+                            className="chat-analyze-btn"
+                            aria-label="Analyze upload"
+                          >
+                            {isSending ? 'Analyzing…' : 'Analyze'}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="chat-input-wrapper">
+                            <textarea
+                              ref={textAreaRef}
+                              value={input}
+                              onChange={(e) => {
+                                setInput(e.target.value)
+                                if (textAreaRef.current) {
+                                  textAreaRef.current.style.height = 'auto'
+                                  textAreaRef.current.style.height = `${Math.min(
+                                    textAreaRef.current.scrollHeight,
+                                    160
+                                  )}px`
+                                }
+                              }}
+                              placeholder="Ask a question about your documents..."
+                              rows={1}
+                              className="chat-textarea"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault()
+                                  handleSend(e)
+                                }
+                              }}
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={!safeTrim(input) || isSending}
+                            className="chat-analyze-btn chat-send-btn"
+                            aria-label="Send message"
+                          >
+                            {isSending ? 'Sending…' : 'Ask'}
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     <p className="chat-disclaimer">
-                      protocolLM may make mistakes. Verify critical decisions with official regulations.
+                      Upload a photo for instant analysis or switch to chat to ask about your documents. Verify critical
+                      decisions with official regulations.
                     </p>
                   </LiquidGlass>
                   <FooterLinks />
