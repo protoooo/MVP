@@ -2,14 +2,12 @@
 // ProtocolLM - Michigan Food Safety Compliance Engine (STATEWIDE)
 // Cohere v2/chat (REST) — Aya Vision for images, Command for text
 //
-// FIXES INCLUDED (addresses your COHERE_V2_CHAT_400 errors):
-// ✅ Use `preamble` (top-level) instead of a {role:"system"} message.
-// ✅ Ensure ALL message `content` fields are arrays of parts (text/image_url).
-// ✅ Send `documents` in a minimal v2-safe shape: [{ id, text }] only.
-// ✅ Better error logging: includes status + raw body snippet to debug 400s fast.
-// ✅ Keeps your tool-output normalizer + chemical scan merge behavior.
+// FIX (CRITICAL):
+// - DO NOT send `documents` param to /v2/chat when using Aya Vision (hasImage=true).
+//   Aya Vision frequently returns 422 on document-object payloads.
+// - Instead: keep retrieval grounding by embedding excerpts into the system prompt (already done via excerptBlock).
 //
-// NOTE: This preserves your existing auth/subscription/device license logic.
+// This file preserves your existing auth, subscription, and device-license logic.
 
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -118,31 +116,23 @@ function stripDocLikeRefs(text) {
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
-  // Remove code fences / headings
   out = out.replace(/```/g, '')
   out = out.replace(/^\s*#{1,6}\s+/gm, '')
 
-  // Remove emojis (best effort)
   try {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
-  // Remove confidence language
   out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
-  // Strip doc/source-like refs
   out = stripDocLikeRefs(out)
-
-  // No stars/hashes
   out = stripStarsAndHashes(out)
 
-  // Collapse excessive newlines
   out = out.replace(/\n{3,}/g, '\n\n')
 
-  // Hard cap
   const HARD_LIMIT = 1800
   if (out.length > HARD_LIMIT) out = out.slice(0, HARD_LIMIT).trimEnd()
 
@@ -232,7 +222,7 @@ function validateImageData(imageInput) {
 }
 
 // ============================================================================
-// COHERE v2/chat (REST) — V2-SAFE PAYLOAD (preamble + parts arrays)
+// COHERE v2/chat (REST)
 // ============================================================================
 
 function cohereResponseToText(resp) {
@@ -246,16 +236,12 @@ function cohereResponseToText(resp) {
   return ''
 }
 
-async function callCohereChatV2Rest({ model, messages, documents, preamble }) {
+async function callCohereChatV2Rest({ model, messages, documents }) {
   const apiKey = process.env.COHERE_API_KEY
   if (!apiKey) throw new Error('COHERE_API_KEY not configured')
 
   const payload = { model, messages }
-
-  // ✅ v2-safe system instructions
-  if (safeText(preamble)) payload.preamble = safeText(preamble)
-
-  // ✅ v2-safe docs (only id + text)
+  // IMPORTANT: only include documents if explicitly allowed by caller
   if (documents && Array.isArray(documents) && documents.length) payload.documents = documents
 
   const res = await fetch('https://api.cohere.com/v2/chat', {
@@ -269,35 +255,46 @@ async function callCohereChatV2Rest({ model, messages, documents, preamble }) {
 
   const raw = await res.text().catch(() => '')
   if (!res.ok) {
-    const snippet = safeLine(raw).slice(0, 1400)
+    const snippet = safeLine(raw).slice(0, 1200)
     const err = new Error(`COHERE_V2_CHAT_${res.status}: ${snippet || 'Request failed'}`)
     err.status = res.status
     err.body = raw
+    // helpful debug (Railway logs)
+    logger.error('Cohere v2/chat error', {
+      status: res.status,
+      model,
+      hasDocuments: Boolean(payload.documents?.length),
+      rawSnippet: snippet,
+    })
     throw err
   }
 
   try {
     return JSON.parse(raw)
   } catch {
-    const err = new Error('COHERE_V2_CHAT_BAD_JSON')
-    err.body = raw
-    throw err
+    throw new Error('COHERE_V2_CHAT_BAD_JSON')
   }
 }
 
-function buildV2Messages({ chatHistory, userMessage, imageDataUrls }) {
+function buildV2Messages({ system, chatHistory, userMessage, imageDataUrls }) {
   const messages = []
+  if (safeText(system)) messages.push({ role: 'system', content: safeText(system) })
 
   const hist = Array.isArray(chatHistory) ? chatHistory : []
   for (const h of hist) {
     const roleRaw = String(h?.role || '').toUpperCase()
     const text = safeText(h?.message || '')
     if (!text) continue
-
     if (roleRaw === 'USER') {
-      messages.push({ role: 'user', content: [{ type: 'text', text }] })
+      messages.push({
+        role: 'user',
+        content: [{ type: 'text', text }],
+      })
     } else if (roleRaw === 'CHATBOT' || roleRaw === 'ASSISTANT') {
-      messages.push({ role: 'assistant', content: [{ type: 'text', text }] })
+      messages.push({
+        role: 'assistant',
+        content: [{ type: 'text', text }],
+      })
     }
   }
 
@@ -316,29 +313,28 @@ function buildV2Messages({ chatHistory, userMessage, imageDataUrls }) {
   return messages
 }
 
-function clampDocText(x, limit = 5000) {
-  const t = safeText(String(x || ''))
-  if (!t) return ''
-  if (t.length <= limit) return t
-  return t.slice(0, limit).trimEnd() + '…'
-}
+/**
+ * callCohereChat
+ * allowDocuments:
+ * - MUST be false for Aya Vision calls (hasImage=true) to avoid 422s.
+ */
+async function callCohereChat({ model, system, userMessage, chatHistory, documents, imageDataUrls, allowDocuments }) {
+  const messages = buildV2Messages({ system, chatHistory, userMessage, imageDataUrls })
 
-async function callCohereChat({ model, system, userMessage, chatHistory, documents, imageDataUrls }) {
-  const messages = buildV2Messages({ chatHistory, userMessage, imageDataUrls })
-
-  // ✅ Minimal v2-safe docs
-  const docs = (documents || [])
-    .map((doc) => ({
-      id: doc?.id || 'internal',
-      text: clampDocText(doc?.text || doc?.snippet || '', 5000),
+  let docs = []
+  if (allowDocuments) {
+    docs = (documents || []).map((doc) => ({
+      // Cohere accepts string or object; object shape varies by model.
+      // Keep it minimal to reduce schema mismatch risk.
+      title: doc?.title || doc?.source || 'Policy',
+      text: doc?.text || doc?.snippet || '',
     }))
-    .filter((d) => d.text && d.text.trim())
+  }
 
   const resp = await callCohereChatV2Rest({
     model,
     messages,
-    documents: docs.length ? docs : undefined,
-    preamble: system, // ✅ system prompt goes here
+    documents: allowDocuments && docs.length ? docs : undefined,
   })
 
   return { raw: resp, text: cohereResponseToText(resp) }
@@ -445,7 +441,7 @@ function normalizeToToolFormat(rawText, { maxBullets }) {
     let l = lines[i].trim()
     if (!l) continue
 
-    if (i === 0) {
+    if (rebuilt.length === 0) {
       const up = l.toUpperCase()
       if (up.startsWith('NO VIOLATIONS')) l = HDR_NO
       else if (up.startsWith('VIOLATIONS')) l = HDR_VIOL
@@ -494,7 +490,6 @@ function extractFirstJsonObject(text) {
   if (!s) return null
   const start = s.indexOf('{')
   if (start === -1) return null
-
   let depth = 0
   for (let i = start; i < s.length; i++) {
     const ch = s[i]
@@ -547,7 +542,7 @@ Schema:
 
 Rules:
 - "found" is true if you can SEE any cleaner/chemical container (e.g., Windex, bleach, degreaser, sanitizer spray bottle).
-- "location" must describe where it is (e.g., "in the sink basin with dishes", "on the drainboard near plates", "on counter by prep area").
+- "location" describes where it is (e.g., "in the sink basin with dishes", "on the drainboard near plates", "on counter by prep area").
 - If you cannot tell, set found=false.`
 
   const userMessage = 'Scan the photo for any visible cleaning chemicals / spray bottles and where they are placed.'
@@ -561,6 +556,8 @@ Rules:
         chatHistory: [],
         documents: [],
         imageDataUrls,
+        // CRITICAL: never send documents to Aya Vision
+        allowDocuments: false,
       }),
       CHEM_SCAN_TIMEOUT_MS,
       'CHEM_SCAN_TIMEOUT'
@@ -585,7 +582,6 @@ Rules:
     }
 
     if (json.found && normalized.length) return { found: true, actionable: false, item: normalized[0] }
-
     return { found: false }
   } catch (e) {
     logger.warn('Chemical scan failed (non-blocking)', { error: e?.message })
@@ -594,7 +590,7 @@ Rules:
 }
 
 // ============================================================================
-// PROMPTS
+// PROMPTS (CONSISTENT WITH TOOL OUTPUT)
 // ============================================================================
 
 function buildSystemPrompt({ fullAudit }) {
@@ -650,8 +646,8 @@ function safeErrorDetails(err) {
     if (!err) return 'Unknown error'
     if (typeof err === 'string') return safeLine(err).slice(0, 400) || 'Unknown error'
     const msg = safeLine(err?.message || '')
-    const body = err?.body ? safeLine(String(err.body)).slice(0, 600) : ''
-    return safeLine([msg, body].filter(Boolean).join(' | ')).slice(0, 900) || 'Unknown error'
+    const body = err?.body ? safeLine(String(err.body)).slice(0, 400) : ''
+    return safeLine([msg, body].filter(Boolean).join(' | ')).slice(0, 700) || 'Unknown error'
   } catch {
     return 'Unknown error'
   }
@@ -709,7 +705,6 @@ export async function POST(request) {
       }
     }
 
-    // Resolve user message
     let userMessage =
       (typeof body.message === 'string' && body.message.trim()) ||
       (Array.isArray(body.messages)
@@ -742,7 +737,7 @@ export async function POST(request) {
     const includeFines = wantsFineInfo(effectivePrompt) || Boolean(body?.includeFines)
 
     // ========================================================================
-    // AUTH + LICENSE VALIDATION
+    // AUTH + LICENSE VALIDATION (auth required)
     // ========================================================================
 
     let userId = null
@@ -774,10 +769,7 @@ export async function POST(request) {
       if (!userId || !data?.user) {
         logger.info('Unauthenticated chat attempt')
         return NextResponse.json(
-          {
-            error: 'Sign up for your 14-day free trial to start scanning.',
-            code: 'AUTH_REQUIRED',
-          },
+          { error: 'Sign up for your 14-day free trial to start scanning.', code: 'AUTH_REQUIRED' },
           { status: 401 }
         )
       }
@@ -789,7 +781,6 @@ export async function POST(request) {
         )
       }
 
-      // Per-minute user rate limiting
       const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}`
       const MAX_REQUESTS_PER_MINUTE = 20
       try {
@@ -806,7 +797,6 @@ export async function POST(request) {
         logger.warn('Rate limit check failed', { error: rateLimitError?.message })
       }
 
-      // Subscription/trial check
       try {
         const accessCheck = await checkAccess(userId)
         if (!accessCheck?.valid) {
@@ -823,7 +813,6 @@ export async function POST(request) {
         )
       }
 
-      // Device license validation
       const deviceCheck = await validateDeviceLicense(userId, sessionInfo)
       if (!deviceCheck.valid) {
         return NextResponse.json(
@@ -846,14 +835,11 @@ export async function POST(request) {
       }
     } catch (e) {
       logger.error('Auth/license check failed', { error: e?.message })
-      return NextResponse.json(
-        { error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Authentication error. Please sign in again.', code: 'AUTH_ERROR' }, { status: 401 })
     }
 
     // ========================================================================
-    // RETRIEVE DOCS
+    // RETRIEVE DOCS (for grounding) — do NOT send as `documents` to Aya Vision
     // ========================================================================
 
     const searchDocumentsFn = await getSearchDocuments()
@@ -915,9 +901,7 @@ export async function POST(request) {
     const excerptBlock =
       contextDocs.length === 0
         ? ''
-        : contextDocs
-            .map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 1100)}`)
-            .join('\n\n')
+        : contextDocs.map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 1100)}`).join('\n\n')
 
     let memoryContext = ''
     try {
@@ -925,7 +909,7 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // BUILD CHAT HISTORY
+    // BUILD CHAT HISTORY (for continuity)
     // ========================================================================
 
     const cohereChatHistory = []
@@ -942,7 +926,7 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // 1) CHEMICAL SCAN
+    // 1) CHEMICAL SCAN (vision)
     // ========================================================================
 
     let chemScan = { found: false }
@@ -974,36 +958,35 @@ export async function POST(request) {
     let tokenUsage = {}
 
     try {
+      // CRITICAL: allowDocuments MUST be false for vision calls (Aya)
+      const allowDocuments = !hasImage
+
       const resp = await withTimeout(
         callCohereChat({
           model: usedModel,
           system: systemPrompt,
           userMessage,
           chatHistory: cohereChatHistory,
+          // still pass documents for internal shaping; function will only include when allowDocuments=true
           documents: contextDocs.map((doc) => ({
-            id: 'internal',
-            text: docTextForExcerpt(doc, 1600), // upstream will clamp further
+            title: doc?.source || doc?.title || 'Policy',
+            text: docTextForExcerpt(doc, 1100),
+            snippet: docTextForExcerpt(doc, 900),
           })),
           imageDataUrls: hasImage ? normalizedImageUrls : [],
+          allowDocuments,
         }),
         ANSWER_TIMEOUT_MS,
         'ANSWER_TIMEOUT'
       )
 
-      billedUnits = resp?.raw?.meta?.billed_units || resp?.raw?.billed_units || {}
-      tokenUsage = resp?.raw?.meta?.tokens || resp?.raw?.tokens || {}
+      billedUnits = resp?.raw?.usage?.billed_units || resp?.raw?.meta?.billed_units || resp?.raw?.billed_units || {}
+      tokenUsage = resp?.raw?.usage?.tokens || resp?.raw?.meta?.tokens || resp?.raw?.tokens || {}
 
       modelText = resp?.text || ''
       assistantMessage = normalizeToToolFormat(modelText, { maxBullets })
     } catch (e) {
-      logger.error('Generation failed', {
-        error: e?.message,
-        status: e?.status,
-        detail: safeErrorDetails(e),
-        rawBody: safeLine(String(e?.body || '')).slice(0, 2000),
-        hasImage,
-        model: usedModel,
-      })
+      logger.error('Generation failed', { error: e?.message, detail: safeErrorDetails(e), hasImage, model: usedModel })
       const status = e?.message?.includes('TIMEOUT') ? 408 : 500
       return NextResponse.json(
         { error: getUserFriendlyErrorMessage(e?.message?.includes('TIMEOUT') ? 'ANSWER_TIMEOUT' : 'GENERATION_FAILED') },
@@ -1078,6 +1061,8 @@ export async function POST(request) {
       rerankUsed,
       chemScanFound: Boolean(chemScan?.found),
       chemScanActionable: Boolean(chemScan?.actionable),
+      // this should always be false for hasImage now
+      documentsSentToModel: !hasImage,
     })
 
     if (userId) {
