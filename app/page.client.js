@@ -119,30 +119,6 @@ const Icons = {
       />
     </svg>
   ),
-  ChatBubble: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path
-        d="M21 13.5c0 2.485-2.91 4.5-6.5 4.5-.76 0-1.48-.09-2.16-.26L6 20.5l1.38-3.14C5.54 16.35 4 15.05 4 13.5 4 11.02 7.13 9 10.5 9S21 11.02 21 13.5Z"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M8 11.5c0-.83 1.12-1.5 2.5-1.5S13 10.67 13 11.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  History: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-      <path d="M3 12a9 9 0 1 1 3 6.708" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M3 12h4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  Document: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M6 3h7l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M13 3v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 13h8M8 17h6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
 }
 
 /**
@@ -239,115 +215,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       </main>
 
       <FooterLinks />
-    </div>
-  )
-}
-
-function ToolLauncher({ isOpen, onToggle, onSelect }) {
-  const tools = [
-    { key: 'chat', label: 'Chat', icon: <Icons.ChatBubble /> },
-    { key: 'image', label: 'Image', icon: <Icons.Camera /> },
-    { key: 'history', label: 'Chat History', icon: <Icons.History /> },
-    { key: 'settings', label: 'Settings', icon: <Icons.Gear /> },
-    { key: 'pdf', label: 'PDF Export', icon: <Icons.Document /> },
-  ]
-  const radius = 132
-
-  return (
-    <div className="tool-launcher">
-      {isOpen && (
-        <button
-          type="button"
-          className="launcher-overlay"
-          aria-label="Close tool wheel"
-          onClick={() => onToggle(false)}
-        />
-      )}
-
-      <div className="launcher-core">
-        <button
-          type="button"
-          className={`launcher-button ${isOpen ? 'open' : ''}`}
-          onClick={() => onToggle(!isOpen)}
-          aria-label="Toggle tools"
-        >
-          <span className="launcher-glow" aria-hidden="true" />
-          <Image src={appleIcon} alt="ProtocolLM" width={108} height={108} priority className="launcher-logo" />
-          <span className="launcher-press" aria-hidden="true" />
-        </button>
-
-        <div className={`radial-menu ${isOpen ? 'open' : ''}`} role="menu" aria-label="Tool picker">
-          {tools.map((item, idx) => {
-            const angle = (idx / tools.length) * Math.PI * 2 - Math.PI / 2
-            const x = Math.cos(angle) * radius
-            const y = Math.sin(angle) * radius
-            return (
-              <button
-                key={item.key}
-                type="button"
-                role="menuitem"
-                className="radial-btn"
-                style={{ '--x': `${x}px`, '--y': `${y}px` }}
-                onClick={() => onSelect(item.key)}
-              >
-                <span className="radial-icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-                <span className="radial-label">{item.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function SettingsPanel({ isOpen, onClose, onManageBilling, onOpenTrial, onSignOut, hasActiveSubscription }) {
-  if (!isOpen) return null
-  return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Settings">
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <LiquidGlass
-          variant="main"
-          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style no-accent-border settings-modal ${plusJakarta.className}`}
-        >
-          <button onClick={onClose} className="modal-close" aria-label="Close settings" type="button">
-            <Icons.X />
-          </button>
-
-          <div className="settings-modal-body">
-            <h2 className="modal-title">Settings</h2>
-            <p className="settings-modal-sub">Manage your workspace access.</p>
-            <div className="settings-actions">
-              <button
-                type="button"
-                className="settings-action"
-                onClick={() => {
-                  onClose()
-                  if (hasActiveSubscription) {
-                    onManageBilling()
-                  } else {
-                    onOpenTrial()
-                  }
-                }}
-              >
-                {hasActiveSubscription ? 'Manage billing' : 'Start trial'}
-              </button>
-              <button
-                type="button"
-                className="settings-action secondary"
-                onClick={() => {
-                  onClose()
-                  onSignOut()
-                }}
-              >
-                Log out
-              </button>
-            </div>
-          </div>
-        </LiquidGlass>
-      </div>
     </div>
   )
 }
@@ -451,7 +318,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <LiquidGlass
           variant="main"
-          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style no-accent-border auth-modal ${plusJakarta.className}`}
+          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style auth-modal ${plusJakarta.className}`}
         >
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
@@ -556,7 +423,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <LiquidGlass
           variant="main"
-          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style no-accent-border pricing-modal ${plusJakarta.className}`}
+          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style pricing-modal ${plusJakarta.className}`}
         >
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
@@ -981,10 +848,6 @@ export default function Page() {
   const [chatHistory, setChatHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
   const [historyReady, setHistoryReady] = useState(false)
-  const [launcherOpen, setLauncherOpen] = useState(false)
-  const [activeTool, setActiveTool] = useState(null)
-  const [pendingToolAction, setPendingToolAction] = useState(null)
-  const [showSettingsPanel, setShowSettingsPanel] = useState(false)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -995,8 +858,31 @@ export default function Page() {
   const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === SUBSCRIPTION_STATUS_TRIALING)
   const historyStorageKey = useMemo(() => `${HISTORY_KEY_BASE}-${session?.user?.id || 'guest'}`, [session?.user?.id])
 
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const settingsRef = useRef(null)
+
   // ✅ if you later add a Cancel button, this lets you abort streaming
   const abortRef = useRef(null)
+
+  useEffect(() => {
+    const onDown = (e) => {
+      if (!settingsRef.current) return
+      if (!settingsRef.current.contains(e.target)) setShowSettingsMenu(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('touchstart', onDown, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('touchstart', onDown)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (window.innerWidth >= 1100) {
+      setShowHistory(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1049,13 +935,6 @@ export default function Page() {
     }
   }, [hasPaidAccess])
 
-  useEffect(() => {
-    if (!hasPaidAccess) {
-      setActiveTool(null)
-      setLauncherOpen(false)
-    }
-  }, [hasPaidAccess])
-
   // ✅ Prevent background scroll when a modal is open (also helps iOS)
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -1087,14 +966,6 @@ export default function Page() {
       document.documentElement.style.overflow = prevHtml
     }
   }, [hasPaidAccess])
-
-  useEffect(() => {
-    if (activeTool !== 'chat') return
-    if (pendingToolAction === 'image' && fileInputRef.current) {
-      fileInputRef.current.click()
-      setPendingToolAction(null)
-    }
-  }, [activeTool, pendingToolAction])
 
   useEffect(() => {
     if (inputMode === 'chat') {
@@ -1459,14 +1330,13 @@ export default function Page() {
 
   const handleSignOut = async () => {
     try {
-      setShowSettingsPanel(false)
+      setShowSettingsMenu(false)
       await supabase.auth.signOut()
     } catch (e) {
       console.error('Sign out error', e)
     } finally {
       setMessages([])
       setCurrentChatId(null)
-      setActiveTool(null)
       router.replace('/')
     }
   }
@@ -1759,93 +1629,6 @@ export default function Page() {
     [buildReportText]
   )
 
-  const handlePdfExport = useCallback(() => {
-    const latestAssistant = [...messages].reverse().find((m) => m.role === 'assistant')
-    if (!latestAssistant) {
-      alert('No assistant response to export yet.')
-      return
-    }
-
-    const text = buildReportText(latestAssistant) || normalizeAssistantText(latestAssistant.content || '')
-    if (!text) {
-      alert('No assistant response to export yet.')
-      return
-    }
-
-    if (typeof window === 'undefined') return
-    const escaped = text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')
-    const win = window.open('', '_blank', 'noopener,noreferrer')
-    if (!win) {
-      alert('Allow pop-ups to export as PDF.')
-      return
-    }
-
-    win.document.write(`
-      <html>
-        <head>
-          <title>ProtocolLM Export</title>
-          <style>
-            body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 32px; color: #0b1220; line-height: 1.6; background: #f8fafc; }
-            h1 { font-size: 20px; margin: 0 0 8px 0; }
-            .meta { color: #475569; font-size: 12px; margin-bottom: 16px; }
-            .content { white-space: pre-wrap; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <h1>ProtocolLM Report</h1>
-          <div class="meta">${new Date().toLocaleString()}</div>
-          <div class="content">${escaped}</div>
-        </body>
-      </html>
-    `)
-    win.document.close()
-    win.focus()
-    win.print()
-  }, [buildReportText, messages])
-
-  const handleToolSelection = useCallback(
-    (tool) => {
-      setLauncherOpen(false)
-
-      if (tool === 'chat') {
-        setActiveTool('chat')
-        setShowHistory(false)
-        setInputMode('chat')
-        return
-      }
-      if (tool === 'image') {
-        setActiveTool('chat')
-        setShowHistory(false)
-        setInputMode('photo')
-        setPendingToolAction('image')
-        return
-      }
-      if (tool === 'history') {
-        setActiveTool('chat')
-        setShowHistory(true)
-        return
-      }
-      if (tool === 'settings') {
-        setShowSettingsPanel(true)
-        return
-      }
-      if (tool === 'pdf') {
-        handlePdfExport()
-      }
-    },
-    [handlePdfExport]
-  )
-
-  const handleCloseWorkspace = useCallback(() => {
-    setActiveTool(null)
-    setShowHistory(false)
-    setPendingToolAction(null)
-  }, [])
-
-  const toggleLauncher = useCallback((next) => {
-    setLauncherOpen((prev) => (typeof next === 'boolean' ? next : !prev))
-  }, [])
-
   useEffect(() => {
     if (!historyReady) return
     if (!hasPaidAccess) return
@@ -2124,8 +1907,8 @@ export default function Page() {
           z-index: 1;
         }
 
-        .glass-modal.modal-card.auth-modal:not(.no-accent-border)::after,
-        .glass-modal.modal-card.pricing-modal:not(.no-accent-border)::after {
+        .glass-modal.modal-card.auth-modal::after,
+        .glass-modal.modal-card.pricing-modal::after {
           content: '';
           position: absolute;
           inset: 0;
@@ -2149,10 +1932,6 @@ export default function Page() {
           mask-composite: exclude;
           pointer-events: none;
           z-index: 0;
-        }
-
-        .glass-modal.modal-card.no-accent-border::after {
-          display: none;
         }
 
         .modal-close {
@@ -2930,7 +2709,7 @@ export default function Page() {
         /* ✅ Subtle gradient border matching ProtocolLM brand colors (blue, gray, orange, muted green)
          * Uses pseudo-element with mask technique for Safari/iOS compatibility
          * Preserves border-radius and maintains glass-like transparency */
-        .landing-hero-card.landing-hero-card--terms-style:not(.no-accent-border)::before {
+        .landing-hero-card.landing-hero-card--terms-style::before {
           content: '';
           position: absolute;
           inset: 0;
@@ -2954,15 +2733,6 @@ export default function Page() {
           mask-composite: exclude;
           pointer-events: none;
           z-index: 0;
-        }
-
-        .landing-hero-card.landing-hero-card--terms-style.no-accent-border {
-          border: 1px solid rgba(255, 255, 255, 0.48) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52) !important;
-        }
-
-        .landing-hero-card.landing-hero-card--terms-style.no-accent-border::before {
-          display: none;
         }
 
         .hero-content {
@@ -3236,13 +3006,12 @@ export default function Page() {
         .chat-top-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 6px;
           margin-right: 0;
-          padding: 0;
+          padding: 0 8px; /* keep equal breathing room left/right of the gear */
         }
 
-        .chat-history-toggle,
-        .launcher-return {
+        .chat-history-toggle {
           height: 34px;
           padding: 0 14px;
           border-radius: 12px;
@@ -3255,11 +3024,57 @@ export default function Page() {
           transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
         }
 
-        .chat-history-toggle:hover,
-        .launcher-return:hover {
+        .chat-history-toggle:hover {
           transform: translateY(-1px);
           border-color: rgba(15, 23, 42, 0.15);
           box-shadow: 0 16px 34px rgba(5, 7, 13, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.62);
+        }
+
+        .chat-settings-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .chat-settings-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 180px;
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(15, 23, 42, 0.12);
+          border-radius: var(--radius-md);
+          padding: 8px;
+          box-shadow: 0 16px 48px rgba(5, 7, 13, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          backdrop-filter: blur(14px) saturate(120%);
+          -webkit-backdrop-filter: blur(14px) saturate(120%);
+          animation: dropdown-in 0.15s ease;
+          z-index: 50;
+        }
+
+        .chat-settings-item {
+          width: 100%;
+          text-align: left;
+          padding: 10px 10px;
+          background: transparent;
+          border: none;
+          border-radius: var(--radius-sm);
+          color: #1f2937;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background 0.15s ease;
+        }
+
+        .chat-settings-item:hover {
+          background: rgba(15, 23, 42, 0.08);
+        }
+
+        .chat-settings-sep {
+          height: 1px;
+          background: rgba(15, 23, 42, 0.12);
+          margin: 6px 2px;
         }
 
         .chat-shell {
@@ -3290,6 +3105,12 @@ export default function Page() {
 
         .chat-history-panel.open {
           display: block;
+        }
+
+        @media (min-width: 1100px) {
+          .chat-history-panel {
+            display: block;
+          }
         }
 
         .chat-main-area {
@@ -4488,243 +4309,11 @@ export default function Page() {
           box-shadow: 0 18px 48px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
 
-        /* Launcher */
-        .launcher-stage {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: clamp(24px, 6vh, 48px);
-        }
-
-        .tool-launcher {
-          position: relative;
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .launcher-overlay {
-          position: fixed;
-          inset: 0;
-          background: transparent;
-          border: none;
-          padding: 0;
-          margin: 0;
-          cursor: pointer;
-          z-index: 8;
-        }
-
-        .launcher-core {
-          position: relative;
-          width: clamp(240px, 32vw, 320px);
-          height: clamp(240px, 32vw, 320px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .launcher-button {
-          width: clamp(140px, 18vw, 188px);
-          height: clamp(140px, 18vw, 188px);
-          border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)),
-            rgba(255, 255, 255, 0.08);
-          box-shadow:
-            0 26px 70px rgba(5, 7, 13, 0.42),
-            inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          display: grid;
-          place-items: center;
-          position: relative;
-          overflow: hidden;
-          cursor: pointer;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-          z-index: 10;
-        }
-
-        .launcher-button.open {
-          animation: squish 0.55s ease;
-        }
-
-        .launcher-button:active {
-          transform: scale(0.95);
-        }
-
-        .launcher-logo {
-          width: 64%;
-          height: 64%;
-          object-fit: contain;
-          filter: drop-shadow(0 10px 30px rgba(5, 7, 13, 0.26));
-        }
-
-        .launcher-glow {
-          position: absolute;
-          inset: 10%;
-          border-radius: 9999px;
-          background: radial-gradient(circle, rgba(95, 168, 255, 0.32), transparent 55%);
-          filter: blur(18px);
-          z-index: 0;
-        }
-
-        .launcher-press {
-          position: absolute;
-          inset: 0;
-          border-radius: 9999px;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
-          mix-blend-mode: screen;
-          z-index: 1;
-        }
-
-        @keyframes squish {
-          0% {
-            transform: scale(1);
-          }
-          30% {
-            transform: scale(0.9, 1.05);
-          }
-          60% {
-            transform: scale(1.06, 0.94);
-          }
-          100% {
-            transform: scale(1);
-          }
-        }
-
-        .radial-menu {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          transition: opacity 0.18s ease;
-          opacity: 0;
-          --radial-scale: 1;
-        }
-
-        .radial-menu.open {
-          opacity: 1;
-          pointer-events: auto;
-        }
-
-        .radial-btn {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) scale(0.6);
-          width: 112px;
-          height: 112px;
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.22);
-          background: rgba(255, 255, 255, 0.12);
-          box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.45),
-            0 18px 48px rgba(5, 7, 13, 0.24);
-          color: rgba(15, 23, 42, 0.9);
-          display: grid;
-          place-items: center;
-          gap: 6px;
-          padding: 14px 10px;
-          cursor: pointer;
-          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-          backdrop-filter: blur(14px) saturate(130%);
-          -webkit-backdrop-filter: blur(14px) saturate(130%);
-          will-change: transform;
-        }
-
-        .radial-menu.open .radial-btn {
-          transform: translate(
-              calc(-50% + var(--x) * var(--radial-scale)),
-              calc(-50% + var(--y) * var(--radial-scale))
-            )
-            scale(1);
-        }
-
-        .radial-icon {
-          width: 34px;
-          height: 34px;
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          background: rgba(255, 255, 255, 0.18);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(15, 23, 42, 0.8);
-        }
-
-        .radial-label {
-          font-weight: 780;
-          font-size: 12px;
-          color: rgba(15, 23, 42, 0.85);
-          text-align: center;
-        }
-
-        .radial-btn:hover {
-          border-color: rgba(95, 168, 255, 0.35);
-          box-shadow:
-            0 18px 52px rgba(5, 7, 13, 0.26),
-            inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          background: rgba(255, 255, 255, 0.16);
-        }
-
-        /* Settings modal */
-        .settings-modal-body {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .settings-modal-sub {
-          margin: 0;
-          font-size: 13px;
-          color: rgba(15, 23, 42, 0.7);
-        }
-
-        .settings-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-top: 6px;
-        }
-
-        .settings-action {
-          height: 44px;
-          border-radius: 12px;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          background: rgba(255, 255, 255, 0.82);
-          color: rgba(15, 23, 42, 0.9);
-          font-weight: 820;
-          cursor: pointer;
-          padding: 0 14px;
-          box-shadow: 0 14px 32px rgba(5, 7, 13, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-          transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
-        }
-
-        .settings-action:hover {
-          transform: translateY(-1px);
-          border-color: rgba(15, 23, 42, 0.18);
-          box-shadow: 0 16px 40px rgba(5, 7, 13, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-        }
-
-        .settings-action.secondary {
-          background: rgba(239, 68, 68, 0.1);
-          border-color: rgba(239, 68, 68, 0.26);
-          color: #b91c1c;
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
           :root {
             --landing-topbar-h: 68px;
             --chat-dock-room: 150px; /* a touch more room on mobile */
-          }
-
-          .radial-menu {
-            --radial-scale: 0.86;
-          }
-
-          .radial-btn {
-            width: 96px;
-            height: 96px;
           }
 
           .hero-break {
@@ -4873,10 +4462,6 @@ export default function Page() {
             --chat-dock-room: 210px;
           }
 
-          .radial-menu {
-            --radial-scale: 0.76;
-          }
-
           .plm-brand-mark {
             width: 124px;
             height: 124px;
@@ -4961,331 +4546,353 @@ export default function Page() {
         />
       </Portal>
 
-      <Portal>
-        <SettingsPanel
-          isOpen={showSettingsPanel}
-          onClose={() => setShowSettingsPanel(false)}
-          onManageBilling={handleManageBilling}
-          onOpenTrial={() => setShowPricingModal(true)}
-          onSignOut={handleSignOut}
-          hasActiveSubscription={hasActiveSubscription}
-        />
-      </Portal>
-
       <div className="app-container">
         {hasPaidAccess ? (
           <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <div className={`${plusJakarta.className} chat-root tool-first-ui`}>
-              {!activeTool && (
-                <div className="launcher-stage">
-                  <ToolLauncher isOpen={launcherOpen} onToggle={toggleLauncher} onSelect={handleToolSelection} />
+              <header className="chat-topbar">
+                <div className="chat-top-meta">
+                  <p className="chat-top-title">protocolLM Assistant</p>
+                  <p className="chat-top-sub">Michigan food safety, photo + text tools</p>
                 </div>
-              )}
-
-              {activeTool === 'chat' && (
-                <>
-                  <header className="chat-topbar">
-                    <div className="chat-top-meta">
-                      <p className="chat-top-title">protocolLM workspace</p>
-                      <p className="chat-top-sub">Choose a tool or return to the launcher</p>
-                    </div>
-                    <nav className="chat-top-actions" aria-label="Tool actions">
+                <nav className="chat-top-actions" aria-label="Tool actions">
+                  <button
+                    type="button"
+                    className="chat-history-toggle"
+                    onClick={() => setShowHistory((v) => !v)}
+                    aria-pressed={showHistory}
+                  >
+                    History
+                  </button>
+                  {isAuthenticated && (
+                    <div className="chat-settings-wrap" ref={settingsRef}>
                       <button
                         type="button"
-                        className="chat-history-toggle"
-                        onClick={() => setShowHistory((v) => !v)}
-                        aria-pressed={showHistory}
+                        className="plm-icon-btn chat-settings-btn"
+                        onClick={() => setShowSettingsMenu((v) => !v)}
+                        aria-expanded={showSettingsMenu}
+                        aria-label="Settings"
                       >
-                        History
+                        <Icons.Gear />
                       </button>
-                      <button type="button" className="launcher-return" onClick={handleCloseWorkspace}>
-                        Launcher
-                      </button>
-                    </nav>
-                  </header>
 
-                  <div className={`chat-shell ${showHistory ? 'history-open' : ''}`}>
-                    <aside className={`chat-history-panel ${showHistory ? 'open' : ''}`} aria-label="Chat history">
-                      <LiquidGlass variant="side" className="chat-history-surface">
-                        <div className="chat-history-shell">
-                          <div className="chat-history-head">
-                            <div>
-                              <p className="chat-history-title">Chat history</p>
-                              <p className="chat-history-sub">Revisit previous scans and questions</p>
-                            </div>
-                            <button type="button" className="chat-history-new" onClick={handleNewChat}>
-                              New chat
-                            </button>
-                          </div>
+                      {showSettingsMenu && (
+                        <div className="chat-settings-menu" role="menu" aria-label="Settings menu">
+                          <button
+                            type="button"
+                            className="chat-settings-item"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              if (hasActiveSubscription) {
+                                handleManageBilling()
+                              } else {
+                                setShowPricingModal(true)
+                              }
+                            }}
+                          >
+                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
+                          </button>
 
-                          <div className="chat-history-list">
-                            {chatHistory.length ? (
-                              chatHistory.map((item) => (
-                                <button
-                                  key={item.id}
-                                  type="button"
-                                  className="chat-history-item"
-                                  onClick={() => handleLoadHistory(item)}
-                                >
-                                  <div>
-                                    <p className="chat-history-item-title">{item.title || 'Chat'}</p>
-                                    <p className="chat-history-item-preview">
-                                      {item.preview || 'Resume this thread with your food safety tools.'}
-                                    </p>
-                                  </div>
-                                  <span className="chat-history-pill">
-                                    {new Date(item.updatedAt || Date.now()).toLocaleDateString()}
-                                  </span>
-                                </button>
-                              ))
-                            ) : (
-                              <p className="chat-history-empty">Your photo and text conversations will appear here.</p>
-                            )}
-                          </div>
+                          <div className="chat-settings-sep" />
+
+                          <button
+                            type="button"
+                            className="chat-settings-item"
+                            role="menuitem"
+                            onClick={() => {
+                              setShowSettingsMenu(false)
+                              handleSignOut()
+                            }}
+                          >
+                            Log out
+                          </button>
                         </div>
-                      </LiquidGlass>
-                    </aside>
+                      )}
+                    </div>
+                  )}
+                </nav>
+              </header>
 
-                    <div className="chat-main-area">
-                      <div
-                        ref={scrollRef}
-                        onScroll={handleScroll}
-                        className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
-                      >
-                        {messages.length === 0 ? (
-                          <div className="chat-empty-state">
-                            <p className="chat-empty-text">Upload a photo to analyze for food safety violations.</p>
-                          </div>
+              <div className={`chat-shell ${showHistory ? 'history-open' : ''}`}>
+                <aside className={`chat-history-panel ${showHistory ? 'open' : ''}`} aria-label="Chat history">
+                  <LiquidGlass variant="side" className="chat-history-surface">
+                    <div className="chat-history-shell">
+                      <div className="chat-history-head">
+                        <div>
+                          <p className="chat-history-title">Chat history</p>
+                          <p className="chat-history-sub">Revisit previous scans and questions</p>
+                        </div>
+                        <button type="button" className="chat-history-new" onClick={handleNewChat}>
+                          New chat
+                        </button>
+                      </div>
+
+                      <div className="chat-history-list">
+                        {chatHistory.length ? (
+                          chatHistory.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="chat-history-item"
+                              onClick={() => handleLoadHistory(item)}
+                            >
+                              <div>
+                                <p className="chat-history-item-title">{item.title || 'Chat'}</p>
+                                <p className="chat-history-item-preview">
+                                  {item.preview || 'Resume this thread with your food safety tools.'}
+                                </p>
+                              </div>
+                              <span className="chat-history-pill">
+                                {new Date(item.updatedAt || Date.now()).toLocaleDateString()}
+                              </span>
+                            </button>
+                          ))
                         ) : (
-                          <LiquidGlass variant="main" className="chat-history-card">
-                            <div className="chat-history">
-                              {messages.map((msg, idx) => {
-                                const isAssistant = msg.role === 'assistant'
-                                const isPendingAssistant =
-                                  isAssistant && msg.content === '' && isSending && idx === messages.length - 1
-                                const hasImage = Boolean(msg.image) || msg.hasImage
-
-                                return (
-                                  <div
-                                    key={idx}
-                                    className={`chat-message ${isAssistant ? 'chat-message-assistant' : 'chat-message-user'}`}
-                                  >
-                                    {hasImage && (
-                                      <div className={`chat-upload-preview ${msg.image ? '' : 'placeholder'}`}>
-                                        {msg.image ? (
-                                          <img src={msg.image} alt="Uploaded" />
-                                        ) : (
-                                          <div className="chat-upload-ghost">
-                                            <Icons.Camera />
-                                          </div>
-                                        )}
-                                        <span className="chat-upload-label">
-                                          {msg.image ? 'Photo ready for analysis' : 'Photo used in prior scan'}
-                                        </span>
-                                      </div>
-                                    )}
-
-                                    {isAssistant ? (
-                                      <div className="chat-analysis-result">
-                                        <div className="chat-analysis-header-row">
-                                          <div>
-                                            <p className="chat-analysis-title">Analysis Results</p>
-                                            <p className="chat-analysis-subtitle">Structured findings for your upload</p>
-                                          </div>
-                                          <span className="chat-analysis-pill">Report</span>
-                                        </div>
-
-                                        <div className="chat-analysis-body">
-                                          {isPendingAssistant ? (
-                                            <div className="chat-thinking">Analyzing…</div>
-                                          ) : (
-                                            formatAssistantContent(msg.content, msg.citations)
-                                          )}
-                                        </div>
-
-                                        {!isPendingAssistant && (
-                                          <div className="chat-analysis-actions">
-                                            <button
-                                              type="button"
-                                              className="chat-action-btn"
-                                              onClick={() => handleDownloadReport(msg)}
-                                            >
-                                              Download report
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="chat-action-btn secondary"
-                                              onClick={() => handleShareResults(msg)}
-                                            >
-                                              Share results
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      (msg.content || msg.image || msg.hasImage) && (
-                                        <div className="chat-user-note">
-                                          <div className="chat-user-note-title">Notes for this scan</div>
-                                          <p className="chat-user-note-text">
-                                            {msg.content
-                                              ? msg.content
-                                              : msg.hasImage
-                                                ? 'Image uploaded for inspection.'
-                                                : 'Image uploaded for inspection.'}
-                                          </p>
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </LiquidGlass>
+                          <p className="chat-history-empty">Your photo and text conversations will appear here.</p>
                         )}
                       </div>
                     </div>
-                  </div>
+                  </LiquidGlass>
+                </aside>
 
-                  <div className="chat-input-area">
-                    <div className="chat-input-inner">
-                      <LiquidGlass variant="main" className="chat-dock">
-                        <div className="chat-dock-head">
-                          <div>
-                            <p className="chat-dock-title">Tools</p>
-                            <p className="chat-dock-sub">Image analysis &amp; regulation questions</p>
-                          </div>
-                        </div>
+                <div className="chat-main-area">
+                  <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className={`chat-messages ${messages.length === 0 ? 'empty' : ''}`}
+                  >
+                    {messages.length === 0 ? (
+                      <div className="chat-empty-state">
+                        <p className="chat-empty-text">Upload a photo to analyze for food safety violations.</p>
+                      </div>
+                    ) : (
+                      <LiquidGlass variant="main" className="chat-history-card">
+                        <div className="chat-history">
+                          {messages.map((msg, idx) => {
+                            const isAssistant = msg.role === 'assistant'
+                            const isPendingAssistant = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
+                            const hasImage = Boolean(msg.image) || msg.hasImage
 
-                        <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-
-                        <div className="chat-mode-toggle" role="tablist" aria-label="Choose input mode">
-                          <button
-                            type="button"
-                            role="tab"
-                            aria-selected={inputMode === 'photo'}
-                            className={`chat-mode-btn ${inputMode === 'photo' ? 'active' : ''}`}
-                            onClick={() => setInputMode('photo')}
-                          >
-                            <span className="chat-mode-label">Photo</span>
-                            <span className="chat-mode-sub">Scan for violations</span>
-                          </button>
-                          <button
-                            type="button"
-                            role="tab"
-                            aria-selected={inputMode === 'chat'}
-                            className={`chat-mode-btn ${inputMode === 'chat' ? 'active' : ''}`}
-                            onClick={() => setInputMode('chat')}
-                          >
-                            <span className="chat-mode-label">Chat</span>
-                            <span className="chat-mode-sub">Ask about Michigan food safety regulations</span>
-                          </button>
-                        </div>
-
-                        {inputMode === 'photo' && selectedImage && (
-                          <LiquidGlass variant="side" className="chat-attachment">
-                            <span className="chat-attachment-icon">
-                              <Icons.Camera />
-                            </span>
-                            <span>Image attached</span>
-                            <button
-                              onClick={() => setSelectedImage(null)}
-                              className="chat-attachment-remove"
-                              aria-label="Remove"
-                              type="button"
-                            >
-                              <Icons.X />
-                            </button>
-                          </LiquidGlass>
-                        )}
-
-                        <div className={`chat-input-row ${inputMode === 'photo' ? 'photo-mode' : 'chat-mode'}`}>
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={handleImageChange}
-                            disabled={inputMode !== 'photo'}
-                          />
-
-                          {inputMode === 'photo' ? (
-                            <>
-                              <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="plm-icon-btn chat-camera-btn"
-                                aria-label="Upload photo"
-                                type="button"
-                                disabled={isSending}
+                            return (
+                              <div
+                                key={idx}
+                                className={`chat-message ${isAssistant ? 'chat-message-assistant' : 'chat-message-user'}`}
                               >
-                                <Icons.Camera />
-                              </button>
+                                {hasImage && (
+                                  <div className={`chat-upload-preview ${msg.image ? '' : 'placeholder'}`}>
+                                    {msg.image ? (
+                                      <img src={msg.image} alt="Uploaded" />
+                                    ) : (
+                                      <div className="chat-upload-ghost">
+                                        <Icons.Camera />
+                                      </div>
+                                    )}
+                                    <span className="chat-upload-label">
+                                      {msg.image ? 'Photo ready for analysis' : 'Photo used in prior scan'}
+                                    </span>
+                                  </div>
+                                )}
 
-                              <div className="chat-photo-hint">
-                                <div className="chat-photo-title">Scan a photo</div>
-                                <p className="chat-photo-sub">Upload a picture to analyze for food safety issues.</p>
+                                {isAssistant ? (
+                                  <div className="chat-analysis-result">
+                                    <div className="chat-analysis-header-row">
+                                      <div>
+                                        <p className="chat-analysis-title">Analysis Results</p>
+                                        <p className="chat-analysis-subtitle">Structured findings for your upload</p>
+                                      </div>
+                                      <span className="chat-analysis-pill">Report</span>
+                                    </div>
+
+                                    <div className="chat-analysis-body">
+                                      {isPendingAssistant ? (
+                                        <div className="chat-thinking">Analyzing…</div>
+                                      ) : (
+                                        formatAssistantContent(msg.content, msg.citations)
+                                      )}
+                                    </div>
+
+                                    {!isPendingAssistant && (
+                                      <div className="chat-analysis-actions">
+                                        <button
+                                          type="button"
+                                          className="chat-action-btn"
+                                          onClick={() => handleDownloadReport(msg)}
+                                        >
+                                          Download report
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="chat-action-btn secondary"
+                                          onClick={() => handleShareResults(msg)}
+                                        >
+                                          Share results
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  (msg.content || msg.image || msg.hasImage) && (
+                                    <div className="chat-user-note">
+                                      <div className="chat-user-note-title">Notes for this scan</div>
+                                      <p className="chat-user-note-text">
+                                        {msg.content
+                                          ? msg.content
+                                          : msg.hasImage
+                                            ? 'Image uploaded for inspection.'
+                                            : 'Image uploaded for inspection.'}
+                                      </p>
+                                    </div>
+                                  )
+                                )}
                               </div>
-
-                              <button
-                                type="button"
-                                onClick={handleSend}
-                                disabled={!selectedImage || isSending}
-                                className="chat-analyze-btn"
-                                aria-label="Analyze upload"
-                              >
-                                {isSending ? 'Analyzing…' : 'Analyze'}
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <div className="chat-input-wrapper">
-                                <textarea
-                                  ref={textAreaRef}
-                                  value={input}
-                                  onChange={(e) => {
-                                    setInput(e.target.value)
-                                    if (textAreaRef.current) {
-                                      textAreaRef.current.style.height = 'auto'
-                                      textAreaRef.current.style.height = `${Math.min(
-                                        textAreaRef.current.scrollHeight,
-                                        160
-                                      )}px`
-                                    }
-                                  }}
-                                  placeholder="Ask about Michigan food safety regulations..."
-                                  rows={1}
-                                  className="chat-textarea"
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                      e.preventDefault()
-                                      handleSend(e)
-                                    }
-                                  }}
-                                />
-                              </div>
-
-                              <button
-                                type="button"
-                                onClick={handleSend}
-                                disabled={!safeTrim(input) || isSending}
-                                className="chat-analyze-btn chat-send-btn"
-                                aria-label="Send message"
-                              >
-                                {isSending ? 'Sending…' : <Icons.Send />}
-                              </button>
-                            </>
-                          )}
+                            )
+                          })}
                         </div>
-
-                        <p className="chat-disclaimer">
-                          Upload a photo for instant analysis or switch to chat to ask about Michigan food safety
-                          regulations. Verify critical decisions with official regulations.
-                        </p>
                       </LiquidGlass>
-                      <FooterLinks />
-                    </div>
+                    )}
                   </div>
-                </>
-              )}
+                </div>
+              </div>
+
+              <div className="chat-input-area">
+                <div className="chat-input-inner">
+                  <LiquidGlass variant="main" className="chat-dock">
+                    <div className="chat-dock-head">
+                      <div>
+                        <p className="chat-dock-title">Tools</p>
+                        <p className="chat-dock-sub">Image analysis &amp; regulation questions</p>
+                      </div>
+                    </div>
+
+                    <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+
+                    <div className="chat-mode-toggle" role="tablist" aria-label="Choose input mode">
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={inputMode === 'photo'}
+                        className={`chat-mode-btn ${inputMode === 'photo' ? 'active' : ''}`}
+                        onClick={() => setInputMode('photo')}
+                      >
+                        <span className="chat-mode-label">Photo</span>
+                        <span className="chat-mode-sub">Scan for violations</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={inputMode === 'chat'}
+                        className={`chat-mode-btn ${inputMode === 'chat' ? 'active' : ''}`}
+                        onClick={() => setInputMode('chat')}
+                      >
+                        <span className="chat-mode-label">Chat</span>
+                        <span className="chat-mode-sub">Ask about Michigan food safety regulations</span>
+                      </button>
+                    </div>
+
+                    {inputMode === 'photo' && selectedImage && (
+                      <LiquidGlass variant="side" className="chat-attachment">
+                        <span className="chat-attachment-icon">
+                          <Icons.Camera />
+                        </span>
+                        <span>Image attached</span>
+                        <button
+                          onClick={() => setSelectedImage(null)}
+                          className="chat-attachment-remove"
+                          aria-label="Remove"
+                          type="button"
+                        >
+                          <Icons.X />
+                        </button>
+                      </LiquidGlass>
+                    )}
+
+                    <div className={`chat-input-row ${inputMode === 'photo' ? 'photo-mode' : 'chat-mode'}`}>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleImageChange}
+                        disabled={inputMode !== 'photo'}
+                      />
+
+                      {inputMode === 'photo' ? (
+                        <>
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="plm-icon-btn chat-camera-btn"
+                            aria-label="Upload photo"
+                            type="button"
+                            disabled={isSending}
+                          >
+                            <Icons.Camera />
+                          </button>
+
+                          <div className="chat-photo-hint">
+                            <div className="chat-photo-title">Scan a photo</div>
+                            <p className="chat-photo-sub">Upload a picture to analyze for food safety issues.</p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={!selectedImage || isSending}
+                            className="chat-analyze-btn"
+                            aria-label="Analyze upload"
+                          >
+                            {isSending ? 'Analyzing…' : 'Analyze'}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="chat-input-wrapper">
+                            <textarea
+                              ref={textAreaRef}
+                              value={input}
+                              onChange={(e) => {
+                                setInput(e.target.value)
+                                if (textAreaRef.current) {
+                                  textAreaRef.current.style.height = 'auto'
+                                  textAreaRef.current.style.height = `${Math.min(
+                                    textAreaRef.current.scrollHeight,
+                                    160
+                                  )}px`
+                                }
+                              }}
+                              placeholder="Ask about Michigan food safety regulations..."
+                              rows={1}
+                              className="chat-textarea"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault()
+                                  handleSend(e)
+                                }
+                              }}
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={!safeTrim(input) || isSending}
+                            className="chat-analyze-btn chat-send-btn"
+                            aria-label="Send message"
+                          >
+                            {isSending ? 'Sending…' : <Icons.Send />}
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    <p className="chat-disclaimer">
+                      Upload a photo for instant analysis or switch to chat to ask about Michigan food safety
+                      regulations. Verify critical decisions with official regulations.
+                    </p>
+                  </LiquidGlass>
+                  <FooterLinks />
+                </div>
+              </div>
             </div>
           </main>
         ) : (
