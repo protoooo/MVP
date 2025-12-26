@@ -4728,11 +4728,12 @@ export default function Page() {
         /* ✅ Panel body */
         .panel-body {
           flex: 1;
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-rows: 1fr auto;
           gap: 12px;
           overflow: hidden;
           min-height: 0;
+          align-items: stretch;
         }
 
         /* ✅ Messages area */
