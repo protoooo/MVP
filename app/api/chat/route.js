@@ -49,7 +49,11 @@ const FEATURE_RERANK = (process.env.FEATURE_RERANK ?? 'false').toLowerCase() ===
 const FEATURE_CHEMICAL_SCAN = (process.env.FEATURE_CHEMICAL_SCAN ?? 'true').toLowerCase() === 'true'
 
 const COHERE_TEXT_MODEL = process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024'
+const COHERE_TEXT_FALLBACK_MODEL = process.env.COHERE_TEXT_FALLBACK_MODEL || 'command-r'
+
 const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-32b'
+const COHERE_VISION_FALLBACK_MODEL = process.env.COHERE_VISION_FALLBACK_MODEL || COHERE_VISION_MODEL
+
 const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v4.0-pro'
 const MODEL_LABEL = 'Cohere'
 
@@ -63,8 +67,8 @@ const CHEM_SCAN_TIMEOUT_MS = 7500
 const TOPK_PER_QUERY = 16
 const RERANK_TOP_N = 5
 const MIN_RERANK_DOCS = 3
-const MAX_CONTEXT_DOCS = 7
-const PINNED_POLICY_TARGET = 3
+const MAX_CONTEXT_DOCS = 6
+const PINNED_POLICY_TARGET = 2
 
 // Tool output constraints
 const MAX_BULLETS_DEFAULT = 3
@@ -81,8 +85,10 @@ const SPAN_V_CLOSE = '</span>'
 const SPAN_F_OPEN = '<span class="plm-f">'
 const SPAN_F_CLOSE = '</span>'
 
-// Guardrails
-const MAX_PREAMBLE_CHARS = 14000
+// Preamble caps (this is what usually triggers 422 if you go too big)
+const PREAMBLE_MAX_FULL = 9000
+const PREAMBLE_MAX_LITE = 5200
+const PREAMBLE_MAX_MIN = 2600
 
 // ============================================================================
 // SMALL UTILS
@@ -132,28 +138,21 @@ function stripDocLikeRefs(text) {
 function sanitizeOutput(text) {
   let out = safeText(text || '')
 
-  // Remove code fences / headings
   out = out.replace(/```/g, '')
   out = out.replace(/^\s*#{1,6}\s+/gm, '')
 
-  // Remove emojis (best effort)
   try {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
     out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
-  // Remove confidence language
   out = out.replace(/\b(high|medium|low)\s*confidence\b/gi, '')
   out = out.replace(/\bconfidence\s*[:\-]?\s*(high|medium|low)\b/gi, '')
   out = out.replace(/\bconfidence\b\s*[:\-]?\s*/gi, '')
 
-  // Strip doc/source-like refs (no citations in UX)
   out = stripDocLikeRefs(out)
-
-  // Collapse excessive newlines
   out = out.replace(/\n{3,}/g, '\n\n')
 
-  // Hard cap
   const HARD_LIMIT = 1800
   if (out.length > HARD_LIMIT) out = out.slice(0, HARD_LIMIT).trimEnd()
 
@@ -178,7 +177,6 @@ function extractMediaTypeFromHeader(header) {
 }
 
 function normalizeToDataUrl(input) {
-  // 1) Already a data URL
   if (typeof input === 'string' && input.trim().startsWith('data:image/')) {
     const trimmed = input.trim()
     const parts = trimmed.split(',')
@@ -194,12 +192,10 @@ function normalizeToDataUrl(input) {
     return { mediaType, base64Data, dataUrl: `data:${mediaType};base64,${base64Data}` }
   }
 
-  // 2) Object with dataUrl
   if (input && typeof input === 'object' && typeof input.dataUrl === 'string') {
     return normalizeToDataUrl(input.dataUrl)
   }
 
-  // 3) Object format: { data, media_type } or { data, mediaType }
   if (input && typeof input === 'object') {
     const data = input.data
     const mediaType = input.media_type || input.mediaType
@@ -210,7 +206,6 @@ function normalizeToDataUrl(input) {
     }
   }
 
-  // 4) Raw base64 (assume jpeg)
   if (typeof input === 'string' && isBase64Like(input)) {
     const base64Data = input.trim().replace(/\s+/g, '')
     const mediaType = 'image/jpeg'
@@ -243,17 +238,15 @@ function validateImageData(imageInput) {
 }
 
 // ============================================================================
-// COHERE v2/chat (REST) — FIXED PAYLOAD (preamble + structured content parts)
+// COHERE v2/chat (REST) — with better error parsing + retries
 // ============================================================================
 
 function cohereResponseToText(resp) {
   const msg = resp?.message
   const content = msg?.content
 
-  // Some responses may be a string
   if (typeof content === 'string' && content.trim()) return content
 
-  // v2 usually returns array of parts
   if (Array.isArray(content)) {
     for (const c of content) {
       if (typeof c?.text === 'string' && c.text.trim()) return c.text
@@ -265,17 +258,38 @@ function cohereResponseToText(resp) {
   return ''
 }
 
+function parseCohereError(raw) {
+  const txt = String(raw || '').trim()
+  if (!txt) return { summary: 'Empty error body', parsed: null }
+  try {
+    const j = JSON.parse(txt)
+    const msg =
+      j?.message ||
+      j?.error?.message ||
+      j?.error ||
+      j?.details?.message ||
+      (Array.isArray(j?.errors) ? j.errors.map((e) => e?.message || e).join(' | ') : '')
+    const detail =
+      j?.details ||
+      j?.error?.details ||
+      j?.validation_errors ||
+      j?.errors ||
+      j
+
+    const summary = safeLine(String(msg || 'Cohere error')).slice(0, 500)
+    return { summary, parsed: detail }
+  } catch {
+    return { summary: safeLine(txt).slice(0, 700), parsed: null }
+  }
+}
+
 async function callCohereChatV2Rest({ model, preamble, messages }) {
   const apiKey = process.env.COHERE_API_KEY
   if (!apiKey) throw new Error('COHERE_API_KEY not configured')
 
-  const payload = {
-    model,
-    messages,
-  }
-
+  const payload = { model, messages }
   const p = safeText(preamble)
-  if (p) payload.preamble = clampText(p, MAX_PREAMBLE_CHARS)
+  if (p) payload.preamble = p
 
   const res = await fetch('https://api.cohere.com/v2/chat', {
     method: 'POST',
@@ -289,10 +303,11 @@ async function callCohereChatV2Rest({ model, preamble, messages }) {
 
   const raw = await res.text().catch(() => '')
   if (!res.ok) {
-    const snippet = safeLine(raw).slice(0, 900)
-    const err = new Error(`COHERE_V2_CHAT_${res.status}: ${snippet || 'Request failed'}`)
+    const parsed = parseCohereError(raw)
+    const err = new Error(`COHERE_V2_CHAT_${res.status}: ${parsed.summary}`)
     err.status = res.status
     err.body = raw
+    err.parsed = parsed.parsed
     throw err
   }
 
@@ -334,26 +349,62 @@ function buildV2Messages({ chatHistory, userMessage, imageDataUrls }) {
   return messages
 }
 
-async function callCohereChat({ model, preamble, userMessage, chatHistory, imageDataUrls }) {
+async function callCohereChatOnce({ model, preamble, userMessage, chatHistory, imageDataUrls }) {
   const messages = buildV2Messages({ chatHistory, userMessage, imageDataUrls })
-
-  // If Cohere rejects something transiently, we still want the raw body in logs.
-  const resp = await callCohereChatV2Rest({
-    model,
-    preamble,
-    messages,
-  })
-
+  const resp = await callCohereChatV2Rest({ model, preamble, messages })
   return { raw: resp, text: cohereResponseToText(resp) }
 }
 
+// Retry on 400/422 with smaller preamble; optional model fallback on repeated failure.
+async function callCohereChatWithRetries({
+  primaryModel,
+  fallbackModel,
+  preambles,
+  userMessage,
+  chatHistory,
+  imageDataUrls,
+}) {
+  let lastErr = null
+
+  const tryModels = [primaryModel]
+  if (fallbackModel && fallbackModel !== primaryModel) tryModels.push(fallbackModel)
+
+  for (const model of tryModels) {
+    for (const pre of preambles) {
+      try {
+        return await callCohereChatOnce({
+          model,
+          preamble: pre.text,
+          userMessage,
+          chatHistory,
+          imageDataUrls,
+        })
+      } catch (e) {
+        lastErr = e
+        const status = Number(e?.status || 0)
+        const retryable = status === 400 || status === 422
+        logger.warn('Cohere v2/chat attempt failed', {
+          status,
+          model,
+          preambleTier: pre.name,
+          error: e?.message,
+          parsed: e?.parsed ? String(JSON.stringify(e.parsed)).slice(0, 500) : undefined,
+        })
+        if (!retryable) throw e
+        // otherwise continue to next smaller preamble (or next model)
+      }
+    }
+  }
+
+  throw lastErr || new Error('COHERE_V2_CHAT_FAILED')
+}
+
 // ============================================================================
-// DOCUMENT RETRIEVAL (your vector store via lib/searchDocs)
+// DOCUMENT RETRIEVAL
 // ============================================================================
 
 const PINNED_POLICY_QUERIES = [
   'Michigan food code priority item priority foundation core definitions correction time frames',
-  'Michigan food safety imminent health hazard closure reopen approval',
   'Michigan food code chemical storage poisonous toxic materials stored to prevent contamination equipment utensils',
 ]
 
@@ -361,7 +412,7 @@ function dedupeByText(items) {
   const seen = new Set()
   const out = []
   for (const it of items || []) {
-    const key = (it?.text || '').slice(0, 1500)
+    const key = (it?.text || '').slice(0, 1200)
     if (!key) continue
     if (seen.has(key)) continue
     seen.add(key)
@@ -370,7 +421,7 @@ function dedupeByText(items) {
   return out
 }
 
-function docTextForExcerpt(doc, maxChars = 900) {
+function docTextForExcerpt(doc, maxChars = 520) {
   const t = safeText(doc?.text || '')
   if (!t) return ''
   if (t.length <= maxChars) return t
@@ -392,26 +443,7 @@ async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
 }
 
 function extractSearchKeywords(text) {
-  const topics = [
-    'chemical',
-    'chemicals',
-    'cleaner',
-    'spray bottle',
-    'windex',
-    'bleach',
-    'degreaser',
-    'sanitizer',
-    'sink',
-    'dish',
-    'utensil',
-    'cross contamination',
-    'hand washing',
-    'temperature',
-    'cooling',
-    'reheating',
-    'date marking',
-    'pest',
-  ]
+  const topics = ['chemical', 'cleaner', 'spray bottle', 'windex', 'bleach', 'degreaser', 'sanitizer', 'sink', 'dish']
   const lower = (text || '').toLowerCase()
   return topics.filter((t) => lower.includes(t))
 }
@@ -432,22 +464,17 @@ function normalizeHeader(line0) {
   return null
 }
 
-// Take any messy model output and force:
-// • <span class="plm-v">VIOLATION (Type | Category): ...</span> <span class="plm-f">FIX: ...</span>
 function forceToolBullets(rawText, { maxBullets }) {
   let out = sanitizeOutput(rawText || '')
   if (!out) return HDR_INFO + '\n• Can you re-send a clearer photo (closer + better lighting)?'
 
-  // Remove common “essay openers”
   out = out.replace(/^Based on the (image|photo) provided[,:\s]*/i, '')
   out = out.replace(/^Here are (some|several) (violations|issues)[,:\s]*/i, '')
 
-  // Detect header or infer
   const lines0 = out.split('\n').map((l) => l.trim()).filter(Boolean)
   const header = normalizeHeader(lines0[0])
   let bodyLines = header ? lines0.slice(1) : lines0
 
-  // If no header, infer from content
   if (!header) {
     const u = out.toUpperCase()
     const inferred =
@@ -468,14 +495,11 @@ function buildFinalToolOutput(header, bodyText, maxBullets) {
 
   if (h === HDR_NO) return HDR_NO
 
-  // Split into candidate bullets from common formats:
-  // - numbered list, dash bullets, or paragraphs
   let chunks = String(bodyText || '')
     .split(/\n+/)
     .map((x) => x.trim())
     .filter(Boolean)
 
-  // If it’s one mega paragraph, try splitting on "1." "2." etc
   if (chunks.length <= 1) {
     chunks = String(bodyText || '')
       .split(/\s(?=\d+\.)/g)
@@ -483,13 +507,9 @@ function buildFinalToolOutput(header, bodyText, maxBullets) {
       .filter(Boolean)
   }
 
-  // Normalize into simple bullet strings
   const bullets = []
   for (const c of chunks) {
-    let t = c
-      .replace(/^\d+\.\s*/g, '')
-      .replace(/^[-•]\s*/g, '')
-      .trim()
+    let t = c.replace(/^\d+\.\s*/g, '').replace(/^[-•]\s*/g, '').trim()
     if (!t) continue
     bullets.push(t)
   }
@@ -504,20 +524,16 @@ function buildFinalToolOutput(header, bodyText, maxBullets) {
     return [HDR_INFO, ...qs.map((q) => `• ${safeLine(q)}`)].join('\n')
   }
 
-  // VIOLATIONS: force each bullet into “Type | Category” + “What we see” + FIX.
   const cleaned = bullets.slice(0, maxB).map((b) => coerceViolationBullet(b))
   if (!cleaned.length) return HDR_INFO + '\n• Can you re-send the photo a bit closer?'
 
   return [HDR_VIOL, ...cleaned.map((b) => `• ${b}`)].join('\n')
 }
 
-// Heuristic coercion: if model rambles, we extract a short “what we see” + one FIX.
-// If it already contains FIX:, keep it but shorten.
 function coerceViolationBullet(text) {
   const t = safeLine(text || '')
   if (!t) return null
 
-  // If model includes “FIX:” keep only first sentence after it
   let issuePart = t
   let fixPart = ''
 
@@ -527,23 +543,13 @@ function coerceViolationBullet(text) {
     fixPart = safeLine(t.slice(fixIdx + 4))
   }
 
-  // Trim issue to first sentence-ish
   issuePart = issuePart.split(/(?<=[.!?])\s+/)[0] || issuePart
   issuePart = issuePart.replace(/^Violation[:\-]\s*/i, '').trim()
 
-  // If no fix, try to derive from common patterns
   if (!fixPart) {
     const lower = t.toLowerCase()
-    if (
-      lower.includes('windex') ||
-      lower.includes('bleach') ||
-      lower.includes('degreaser') ||
-      lower.includes('cleaner') ||
-      lower.includes('spray bottle')
-    ) {
+    if (lower.includes('windex') || lower.includes('bleach') || lower.includes('degreaser') || lower.includes('cleaner') || lower.includes('spray bottle')) {
       fixPart = 'Remove chemicals from dish/food-contact areas and store in a labeled chemical area away from food and clean utensils.'
-    } else if (lower.includes('dirty dishes') || lower.includes('soiled') || lower.includes('food residue')) {
-      fixPart = 'Wash, rinse, sanitize, and air-dry; keep dirty and clean items separated.'
     } else {
       fixPart = 'Correct the issue immediately and keep the area clean, organized, and protected from contamination.'
     }
@@ -551,7 +557,6 @@ function coerceViolationBullet(text) {
     fixPart = fixPart.split(/(?<=[.!?])\s+/)[0] || fixPart
   }
 
-  // Try to infer a simple Type + Category
   const { type, category } = inferTypeAndCategory(t)
 
   const label = `${SPAN_V_OPEN}VIOLATION (${type} | ${category}): ${issuePart}.${SPAN_V_CLOSE}`
@@ -563,22 +568,12 @@ function coerceViolationBullet(text) {
 function inferTypeAndCategory(text) {
   const lower = String(text || '').toLowerCase()
   let type = 'Sanitation'
-  if (
-    lower.includes('chemical') ||
-    lower.includes('windex') ||
-    lower.includes('bleach') ||
-    lower.includes('cleaner') ||
-    lower.includes('spray bottle')
-  )
-    type = 'Chemical Handling'
+  if (lower.includes('chemical') || lower.includes('windex') || lower.includes('bleach') || lower.includes('cleaner') || lower.includes('spray bottle')) type = 'Chemical Handling'
   else if (lower.includes('handwash') || lower.includes('hand wash')) type = 'Handwashing'
-  else if (lower.includes('temperature') || lower.includes('cool') || lower.includes('reheat') || lower.includes('hot hold') || lower.includes('cold hold'))
-    type = 'Time/Temperature'
-  else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') || lower.includes('ready-to-eat'))
-    type = 'Cross-Contamination'
-  else if (lower.includes('pest') || lower.includes('flies') || lower.includes('droppings')) type = 'Pest Control'
+  else if (lower.includes('temperature') || lower.includes('cool') || lower.includes('reheat') || lower.includes('hot hold') || lower.includes('cold hold')) type = 'Time/Temperature'
+  else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') || lower.includes('ready-to-eat')) type = 'Cross-Contamination'
+  else if (lower.includes('pest')) type = 'Pest Control'
 
-  // Conservative category: never overstate; use Core unless clearly riskier
   let category = 'Core'
   if (type === 'Chemical Handling' || type === 'Time/Temperature' || type === 'Cross-Contamination') category = 'Priority'
   return { type, category }
@@ -590,7 +585,7 @@ function hasChemicalBullet(toolText) {
 }
 
 // ============================================================================
-// CHEMICAL SCAN (VISION) — deterministic JSON -> rule -> violation bullet
+// CHEMICAL SCAN (VISION) — deterministic JSON
 // ============================================================================
 
 function extractFirstJsonObject(text) {
@@ -640,7 +635,8 @@ function buildChemicalViolationBullet(foundItem) {
 async function runChemicalScan({ imageDataUrls }) {
   if (!FEATURE_CHEMICAL_SCAN) return { found: false }
 
-  const preamble = `You are a visual checker. Return ONLY valid JSON. No extra text.
+  const preamble = clampText(
+    `You are a visual checker. Return ONLY valid JSON. No extra text.
 
 Schema:
 {
@@ -653,15 +649,18 @@ Schema:
 Rules:
 - "found" true if you can SEE any cleaner/chemical container (Windex/bleach/degreaser/sanitizer spray bottle/etc.)
 - "location" must describe where it is (sink basin with dishes / drainboard near plates / counter by prep / etc.)
-- If you cannot tell, set found=false.`
+- If you cannot tell, set found=false.`,
+    PREAMBLE_MAX_MIN
+  )
 
   const userMessage = 'Scan the photo for any visible cleaning chemicals / spray bottles and where they are placed.'
 
   try {
     const resp = await withTimeout(
-      callCohereChat({
-        model: COHERE_VISION_MODEL,
-        preamble,
+      callCohereChatWithRetries({
+        primaryModel: COHERE_VISION_MODEL,
+        fallbackModel: COHERE_VISION_FALLBACK_MODEL,
+        preambles: [{ name: 'MIN', text: preamble }],
         userMessage,
         chatHistory: [],
         imageDataUrls,
@@ -676,10 +675,7 @@ Rules:
 
     const items = Array.isArray(json.items) ? json.items : []
     const normalized = items
-      .map((it) => ({
-        name: safeLine(it?.name || ''),
-        location: safeLine(it?.location || ''),
-      }))
+      .map((it) => ({ name: safeLine(it?.name || ''), location: safeLine(it?.location || '') }))
       .filter((it) => it.name || it.location)
 
     for (const it of normalized) {
@@ -697,7 +693,7 @@ Rules:
 }
 
 // ============================================================================
-// PROMPTS (FORCES CONCISE TOOL OUTPUT)
+// PROMPTS
 // ============================================================================
 
 function buildSystemPrompt({ fullAudit }) {
@@ -727,14 +723,7 @@ Keep it short and useful for an entry-level employee and a GM.`
 
 function wantsFullAudit(text) {
   const t = safeLine(text).toLowerCase()
-  return (
-    t.includes('full audit') ||
-    t.includes('full-audit') ||
-    t.includes('everything you see') ||
-    t.includes('check everything') ||
-    t.includes('complete audit') ||
-    t.includes('detailed scan')
-  )
+  return t.includes('full audit') || t.includes('everything you see') || t.includes('check everything') || t.includes('complete audit') || t.includes('detailed scan')
 }
 
 function wantsFineInfo(text) {
@@ -751,18 +740,6 @@ function getUserFriendlyErrorMessage(errorMessage) {
   if (errorMessage === 'RETRIEVAL_TIMEOUT') return 'Document search timed out. Please try again.'
   if (errorMessage === 'ANSWER_TIMEOUT') return 'Response timed out. Try again in 10 seconds.'
   return 'Unable to process request. Please try again.'
-}
-
-function safeErrorDetails(err) {
-  try {
-    if (!err) return 'Unknown error'
-    if (typeof err === 'string') return safeLine(err).slice(0, 400) || 'Unknown error'
-    const msg = safeLine(err?.message || '')
-    const body = err?.body ? safeLine(String(err.body)).slice(0, 600) : ''
-    return safeLine([msg, body].filter(Boolean).join(' | ')).slice(0, 900) || 'Unknown error'
-  } catch {
-    return 'Unknown error'
-  }
 }
 
 async function safeLogUsage(payload) {
@@ -857,7 +834,7 @@ export async function POST(request) {
     const sessionInfo = getSessionInfoFromRequest(request)
 
     try {
-      const cookieStore = cookies()
+      const cookieStore = await cookies()
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -951,13 +928,13 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // RETRIEVE DOCS (grounding via excerptBlock inserted into preamble)
+    // RETRIEVE DOCS (grounding excerpts in preamble)
     // ========================================================================
 
     const searchDocumentsFn = await getSearchDocuments()
-
     const userKeywords = extractSearchKeywords(effectivePrompt)
-    const searchQuery = [effectivePrompt, userKeywords.slice(0, 8).join(' '), 'Michigan food code']
+
+    const searchQuery = [effectivePrompt, userKeywords.slice(0, 6).join(' '), 'Michigan food code']
       .filter(Boolean)
       .join(' ')
       .slice(0, 900)
@@ -1010,12 +987,15 @@ export async function POST(request) {
       MAX_CONTEXT_DOCS
     )
 
-    const excerptBlock =
+    const excerptBlockFull =
       contextDocs.length === 0
         ? ''
-        : contextDocs
-            .map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 900)}`)
-            .join('\n\n')
+        : contextDocs.map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 520)}`).join('\n\n')
+
+    const excerptBlockLite =
+      contextDocs.length === 0
+        ? ''
+        : contextDocs.slice(0, 3).map((doc) => `POLICY EXCERPT:\n${docTextForExcerpt(doc, 320)}`).join('\n\n')
 
     let memoryContext = ''
     try {
@@ -1023,7 +1003,7 @@ export async function POST(request) {
     } catch {}
 
     // ========================================================================
-    // BUILD CHAT HISTORY (for continuity)
+    // BUILD CHAT HISTORY
     // ========================================================================
 
     const cohereChatHistory = []
@@ -1049,36 +1029,44 @@ export async function POST(request) {
     }
 
     // ========================================================================
-    // 2) MAIN COMPLIANCE CALL
+    // 2) MAIN COMPLIANCE CALL (with preamble-tier retries)
     // ========================================================================
 
     const maxBullets = fullAudit ? MAX_BULLETS_FULL_AUDIT : MAX_BULLETS_DEFAULT
+    const base = buildSystemPrompt({ fullAudit })
+    const reminder = 'Reminder: Do not mention any internal documents or sources.'
 
-    const preamble = clampText(
-      [
-        buildSystemPrompt({ fullAudit }),
-        memoryContext ? `\n\nMEMORY CONTEXT:\n${memoryContext}` : '',
-        excerptBlock ? `\n\n${excerptBlock}` : '',
-        '\n\nReminder: Do not mention any internal documents or sources.',
-      ]
-        .filter(Boolean)
-        .join(''),
-      MAX_PREAMBLE_CHARS
-    )
+    const preambles = [
+      {
+        name: 'FULL',
+        text: clampText([base, memoryContext ? `MEMORY CONTEXT:\n${memoryContext}` : '', excerptBlockFull, reminder].filter(Boolean).join('\n\n'), PREAMBLE_MAX_FULL),
+      },
+      {
+        name: 'LITE',
+        text: clampText([base, excerptBlockLite, reminder].filter(Boolean).join('\n\n'), PREAMBLE_MAX_LITE),
+      },
+      {
+        name: 'MIN',
+        text: clampText([base, reminder].filter(Boolean).join('\n\n'), PREAMBLE_MAX_MIN),
+      },
+    ]
 
-    const usedModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
-    const mode = hasImage ? 'vision' : 'text'
+    const primaryModel = hasImage ? COHERE_VISION_MODEL : COHERE_TEXT_MODEL
+    const fallbackModel = hasImage ? COHERE_VISION_FALLBACK_MODEL : COHERE_TEXT_FALLBACK_MODEL
+    const usedMode = hasImage ? 'vision' : 'text'
 
     let modelText = ''
     let assistantMessage = HDR_INFO + '\n• Can you try again?'
     let billedUnits = {}
     let tokenUsage = {}
+    let usedModel = primaryModel
 
     try {
       const resp = await withTimeout(
-        callCohereChat({
-          model: usedModel,
-          preamble,
+        callCohereChatWithRetries({
+          primaryModel,
+          fallbackModel,
+          preambles,
           userMessage,
           chatHistory: cohereChatHistory,
           imageDataUrls: hasImage ? normalizedImageUrls : [],
@@ -1087,15 +1075,14 @@ export async function POST(request) {
         'ANSWER_TIMEOUT'
       )
 
+      usedModel = resp?.raw?.model || usedModel
       billedUnits = resp?.raw?.meta?.billed_units || resp?.raw?.billed_units || {}
       tokenUsage = resp?.raw?.meta?.tokens || resp?.raw?.tokens || {}
 
       modelText = resp?.text || ''
-
-      // Force tool output no matter what the model wrote:
       assistantMessage = forceToolBullets(modelText, { maxBullets })
     } catch (e) {
-      logger.error('Generation failed', { error: e?.message, detail: safeErrorDetails(e), hasImage, model: usedModel })
+      logger.error('Generation failed', { error: e?.message, status: e?.status, hasImage, model: primaryModel })
       const status = e?.message?.includes('TIMEOUT') ? 408 : 500
       return NextResponse.json(
         { error: getUserFriendlyErrorMessage(e?.message?.includes('TIMEOUT') ? 'ANSWER_TIMEOUT' : 'GENERATION_FAILED') },
@@ -1123,13 +1110,8 @@ export async function POST(request) {
         } else if ((assistantMessage || '').toUpperCase().startsWith(HDR_INFO)) {
           assistantMessage = [HDR_VIOL, `• ${chemBullet}`].join('\n')
         }
-      } else if (hasImage && chemScan?.found && !chemScan?.actionable) {
-        if ((assistantMessage || '').toUpperCase().startsWith(HDR_NO)) {
-          assistantMessage = [HDR_INFO, '• Is that a cleaner/spray bottle placed in or next to the sink/dish area?'].join('\n')
-        }
       }
 
-      // Re-force tool format to keep it tight
       assistantMessage = forceToolBullets(assistantMessage, { maxBullets })
     } catch (mergeErr) {
       logger.warn('Chemical merge failed (non-blocking)', { error: mergeErr?.message })
@@ -1145,7 +1127,7 @@ export async function POST(request) {
         await updateMemory(userId, {
           userMessage: effectivePrompt,
           assistantResponse: assistantMessage,
-          mode,
+          mode: usedMode,
           meta: { firstUseComplete: true },
           firstUseComplete: true,
         })
@@ -1162,7 +1144,6 @@ export async function POST(request) {
       hasImage,
       durationMs: Date.now() - startedAt,
       docsRetrieved: contextDocs.length,
-      pinnedPolicyDocs: pinnedPolicyDocs.length,
       fullAudit,
       includeFines,
       model: usedModel,
@@ -1176,7 +1157,7 @@ export async function POST(request) {
         userId,
         provider: 'cohere',
         model: usedModel,
-        mode,
+        mode: usedMode,
         inputTokens: tokenUsage.input_tokens ?? tokenUsage.prompt_tokens,
         outputTokens: tokenUsage.output_tokens ?? tokenUsage.completion_tokens,
         billedInputTokens: billedUnits.input_tokens,
@@ -1203,7 +1184,6 @@ export async function POST(request) {
           fullAudit,
           includeFines,
           docsRetrieved: contextDocs.length,
-          pinnedPolicyDocs: pinnedPolicyDocs.length,
           durationMs: Date.now() - startedAt,
           rerankUsed,
           chemicalScan: FEATURE_CHEMICAL_SCAN
