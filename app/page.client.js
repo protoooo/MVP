@@ -5287,7 +5287,7 @@ export default function Page() {
 
             {/* Header */}
             <header className="border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2.5">
+              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-1.5">
                 <div className="flex items-center gap-3">
                   <BrandLink variant="chat" />
                 </div>
@@ -5606,12 +5606,7 @@ export default function Page() {
                 )}
               </div>
 
-              {/* Session Info */}
-              {uploadSessionId && (
-                <div className="mt-4 rounded-md px-4 py-3 text-center text-xs" style={{ background: 'var(--clay)', color: 'var(--ink-40)' }}>
-                  Session ID: <span className="font-mono">{uploadSessionId}</span>
-                </div>
-              )}
+
             </section>
           </main>
       </div>
