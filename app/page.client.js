@@ -94,7 +94,7 @@ export default function UploadPage() {
       setFiles((prev) => {
         resetPreviews(prev)
         return selected.map((file) => ({
-          id: crypto.randomUUID(),
+          id: makeId(),
           file,
           previewUrl: file.type.startsWith('image') ? URL.createObjectURL(file) : '',
         }))
@@ -276,7 +276,8 @@ export default function UploadPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-slate-900">{item.file.name}</p>
                       <p className="text-xs text-slate-500">
-                        {(item.file.type || 'file').split('/')[0]} · {(item.file.size / 1024 ** 2).toFixed(1)} MB
+                        {(item.file.type || 'file').split('/')[0]} ·{' '}
+                        {item.file?.size ? (item.file.size / 1024 ** 2).toFixed(1) : '0.0'} MB
                       </p>
                     </div>
                   </div>
@@ -340,4 +341,8 @@ export default function UploadPage() {
       </div>
     </div>
   )
+}
+const makeId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  return `id-${Math.random().toString(16).slice(2)}`
 }
