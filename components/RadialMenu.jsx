@@ -22,8 +22,10 @@ export default function RadialMenu({
   onSettings,
   onChatHistory,
   className = '',
+  logoSrc,
 }) {
   const [wheelRadius, setWheelRadius] = useState(120)
+  const [expanded, setExpanded] = useState(true)
 
   const WHEEL_RADIUS_MOBILE = 110
   const WHEEL_RADIUS_DESKTOP = 140
@@ -44,11 +46,11 @@ export default function RadialMenu({
 
   const actions = useMemo(
     () => [
-      { key: 'chat', label: 'Chat', iconType: 'chat', color: '#3b82f6', onClick: onChat },
-      { key: 'image', label: 'Image Analysis', iconType: 'vision', color: '#22c55e', onClick: onImage },
-      { key: 'pdf', label: 'PDF Export', iconType: 'pdf', color: '#f97316', onClick: onPdfExport },
-      { key: 'history', label: 'History', iconType: 'history', color: '#0d9488', onClick: onChatHistory },
-      { key: 'settings', label: 'Settings', iconType: 'settings', color: '#6b7280', onClick: onSettings },
+      { key: 'chat', label: 'Chat', iconType: 'chat', color: '#3478eb', onClick: onChat },
+      { key: 'image', label: 'Image Analysis', iconType: 'vision', color: '#1e9c63', onClick: onImage },
+      { key: 'pdf', label: 'PDF Export', iconType: 'pdf', color: '#d96a1c', onClick: onPdfExport },
+      { key: 'history', label: 'History', iconType: 'history', color: '#0f766e', onClick: onChatHistory },
+      { key: 'settings', label: 'Settings', iconType: 'settings', color: '#4b5563', onClick: onSettings },
     ],
     [onChat, onChatHistory, onImage, onPdfExport, onSettings]
   )
@@ -67,35 +69,49 @@ export default function RadialMenu({
     <>
       <div className={`radial-menu-container ${className}`}>
         <div className="radial-wheel">
-          {actions.map((action, index) => {
-            const pos = getItemPosition(index, actions.length, wheelRadius)
+          <button
+            type="button"
+            className="radial-center-btn"
+            onClick={() => setExpanded((v) => !v)}
+            aria-label="ProtocolLM menu"
+          >
+            {logoSrc ? (
+              <img src={logoSrc?.src || logoSrc} alt="ProtocolLM" className="radial-center-logo" />
+            ) : (
+              <span className="radial-center-dot" />
+            )}
+          </button>
 
-            return (
-              <button
-                key={action.key}
-                type="button"
-                className="radial-item"
-                onClick={action.onClick}
-                style={{
-                  '--item-x': `${pos.x}px`,
-                  '--item-y': `${pos.y}px`,
-                  '--item-delay': `${index * 0.05}s`,
-                  '--icon-color': action.color,
-                }}
-                aria-label={action.label}
-              >
-                <span className="radial-icon" aria-hidden="true">
-                  <AgentIcon type={action.iconType} />
-                </span>
-              </button>
-            )
-          })}
+          {expanded &&
+            actions.map((action, index) => {
+              const pos = getItemPosition(index, actions.length, wheelRadius)
+
+              return (
+                <button
+                  key={action.key}
+                  type="button"
+                  className="radial-item"
+                  onClick={action.onClick}
+                  style={{
+                    '--item-x': `${pos.x}px`,
+                    '--item-y': `${pos.y}px`,
+                    '--item-delay': `${index * 0.05}s`,
+                    '--icon-color': action.color,
+                  }}
+                  aria-label={action.label}
+                >
+                  <span className="radial-icon" aria-hidden="true">
+                    <AgentIcon type={action.iconType} />
+                  </span>
+                </button>
+              )
+            })}
         </div>
       </div>
 
       <style jsx>{`
         .radial-menu-container {
-          --item-icon-size: 44px;
+          --item-icon-size: 36px;
           position: relative;
           display: flex;
           align-items: center;
@@ -116,6 +132,49 @@ export default function RadialMenu({
           transform: translate(-50%, -50%);
         }
 
+        .radial-center-btn {
+          --center-size: 86px;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: var(--center-size);
+          height: var(--center-size);
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          background: #f6f7f5;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .radial-center-btn:hover {
+          transform: translate(-50%, -50%) scale(1.03);
+          box-shadow: 0 12px 34px rgba(0, 0, 0, 0.1);
+          border-color: rgba(0, 0, 0, 0.12);
+        }
+
+        .radial-center-btn:active {
+          transform: translate(-50%, -50%) scale(0.98);
+        }
+
+        .radial-center-logo {
+          width: 52px;
+          height: 52px;
+          object-fit: contain;
+        }
+
+        .radial-center-dot {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #3478eb;
+          box-shadow: 0 0 0 6px rgba(52, 120, 235, 0.12);
+        }
+
         .radial-item {
           --item-size: 70px;
           position: absolute;
@@ -124,8 +183,9 @@ export default function RadialMenu({
           width: var(--item-size);
           height: var(--item-size);
           padding: 0;
-          border: none;
-          background: transparent;
+          border-radius: 18px;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          background: #fefefe;
           color: var(--icon-color);
           display: inline-flex;
           align-items: center;
@@ -136,7 +196,8 @@ export default function RadialMenu({
               calc(var(--item-y) - (var(--item-size) / 2))
             )
             scale(0.94);
-          transition: transform 0.2s ease, opacity 0.25s ease;
+          box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+          transition: transform 0.2s ease, opacity 0.25s ease, box-shadow 0.2s ease, border-color 0.2s ease;
           opacity: 0;
           animation: radial-item-pop 0.3s ease forwards;
           animation-delay: var(--item-delay);
@@ -148,6 +209,8 @@ export default function RadialMenu({
               calc(var(--item-y) - (var(--item-size) / 2))
             )
             scale(1.06);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+          border-color: rgba(0, 0, 0, 0.12);
         }
 
         .radial-item:active {
@@ -156,6 +219,7 @@ export default function RadialMenu({
               calc(var(--item-y) - (var(--item-size) / 2))
             )
             scale(0.96);
+          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
         }
 
         .radial-item:focus-visible {
@@ -212,7 +276,13 @@ export default function RadialMenu({
           }
 
           .radial-icon {
-            --item-icon-size: 40px;
+            --item-icon-size: 34px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .radial-center-btn {
+            --center-size: 74px;
           }
         }
 
