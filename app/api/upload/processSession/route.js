@@ -244,13 +244,13 @@ export async function POST(req) {
           session_id: sessionId,
           media_id: r.media_id,
           violation: r.violation,
-          violation_type: r.violation_type || r.type,
-          category: r.category,
-          severity: r.severity,
-          confidence: r.confidence,
-          citation: r.citation,
-          findings: r.findings,
-          citations: r.citations,
+          violation_type: r.violation_type || r.type || 'General',
+          category: r.category || 'Core',  // Always provide a default category
+          severity: r.severity || 'info',  // Always provide a default severity
+          confidence: r.confidence || 0,
+          citation: r.citation || null,
+          findings: r.findings || [],
+          citations: r.citations || [],
           error: r.error || null
         }
         if (!user.isAnonymous) {
@@ -264,6 +264,7 @@ export async function POST(req) {
         .insert(insertRows)
       if (insertError) {
         console.error('Failed to insert compliance results:', insertError.message)
+        console.error('Insert data sample:', JSON.stringify(insertRows[0], null, 2))
       }
     }
 
