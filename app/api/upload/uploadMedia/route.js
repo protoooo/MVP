@@ -64,14 +64,11 @@ export async function POST(req) {
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
     // Upload to Supabase Storage
-    // TEMP STORAGE DEBUG (remove after verification)
-    console.log('[TEMP STORAGE DEBUG] Uploading to bucket', {
-      supabaseUrl,
-      bucket: 'media',
-    })
-    await ensureBucketExists('media', { public: true }, supabase)
+    console.log('[DEBUG] Supabase project URL:', supabase.supabaseUrl)
+    console.log('[DEBUG] Bucket used for upload:', 'audit-videos')
+    await ensureBucketExists('audit-videos', { public: false }, supabase)
     const { error: uploadError } = await supabase.storage
-      .from('media')
+      .from('audit-videos')
       .upload(objectPath, buffer, { upsert: true, contentType })
     
     if (uploadError) throw uploadError
