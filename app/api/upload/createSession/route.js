@@ -42,9 +42,15 @@ export async function POST(req) {
     const { type = 'restaurant', area_tags = [] } = body
     const sessionId = uuidv4()
 
+    // Build session data - omit user_id for anonymous users
+    const sessionData = { id: sessionId, type, area_tags }
+    if (!user.isAnonymous) {
+      sessionData.user_id = user.id
+    }
+
     const { error } = await supabase
       .from('audit_sessions')
-      .insert([{ id: sessionId, user_id: user.id, type, area_tags }])
+      .insert([sessionData])
 
     if (error) throw error
 

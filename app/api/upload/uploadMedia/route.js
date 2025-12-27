@@ -65,17 +65,19 @@ export async function POST(req) {
     
     if (uploadError) throw uploadError
 
-    // Save media record to database
-    const { error } = await supabase.from('media').insert([
-      {
-        id: mediaId,
-        session_id: sessionId,
-        user_id: user.id,
-        url: objectPath,
-        type: contentType.startsWith('video') ? 'video' : 'image',
-        area,
-      },
-    ])
+    // Save media record to database - omit user_id for anonymous users
+    const mediaRecord = {
+      id: mediaId,
+      session_id: sessionId,
+      url: objectPath,
+      type: contentType.startsWith('video') ? 'video' : 'image',
+      area,
+    }
+    if (!user.isAnonymous) {
+      mediaRecord.user_id = user.id
+    }
+
+    const { error } = await supabase.from('media').insert([mediaRecord])
     if (error) throw error
 
     return NextResponse.json({

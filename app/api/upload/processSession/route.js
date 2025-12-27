@@ -118,11 +118,17 @@ export async function POST(req) {
     }
 
     // Get all media for this session
-    const { data: media, error: mediaError } = await supabase
+    // For anonymous users, only filter by session_id (no user_id to match)
+    let mediaQuery = supabase
       .from('media')
       .select('*')
       .eq('session_id', sessionId)
-      .eq('user_id', user.id)
+    
+    if (!user.isAnonymous) {
+      mediaQuery = mediaQuery.eq('user_id', user.id)
+    }
+    
+    const { data: media, error: mediaError } = await mediaQuery
     if (mediaError) throw mediaError
 
     const results = []
@@ -150,9 +156,17 @@ export async function POST(req) {
 
     // Save compliance results
     if (results.length) {
+      // For anonymous users, omit user_id from the insert
+      const insertRows = results.map((r) => {
+        const row = { id: uuidv4(), session_id: sessionId, ...r }
+        if (!user.isAnonymous) {
+          row.user_id = user.id
+        }
+        return row
+      })
       const { error: insertError } = await supabase
         .from('compliance_results')
-        .insert(results.map((r) => ({ id: uuidv4(), session_id: sessionId, user_id: user.id, ...r })))
+        .insert(insertRows)
       if (insertError) {
         console.error('Failed to insert compliance results:', insertError)
       }
@@ -171,17 +185,18 @@ export async function POST(req) {
     }
 
     // Save report to database
+    // For anonymous users, omit user_id from the upsert
+    const reportData = {
+      session_id: sessionId,
+      json_report: jsonReport,
+      pdf_path: pdfPath,
+    }
+    if (!user.isAnonymous) {
+      reportData.user_id = user.id
+    }
     const { data: reportRow, error: reportError } = await supabase
       .from('reports')
-      .upsert(
-        {
-          session_id: sessionId,
-          user_id: user.id,
-          json_report: jsonReport,
-          pdf_path: pdfPath,
-        },
-        { onConflict: 'session_id' }
-      )
+      .upsert(reportData, { onConflict: 'session_id' })
       .select()
       .single()
     if (reportError) {

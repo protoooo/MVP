@@ -44,12 +44,17 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing session_id' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    // For anonymous users, only filter by session_id
+    let reportQuery = supabase
       .from('reports')
       .select('*')
       .eq('session_id', sessionId)
-      .eq('user_id', user.id)
-      .single()
+    
+    if (!user.isAnonymous) {
+      reportQuery = reportQuery.eq('user_id', user.id)
+    }
+    
+    const { data, error } = await reportQuery.single()
     if (error) throw error
 
     // Get public URL for PDF
