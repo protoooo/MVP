@@ -153,10 +153,14 @@ function extractJsonFromResponse(text) {
       if (depth === 0) {
         try {
           const jsonStr = s.slice(start, i + 1)
-          return JSON.parse(jsonStr)
+          const parsed = JSON.parse(jsonStr)
+          console.log('[aiAnalysis] Successfully parsed JSON using strategy 1 (balanced braces)')
+          return parsed
         } catch (parseErr) {
           console.warn('[aiAnalysis] JSON parse error (strategy 1):', parseErr.message)
+          // Continue to next strategy
         }
+        break // Found balanced braces but failed to parse, try other strategies
       }
     }
   }
@@ -165,7 +169,9 @@ function extractJsonFromResponse(text) {
   const codeBlockMatch = s.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/)
   if (codeBlockMatch && codeBlockMatch[1]) {
     try {
-      return JSON.parse(codeBlockMatch[1])
+      const parsed = JSON.parse(codeBlockMatch[1])
+      console.log('[aiAnalysis] Successfully parsed JSON using strategy 2 (markdown code block)')
+      return parsed
     } catch (parseErr) {
       console.warn('[aiAnalysis] JSON parse error (strategy 2):', parseErr.message)
     }
@@ -174,7 +180,9 @@ function extractJsonFromResponse(text) {
   // Strategy 3: Try the entire string as JSON
   if (s.startsWith('{') && s.endsWith('}')) {
     try {
-      return JSON.parse(s)
+      const parsed = JSON.parse(s)
+      console.log('[aiAnalysis] Successfully parsed JSON using strategy 3 (whole string)')
+      return parsed
     } catch (parseErr) {
       console.warn('[aiAnalysis] JSON parse error (strategy 3):', parseErr.message)
     }
@@ -194,13 +202,47 @@ function extractJsonFromResponse(text) {
       const firstOpenBrace = cleaned.indexOf('{')
       if (firstOpenBrace !== -1 && firstOpenBrace < lastCloseBrace) {
         const jsonStr = cleaned.slice(firstOpenBrace, lastCloseBrace + 1)
-        return JSON.parse(jsonStr)
+        const parsed = JSON.parse(jsonStr)
+        console.log('[aiAnalysis] Successfully parsed JSON using strategy 4 (cleaned)')
+        return parsed
       }
     }
   } catch (parseErr) {
     console.warn('[aiAnalysis] JSON parse error (strategy 4):', parseErr.message)
   }
   
+  // Strategy 5: Try to extract the first complete object even if there's trailing text
+  if (start !== -1) {
+    try {
+      let depth = 0
+      let end = start
+      for (let i = start; i < s.length; i++) {
+        if (s[i] === '{') depth++
+        if (s[i] === '}') {
+          depth--
+          if (depth === 0) {
+            end = i + 1
+            break
+          }
+        }
+      }
+      if (end > start) {
+        const jsonStr = s.slice(start, end)
+        // Try to fix unescaped quotes and other common issues
+        let fixed = jsonStr
+          .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3') // Quote unquoted keys
+          .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+        
+        const parsed = JSON.parse(fixed)
+        console.log('[aiAnalysis] Successfully parsed JSON using strategy 5 (fixed format)')
+        return parsed
+      }
+    } catch (parseErr) {
+      console.warn('[aiAnalysis] JSON parse error (strategy 5):', parseErr.message)
+    }
+  }
+  
+  console.error('[aiAnalysis] All JSON extraction strategies failed')
   return null
 }
 
