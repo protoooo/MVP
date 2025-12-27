@@ -15,11 +15,11 @@ async function authorize(req) {
   const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
   if (!apiKey) return null
   
-  // Accept the anon key for authenticated users
+  // Accept the anon key for anonymous users - generate a valid UUID for them
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (apiKey === anonKey) {
-    // For anon key, we treat it as valid but return a placeholder user
-    return { id: 'anonymous' }
+    // For anon key, generate a valid UUID so database inserts don't fail
+    return { id: uuidv4(), isAnonymous: true }
   }
   
   const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
@@ -42,9 +42,15 @@ export async function POST(req) {
     const { type = 'restaurant', area_tags = [] } = body
     const sessionId = uuidv4()
 
+    // Build session data - omit user_id for anonymous users
+    const sessionData = { id: sessionId, type, area_tags }
+    if (!user.isAnonymous) {
+      sessionData.user_id = user.id
+    }
+
     const { error } = await supabase
       .from('audit_sessions')
-      .insert([{ id: sessionId, user_id: user.id, type, area_tags }])
+      .insert([sessionData])
 
     if (error) throw error
 
