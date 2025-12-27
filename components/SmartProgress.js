@@ -16,7 +16,7 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
   const config = useMemo(() => {
     // vision/upload mode needs more gradual progress to feel honest
     return mode === 'vision'
-      ? { baseCap: 92, finalCap: 97, k: 0.025 }
+      ? { baseCap: 92, finalCap: 98, k: 0.025 }
       : { baseCap: 90, finalCap: 96, k: 0.040 }
   }, [mode])
 

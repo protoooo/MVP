@@ -5287,7 +5287,7 @@ export default function Page() {
 
             {/* Header */}
             <header className="border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-1.5">
+              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-1">
                 <div className="flex items-center gap-3">
                   <BrandLink variant="chat" />
                 </div>
@@ -5332,7 +5332,7 @@ export default function Page() {
             <section className="mx-auto max-w-4xl px-6 py-6 sm:py-12">
               {/* Hero Title - more compact */}
               <div className="mb-6 sm:mb-10 text-center">
-                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
+                <h1 className="text-lg sm:text-3xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
                   Upload → Process → Download
                 </h1>
                 <p className="mt-1 sm:mt-2 text-sm sm:text-base" style={{ color: 'var(--ink-60)' }}>
@@ -5342,37 +5342,37 @@ export default function Page() {
 
               {/* Process Steps - compact on mobile, full on desktop */}
               <div className="mb-4 sm:mb-8 flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm">
-                <div className={`flex items-center gap-1 sm:gap-2 rounded-full px-2 sm:px-4 py-1 sm:py-2 font-medium ${!uploadFiles.length ? 'ring-2' : ''}`}
+                <div className={`flex items-center gap-1 sm:gap-2 rounded-lg px-2 sm:px-4 py-1 sm:py-2 font-medium ${!uploadFiles.length ? 'ring-2' : ''}`}
                   style={{ 
                     background: !uploadFiles.length ? 'var(--accent-bg)' : 'var(--clay)',
                     color: !uploadFiles.length ? 'var(--accent)' : 'var(--ink-60)',
                     ringColor: !uploadFiles.length ? 'var(--accent)' : 'transparent'
                   }}>
-                  <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold" 
+                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md text-[10px] sm:text-xs font-bold" 
                     style={{ background: !uploadFiles.length ? 'var(--accent)' : 'var(--border)', color: !uploadFiles.length ? '#fff' : 'var(--ink-60)' }}>1</span>
-                  <span className="hidden xs:inline">Upload</span>
+                  <span>Upload</span>
                 </div>
                 <div className="h-px w-3 sm:w-6" style={{ background: 'var(--border)' }} />
-                <div className={`flex items-center gap-1 sm:gap-2 rounded-full px-2 sm:px-4 py-1 sm:py-2 font-medium ${isSending ? 'ring-2' : ''}`}
+                <div className={`flex items-center gap-1 sm:gap-2 rounded-lg px-2 sm:px-4 py-1 sm:py-2 font-medium ${isSending ? 'ring-2' : ''}`}
                   style={{ 
                     background: isSending ? 'var(--accent-yellow-bg)' : 'var(--clay)',
                     color: isSending ? 'var(--accent-yellow)' : 'var(--ink-60)',
                     ringColor: isSending ? 'var(--accent-yellow)' : 'transparent'
                   }}>
-                  <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold"
+                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md text-[10px] sm:text-xs font-bold"
                     style={{ background: isSending ? 'var(--accent-yellow)' : 'var(--border)', color: isSending ? '#fff' : 'var(--ink-60)' }}>2</span>
-                  <span className="hidden xs:inline">Process</span>
+                  <span>Process</span>
                 </div>
                 <div className="h-px w-3 sm:w-6" style={{ background: 'var(--border)' }} />
-                <div className={`flex items-center gap-1 sm:gap-2 rounded-full px-2 sm:px-4 py-1 sm:py-2 font-medium ${reportData ? 'ring-2' : ''}`}
+                <div className={`flex items-center gap-1 sm:gap-2 rounded-lg px-2 sm:px-4 py-1 sm:py-2 font-medium ${reportData ? 'ring-2' : ''}`}
                   style={{ 
                     background: reportData ? 'var(--accent-green-bg)' : 'var(--clay)',
                     color: reportData ? 'var(--accent-green)' : 'var(--ink-60)',
                     ringColor: reportData ? 'var(--accent-green)' : 'transparent'
                   }}>
-                  <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold"
+                  <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md text-[10px] sm:text-xs font-bold"
                     style={{ background: reportData ? 'var(--accent-green)' : 'var(--border)', color: reportData ? '#fff' : 'var(--ink-60)' }}>3</span>
-                  <span className="hidden xs:inline">Download</span>
+                  <span>Download</span>
                 </div>
               </div>
 
@@ -5472,7 +5472,9 @@ export default function Page() {
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{file.name}</p>
+                            <p className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>
+                              {file.name.length > 15 ? `${file.name.substring(0, 10)}...${file.name.substring(file.name.lastIndexOf('.'))}` : file.name}
+                            </p>
                             <p className="text-xs" style={{ color: 'var(--ink-40)' }}>
                               {(file.size / (1024 * 1024)).toFixed(1)} MB
                             </p>
@@ -5498,8 +5500,8 @@ export default function Page() {
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
+                  {(uploadStatus || (uploadingCount > 0 && uploadFiles.length && isSending)) && (
+                    <div className="mb-3 flex items-center justify-center gap-3">
                       {uploadStatus && (
                         <span className="text-sm font-medium" style={{ color: isSending ? 'var(--accent-yellow)' : 'var(--ink-60)' }}>
                           {uploadStatus}
@@ -5511,7 +5513,9 @@ export default function Page() {
                         </span>
                       ) : null}
                     </div>
-                    
+                  )}
+                  
+                  <div className="flex justify-center">
                     <button
                       type="button"
                       onClick={handleUploadAndProcess}
@@ -5544,7 +5548,7 @@ export default function Page() {
                         <p className="mt-1 text-sm" style={{ color: 'var(--ink-60)' }}>
                           Your compliance report has been generated and is ready for download.
                         </p>
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <div className="mt-4">
                           <button
                             type="button"
                             onClick={handleUnifiedReportDownload}
@@ -5553,17 +5557,6 @@ export default function Page() {
                           >
                             Download Report
                           </button>
-                          {reportData.pdf_url && (
-                            <a
-                              href={reportData.pdf_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sm font-medium underline"
-                              style={{ color: 'var(--accent-green)' }}
-                            >
-                              Open PDF
-                            </a>
-                          )}
                         </div>
                       </div>
                     </div>
