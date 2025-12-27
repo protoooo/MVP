@@ -450,10 +450,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Pricing">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <LiquidGlass
-          variant="main"
-          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style pricing-modal ${plusJakarta.className}`}
-        >
+        <div className={`modal-card pricing-modal-flat ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -566,7 +563,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
               .
             </p>
           </div>
-        </LiquidGlass>
+        </div>
       </div>
     </div>
   )
@@ -1366,14 +1363,27 @@ export default function Page() {
 
   const handleSignOut = async () => {
     try {
+      // Close any open panels and menus immediately
+      setActivePanel(null)
       setShowSettingsMenu(false)
+      
+      // Clear policy acceptance
       if (session?.user?.id) clearPolicyAcceptance(session.user.id)
+      
+      // Sign out from Supabase
       await supabase.auth.signOut()
+      
+      // Clear local state
+      setMessages([])
+      setCurrentChatId(null)
+      setSession(null)
+      setHasActiveSubscription(false)
+      setSubscription(null)
+      
     } catch (e) {
       console.error('Sign out error', e)
     } finally {
-      setMessages([])
-      setCurrentChatId(null)
+      // Force redirect to home
       router.replace('/')
     }
   }
@@ -1898,6 +1908,20 @@ export default function Page() {
           position: relative;
           border-radius: 16px;
           padding: 22px;
+          background: #f9f9f7;
+          border: 1px solid rgba(0, 0, 0, 0.07);
+          box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
+          color: var(--ink);
+          overflow: hidden;
+        }
+
+        /* ✅ Pricing modal - matches auth-surface (NO liquid glass) */
+        .pricing-modal-flat {
+          width: 100%;
+          max-width: 520px;
+          position: relative;
+          border-radius: 16px;
+          padding: 28px;
           background: #f9f9f7;
           border: 1px solid rgba(0, 0, 0, 0.07);
           box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
@@ -5503,10 +5527,7 @@ export default function Page() {
                         <button
                           type="button"
                           className="panel-settings-item danger"
-                          onClick={() => {
-                            setActivePanel(null)
-                            handleSignOut()
-                          }}
+                          onClick={handleSignOut}
                         >
                           <span className="panel-settings-label">Log Out</span>
                           <Icons.ArrowRight />
