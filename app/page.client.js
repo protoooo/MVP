@@ -1462,7 +1462,8 @@ export default function Page() {
 
     try {
       const sessionRes = await callBackendFunction('createSession', {
-        body: { type: 'restaurant', area_tags: ['general'] },
+        // Use 'media' type - compatible with database check constraint
+        body: { type: 'media', area_tags: ['general'] },
       })
       const sessionId = sessionRes?.session_id
       if (!sessionId) throw new Error('Session could not be created.')
@@ -2544,12 +2545,13 @@ export default function Page() {
 
         /* App */
         .app-container {
-          height: 100vh;
-          height: 100dvh;
+          min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           flex-direction: column;
           background: transparent;
-          overflow: hidden; /* ✅ critical: prevents page scroll behind the chat */
+          overflow-y: auto; /* ✅ Allow scrolling in landscape mode to reach the upload button */
+          overflow-x: hidden;
         }
 
         /* Brand */
@@ -5329,23 +5331,23 @@ export default function Page() {
               </div>
             </header>
 
-            {/* Main Content */}
-            <section className="mx-auto max-w-4xl px-6 py-12">
-              {/* Hero Title */}
-              <div className="mb-10 text-center">
-                <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
+            {/* Main Content - reduced padding for better landscape accessibility */}
+            <section className="mx-auto max-w-4xl px-6 py-6 sm:py-12">
+              {/* Hero Title - more compact */}
+              <div className="mb-6 sm:mb-10 text-center">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
                   Upload → Process → Download
                 </h1>
-                <p className="mt-2 text-base" style={{ color: 'var(--ink-60)' }}>
+                <p className="mt-1 sm:mt-2 text-sm sm:text-base" style={{ color: 'var(--ink-60)' }}>
                   Drop your inspection photos. Get a comprehensive compliance report.
                 </p>
-                <p className="mt-1 text-sm" style={{ color: 'var(--ink-40)' }}>
+                <p className="mt-1 text-xs sm:text-sm" style={{ color: 'var(--ink-40)' }}>
                   Serving Washtenaw, Oakland & Wayne County • Michigan
                 </p>
               </div>
 
-              {/* Process Steps */}
-              <div className="mb-8 flex items-center justify-center gap-3">
+              {/* Process Steps - hidden on landscape to save space */}
+              <div className="mb-4 sm:mb-8 hidden sm:flex items-center justify-center gap-3">
                 <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${!uploadFiles.length ? 'ring-2' : ''}`}
                   style={{ 
                     background: !uploadFiles.length ? 'var(--accent-bg)' : 'var(--clay)',
@@ -5382,7 +5384,7 @@ export default function Page() {
 
               {/* Upload Card */}
               <div className="rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' }}>
-                {/* Drop Zone */}
+                {/* Drop Zone - more compact on mobile/landscape */}
                 <div
                   role="button"
                   tabIndex={0}
@@ -5405,20 +5407,20 @@ export default function Page() {
                   }}
                   onDrop={handleDropFiles}
                   onDragOver={(e) => e.preventDefault()}
-                  className="flex cursor-pointer flex-col items-center justify-center rounded-t-xl px-8 py-12 text-center transition-all"
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-t-xl px-6 py-6 sm:px-8 sm:py-12 text-center transition-all"
                   style={{ 
                     background: 'var(--clay)',
                     borderBottom: '1px solid var(--border)'
                   }}
                 >
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl"
+                  <div className="mb-3 sm:mb-4 flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-xl"
                     style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>
                     <Icons.ArrowUp />
                   </div>
-                  <p className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>
+                  <p className="text-base sm:text-lg font-semibold" style={{ color: 'var(--ink)' }}>
                     Drop files here to upload
                   </p>
-                  <p className="mt-1 text-sm" style={{ color: 'var(--ink-60)' }}>
+                  <p className="mt-1 text-xs sm:text-sm" style={{ color: 'var(--ink-60)' }}>
                     Images or videos · up to 50 files
                   </p>
                   <button
@@ -5431,7 +5433,7 @@ export default function Page() {
                       }
                       fileInputRef.current?.click()
                     }}
-                    className="mt-4 rounded-md px-5 py-2 text-sm font-medium text-white transition"
+                    className="mt-3 sm:mt-4 rounded-md px-5 py-2 text-sm font-medium text-white transition"
                     style={{ background: 'var(--accent)' }}
                   >
                     Select files

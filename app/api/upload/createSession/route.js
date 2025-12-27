@@ -39,7 +39,8 @@ export async function POST(req) {
     }
 
     const body = await req.json()
-    const { type = 'restaurant', area_tags = [] } = body
+    // Use 'media' as the default type - compatible with database check constraint
+    const { type = 'media', area_tags = [] } = body
     const sessionId = uuidv4()
 
     // Build session data - omit user_id for anonymous users
