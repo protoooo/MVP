@@ -2550,7 +2550,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           background: transparent;
-          overflow-y: auto; /* ✅ Allow scrolling in landscape mode to reach the upload button */
+          overflow-y: auto; /* Allow page scrolling for all viewport sizes including landscape */
           overflow-x: hidden;
         }
 
@@ -5346,39 +5346,39 @@ export default function Page() {
                 </p>
               </div>
 
-              {/* Process Steps - hidden on landscape to save space */}
-              <div className="mb-4 sm:mb-8 hidden sm:flex items-center justify-center gap-3">
-                <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${!uploadFiles.length ? 'ring-2' : ''}`}
+              {/* Process Steps - compact on mobile, full on desktop */}
+              <div className="mb-4 sm:mb-8 flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                <div className={`flex items-center gap-1 sm:gap-2 rounded-full px-2 sm:px-4 py-1 sm:py-2 font-medium ${!uploadFiles.length ? 'ring-2' : ''}`}
                   style={{ 
                     background: !uploadFiles.length ? 'var(--accent-bg)' : 'var(--clay)',
                     color: !uploadFiles.length ? 'var(--accent)' : 'var(--ink-60)',
                     ringColor: !uploadFiles.length ? 'var(--accent)' : 'transparent'
                   }}>
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold" 
+                  <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold" 
                     style={{ background: !uploadFiles.length ? 'var(--accent)' : 'var(--border)', color: !uploadFiles.length ? '#fff' : 'var(--ink-60)' }}>1</span>
-                  Upload
+                  <span className="hidden xs:inline">Upload</span>
                 </div>
-                <div className="h-px w-6" style={{ background: 'var(--border)' }} />
-                <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${isSending ? 'ring-2' : ''}`}
+                <div className="h-px w-3 sm:w-6" style={{ background: 'var(--border)' }} />
+                <div className={`flex items-center gap-1 sm:gap-2 rounded-full px-2 sm:px-4 py-1 sm:py-2 font-medium ${isSending ? 'ring-2' : ''}`}
                   style={{ 
                     background: isSending ? 'var(--accent-yellow-bg)' : 'var(--clay)',
                     color: isSending ? 'var(--accent-yellow)' : 'var(--ink-60)',
                     ringColor: isSending ? 'var(--accent-yellow)' : 'transparent'
                   }}>
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
+                  <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold"
                     style={{ background: isSending ? 'var(--accent-yellow)' : 'var(--border)', color: isSending ? '#fff' : 'var(--ink-60)' }}>2</span>
-                  Process
+                  <span className="hidden xs:inline">Process</span>
                 </div>
-                <div className="h-px w-6" style={{ background: 'var(--border)' }} />
-                <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${reportData ? 'ring-2' : ''}`}
+                <div className="h-px w-3 sm:w-6" style={{ background: 'var(--border)' }} />
+                <div className={`flex items-center gap-1 sm:gap-2 rounded-full px-2 sm:px-4 py-1 sm:py-2 font-medium ${reportData ? 'ring-2' : ''}`}
                   style={{ 
                     background: reportData ? 'var(--accent-green-bg)' : 'var(--clay)',
                     color: reportData ? 'var(--accent-green)' : 'var(--ink-60)',
                     ringColor: reportData ? 'var(--accent-green)' : 'transparent'
                   }}>
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
+                  <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-xs font-bold"
                     style={{ background: reportData ? 'var(--accent-green)' : 'var(--border)', color: reportData ? '#fff' : 'var(--ink-60)' }}>3</span>
-                  Download
+                  <span className="hidden xs:inline">Download</span>
                 </div>
               </div>
 
