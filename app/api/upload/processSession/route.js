@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { ensureBucketExists, getPublicUrlSafe } from '../storageHelpers'
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -12,25 +13,6 @@ const supabase =
   supabaseUrl && supabaseServiceKey
     ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
     : null
-
-const ensuredBuckets = new Set()
-
-async function ensureBucketExists(bucket) {
-  if (ensuredBuckets.has(bucket)) return
-  const { data, error } = await supabase.storage.getBucket(bucket)
-  if (!error && data) {
-    ensuredBuckets.add(bucket)
-    return
-  }
-  if (error && error.status !== 404 && error.statusCode !== '404' && !/not found/i.test(error.message || '')) {
-    throw error
-  }
-  const { error: createError } = await supabase.storage.createBucket(bucket, { public: true })
-  if (createError && !/already exists/i.test(createError.message || '')) {
-    throw createError
-  }
-  ensuredBuckets.add(bucket)
-}
 
 async function authorize(req) {
   const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
@@ -125,8 +107,8 @@ export async function POST(req) {
   }
 
   try {
-    await ensureBucketExists('media')
-    await ensureBucketExists('reports')
+    await ensureBucketExists(supabase, 'media')
+    await ensureBucketExists(supabase, 'reports')
 
     const user = await authorize(req)
     if (!user) {
@@ -226,8 +208,7 @@ export async function POST(req) {
     }
 
     // Get public URL for PDF
-    const { data: urlData } = supabase.storage.from('reports').getPublicUrl(pdfPath)
-    const publicPdfUrl = urlData?.publicUrl
+    const publicPdfUrl = await getPublicUrlSafe(supabase, 'reports', pdfPath)
 
     // Cleanup temp files
     tempPaths.forEach((p) => {

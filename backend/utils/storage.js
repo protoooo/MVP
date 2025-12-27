@@ -8,6 +8,8 @@ export const supabase =
     ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } })
     : null
 
+// Cache bucket checks for the current runtime to avoid repeated network lookups.
+// If bucket visibility changes externally, restart the runtime to refresh.
 const ensuredBuckets = new Set()
 
 async function ensureBucketExists(bucket, options = { public: true }) {
@@ -45,9 +47,8 @@ export async function uploadFile(bucket, filePath, fileBody, contentType) {
 export async function getPublicUrl(bucket, filePath) {
   if (!supabase) throw new Error('Supabase client is not configured')
   await ensureBucketExists(bucket, { public: true })
-  const { data, error } = supabase.storage.from(bucket).getPublicUrl(filePath)
-  if (error) throw error
-  return data.publicUrl
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath)
+  return data?.publicUrl || null
 }
 
 export async function downloadFile(bucket, filePath) {
