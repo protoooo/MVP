@@ -87,12 +87,12 @@ export default function RadialMenu({
               const pos = getItemPosition(index, actions.length, wheelRadius)
 
               return (
-                <button
-                  key={action.key}
-                  type="button"
-                  className="radial-item"
-                  onClick={action.onClick}
-                  style={{
+                 <button
+                   key={action.key}
+                   type="button"
+                   className={`radial-item radial-item--${action.key}`}
+                   onClick={action.onClick}
+                   style={{
                     '--item-x': `${pos.x}px`,
                     '--item-y': `${pos.y}px`,
                     '--item-delay': `${index * 0.05}s`,
@@ -110,9 +110,9 @@ export default function RadialMenu({
       </div>
 
       <style jsx>{`
-        .radial-menu-container {
-          --item-icon-size: 36px;
-          position: relative;
+         .radial-menu-container {
+           --item-icon-size: 38px;
+           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -132,9 +132,9 @@ export default function RadialMenu({
           transform: translate(-50%, -50%);
         }
 
-        .radial-center-btn {
-          --center-size: 86px;
-          position: absolute;
+         .radial-center-btn {
+           --center-size: 120px;
+           position: absolute;
           top: 50%;
           left: 50%;
           width: var(--center-size);
@@ -148,24 +148,26 @@ export default function RadialMenu({
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-        }
+           transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+           touch-action: manipulation;
+         }
 
         .radial-center-btn:hover {
-          transform: translate(-50%, -50%) scale(1.03);
+           transform: translate(-50%, -50%) scale(1.05);
           box-shadow: 0 12px 34px rgba(0, 0, 0, 0.1);
           border-color: rgba(0, 0, 0, 0.12);
         }
 
         .radial-center-btn:active {
-          transform: translate(-50%, -50%) scale(0.98);
-        }
+           transform: translate(-50%, -50%) scale(0.92);
+           box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+         }
 
-        .radial-center-logo {
-          width: 52px;
-          height: 52px;
-          object-fit: contain;
-        }
+         .radial-center-logo {
+           width: 96px;
+           height: 96px;
+           object-fit: contain;
+         }
 
         .radial-center-dot {
           width: 14px;
@@ -175,9 +177,9 @@ export default function RadialMenu({
           box-shadow: 0 0 0 6px rgba(52, 120, 235, 0.12);
         }
 
-        .radial-item {
-          --item-size: 70px;
-          position: absolute;
+         .radial-item {
+           --item-size: 70px;
+           position: absolute;
           top: 0;
           left: 0;
           width: var(--item-size);
@@ -191,47 +193,51 @@ export default function RadialMenu({
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transform: translate(
-              calc(var(--item-x) - (var(--item-size) / 2)),
-              calc(var(--item-y) - (var(--item-size) / 2))
-            )
+           transform-origin: center;
+           transform: translate(
+               calc(var(--item-x) - (var(--item-size) / 2)),
+               calc(var(--item-y) - (var(--item-size) / 2))
+             )
             scale(0.94);
           box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
           transition: transform 0.2s ease, opacity 0.25s ease, box-shadow 0.2s ease, border-color 0.2s ease;
           opacity: 0;
           animation: radial-item-pop 0.3s ease forwards;
-          animation-delay: var(--item-delay);
-        }
+           animation-delay: var(--item-delay);
+           touch-action: manipulation;
+         }
 
-        .radial-item:hover {
+         .radial-item:hover {
           transform: translate(
               calc(var(--item-x) - (var(--item-size) / 2)),
               calc(var(--item-y) - (var(--item-size) / 2))
             )
-            scale(1.06);
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-          border-color: rgba(0, 0, 0, 0.12);
-        }
+             scale(1.07);
+           box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+           border-color: rgba(0, 0, 0, 0.12);
+         }
 
-        .radial-item:active {
-          transform: translate(
-              calc(var(--item-x) - (var(--item-size) / 2)),
-              calc(var(--item-y) - (var(--item-size) / 2))
-            )
-            scale(0.96);
-          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
-        }
+         .radial-item:active {
+           transform: translate(
+               calc(var(--item-x) - (var(--item-size) / 2)),
+               calc(var(--item-y) - (var(--item-size) / 2))
+             )
+             scale(0.9);
+           box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+         }
 
         .radial-item:focus-visible {
           outline: 2px solid currentColor;
           outline-offset: 10px;
         }
 
-        .radial-icon {
-          width: var(--item-icon-size);
-          height: var(--item-icon-size);
-          display: inline-flex;
-        }
+         .radial-icon {
+           width: var(--item-icon-size);
+           height: var(--item-icon-size);
+           display: inline-flex;
+           align-items: center;
+           justify-content: center;
+         }
 
         .radial-icon :global(.agent-icon) {
           display: inline-flex;
@@ -280,9 +286,17 @@ export default function RadialMenu({
           }
         }
 
+        .radial-item--pdf {
+          --item-size: 74px;
+        }
+
+        .radial-item--pdf .radial-icon {
+          --item-icon-size: 40px;
+        }
+
         @media (max-width: 480px) {
           .radial-center-btn {
-            --center-size: 74px;
+            --center-size: 100px;
           }
         }
 

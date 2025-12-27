@@ -4536,10 +4536,9 @@ export default function Page() {
           justify-content: center;
           padding: 12px;
           z-index: 100;
-          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 35%),
-            rgba(8, 13, 26, 0.25);
-          backdrop-filter: blur(8px) saturate(120%);
-          -webkit-backdrop-filter: blur(8px) saturate(120%);
+          background: rgba(26, 26, 26, 0.08);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
           animation: panel-fade-in 0.2s ease;
         }
 
@@ -4588,7 +4587,12 @@ export default function Page() {
           max-height: calc(100vh - 32px);
           max-height: calc(100dvh - 32px);
           overflow: hidden;
-          padding: 20px 20px 14px !important;
+          padding: 20px 20px 10px !important;
+          background: var(--surface);
+          border: 1px solid var(--border-strong);
+          box-shadow: var(--shadow-md);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
         }
 
         .panel-card.text-panel,
@@ -4607,7 +4611,7 @@ export default function Page() {
           .panel-card {
             max-height: calc(100vh - 40px);
             max-height: calc(100dvh - 40px);
-            padding: 24px 24px 16px !important;
+            padding: 24px 24px 12px !important;
           }
 
           .panel-card.text-panel,
@@ -4668,7 +4672,7 @@ export default function Page() {
         /* ✅ Panel header */
         .panel-header {
           padding: 0 0 16px 0;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+          border-bottom: 1px solid var(--border-strong);
           margin-bottom: 16px;
         }
 
@@ -4776,7 +4780,7 @@ export default function Page() {
         /* ✅ Input area */
         .panel-input-area {
           flex-shrink: 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.12);
+          border-top: 1px solid var(--border);
           padding-top: 12px;
           margin-top: auto;
         }
@@ -4791,13 +4795,13 @@ export default function Page() {
           flex: 1;
           display: flex;
           align-items: center;
-          background: rgba(255, 255, 255, 0.5);
-          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: var(--surface);
+          border: 1px solid var(--border-strong);
           border-radius: 14px;
           padding: 4px;
-          box-shadow: 0 8px 24px rgba(5, 7, 13, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
+          box-shadow: var(--shadow-sm);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
           transition: all 0.15s ease;
         }
 
@@ -4834,14 +4838,14 @@ export default function Page() {
           width: 48px;
           height: 48px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          background: linear-gradient(180deg, rgba(95, 168, 255, 0.95), rgba(95, 168, 255, 0.8));
+          border: 1px solid var(--border-strong);
+          background: var(--accent);
           color: #fff;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 8px 20px rgba(95, 168, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          box-shadow: var(--shadow-md);
           transition: all 0.15s ease;
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
@@ -4855,8 +4859,8 @@ export default function Page() {
 
         .panel-send-btn:active:not(:disabled),
         .panel-camera-btn:active:not(:disabled) {
-          transform: scale(0.95);
-          background: linear-gradient(180deg, rgba(95, 168, 255, 1), rgba(95, 168, 255, 0.9));
+          transform: scale(0.9);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
         }
 
         .panel-send-btn:disabled,
@@ -4866,19 +4870,19 @@ export default function Page() {
         }
 
         .panel-camera-btn {
-          background: rgba(255, 255, 255, 0.25);
-          border-color: rgba(255, 255, 255, 0.3);
+          background: var(--clay);
+          border-color: var(--border-strong);
           color: rgba(15, 23, 42, 0.85);
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+          box-shadow: var(--shadow-sm);
         }
 
         .panel-camera-btn:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.35);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+          background: #e8e8e6;
+          box-shadow: var(--shadow-md);
         }
 
         .panel-camera-btn:active:not(:disabled) {
-          background: rgba(255, 255, 255, 0.45);
+          background: #e0e0de;
         }
 
         @media (min-width: 768px) {
