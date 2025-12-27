@@ -905,7 +905,7 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = hasPaidAccess ? 'console' : 'locked'
+    document.documentElement.dataset.view = hasPaidAccess ? 'chat' : 'landing'
     const splineContainer = document.getElementById('plm-spline-bg')
     if (splineContainer) {
       splineContainer.style.display = hasPaidAccess ? 'block' : 'none'
@@ -5336,6 +5336,7 @@ export default function Page() {
                 </div>
               </div>
 
+              {/* Solid cards replace prior glass effects for the compliance-focused shell */}
               <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
                 <div className="rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-100">
                   <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -5507,7 +5508,7 @@ export default function Page() {
                     </div>
 
                     {!isLocked && reportData && (
-                      <div className="rounded-xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 px-4 py-4 shadow-inner shadow-slate-100">
+                      <div className="rounded-xl border border-slate-100 bg-white px-4 py-4 shadow-inner shadow-slate-100">
                         <p className="text-xs uppercase tracking-wide text-slate-500">Report</p>
                         <p className="mb-3 text-sm text-slate-700">
                           JSON + PDF are ready. Download the combined report to keep both artifacts together.
