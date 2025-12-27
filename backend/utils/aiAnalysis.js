@@ -8,15 +8,33 @@ import path from 'path'
 import { CohereClient } from 'cohere-ai'
 import { createClient } from '@supabase/supabase-js'
 
-// Initialize Cohere client
+// Configuration constants
 const COHERE_API_KEY = process.env.COHERE_API_KEY
 const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-32b'
 const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
 const COHERE_RERANK_MODEL = process.env.COHERE_RERANK_MODEL || 'rerank-v4.0-pro'
+const COHERE_API_URL = process.env.COHERE_API_URL || 'https://api.cohere.com/v2/chat'
 
 // Supabase for document search
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+// Violation type keywords for classification
+const VIOLATION_KEYWORDS = {
+  chemicalHandling: ['chemical', 'cleaner', 'toxic', 'sanitizer', 'bleach', 'spray bottle'],
+  timeTemperature: ['temperature', 'cold hold', 'hot hold', 'cooling', 'reheating', 'thermometer'],
+  crossContamination: ['cross', 'contamination', 'raw', 'ready-to-eat', 'separate'],
+  handwashing: ['handwash', 'hand wash', 'hand sink'],
+  pestControl: ['pest', 'rodent', 'insect', 'fly', 'droppings'],
+  labeling: ['label', 'date', 'expir'],
+  facilities: ['floor', 'wall', 'ceiling', 'equipment', 'surface']
+}
+
+// Severity indicators
+const SEVERITY_KEYWORDS = {
+  critical: ['critical', 'immediate', 'danger', 'illness', 'outbreak'],
+  major: ['major', 'significant', 'repeat']
+}
 
 const cohere = COHERE_API_KEY ? new CohereClient({ token: COHERE_API_KEY }) : null
 const supabase = SUPABASE_URL && SUPABASE_KEY
@@ -68,8 +86,23 @@ async function searchRegulations(query, topK = 5) {
       'EMBEDDING_TIMEOUT'
     )
 
-    const queryEmbedding = embeddingResponse?.embeddings?.float?.[0]
-    if (!queryEmbedding) return []
+    // Validate embedding response structure
+    if (!embeddingResponse || !embeddingResponse.embeddings) {
+      console.warn('[aiAnalysis] Invalid embedding response structure')
+      return []
+    }
+
+    const floatEmbeddings = embeddingResponse.embeddings.float
+    if (!Array.isArray(floatEmbeddings) || floatEmbeddings.length === 0) {
+      console.warn('[aiAnalysis] No float embeddings returned')
+      return []
+    }
+
+    const queryEmbedding = floatEmbeddings[0]
+    if (!queryEmbedding || !Array.isArray(queryEmbedding)) {
+      console.warn('[aiAnalysis] Invalid query embedding format')
+      return []
+    }
 
     // Search documents using vector similarity
     const { data: documents, error } = await supabase.rpc('match_documents', {
@@ -124,55 +157,52 @@ function extractJsonFromResponse(text) {
   return null
 }
 
-// Infer violation type and severity based on content
+// Infer violation type and severity based on content using configured keywords
 function inferViolationDetails(description) {
   const lower = (description || '').toLowerCase()
+  
+  // Helper to check if text contains any keyword from array
+  const containsAny = (keywords) => keywords.some(k => lower.includes(k))
   
   let type = 'Sanitation'
   let category = 'Core'
   let severity = 'minor'
   
-  // Type inference
-  if (lower.includes('chemical') || lower.includes('cleaner') || lower.includes('toxic') || 
-      lower.includes('sanitizer') || lower.includes('bleach') || lower.includes('spray bottle')) {
+  // Type inference using configured keywords
+  if (containsAny(VIOLATION_KEYWORDS.chemicalHandling)) {
     type = 'Chemical Handling'
     category = 'Priority'
     severity = 'major'
-  } else if (lower.includes('temperature') || lower.includes('cold hold') || lower.includes('hot hold') ||
-             lower.includes('cooling') || lower.includes('reheating') || lower.includes('thermometer')) {
+  } else if (containsAny(VIOLATION_KEYWORDS.timeTemperature)) {
     type = 'Time/Temperature'
     category = 'Priority'
     severity = 'critical'
-  } else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') ||
-             lower.includes('ready-to-eat') || lower.includes('separate')) {
+  } else if (containsAny(VIOLATION_KEYWORDS.crossContamination)) {
     type = 'Cross-Contamination'
     category = 'Priority'
     severity = 'critical'
-  } else if (lower.includes('handwash') || lower.includes('hand wash') || lower.includes('hand sink')) {
+  } else if (containsAny(VIOLATION_KEYWORDS.handwashing)) {
     type = 'Handwashing'
     category = 'Priority Foundation'
     severity = 'major'
-  } else if (lower.includes('pest') || lower.includes('rodent') || lower.includes('insect') ||
-             lower.includes('fly') || lower.includes('droppings')) {
+  } else if (containsAny(VIOLATION_KEYWORDS.pestControl)) {
     type = 'Pest Control'
     category = 'Core'
     severity = 'major'
-  } else if (lower.includes('label') || lower.includes('date') || lower.includes('expir')) {
+  } else if (containsAny(VIOLATION_KEYWORDS.labeling)) {
     type = 'Labeling/Dating'
     category = 'Core'
     severity = 'minor'
-  } else if (lower.includes('floor') || lower.includes('wall') || lower.includes('ceiling') ||
-             lower.includes('equipment') || lower.includes('surface')) {
+  } else if (containsAny(VIOLATION_KEYWORDS.facilities)) {
     type = 'Physical Facilities'
     category = 'Core'
     severity = 'minor'
   }
   
-  // Severity inference
-  if (lower.includes('critical') || lower.includes('immediate') || lower.includes('danger') ||
-      lower.includes('illness') || lower.includes('outbreak')) {
+  // Severity inference using configured keywords
+  if (containsAny(SEVERITY_KEYWORDS.critical)) {
     severity = 'critical'
-  } else if (lower.includes('major') || lower.includes('significant') || lower.includes('repeat')) {
+  } else if (containsAny(SEVERITY_KEYWORDS.major)) {
     severity = 'major'
   }
   
@@ -255,7 +285,7 @@ Focus on these key areas:
 
     // Call Cohere AYA Vision API
     const response = await withTimeout(
-      fetch('https://api.cohere.com/v2/chat', {
+      fetch(COHERE_API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${COHERE_API_KEY}`,

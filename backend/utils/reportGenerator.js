@@ -1,5 +1,9 @@
 import PDFDocument from 'pdfkit'
 
+// Constants for excerpt lengths
+const EXCERPT_LENGTH_JSON = 200
+const EXCERPT_LENGTH_PDF = 150
+
 /**
  * Generate a professional compliance report with violations and citations
  * from Michigan food safety regulations
@@ -65,7 +69,7 @@ export async function generateReport(sessionId, results) {
     citations_referenced: allCitations.map(c => ({
       source: c.source,
       page: c.page,
-      excerpt: c.excerpt?.slice(0, 200) || ''
+      excerpt: c.excerpt?.slice(0, EXCERPT_LENGTH_JSON) || ''
     }))
   }
 
@@ -169,7 +173,7 @@ export async function generateReport(sessionId, results) {
           v.citations.slice(0, 3).forEach(c => {
             doc.text(`   • ${c.source}${c.page && c.page !== 'N/A' ? ` (p. ${c.page})` : ''}`)
             if (c.excerpt) {
-              const excerpt = c.excerpt.slice(0, 150).replace(/\s+/g, ' ').trim()
+              const excerpt = c.excerpt.slice(0, EXCERPT_LENGTH_PDF).replace(/\s+/g, ' ').trim()
               doc.fontSize(9).fillColor('#666666')
               doc.text(`     "${excerpt}..."`, { width: 450 })
               doc.fontSize(10).fillColor('#000000')

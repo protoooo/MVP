@@ -131,7 +131,24 @@ export async function POST(req) {
           tempPaths.push(frameDir)
           
           // Extract frames from video (1 frame per second)
-          await extractFrames(videoPath, frameDir)
+          try {
+            await extractFrames(videoPath, frameDir)
+          } catch (extractErr) {
+            console.error(`[processSession] Frame extraction failed for video ${item.id}:`, extractErr.message)
+            results.push({
+              media_id: item.id,
+              media_type: 'video',
+              area: item.area || 'general',
+              violation: null,
+              findings: [],
+              citations: [],
+              severity: 'info',
+              confidence: 0,
+              analyzed: false,
+              error: `Frame extraction failed: ${extractErr.message}`
+            })
+            continue
+          }
           
           // Get all extracted frame files
           const frameFiles = fs
@@ -140,10 +157,34 @@ export async function POST(req) {
             .filter((f) => f.endsWith('.jpg') || f.endsWith('.png'))
             .sort() // Ensure chronological order
           
+          if (frameFiles.length === 0) {
+            console.warn(`[processSession] No frames extracted from video ${item.id}`)
+            results.push({
+              media_id: item.id,
+              media_type: 'video',
+              area: item.area || 'general',
+              violation: null,
+              findings: [],
+              citations: [],
+              severity: 'info',
+              confidence: 0,
+              analyzed: false,
+              error: 'No frames could be extracted from video'
+            })
+            continue
+          }
+          
           console.log(`[processSession] Extracted ${frameFiles.length} frames from video ${item.id}`)
           
           // Deduplicate frames using perceptual hashing
-          const uniqueFrames = await deduplicateFrames(frameFiles)
+          let uniqueFrames
+          try {
+            uniqueFrames = await deduplicateFrames(frameFiles)
+          } catch (dedupErr) {
+            console.error(`[processSession] Frame deduplication failed for video ${item.id}:`, dedupErr.message)
+            // Fall back to using all frames if deduplication fails
+            uniqueFrames = frameFiles
+          }
           console.log(`[processSession] ${uniqueFrames.length} unique frames after deduplication`)
           
           // Analyze unique frames in batch for efficiency
