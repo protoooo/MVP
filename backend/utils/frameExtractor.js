@@ -6,11 +6,21 @@ import imageHash from 'image-hash'
 export async function extractFrames(videoPath, outputDir) {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
+    
     ffmpeg(videoPath)
       .outputOptions(['-vf fps=1'])
       .save(path.join(outputDir, 'frame_%04d.jpg'))
       .on('end', () => resolve(outputDir))
-      .on('error', (err) => reject(err))
+      .on('error', (err) => {
+        // Provide more helpful error message if ffmpeg is not found
+        // Check for common ffmpeg-not-found error patterns
+        if (err.code === 'ENOENT' || 
+            (err.syscall === 'spawn' && String(err).includes('ffmpeg'))) {
+          reject(new Error('Cannot find ffmpeg. Please ensure ffmpeg is installed on the system.'))
+        } else {
+          reject(err)
+        }
+      })
   })
 }
 
