@@ -40,7 +40,7 @@ export default async function uploadMedia(req) {
     const fileExt = (path.extname(file.name || '') || '').toLowerCase()
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
-    await uploadFile('media', objectPath, buffer, contentType)
+    await uploadFile('audit-videos', objectPath, buffer, contentType)
 
     const { error } = await supabase.from('media').insert([
       {
