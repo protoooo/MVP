@@ -344,5 +344,5 @@ export default function UploadPage() {
 }
 const makeId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
-  return `id-${Math.random().toString(16).slice(2)}`
+  return `id-${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`
 }
