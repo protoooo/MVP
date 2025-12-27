@@ -18,7 +18,9 @@ const targetDir = path.join(projectRoot, 'app', 'api', 'upload', 'processSession
 try {
   // Check if source directory exists
   if (!fs.existsSync(sourceDir)) {
-    console.log('⚠️  PDFKit font data directory not found. Skipping font copy.')
+    console.warn(`⚠️  PDFKit font data directory not found at: ${sourceDir}`)
+    console.warn('    This may indicate pdfkit is not properly installed.')
+    console.warn('    Fonts will need to be available at runtime or PDF generation may fail.')
     process.exit(0)
   }
 
@@ -39,6 +41,8 @@ try {
   console.log(`✅ Copied ${files.length} PDFKit font files to ${targetDir}`)
 } catch (error) {
   console.error('❌ Error copying PDFKit fonts:', error.message)
-  // Don't fail the build if font copy fails
+  console.error('   Path attempted:', sourceDir, '->', targetDir)
+  console.error('   This may cause PDF generation failures at runtime.')
+  // Don't fail the build if font copy fails - fonts may be available via other means
   process.exit(0)
 }

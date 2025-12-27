@@ -13,8 +13,9 @@ export async function extractFrames(videoPath, outputDir) {
       .on('end', () => resolve(outputDir))
       .on('error', (err) => {
         // Provide more helpful error message if ffmpeg is not found
-        const errorMsg = err.message || String(err)
-        if (errorMsg.includes('ffmpeg') || errorMsg.includes('spawn') || errorMsg.includes('ENOENT')) {
+        // Check for common ffmpeg-not-found error patterns
+        if (err.code === 'ENOENT' || 
+            (err.syscall === 'spawn' && String(err).includes('ffmpeg'))) {
           reject(new Error('Cannot find ffmpeg. Please ensure ffmpeg is installed on the system.'))
         } else {
           reject(err)

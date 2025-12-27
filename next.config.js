@@ -67,6 +67,9 @@ const nextConfig = {
     }
     
     // Copy pdfkit font data files to output directory
+    // Note: This webpack rule handles .afm files during bundling, but we also
+    // copy font files manually via scripts/copy-pdfkit-fonts.js as a backup
+    // to ensure fonts are available at runtime regardless of bundling issues
     if (isServer) {
       config.module.rules.push({
         test: /\.afm$/,
