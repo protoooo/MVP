@@ -1,4 +1,4 @@
-// app/reset-password/page.js - UPDATED: Light UI with Liquid Glass
+// app/reset-password/page.js - Updated: Enterprise card layout
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,7 +8,6 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from '@/app/apple-icon.png'
-import LiquidGlass from '@/components/ui/LiquidGlass'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 
@@ -145,8 +144,8 @@ export default function ResetPasswordPage() {
         html, body {
           height: 100%;
           margin: 0;
-          background: transparent;
-          color: var(--ink-0);
+          background: #f8fafc;
+          color: #0f172a;
         }
 
         .reset-page {
@@ -222,6 +221,11 @@ export default function ResetPasswordPage() {
         .reset-card {
           width: 100%;
           max-width: 480px;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+          padding: 28px;
         }
 
         .reset-header {
@@ -446,7 +450,7 @@ export default function ResetPasswordPage() {
         </header>
 
         <div className="reset-content">
-          <LiquidGlass variant="main" className="reset-card">
+          <div className="reset-card">
             <div className="reset-header">
               <div className="reset-eyebrow">Password Reset</div>
               <h1 className="reset-title">Set New Password</h1>
@@ -536,7 +540,7 @@ export default function ResetPasswordPage() {
                 ← Back to home
               </button>
             </div>
-          </LiquidGlass>
+          </div>
         </div>
       </div>
     </>
