@@ -7,10 +7,13 @@ import SmartProgress from '@/components/SmartProgress'
 const MAX_FILES = 50
 const MIN_RECOMMENDED_FILES = 30
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ||
-  (process.env.NEXT_PUBLIC_SUPABASE_URL ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1` : '') ||
-  null
+const apiBaseFromEnv = () => {
+  if (process.env.NEXT_PUBLIC_API_BASE) return process.env.NEXT_PUBLIC_API_BASE
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`
+  return null
+}
+
+const API_BASE = apiBaseFromEnv()
 const AUTH_HEADER = process.env.NEXT_PUBLIC_USER_API_KEY
   ? { Authorization: `Bearer ${process.env.NEXT_PUBLIC_USER_API_KEY}` }
   : {}
@@ -346,9 +349,7 @@ export default function UploadPage() {
     </div>
   )
 }
-let fallbackCounter = 0
 const makeId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
-  fallbackCounter += 1
-  return `id-${Date.now().toString(16)}-${fallbackCounter}-${Math.random().toString(16).slice(2)}`
+  return `id-${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}-${Math.floor(Math.random() * 1e6)}`
 }
