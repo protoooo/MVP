@@ -22,7 +22,8 @@ export default function UploadSection() {
   const handleUpload = async () => {
     if (!files.length) return;
     setProcessing(true);
-    const session = await createSession({ type: "audit", area_tags: [] });
+    // Use 'media' type - compatible with database check constraint
+    const session = await createSession({ type: "media", area_tags: [] });
 
     // Upload files sequentially or in parallel
     for (let i = 0; i < files.length; i++) {
