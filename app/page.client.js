@@ -53,10 +53,8 @@ const clearPolicyAcceptance = (userId) => {
 // ✅ Panel UI constants
 const MAX_TEXTAREA_HEIGHT = 120
 
-const FUNCTION_BASE =
-  typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`
-    : ''
+// Use local Next.js API routes for upload functionality
+const FUNCTION_BASE = '/api/upload'
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const USER_API_KEY = process.env.NEXT_PUBLIC_USER_API_KEY || ''
 
@@ -5283,7 +5281,7 @@ export default function Page() {
       </Portal>
 
       <div className="app-container">
-        <main className={`${plusJakarta.className} min-h-screen bg-slate-50`}>
+        <main className={`${plusJakarta.className} min-h-screen`} style={{ background: 'var(--paper)' }}>
             <input
               ref={fileInputRef}
               type="file"
@@ -5293,22 +5291,22 @@ export default function Page() {
               onChange={(e) => handleFilesAdded(e.target.files)}
             />
 
-            <section className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Single upload</p>
-                  <h1 className="text-3xl font-semibold text-slate-900">Upload → Process → Download</h1>
-                  <p className="text-sm text-slate-600">
-                    Drop 30–50 images or videos at once. We&apos;ll handle the upload, AI processing, and report delivery.
-                  </p>
-                </div>
+            {/* Header */}
+            <header className="border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-3">
                   <BrandLink variant="chat" />
+                  <span className="text-sm font-medium" style={{ color: 'var(--ink-60)' }}>
+                    Health Inspection Reports
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
                   {hasPaidAccess ? (
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                      className="rounded-md px-3 py-1.5 text-sm font-medium transition"
+                      style={{ color: 'var(--ink-60)', border: '1px solid var(--border)' }}
                     >
                       Sign out
                     </button>
@@ -5320,14 +5318,16 @@ export default function Page() {
                           setSelectedPriceId(null)
                           setShowPricingModal(true)
                         }}
-                        className="rounded-full border border-blue-100 bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                        className="rounded-md px-4 py-1.5 text-sm font-medium text-white transition"
+                        style={{ background: 'var(--accent)' }}
                       >
                         Start trial
                       </button>
                       <button
                         type="button"
                         onClick={handleShowSignIn}
-                        className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                        className="rounded-md px-3 py-1.5 text-sm font-medium transition"
+                        style={{ color: 'var(--ink)', border: '1px solid var(--border)' }}
                       >
                         Sign in
                       </button>
@@ -5335,209 +5335,295 @@ export default function Page() {
                   )}
                 </div>
               </div>
+            </header>
 
-              {/* Solid cards replace prior glass effects for the compliance-focused shell */}
-              <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-100">
-                  <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Upload</p>
-                      <h2 className="text-xl font-semibold text-slate-900">Images & Videos (30–50)</h2>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleUploadAndProcess}
-                      disabled={isSending || !uploadFiles.length}
-                      className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {isSending ? 'Processing…' : 'Upload & Process'}
-                      <Icons.ArrowRight />
-                    </button>
+            {/* Main Content */}
+            <section className="mx-auto max-w-4xl px-6 py-12">
+              {/* Hero Title */}
+              <div className="mb-10 text-center">
+                <h1 className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
+                  Upload → Process → Download
+                </h1>
+                <p className="mt-2 text-base" style={{ color: 'var(--ink-60)' }}>
+                  Drop your inspection photos. Get a comprehensive compliance report.
+                </p>
+                <p className="mt-1 text-sm" style={{ color: 'var(--ink-40)' }}>
+                  Serving Washtenaw, Oakland & Wayne County • Michigan
+                </p>
+              </div>
+
+              {/* Process Steps */}
+              <div className="mb-8 flex items-center justify-center gap-3">
+                <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${!uploadFiles.length ? 'ring-2' : ''}`}
+                  style={{ 
+                    background: !uploadFiles.length ? 'var(--accent-bg)' : 'var(--clay)',
+                    color: !uploadFiles.length ? 'var(--accent)' : 'var(--ink-60)',
+                    ringColor: !uploadFiles.length ? 'var(--accent)' : 'transparent'
+                  }}>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold" 
+                    style={{ background: !uploadFiles.length ? 'var(--accent)' : 'var(--border)', color: !uploadFiles.length ? '#fff' : 'var(--ink-60)' }}>1</span>
+                  Upload
+                </div>
+                <div className="h-px w-6" style={{ background: 'var(--border)' }} />
+                <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${isSending ? 'ring-2' : ''}`}
+                  style={{ 
+                    background: isSending ? 'var(--accent-yellow-bg)' : 'var(--clay)',
+                    color: isSending ? 'var(--accent-yellow)' : 'var(--ink-60)',
+                    ringColor: isSending ? 'var(--accent-yellow)' : 'transparent'
+                  }}>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
+                    style={{ background: isSending ? 'var(--accent-yellow)' : 'var(--border)', color: isSending ? '#fff' : 'var(--ink-60)' }}>2</span>
+                  Process
+                </div>
+                <div className="h-px w-6" style={{ background: 'var(--border)' }} />
+                <div className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${reportData ? 'ring-2' : ''}`}
+                  style={{ 
+                    background: reportData ? 'var(--accent-green-bg)' : 'var(--clay)',
+                    color: reportData ? 'var(--accent-green)' : 'var(--ink-60)',
+                    ringColor: reportData ? 'var(--accent-green)' : 'transparent'
+                  }}>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
+                    style={{ background: reportData ? 'var(--accent-green)' : 'var(--border)', color: reportData ? '#fff' : 'var(--ink-60)' }}>3</span>
+                  Download
+                </div>
+              </div>
+
+              {/* Upload Card */}
+              <div className="rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' }}>
+                {/* Drop Zone */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    if (isLocked) {
+                      requestAccess()
+                      return
+                    }
+                    fileInputRef.current?.click()
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      if (isLocked) {
+                        requestAccess()
+                        return
+                      }
+                      fileInputRef.current?.click()
+                    }
+                  }}
+                  onDrop={handleDropFiles}
+                  onDragOver={(e) => e.preventDefault()}
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-t-xl px-8 py-12 text-center transition-all"
+                  style={{ 
+                    background: 'var(--clay)',
+                    borderBottom: '1px solid var(--border)'
+                  }}
+                >
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl"
+                    style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>
+                    <Icons.ArrowUp />
                   </div>
+                  <p className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>
+                    Drop files here to upload
+                  </p>
+                  <p className="mt-1 text-sm" style={{ color: 'var(--ink-60)' }}>
+                    Images or videos · up to 50 files
+                  </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (isLocked) {
+                        requestAccess()
+                        return
+                      }
+                      fileInputRef.current?.click()
+                    }}
+                    className="mt-4 rounded-md px-5 py-2 text-sm font-medium text-white transition"
+                    style={{ background: 'var(--accent)' }}
+                  >
+                    Select files
+                  </button>
+                </div>
 
-                  <div className="px-6 py-5">
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => {
-                        if (isLocked) {
-                          requestAccess()
-                          return
-                        }
-                        fileInputRef.current?.click()
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          if (isLocked) {
-                            requestAccess()
-                            return
-                          }
-                          fileInputRef.current?.click()
-                        }
-                      }}
-                      onDrop={handleDropFiles}
-                      onDragOver={(e) => e.preventDefault()}
-                      className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center transition hover:border-slate-300 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 shadow-inner shadow-blue-100">
-                        <Icons.ArrowUp />
-                      </div>
-                      <p className="mt-3 text-base font-semibold text-slate-900">Drag & drop your files</p>
-                      <p className="text-sm text-slate-500">Images or videos · up to 50 files (best with 30–50 at once)</p>
-                      <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (isLocked) {
-                              requestAccess()
-                              return
-                            }
-                            fileInputRef.current?.click()
-                          }}
-                          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                        >
-                          Select files
-                        </button>
-                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">or drop anywhere</span>
-                      </div>
+                {/* File List */}
+                {uploadFiles.length > 0 && (
+                  <div className="border-b px-6 py-4" style={{ borderColor: 'var(--border)' }}>
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
+                        {uploadFiles.length} file{uploadFiles.length > 1 ? 's' : ''} selected
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setUploadFiles([])}
+                        className="text-sm font-medium"
+                        style={{ color: 'var(--accent-red)' }}
+                      >
+                        Clear all
+                      </button>
                     </div>
-
-                    {uploadFiles.length > 0 && (
-                      <div className="mt-5 space-y-3">
-                        <div className="flex items-center justify-between text-sm text-slate-700">
-                          <span>{uploadFiles.length} file(s) ready</span>
-                          <span className="text-slate-500">Progressive upload with AI processing</span>
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {uploadFiles.slice(0, 9).map((file) => (
+                        <div
+                          key={file.id}
+                          className="flex items-center gap-2 rounded-md px-3 py-2"
+                          style={{ background: 'var(--clay)' }}
+                        >
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-md" style={{ background: 'var(--surface)' }}>
+                            {file.previewUrl ? (
+                              <Image
+                                src={file.previewUrl}
+                                alt={file.name}
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 rounded-md object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <Icons.Camera />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium" style={{ color: 'var(--ink)' }}>{file.name}</p>
+                            <p className="text-xs" style={{ color: 'var(--ink-40)' }}>
+                              {(file.size / (1024 * 1024)).toFixed(1)} MB
+                            </p>
+                          </div>
                         </div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {uploadFiles.map((file) => (
-                            <div
-                              key={file.id}
-                              className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 shadow-inner shadow-slate-100"
-                            >
-                              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white shadow-inner shadow-slate-100">
-                                {file.previewUrl ? (
-                                  <Image
-                                    src={file.previewUrl}
-                                    alt={file.name}
-                                    width={48}
-                                    height={48}
-                                    className="h-12 w-12 rounded-md object-cover"
-                                    unoptimized
-                                  />
-                                ) : (
-                                  <Icons.Camera />
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-slate-900">{file.name}</p>
-                                <p className="text-xs text-slate-500">
-                                  {file.type.toUpperCase()} · {(file.size / (1024 * 1024)).toFixed(1)} MB
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="mt-6 space-y-2">
-                      <SmartProgress active={isSending} mode="vision" requestKey={sendKey} />
-                      <div className="flex items-center justify-between text-sm text-slate-600" aria-live="polite">
-                        <span>{uploadStatus || 'Waiting to start'}</span>
-                        {uploadingCount > 0 && uploadFiles.length ? (
-                          <span className="text-slate-500">
-                            {uploadingCount}/{uploadFiles.length} uploaded
+                      ))}
+                      {uploadFiles.length > 9 && (
+                        <div className="flex items-center justify-center rounded-md px-3 py-2" style={{ background: 'var(--clay)' }}>
+                          <span className="text-sm font-medium" style={{ color: 'var(--ink-60)' }}>
+                            +{uploadFiles.length - 9} more files
                           </span>
-                        ) : null}
-                      </div>
-                      {uploadError && (
-                        <div className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                          {uploadError}
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
 
-                    {isLocked && (
-                      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <p className="text-sm font-semibold text-slate-900">Access required</p>
-                        <p className="text-sm text-slate-600">Start a trial or sign in to run uploads and generate reports.</p>
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                {/* Progress & Status */}
+                <div className="px-6 py-4">
+                  {isSending && (
+                    <div className="mb-4">
+                      <SmartProgress active={isSending} mode="vision" requestKey={sendKey} />
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {uploadStatus && (
+                        <span className="text-sm font-medium" style={{ color: isSending ? 'var(--accent-yellow)' : 'var(--ink-60)' }}>
+                          {uploadStatus}
+                        </span>
+                      )}
+                      {uploadingCount > 0 && uploadFiles.length && isSending ? (
+                        <span className="text-sm" style={{ color: 'var(--ink-40)' }}>
+                          {uploadingCount}/{uploadFiles.length}
+                        </span>
+                      ) : null}
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={handleUploadAndProcess}
+                      disabled={isSending || !uploadFiles.length || isLocked}
+                      className="rounded-md px-6 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{ background: 'var(--accent)' }}
+                    >
+                      {isSending ? 'Processing…' : 'Upload & Process'}
+                    </button>
+                  </div>
+
+                  {uploadError && (
+                    <div className="mt-4 rounded-md px-4 py-3 text-sm" style={{ background: 'var(--accent-red-bg)', color: 'var(--accent-red)' }}>
+                      {uploadError}
+                    </div>
+                  )}
+                </div>
+
+                {/* Report Ready */}
+                {!isLocked && reportData && (
+                  <div className="border-t px-6 py-6" style={{ borderColor: 'var(--border)', background: 'var(--accent-green-bg)' }}>
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'var(--accent-green)', color: '#fff' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>Report Ready</p>
+                        <p className="mt-1 text-sm" style={{ color: 'var(--ink-60)' }}>
+                          Your compliance report has been generated and is ready for download.
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
                           <button
                             type="button"
-                            onClick={() => {
-                              setSelectedPriceId(null)
-                              setShowPricingModal(true)
-                            }}
-                            className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                            onClick={handleUnifiedReportDownload}
+                            className="rounded-md px-5 py-2 text-sm font-semibold text-white transition"
+                            style={{ background: 'var(--accent-green)' }}
                           >
-                            Start trial
+                            Download Report
                           </button>
-                          <button
-                            type="button"
-                            onClick={handleShowSignIn}
-                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                          >
-                            Sign in
-                          </button>
+                          {reportData.pdf_url && (
+                            <a
+                              href={reportData.pdf_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-sm font-medium underline"
+                              style={{ color: 'var(--accent-green)' }}
+                            >
+                              Open PDF
+                            </a>
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-100">
-                  <div className="border-b border-slate-100 px-6 py-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Session</p>
-                    <p className="text-lg font-semibold text-slate-900">Status & Report</p>
-                  </div>
-
-                  <div className="space-y-4 px-6 py-5">
-                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Session ID</p>
-                      <p className="font-mono text-sm text-slate-900">
-                        {isLocked ? 'Requires active trial or paid account' : uploadSessionId ? uploadSessionId : 'Not started yet'}
-                      </p>
                     </div>
+                  </div>
+                )}
 
-                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" aria-live="polite">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
-                      <p className="text-sm font-medium text-slate-900">
-                        {isLocked ? 'Unlock uploads to begin processing' : uploadStatus || 'Waiting for files'}
-                      </p>
-                    </div>
-
-                    {!isLocked && reportData && (
-                      <div className="rounded-xl border border-slate-100 bg-white px-4 py-4 shadow-inner shadow-slate-100">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">Report</p>
-                        <p className="mb-3 text-sm text-slate-700">
-                          JSON + PDF are ready. Download the combined report to keep both artifacts together.
+                {/* Access Required Banner */}
+                {isLocked && (
+                  <div className="border-t px-6 py-5" style={{ borderColor: 'var(--border)', background: 'var(--accent-bg)' }}>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <p className="font-medium" style={{ color: 'var(--ink)' }}>Sign in to upload files</p>
+                        <p className="mt-0.5 text-sm" style={{ color: 'var(--ink-60)' }}>
+                          Start a free trial to generate compliance reports.
                         </p>
-
+                      </div>
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={handleUnifiedReportDownload}
-                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                          onClick={() => {
+                            setSelectedPriceId(null)
+                            setShowPricingModal(true)
+                          }}
+                          className="rounded-md px-4 py-2 text-sm font-medium text-white"
+                          style={{ background: 'var(--accent)' }}
                         >
-                          <Icons.ArrowRight />
-                          <span>Download JSON + PDF</span>
+                          Start trial
                         </button>
-
-                        {reportData.pdf_url && (
-                          <a
-                            href={reportData.pdf_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-3 block text-center text-xs font-medium text-emerald-700 underline"
-                          >
-                            Open PDF in new tab
-                          </a>
-                        )}
+                        <button
+                          type="button"
+                          onClick={handleShowSignIn}
+                          className="rounded-md px-4 py-2 text-sm font-medium"
+                          style={{ color: 'var(--accent)', border: '1px solid var(--accent)' }}
+                        >
+                          Sign in
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
+
+              {/* Session Info */}
+              {uploadSessionId && (
+                <div className="mt-4 rounded-md px-4 py-3 text-center text-xs" style={{ background: 'var(--clay)', color: 'var(--ink-40)' }}>
+                  Session ID: <span className="font-mono">{uploadSessionId}</span>
+                </div>
+              )}
             </section>
           </main>
       </div>
