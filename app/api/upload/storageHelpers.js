@@ -5,14 +5,14 @@ export async function ensureBucketExists(supabase, bucket, options = { public: t
   if (ensuredBuckets.has(bucket)) return
 
   const { data, error } = await supabase.storage.getBucket(bucket)
-  if (!error && data) {
+  if (data && !error) {
     ensuredBuckets.add(bucket)
     return
   }
 
-  if (error && error.status !== 404 && error.statusCode !== '404' && !/not found/i.test(error.message || '')) {
-    throw error
-  }
+  const status = error?.status ?? error?.statusCode
+  const isMissing = status === 404 || status === '404' || /not found/i.test(error?.message || '')
+  if (error && !isMissing) throw error
 
   const { error: createError } = await supabase.storage.createBucket(bucket, options)
   if (createError && !/already exists/i.test(createError.message || '')) {

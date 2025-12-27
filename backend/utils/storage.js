@@ -12,7 +12,7 @@ export const supabase =
 // If bucket visibility changes externally, restart the runtime to refresh.
 const ensuredBuckets = new Set()
 
-async function ensureBucketExists(bucket, options = { public: true }) {
+export async function ensureBucketExists(bucket, options = { public: true }) {
   if (!supabase) throw new Error('Supabase client is not configured')
   if (ensuredBuckets.has(bucket)) return
 
@@ -22,9 +22,9 @@ async function ensureBucketExists(bucket, options = { public: true }) {
     return
   }
 
-  if (error && error.status !== 404 && error.statusCode !== '404' && !/not found/i.test(error.message || '')) {
-    throw error
-  }
+  const status = error?.status ?? error?.statusCode
+  const isMissing = status === 404 || status === '404' || /not found/i.test(error?.message || '')
+  if (error && !isMissing) throw error
 
   const { error: createError } = await supabase.storage.createBucket(bucket, options)
   if (createError && !/already exists/i.test(createError.message || '')) {
