@@ -525,7 +525,8 @@ function normalizeAssistantText(content) {
 
   let normalized = text.replace(/<br\s*\/?>/gi, '\n')
   normalized = normalized.replace(/<\/p>/gi, '\n').replace(/<p[^>]*>/gi, '')
-  normalized = normalized.replace(/<\/?span[^>]*>/gi, '')
+  // ✅ Preserve plm-v and plm-f spans, remove all others
+  normalized = normalized.replace(/<\/?span(?!\s+class="plm-[vf]")[^>]*>/gi, '')
   normalized = normalized.replace(/<\/?(strong|em|b|i)[^>]*>/gi, '')
   normalized = normalized.replace(/&nbsp;/gi, ' ')
   return normalized.trim()
@@ -660,8 +661,8 @@ function formatAssistantContent(content, citations = []) {
                 ⚠️
               </span>
               <div className="chat-violation-content">
-                <div className="chat-violation-title">{v.issue}</div>
-                {v.fix && <div className="chat-violation-fix">Fix: {v.fix}</div>}
+                <div className="chat-violation-title" dangerouslySetInnerHTML={{ __html: v.issue }} />
+                {v.fix && <div className="chat-violation-fix" dangerouslySetInnerHTML={{ __html: `Fix: ${v.fix}` }} />}
                 {renderCitations(v.citations)}
               </div>
             </li>
@@ -692,12 +693,12 @@ function formatAssistantContent(content, citations = []) {
     )
   }
   
-  // Default: return as plain text
+  // Default: return as plain text (but preserve HTML spans for styling)
   const ids = extractCitationIds(text)
   const clean = text.replace(/\s*\[\d+\]/g, '').trim()
   return (
     <div className="chat-analysis-text">
-      <div className="chat-content">{clean}</div>
+      <div className="chat-content" dangerouslySetInnerHTML={{ __html: clean }} />
       {renderCitations(ids)}
     </div>
   )
@@ -4226,6 +4227,17 @@ export default function Page() {
         .chat-analysis-text .chat-content {
           font-weight: 700;
           color: rgba(15, 23, 42, 0.9);
+        }
+
+        /* ✅ Violation and Fix span styling for API responses */
+        .plm-v {
+          font-weight: 800;
+          color: #dc2626;
+        }
+
+        .plm-f {
+          font-weight: 600;
+          color: #059669;
         }
 
         .chat-analysis-actions {
