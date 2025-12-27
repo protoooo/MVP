@@ -16,7 +16,6 @@ import SmartProgress from '@/components/SmartProgress'
 // ⛔️ IMPORTANT: we intentionally DO NOT use the imported PricingModal
 // because it’s rendering “in flow” on iOS/Safari due to containing-block issues.
 // import PricingModal from '@/components/PricingModal'
-import LiquidGlass from '@/components/ui/LiquidGlass'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
@@ -186,77 +185,6 @@ function BrandLink({ variant = 'landing' }) {
   )
 }
 
-function FooterLinks() {
-  return (
-    <div className={`plm-footer-links ${plusJakarta.className}`}>
-      <Link className="plm-footer-link" href="/terms">
-        Terms
-      </Link>
-      <span className="plm-footer-sep">·</span>
-      <Link className="plm-footer-link" href="/privacy">
-        Privacy
-      </Link>
-      <span className="plm-footer-sep">·</span>
-      <Link className="plm-footer-link" href="/contact">
-        Contact
-      </Link>
-    </div>
-  )
-}
-
-function LandingPage({ onShowPricing, onShowAuth }) {
-  return (
-    <div className={`${plusJakarta.className} landing-root`}>
-      <header className="landing-topbar">
-        <div className="landing-topbar-inner">
-          <div className="plm-brand-wrap">
-            <BrandLink variant="landing" />
-          </div>
-
-          <nav className="landing-top-actions" aria-label="Top actions">
-            <button onClick={onShowAuth} className="btn-nav landing-signin-btn" type="button">
-              Sign in
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="landing-hero">
-        <LiquidGlass variant="main" className="landing-hero-card landing-hero-card--terms-style">
-          <div className="hero-content">
-            <div className="hero-headings">
-              <h1 className={`hero-title ${plusJakarta.className}`}>
-                CATCH VIOLATIONS,
-                <span className="hero-break">
-                  <br />
-                </span>{' '}
-                <span className="hero-nowrap">NOT&nbsp;FINES.</span>
-              </h1>
-              <div className="hero-divider" aria-hidden="true" />
-              <p className="hero-support">
-                Take pictures within your food establishment to catch violations and prepare for inspections.
-              </p>
-            </div>
-
-            <div className="hero-cta-row">
-              <div className="hero-arrow-text">Get started in minutes</div>
-              <div className="hero-arrow-icon">
-                <Icons.ArrowRight />
-              </div>
-              <button className="btn-primary hero-cta hero-cta-trace" onClick={onShowPricing} type="button">
-                Start free trial
-              </button>
-            </div>
-          </div>
-        </LiquidGlass>
-      </main>
-
-      <FooterLinks />
-    </div>
-  )
-}
-
-/* ✅ AuthModal now uses LiquidGlass so it matches landing + chat glass */
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -897,6 +825,7 @@ export default function Page() {
   const isAuthenticated = !!session
   const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === SUBSCRIPTION_STATUS_TRIALING)
   const historyStorageKey = useMemo(() => `${HISTORY_KEY_BASE}-${session?.user?.id || 'guest'}`, [session?.user?.id])
+  const isLocked = !hasPaidAccess
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
@@ -976,7 +905,7 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = hasPaidAccess ? 'chat' : 'landing'
+    document.documentElement.dataset.view = hasPaidAccess ? 'console' : 'locked'
     const splineContainer = document.getElementById('plm-spline-bg')
     if (splineContainer) {
       splineContainer.style.display = hasPaidAccess ? 'block' : 'none'
@@ -1417,6 +1346,11 @@ export default function Page() {
     }
   }
 
+  const requestAccess = useCallback(() => {
+    setUploadError('Start a trial or sign in to run uploads.')
+    setShowPricingModal(true)
+  }, [])
+
   // eslint-disable-next-line no-unused-vars
   const handleNewChat = useCallback(() => {
     setCurrentChatId(null)
@@ -1484,6 +1418,10 @@ export default function Page() {
   )
 
   const handleFilesAdded = useCallback((fileList) => {
+    if (isLocked) {
+      requestAccess()
+      return
+    }
     const incoming = Array.from(fileList || []).slice(0, 50)
     const normalized = incoming.map((file, idx) => ({
       id: `${file.name}-${idx}-${file.lastModified || Date.now()}`,
@@ -1499,18 +1437,26 @@ export default function Page() {
     setReportData(null)
     setUploadingCount(0)
     setUploadStatus('')
-  }, [])
+  }, [isLocked, requestAccess])
 
   const handleDropFiles = useCallback(
     (e) => {
       e.preventDefault()
+      if (isLocked) {
+        requestAccess()
+        return
+      }
       const dropped = e.dataTransfer?.files
       if (dropped?.length) handleFilesAdded(dropped)
     },
-    [handleFilesAdded]
+    [handleFilesAdded, isLocked, requestAccess]
   )
 
   const handleUploadAndProcess = useCallback(async () => {
+    if (isLocked) {
+      requestAccess()
+      return
+    }
     if (!uploadFiles.length) {
       setUploadError('Select 30–50 images or videos to continue.')
       return
@@ -1556,7 +1502,7 @@ export default function Page() {
     } finally {
       setIsSending(false)
     }
-  }, [callBackendFunction, uploadFiles])
+  }, [callBackendFunction, isLocked, requestAccess, uploadFiles])
 
   const handleUnifiedReportDownload = useCallback(() => {
     if (!reportData) return
@@ -2877,26 +2823,6 @@ export default function Page() {
           }
         }
 
-        .landing-hero-card {
-          width: 100%;
-          max-width: 880px;
-          margin: 0 auto;
-        }
-
-        /* ✅ Override LiquidGlass with light Apple-style glass effect
-         * Reduced opacity to show kitchen background clearly through the card
-         * Maintains text readability while achieving true see-through glass aesthetic
-         * Note: Using !important to override LiquidGlass component styles without modifying
-         * the shared component itself (minimal change approach) */
-        .landing-hero-card.landing-hero-card--terms-style {
-          position: relative;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.034)) !important;
-          border: none !important;
-          border-radius: 8px !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
-          padding: 40px 48px;
-        }
-
         /* ✅ Subtle gradient border matching ProtocolLM brand colors (blue, gray, orange, muted green)
          * Uses pseudo-element with mask technique for Safari/iOS compatibility
          * Preserves border-radius and maintains glass-like transparency */
@@ -3807,7 +3733,6 @@ export default function Page() {
           gap: 10px;
         }
 
-        /* ✅ FIX: DO NOT override LiquidGlass with transparent/none (this was causing the “matte white” bar) */
         .chat-dock {
           width: 100%;
           display: flex;
@@ -5358,8 +5283,7 @@ export default function Page() {
       </Portal>
 
       <div className="app-container">
-        {hasPaidAccess ? (
-          <main className={`${plusJakarta.className} min-h-screen bg-slate-50`}>
+        <main className={`${plusJakarta.className} min-h-screen bg-slate-50`}>
             <input
               ref={fileInputRef}
               type="file"
@@ -5380,18 +5304,40 @@ export default function Page() {
                 </div>
                 <div className="flex items-center gap-3">
                   <BrandLink variant="chat" />
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                  >
-                    Sign out
-                  </button>
+                  {hasPaidAccess ? (
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                    >
+                      Sign out
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPriceId(null)
+                          setShowPricingModal(true)
+                        }}
+                        className="rounded-full border border-blue-100 bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                      >
+                        Start trial
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleShowSignIn}
+                        className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                      >
+                        Sign in
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-                <div className="rounded-2xl border border-slate-200 bg-white/80 shadow-sm shadow-slate-100 backdrop-blur">
+                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-100">
                   <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Upload</p>
@@ -5408,96 +5354,138 @@ export default function Page() {
                     </button>
                   </div>
 
-                    <div className="px-6 py-5">
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => fileInputRef.current?.click()}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            fileInputRef.current?.click()
+                  <div className="px-6 py-5">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (isLocked) {
+                          requestAccess()
+                          return
+                        }
+                        fileInputRef.current?.click()
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          if (isLocked) {
+                            requestAccess()
+                            return
                           }
-                        }}
-                        onDrop={handleDropFiles}
-                        onDragOver={(e) => e.preventDefault()}
-                        className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-8 text-center transition hover:border-slate-300 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                      >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 shadow-inner shadow-blue-100">
-                          <Icons.ArrowUp />
-                        </div>
-                        <p className="mt-3 text-base font-semibold text-slate-900">Drag & drop your files</p>
-                        <p className="text-sm text-slate-500">Images or videos · up to 50 files (best with 30–50 at once)</p>
-                        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                          >
-                            Select files
-                          </button>
-                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">or drop anywhere</span>
-                        </div>
+                          fileInputRef.current?.click()
+                        }
+                      }}
+                      onDrop={handleDropFiles}
+                      onDragOver={(e) => e.preventDefault()}
+                      className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center transition hover:border-slate-300 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 shadow-inner shadow-blue-100">
+                        <Icons.ArrowUp />
                       </div>
-
-                      {uploadFiles.length > 0 && (
-                        <div className="mt-5 space-y-3">
-                          <div className="flex items-center justify-between text-sm text-slate-700">
-                            <span>{uploadFiles.length} file(s) ready</span>
-                            <span className="text-slate-500">Progressive upload with AI processing</span>
-                          </div>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            {uploadFiles.map((file) => (
-                              <div
-                                key={file.id}
-                                className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 shadow-inner shadow-slate-100"
-                              >
-                                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white shadow-inner shadow-slate-100">
-                                  {file.previewUrl ? (
-                                    <Image
-                                      src={file.previewUrl}
-                                      alt={file.name}
-                                      width={48}
-                                      height={48}
-                                      className="h-12 w-12 rounded-md object-cover"
-                                      unoptimized
-                                    />
-                                  ) : (
-                                    <Icons.Camera />
-                                  )}
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="truncate text-sm font-semibold text-slate-900">{file.name}</p>
-                                  <p className="text-xs text-slate-500">
-                                    {file.type.toUpperCase()} · {(file.size / (1024 * 1024)).toFixed(1)} MB
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mt-6 space-y-2">
-                        <SmartProgress active={isSending} mode="vision" requestKey={sendKey} />
-                        <div className="flex items-center justify-between text-sm text-slate-600" aria-live="polite">
-                          <span>{uploadStatus || 'Waiting to start'}</span>
-                          {uploadingCount > 0 && uploadFiles.length ? (
-                            <span className="text-slate-500">
-                              {uploadingCount}/{uploadFiles.length} uploaded
-                            </span>
-                          ) : null}
-                        </div>
-                        {uploadError && (
-                          <div className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                            {uploadError}
-                          </div>
-                        )}
+                      <p className="mt-3 text-base font-semibold text-slate-900">Drag & drop your files</p>
+                      <p className="text-sm text-slate-500">Images or videos · up to 50 files (best with 30–50 at once)</p>
+                      <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isLocked) {
+                              requestAccess()
+                              return
+                            }
+                            fileInputRef.current?.click()
+                          }}
+                          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                        >
+                          Select files
+                        </button>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">or drop anywhere</span>
                       </div>
                     </div>
+
+                    {uploadFiles.length > 0 && (
+                      <div className="mt-5 space-y-3">
+                        <div className="flex items-center justify-between text-sm text-slate-700">
+                          <span>{uploadFiles.length} file(s) ready</span>
+                          <span className="text-slate-500">Progressive upload with AI processing</span>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {uploadFiles.map((file) => (
+                            <div
+                              key={file.id}
+                              className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 shadow-inner shadow-slate-100"
+                            >
+                              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white shadow-inner shadow-slate-100">
+                                {file.previewUrl ? (
+                                  <Image
+                                    src={file.previewUrl}
+                                    alt={file.name}
+                                    width={48}
+                                    height={48}
+                                    className="h-12 w-12 rounded-md object-cover"
+                                    unoptimized
+                                  />
+                                ) : (
+                                  <Icons.Camera />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-slate-900">{file.name}</p>
+                                <p className="text-xs text-slate-500">
+                                  {file.type.toUpperCase()} · {(file.size / (1024 * 1024)).toFixed(1)} MB
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-6 space-y-2">
+                      <SmartProgress active={isSending} mode="vision" requestKey={sendKey} />
+                      <div className="flex items-center justify-between text-sm text-slate-600" aria-live="polite">
+                        <span>{uploadStatus || 'Waiting to start'}</span>
+                        {uploadingCount > 0 && uploadFiles.length ? (
+                          <span className="text-slate-500">
+                            {uploadingCount}/{uploadFiles.length} uploaded
+                          </span>
+                        ) : null}
+                      </div>
+                      {uploadError && (
+                        <div className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                          {uploadError}
+                        </div>
+                      )}
+                    </div>
+
+                    {isLocked && (
+                      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p className="text-sm font-semibold text-slate-900">Access required</p>
+                        <p className="text-sm text-slate-600">Start a trial or sign in to run uploads and generate reports.</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedPriceId(null)
+                              setShowPricingModal(true)
+                            }}
+                            className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                          >
+                            Start trial
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleShowSignIn}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                          >
+                            Sign in
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white/80 shadow-sm shadow-slate-100 backdrop-blur">
+                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-100">
                   <div className="border-b border-slate-100 px-6 py-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Session</p>
                     <p className="text-lg font-semibold text-slate-900">Status & Report</p>
@@ -5507,18 +5495,18 @@ export default function Page() {
                     <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
                       <p className="text-xs uppercase tracking-wide text-slate-500">Session ID</p>
                       <p className="font-mono text-sm text-slate-900">
-                        {uploadSessionId ? uploadSessionId : 'Not started yet'}
+                        {isLocked ? 'Requires active trial or paid account' : uploadSessionId ? uploadSessionId : 'Not started yet'}
                       </p>
                     </div>
 
                     <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" aria-live="polite">
                       <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
                       <p className="text-sm font-medium text-slate-900">
-                        {uploadStatus || 'Waiting for files'}
+                        {isLocked ? 'Unlock uploads to begin processing' : uploadStatus || 'Waiting for files'}
                       </p>
                     </div>
 
-                    {reportData && (
+                    {!isLocked && reportData && (
                       <div className="rounded-xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 px-4 py-4 shadow-inner shadow-slate-100">
                         <p className="text-xs uppercase tracking-wide text-slate-500">Report</p>
                         <p className="mb-3 text-sm text-slate-700">
@@ -5551,15 +5539,6 @@ export default function Page() {
               </div>
             </section>
           </main>
-        ) : (
-          <LandingPage
-            onShowPricing={() => {
-              setSelectedPriceId(null)
-              setShowPricingModal(true)
-            }}
-            onShowAuth={handleShowSignIn}
-          />
-        )}
       </div>
     </>
   )
