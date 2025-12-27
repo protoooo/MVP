@@ -25,7 +25,7 @@ export default function RadialMenu({
   logoSrc,
 }) {
   const [wheelRadius, setWheelRadius] = useState(120)
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false) // ✅ Changed from true to false - menu starts collapsed
 
   const WHEEL_RADIUS_MOBILE = 110
   const WHEEL_RADIUS_DESKTOP = 140
@@ -133,7 +133,7 @@ export default function RadialMenu({
         }
 
          .radial-center-btn {
-           --center-size: 120px;
+           --center-size: 150px; /* ✅ Increased from 120px to 150px (~25% larger for better fill) */
            position: absolute;
           top: 50%;
           left: 50%;
@@ -164,8 +164,8 @@ export default function RadialMenu({
          }
 
          .radial-center-logo {
-           width: 96px;
-           height: 96px;
+           width: 120px; /* ✅ Increased from 96px to 120px to properly fill container */
+           height: 120px;
            object-fit: contain;
          }
 
@@ -286,17 +286,14 @@ export default function RadialMenu({
           }
         }
 
-        .radial-item--pdf {
-          --item-size: 74px;
-        }
-
-        .radial-item--pdf .radial-icon {
-          --item-icon-size: 40px;
-        }
-
         @media (max-width: 480px) {
           .radial-center-btn {
-            --center-size: 100px;
+            --center-size: 130px; /* ✅ Adjusted mobile size proportionally */
+          }
+          
+          .radial-center-logo {
+            width: 104px;
+            height: 104px;
           }
         }
 
