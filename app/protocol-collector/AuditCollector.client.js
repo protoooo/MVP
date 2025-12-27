@@ -93,7 +93,8 @@ export default function AuditCollector() {
     if (sessionId) return sessionId
     const data = await callFunction('createSession', {
       apiKey,
-      body: { type: 'restaurant', area_tags: AREAS.map((a) => a.label) },
+      // Use 'media' type - compatible with database check constraint
+      body: { type: 'media', area_tags: AREAS.map((a) => a.label) },
     })
     setSessionId(data.session_id)
     return data.session_id
