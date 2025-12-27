@@ -60,7 +60,7 @@ export async function POST(req) {
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
     // Upload to Supabase Storage
-    await ensureBucketExists(supabase, 'media')
+    await ensureBucketExists('media', { public: true }, supabase)
     const { error: uploadError } = await supabase.storage
       .from('media')
       .upload(objectPath, buffer, { upsert: true, contentType })

@@ -107,8 +107,10 @@ export async function POST(req) {
   }
 
   try {
-    await ensureBucketExists(supabase, 'media')
-    await ensureBucketExists(supabase, 'reports')
+    await Promise.all([
+      ensureBucketExists('media', { public: true }, supabase),
+      ensureBucketExists('reports', { public: true }, supabase),
+    ])
 
     const user = await authorize(req)
     if (!user) {
@@ -208,7 +210,7 @@ export async function POST(req) {
     }
 
     // Get public URL for PDF
-    const publicPdfUrl = await getPublicUrlSafe(supabase, 'reports', pdfPath)
+    const publicPdfUrl = await getPublicUrlSafe('reports', pdfPath, supabase)
 
     // Cleanup temp files
     tempPaths.forEach((p) => {

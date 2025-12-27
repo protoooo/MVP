@@ -23,8 +23,8 @@ export async function ensureBucketExists(bucket, options = { public: true }, cli
     return
   }
 
-  const status = error?.status ?? error?.statusCode
-  const isMissing = status === 404 || status === '404' || /not found/i.test(error?.message || '')
+  const status = Number(error?.status ?? error?.statusCode)
+  const isMissing = status === 404 || /not found/i.test(error?.message || '')
   if (error && !isMissing) throw error
 
   const { error: createError } = await activeClient.storage.createBucket(bucket, options)

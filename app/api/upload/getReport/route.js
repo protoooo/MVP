@@ -59,7 +59,7 @@ export async function POST(req) {
     if (error) throw error
 
     // Get public URL for PDF
-    const pdfUrl = data?.pdf_path ? await getPublicUrlSafe(supabase, 'reports', data.pdf_path) : null
+    const pdfUrl = data?.pdf_path ? await getPublicUrlSafe('reports', data.pdf_path, supabase) : null
 
     return NextResponse.json({ ...data, pdf_url: pdfUrl })
   } catch (err) {
