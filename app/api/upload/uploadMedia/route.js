@@ -17,6 +17,7 @@ if (supabase) {
 }
 
 async function uploadMedia(filePath, fileBuffer, contentType = 'application/octet-stream') {
+  if (!supabase) throw new Error('Supabase is not configured')
   console.log('[DEBUG] Supabase project URL:', supabase.supabaseUrl)
   console.log('[DEBUG] Bucket used for upload:', BUCKET_NAME)
   await ensureBucketExists(BUCKET_NAME, { public: false }, supabase)
@@ -68,15 +69,12 @@ export async function POST(req) {
 
     await uploadMedia(objectPath, buffer, contentType)
 
-    // Save media record to database - omit user_id for anonymous users
     const mediaRecord = {
       id: mediaId,
       session_id: sessionId,
       url: objectPath,
       type: contentType.startsWith('video') ? 'video' : 'image',
-    }
-    if (!user.isAnonymous) {
-      mediaRecord.user_id = user.id
+      user_id: user.id,
     }
 
     const { error } = await supabase.from('media').insert([mediaRecord])
