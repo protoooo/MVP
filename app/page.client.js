@@ -5287,12 +5287,9 @@ export default function Page() {
 
             {/* Header */}
             <header className="border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2.5">
                 <div className="flex items-center gap-3">
                   <BrandLink variant="chat" />
-                  <span className="text-sm font-medium" style={{ color: 'var(--ink-60)' }}>
-                    Health Inspection Reports
-                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   {hasPaidAccess ? (
@@ -5339,10 +5336,7 @@ export default function Page() {
                   Upload → Process → Download
                 </h1>
                 <p className="mt-1 sm:mt-2 text-sm sm:text-base" style={{ color: 'var(--ink-60)' }}>
-                  Drop your inspection photos. Get a comprehensive compliance report.
-                </p>
-                <p className="mt-1 text-xs sm:text-sm" style={{ color: 'var(--ink-40)' }}>
-                  Serving Washtenaw, Oakland & Wayne County • Michigan
+                  Upload videos or images of your establishment. Get a comprehensive compliance report that cross-checks Michigan state food safety regulations.
                 </p>
               </div>
 
