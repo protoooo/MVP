@@ -24,12 +24,15 @@ export async function ensureBucketExists(bucket, options = { public: true }, cli
   }
 
   const status = Number(error?.status ?? error?.statusCode)
-  const isMissing = status === 404 || /not found/i.test(error?.message || '')
+  const isMissing = status === 404 || (Number.isNaN(status) && /not found/i.test(error?.message || ''))
   if (error && !isMissing) throw error
 
   const { error: createError } = await activeClient.storage.createBucket(bucket, options)
-  if (createError && !/already exists/i.test(createError.message || '')) {
-    throw createError
+  if (createError) {
+    const createStatus = Number(createError?.status ?? createError?.statusCode)
+    const alreadyExists =
+      createStatus === 409 || createStatus === 400 || (Number.isNaN(createStatus) && /already exists/i.test(createError.message || ''))
+    if (!alreadyExists) throw createError
   }
 
   ensuredBuckets.add(bucket)
@@ -50,6 +53,13 @@ export async function getPublicUrl(bucket, filePath, client = supabase) {
   if (!activeClient) throw new Error('Supabase client is not configured')
   await ensureBucketExists(bucket, { public: true }, activeClient)
   const { data } = activeClient.storage.from(bucket).getPublicUrl(filePath)
+  return data?.publicUrl || null
+}
+
+// Backwards-compatible, synchronous variant for callers that do not need bucket provisioning.
+export function getPublicUrlSync(bucket, filePath) {
+  if (!supabase) throw new Error('Supabase client is not configured')
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath)
   return data?.publicUrl || null
 }
 
