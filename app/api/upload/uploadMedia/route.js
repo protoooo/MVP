@@ -45,7 +45,6 @@ export async function POST(req) {
 
     const formData = await req.formData()
     const sessionId = formData.get('session_id')
-    const area = formData.get('area') || 'general'
     const file = formData.get('file')
 
     if (!sessionId || !file) {
@@ -79,7 +78,6 @@ export async function POST(req) {
       session_id: sessionId,
       url: objectPath,
       type: contentType.startsWith('video') ? 'video' : 'image',
-      area,
     }
     if (!user.isAnonymous) {
       mediaRecord.user_id = user.id
@@ -91,7 +89,6 @@ export async function POST(req) {
     return NextResponse.json({
       media_id: mediaId,
       path: objectPath,
-      area,
     })
   } catch (err) {
     return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 })
