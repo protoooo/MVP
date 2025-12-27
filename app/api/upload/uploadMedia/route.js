@@ -15,10 +15,11 @@ async function authorize(req) {
   const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
   if (!apiKey) return null
   
-  // Accept the anon key for authenticated users
+  // Accept the anon key for anonymous users - generate a valid UUID for them
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (apiKey === anonKey) {
-    return { id: 'anonymous' }
+    // For anon key, generate a valid UUID so database inserts don't fail
+    return { id: uuidv4(), isAnonymous: true }
   }
   
   const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
@@ -64,17 +65,19 @@ export async function POST(req) {
     
     if (uploadError) throw uploadError
 
-    // Save media record to database
-    const { error } = await supabase.from('media').insert([
-      {
-        id: mediaId,
-        session_id: sessionId,
-        user_id: user.id,
-        url: objectPath,
-        type: contentType.startsWith('video') ? 'video' : 'image',
-        area,
-      },
-    ])
+    // Save media record to database - omit user_id for anonymous users
+    const mediaRecord = {
+      id: mediaId,
+      session_id: sessionId,
+      url: objectPath,
+      type: contentType.startsWith('video') ? 'video' : 'image',
+      area,
+    }
+    if (!user.isAnonymous) {
+      mediaRecord.user_id = user.id
+    }
+
+    const { error } = await supabase.from('media').insert([mediaRecord])
     if (error) throw error
 
     return NextResponse.json({
