@@ -3,6 +3,7 @@ import PDFDocument from 'pdfkit'
 // Constants for excerpt lengths
 const EXCERPT_LENGTH_JSON = 200
 const EXCERPT_LENGTH_PDF = 150
+const REDUNDANCY_CHECK_LENGTH = 30  // Characters to check for redundant descriptions
 
 /**
  * Generate a professional compliance report with violations and citations
@@ -154,7 +155,7 @@ export async function generateReport(sessionId, results) {
           v.findings.forEach((f, fIdx) => {
             // Skip first finding if it's redundant with the violation description
             if (fIdx === 0 && v.violation && f.description && 
-                v.violation.toLowerCase().includes(f.description.toLowerCase().slice(0, 30))) {
+                v.violation.toLowerCase().includes(f.description.toLowerCase().slice(0, REDUNDANCY_CHECK_LENGTH))) {
               // Skip redundant first finding
               return
             }

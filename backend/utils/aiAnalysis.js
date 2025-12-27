@@ -8,6 +8,10 @@ import path from 'path'
 import { CohereClient } from 'cohere-ai'
 import { createClient } from '@supabase/supabase-js'
 
+// Violation detection quality thresholds
+const MIN_VIOLATIONS_QUALITY = 2  // Minimum number of high-quality violations to report
+const MAX_VIOLATIONS_QUESTIONABLE = 10  // Maximum number of low-quality violations to avoid
+
 // Configuration constants
 const COHERE_API_KEY = process.env.COHERE_API_KEY
 const COHERE_VISION_MODEL = process.env.COHERE_VISION_MODEL || 'c4ai-aya-vision-32b'
@@ -388,7 +392,7 @@ Focus on these key areas:
 - Food labeling and dating
 - Physical facility conditions
 
-REMEMBER: Quality over quantity. Better to report 2-3 certain violations than 10+ questionable ones.`
+REMEMBER: Quality over quantity. Better to report ${MIN_VIOLATIONS_QUALITY}-${MIN_VIOLATIONS_QUALITY + 1} certain violations than ${MAX_VIOLATIONS_QUESTIONABLE}+ questionable ones.`
 
     // Call Cohere AYA Vision API
     const response = await withTimeout(
