@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
+import { ensureBucketExists } from '../storageHelpers'
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -59,6 +60,7 @@ export async function POST(req) {
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
     // Upload to Supabase Storage
+    await ensureBucketExists('media', { public: true }, supabase)
     const { error: uploadError } = await supabase.storage
       .from('media')
       .upload(objectPath, buffer, { upsert: true, contentType })
