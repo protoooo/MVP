@@ -25,7 +25,8 @@ export default async function createSession(req) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
     }
 
-    const { type = 'restaurant', area_tags = [] } = await req.json()
+    // Use 'media' as the default type - compatible with database check constraint
+    const { type = 'media', area_tags = [] } = await req.json()
     const sessionId = uuidv4()
 
     const { error } = await supabase
