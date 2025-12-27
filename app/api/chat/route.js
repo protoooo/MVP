@@ -670,14 +670,49 @@ function coerceViolationBullet(text) {
 function inferTypeAndCategory(text) {
   const lower = String(text || '').toLowerCase()
   let type = 'Sanitation'
-  if (lower.includes('chemical') || lower.includes('windex') || lower.includes('bleach') || lower.includes('cleaner') || lower.includes('spray bottle')) type = 'Chemical Handling'
-  else if (lower.includes('handwash') || lower.includes('hand wash')) type = 'Handwashing'
-  else if (lower.includes('temperature') || lower.includes('cool') || lower.includes('reheat') || lower.includes('hot hold') || lower.includes('cold hold')) type = 'Time/Temperature'
-  else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') || lower.includes('ready-to-eat')) type = 'Cross-Contamination'
-  else if (lower.includes('pest')) type = 'Pest Control'
-
   let category = 'Core'
-  if (type === 'Chemical Handling' || type === 'Time/Temperature' || type === 'Cross-Contamination') category = 'Priority'
+  
+  // Chemical violations are always Priority
+  if (lower.includes('chemical') || lower.includes('windex') || lower.includes('bleach') || lower.includes('cleaner') || lower.includes('spray bottle') || lower.includes('toxic') || lower.includes('poisonous')) {
+    type = 'Chemical Handling'
+    category = 'Priority'
+  }
+  // Temperature control is Priority
+  else if (lower.includes('temperature') || lower.includes('cool') || lower.includes('reheat') || lower.includes('hot hold') || lower.includes('cold hold') || lower.includes('thaw') || lower.includes('danger zone')) {
+    type = 'Time/Temperature'
+    category = 'Priority'
+  }
+  // Cross-contamination is Priority
+  else if (lower.includes('cross') || lower.includes('contamination') || lower.includes('raw') && lower.includes('ready-to-eat')) {
+    type = 'Cross-Contamination'
+    category = 'Priority'
+  }
+  // Handwashing is Priority Foundation
+  else if (lower.includes('handwash') || lower.includes('hand wash') || lower.includes('hand sink')) {
+    type = 'Handwashing'
+    category = 'Priority Foundation'
+  }
+  // Foodborne illness risk is Priority
+  else if (lower.includes('illness') || lower.includes('pathogen') || lower.includes('bacteria') || lower.includes('salmonella') || lower.includes('e. coli') || lower.includes('listeria')) {
+    type = 'Foodborne Illness Risk'
+    category = 'Priority'
+  }
+  // Pest control can be Priority or Core depending on context
+  else if (lower.includes('pest') || lower.includes('rodent') || lower.includes('insect')) {
+    type = 'Pest Control'
+    category = lower.includes('droppings') || lower.includes('infestation') ? 'Priority' : 'Core'
+  }
+  // Equipment and utensils are generally Priority Foundation
+  else if (lower.includes('equipment') || lower.includes('utensil') || lower.includes('cutting board') || lower.includes('thermometer')) {
+    type = 'Equipment & Utensils'
+    category = 'Priority Foundation'
+  }
+  // General sanitation is Core
+  else if (lower.includes('clean') || lower.includes('sanitation') || lower.includes('waste') || lower.includes('floor') || lower.includes('wall')) {
+    type = 'Sanitation'
+    category = 'Core'
+  }
+  
   return { type, category }
 }
 
@@ -729,8 +764,16 @@ function locationRisky(loc = '') {
 function buildChemicalViolationBullet(foundItem) {
   const name = safeLine(foundItem?.name || 'Cleaner bottle')
   const loc = safeLine(foundItem?.location || 'in the sink/dish area')
-  const label = `${SPAN_V_OPEN}VIOLATION (Chemical Handling | Priority): ${name} stored ${loc}.${SPAN_V_CLOSE}`
-  const fix = `${SPAN_F_OPEN}FIX: Move chemicals to a labeled chemical storage area away from food, clean dishes, and utensils.${SPAN_F_CLOSE}`
+  const spatial = safeLine(foundItem?.spatial_context || 'near dishes')
+  
+  // Build more accurate violation description based on spatial context
+  let violationDesc = `${name} stored ${loc}`
+  if (spatial && spatial !== 'unclear') {
+    violationDesc = `${name} ${spatial} ${loc}`
+  }
+  
+  const label = `${SPAN_V_OPEN}VIOLATION (Chemical Handling | Priority): ${violationDesc}.${SPAN_V_CLOSE}`
+  const fix = `${SPAN_F_OPEN}FIX: Remove all chemicals from food preparation and dish areas. Store in a designated chemical storage area with clear labels, away from food, clean dishes, and utensils.${SPAN_F_CLOSE}`
   return `${label} ${fix}`
 }
 
@@ -738,26 +781,35 @@ async function runChemicalScan({ imageDataUrls }) {
   if (!FEATURE_CHEMICAL_SCAN) return { found: false }
 
   const preamble = clampText(
-    `You are a visual checker. Return ONLY valid JSON. No extra text.
+    `You are a visual checker for food safety compliance. Return ONLY valid JSON. No extra text.
 
 Schema:
 {
   "found": boolean,
   "items": [
-    { "name": string, "location": string, "spatial_context": string }
+    { "name": string, "location": string, "spatial_context": string, "is_violation": boolean }
   ]
 }
 
 Rules:
 - "found" true if you can SEE any cleaner/chemical container (Windex/bleach/degreaser/sanitizer spray bottle/etc.)
-- "location" must describe where it is (sink basin with dishes / drainboard near plates / counter by prep / etc.)
-- "spatial_context" must describe the EXACT spatial relationship: is it ON, IN, NEXT TO, ABOVE, TOUCHING, or NEAR food/dishes? Be explicit and accurate.
-- If you cannot tell the exact spatial relationship, state "unclear" in spatial_context.
-- DO NOT say something is "on" a surface if it is only "next to" or "adjacent to" that surface.`,
+- "location" must describe where it is (e.g., "in sink basin", "on countertop", "under sink cabinet", "on shelf above prep area")
+- "spatial_context" must describe the EXACT spatial relationship to food/dishes/utensils: ON TOP OF, IN SAME CONTAINER AS, TOUCHING, NEXT TO (no contact), NEAR (separate), ABOVE (hanging/stored), etc.
+- "is_violation" should be true ONLY if the chemical is:
+  * IN the same basin/container as dishes/food
+  * ON TOP OF dishes, cutting boards, or food prep surfaces  
+  * TOUCHING food, clean utensils, or food-contact surfaces
+  * INSIDE a refrigerator with food
+- "is_violation" should be false if chemical is:
+  * NEXT TO or NEAR a sink (but not IN it with dishes)
+  * UNDER a sink in a cabinet (standard storage)
+  * ON a separate shelf or counter away from food-contact surfaces
+- If you cannot tell the exact spatial relationship, state "unclear" in spatial_context and set is_violation to false
+- BE PRECISE: "next to" means no contact, "on" means resting on top of`,
     PREAMBLE_MAX_MIN
   )
 
-  const userMessage = 'Scan the photo for any visible cleaning chemicals / spray bottles. Describe their exact spatial relationship to food, dishes, or prep surfaces.'
+  const userMessage = 'Scan the photo for any visible cleaning chemicals / spray bottles. Describe their exact spatial relationship to food, dishes, or prep surfaces. Determine if the placement creates a contamination risk.'
 
   try {
     const resp = await withTimeout(
@@ -782,14 +834,26 @@ Rules:
       .map((it) => ({ 
         name: safeLine(it?.name || ''), 
         location: safeLine(it?.location || ''),
-        spatial_context: safeLine(it?.spatial_context || '')
+        spatial_context: safeLine(it?.spatial_context || ''),
+        is_violation: Boolean(it?.is_violation)
       }))
       .filter((it) => it.name || it.location)
 
+    // Check if model explicitly flagged as violation
+    for (const it of normalized) {
+      if (it.is_violation) return { found: true, actionable: true, item: it }
+    }
+
+    // Fallback: check our own heuristics
     for (const it of normalized) {
       const likely = chemicalLikely(it.name)
       const risky = locationRisky(it.location)
-      if (likely && risky) return { found: true, actionable: true, item: it }
+      const spatial = it.spatial_context.toLowerCase()
+      const actuallyRisky = spatial.includes('in') || spatial.includes('on top') || spatial.includes('touching') || spatial.includes('inside')
+      
+      if (likely && risky && actuallyRisky) {
+        return { found: true, actionable: true, item: it }
+      }
     }
 
     if (json.found && normalized.length) return { found: true, actionable: false, item: normalized[0] }
@@ -807,7 +871,7 @@ Rules:
 function buildSystemPrompt({ fullAudit }) {
   const maxBullets = fullAudit ? MAX_BULLETS_FULL_AUDIT : MAX_BULLETS_DEFAULT
 
-  return `You are ProtocolLM — a Michigan food service compliance tool. Be concise and actionable.
+  return `You are ProtocolLM — a Michigan food service compliance tool using the Michigan Modified Food Code. Be factual, concise, and actionable.
 
 CRITICAL OUTPUT RULES:
 - Output MUST be plain text (no markdown).
@@ -816,30 +880,55 @@ CRITICAL OUTPUT RULES:
 - If "${HDR_VIOL}", output up to ${maxBullets} bullets, each EXACTLY like:
   "• VIOLATION (Type | Category): <what is visible>. FIX: <one clear instruction>."
 - If "${HDR_INFO}", output up to 2 bullets, each a short question.
-- For photos: ONLY report what you can directly see. Do NOT assume temps/times/missing items.
+- For photos: ONLY report what you can DIRECTLY SEE. Do NOT assume states (wet/dry), temperatures, or missing items unless visually obvious.
 - Add citations by appending bracketed IDs that match the provided POLICY EXCERPT list (e.g., [1] or [1][3]).
 - Only cite when an excerpt supports the bullet. If no excerpts are available, omit citations.
 
+VIOLATION CATEGORIES (Michigan Modified Food Code):
+- **Priority**: Conditions that directly contribute to foodborne illness (e.g., improper temperatures, cross-contamination, chemical storage near food/dishes)
+- **Priority Foundation**: Supports Priority items (e.g., lack of proper handwashing facilities, inadequate equipment)
+- **Core**: General sanitation and operational issues (e.g., minor cleanliness issues, facility maintenance)
+
+NEVER MAKE ASSUMPTIONS:
+- DO NOT claim items are "wet" unless you see water, condensation, or glistening
+- DO NOT claim items are at wrong temperatures without visible thermometers or steam/frost
+- DO NOT claim items are "improperly stored" if their actual position is appropriate
+- DO NOT invent violations about normal, safe practices (e.g., dish soap near a sink is NORMAL and REQUIRED, not a violation)
+
+COMMON NON-VIOLATIONS (do NOT flag these):
+- Dish soap/detergent stored near or at a sink (this is REQUIRED for proper dish washing)
+- Items "next to" or "adjacent to" each other when there's no contact or contamination risk
+- Single-compartment residential sinks in home settings (only flag if this is clearly a commercial food establishment)
+
 SPATIAL REASONING REQUIREMENTS:
-- When describing object locations, be EXPLICIT about spatial relationships (on, in, above, below, next to, touching, etc.).
-- Differentiate clearly between objects that are:
-  * ON TOP OF each other (directly resting on surface)
-  * NEXT TO / ADJACENT (nearby but separate)
-  * TOUCHING (in contact but not stacked)
-  * NEAR (in same area but with clear separation)
-- If spatial relationship is UNCLEAR or AMBIGUOUS, state your uncertainty (e.g., "appears to be next to" or "possibly adjacent").
-- DO NOT assume an object is "on top of" something unless you can clearly see it is resting on that surface.
-- When objects are side-by-side or adjacent, describe them as "next to" or "adjacent to", NOT "on top of".
+- Be EXPLICIT about spatial relationships: on, in, above, below, next to, touching, inside, etc.
+- Differentiate clearly:
+  * ON TOP OF / ON: directly resting on surface
+  * NEXT TO / ADJACENT: nearby but separate, no contact
+  * TOUCHING: in contact but not stacked
+  * NEAR: in same area with clear separation
+  * INSIDE / IN: contained within
+- If spatial relationship is UNCLEAR, state uncertainty (e.g., "appears to be next to" or "possibly adjacent")
+- When objects are side-by-side, use "next to" or "adjacent to", NOT "on"
+
+CHEMICAL STORAGE VIOLATIONS (Priority):
+- Flag ONLY if cleaning chemicals (Windex, bleach, spray cleaners, etc.) are:
+  * IN the same basin/container as dishes
+  * ON TOP OF dishes, cutting boards, or food prep surfaces
+  * TOUCHING food, clean utensils, or food-contact surfaces
+- Being "next to" or "near" a sink is NOT a violation unless there's direct contact or contamination risk
+
+SINK VIOLATIONS IN COMMERCIAL SETTINGS:
+- Commercial food establishments require 3-compartment sinks for manual dishwashing
+- If you see a commercial kitchen with dirty dishes in a single-compartment sink, that may be a violation
+- Residential kitchens typically have single sinks - only flag if clearly a commercial setting
 
 IMPORTANT STYLE:
-- Do NOT write long explanations.
-- Do NOT list 10+ items.
-- Each bullet should be 1–2 short sentences max.
+- Do NOT write long explanations or assumptions
+- Do NOT list 10+ items
+- Each bullet: 1-2 short sentences max, stating ONLY observable facts
 
-SPECIAL (visual):
-- If you can SEE a cleaner/spray bottle (Windex/bleach/degreaser/etc.) in/near a sink with dishes or on food-contact surfaces, that IS a violation.
-
-Keep it short and useful for an entry-level employee and a GM.`
+Keep it factual, short, and useful for food service staff and managers.`
 }
 
 function wantsFullAudit(text) {
