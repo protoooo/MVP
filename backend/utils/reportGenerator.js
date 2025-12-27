@@ -3,6 +3,7 @@ import PDFDocument from 'pdfkit'
 // Constants for excerpt lengths
 const EXCERPT_LENGTH_JSON = 200
 const EXCERPT_LENGTH_PDF = 150
+const REDUNDANCY_CHECK_LENGTH = 30  // Characters to check for redundant descriptions
 
 /**
  * Generate a professional compliance report with violations and citations
@@ -96,7 +97,6 @@ export async function generateReport(sessionId, results) {
 
     // Report Info
     doc.fontSize(11).font('Helvetica')
-    doc.text(`Session ID: ${sessionId}`)
     doc.text(`Generated: ${new Date().toLocaleString('en-US', { 
       dateStyle: 'full', 
       timeStyle: 'short' 
@@ -144,29 +144,28 @@ export async function generateReport(sessionId, results) {
         doc.fillColor('#000000').text(` ${v.violation_type || v.type || 'General'} - ${v.category || 'Core'}`)
         
         doc.fontSize(10).font('Helvetica')
-        if (v.media_id) doc.text(`   Media Reference: ${v.media_id}`)
         
         // Main violation description
         if (v.violation) {
           doc.text(`   Finding: ${v.violation}`)
         }
         
-        // Detailed findings
+        // Detailed findings (avoid redundant first bullet if it repeats the violation)
         if (v.findings && v.findings.length > 0) {
-          v.findings.forEach(f => {
+          v.findings.forEach((f, fIdx) => {
+            // Skip first finding if it's redundant with the violation description
+            if (fIdx === 0 && v.violation && f.description && 
+                v.violation.toLowerCase().includes(f.description.toLowerCase().slice(0, REDUNDANCY_CHECK_LENGTH))) {
+              // Skip redundant first finding
+              return
+            }
             if (f.description) doc.text(`   • ${f.description}`)
             if (f.location) doc.text(`     Location: ${f.location}`)
             if (f.concern) doc.text(`     Concern: ${f.concern}`)
           })
         }
         
-        // Citation
-        if (v.citation) {
-          doc.font('Helvetica-Oblique').text(`   Citation: ${v.citation}`)
-          doc.font('Helvetica')
-        }
-        
-        // Additional citations with excerpts
+        // Inline citations with excerpts (immediately after violation)
         if (v.citations && v.citations.length > 0) {
           doc.font('Helvetica-Bold').text('   Regulatory References:')
           doc.font('Helvetica')
@@ -179,6 +178,10 @@ export async function generateReport(sessionId, results) {
               doc.fontSize(10).fillColor('#000000')
             }
           })
+        } else if (v.citation) {
+          // Fallback to old citation format if new format not available
+          doc.font('Helvetica-Oblique').text(`   Citation: ${v.citation}`)
+          doc.font('Helvetica')
         }
         
         // Confidence score
@@ -200,26 +203,34 @@ export async function generateReport(sessionId, results) {
     
     doc.moveDown()
 
-    // Citations Reference Section
-    if (allCitations.length > 0) {
+    // Compliant Items Summary (if violations exist, add brief compliant summary)
+    if (violations.length > 0 && compliant.length > 0) {
       doc.strokeColor('#333333').lineWidth(0.5)
       doc.moveTo(50, doc.y).lineTo(562, doc.y).stroke()
       doc.moveDown()
       
-      doc.fontSize(14).font('Helvetica-Bold').text('Regulatory References')
-      doc.moveDown(0.5)
-      doc.fontSize(9).font('Helvetica')
-      
-      const uniqueSources = [...new Set(allCitations.map(c => c.source))]
-      uniqueSources.forEach(source => {
-        doc.font('Helvetica-Bold').text(`• ${source}`)
-        doc.font('Helvetica')
-      })
-      doc.moveDown()
-      
-      doc.fontSize(8).fillColor('#666666')
-      doc.text('Note: Citations are from Michigan food safety regulations including the Michigan Modified Food Code, MCL Act 92 of 2000, and related guidance documents.', { width: 500 })
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#28a745').text('✓ Compliant Areas')
       doc.fillColor('#000000')
+      doc.moveDown(0.5)
+      doc.fontSize(10).font('Helvetica')
+      
+      // Generate summary of compliant categories
+      const compliantCategories = new Set()
+      compliant.forEach(c => {
+        if (c.overall_assessment) {
+          compliantCategories.add(c.overall_assessment)
+        } else if (c.area) {
+          compliantCategories.add(c.area)
+        }
+      })
+      
+      if (compliantCategories.size > 0) {
+        const summary = Array.from(compliantCategories).slice(0, 5).join(', ')
+        doc.text(`${compliant.length} item${compliant.length !== 1 ? 's' : ''} reviewed with no violations detected. These areas appear to be in good standing: ${summary}.`)
+      } else {
+        doc.text(`${compliant.length} item${compliant.length !== 1 ? 's' : ''} reviewed with no violations detected.`)
+      }
+      doc.moveDown()
     }
 
     // Footer
