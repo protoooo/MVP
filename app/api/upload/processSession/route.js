@@ -238,21 +238,30 @@ export async function POST(req) {
     // Save compliance results
     if (results.length) {
       // For anonymous users, omit user_id from the insert
+      // Build insert rows with only the fields that exist in the database schema
       const insertRows = results.map((r) => {
         const row = { 
           id: uuidv4(), 
           session_id: sessionId,
           media_id: r.media_id,
           violation: r.violation,
-          violation_type: r.violation_type || r.type || 'General',
-          category: r.category || 'Core',  // Always provide a default category
-          severity: r.severity || 'info',  // Always provide a default severity
+          // Use violation_type as a fallback if the database doesn't have 'category'
+          // Some schemas have 'category', others have just 'violation_type'
+          violation_type: r.violation_type || r.type || r.category || 'General',
+          severity: r.severity || 'info',
           confidence: r.confidence || 0,
           citation: r.citation || null,
           findings: r.findings || [],
           citations: r.citations || [],
           error: r.error || null
         }
+        
+        // Add category only if it's provided and not redundant
+        // Some database schemas have this field, others don't
+        if (r.category && r.category !== r.violation_type) {
+          row.category = r.category
+        }
+        
         if (!user.isAnonymous) {
           row.user_id = user.id
         }
@@ -265,6 +274,23 @@ export async function POST(req) {
       if (insertError) {
         console.error('Failed to insert compliance results:', insertError.message)
         console.error('Insert data sample:', JSON.stringify(insertRows[0], null, 2))
+        
+        // If the error is about missing column, try inserting without category
+        if (insertError.message && insertError.message.includes('category')) {
+          console.log('[processSession] Retrying insert without category field...')
+          const rowsWithoutCategory = insertRows.map(row => {
+            const { category, ...rest } = row
+            return rest
+          })
+          const { error: retryError } = await supabase
+            .from('compliance_results')
+            .insert(rowsWithoutCategory)
+          if (retryError) {
+            console.error('Failed to insert compliance results (retry):', retryError.message)
+          } else {
+            console.log('[processSession] Successfully inserted results without category field')
+          }
+        }
       }
     }
 
