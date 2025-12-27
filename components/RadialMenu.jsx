@@ -47,10 +47,10 @@ export default function RadialMenu({
   const actions = useMemo(
     () => [
       { key: 'chat', label: 'Chat', iconType: 'chat', color: '#3478eb', onClick: onChat },
-      { key: 'image', label: 'Image Analysis', iconType: 'vision', color: '#1e9c63', onClick: onImage },
-      { key: 'pdf', label: 'PDF Export', iconType: 'pdf', color: '#d96a1c', onClick: onPdfExport },
-      { key: 'history', label: 'History', iconType: 'history', color: '#0f766e', onClick: onChatHistory },
-      { key: 'settings', label: 'Settings', iconType: 'settings', color: '#4b5563', onClick: onSettings },
+      { key: 'image', label: 'Image Analysis', iconType: 'vision', color: '#16a34a', onClick: onImage },
+      { key: 'pdf', label: 'PDF Export', iconType: 'pdf', color: '#a855f7', onClick: onPdfExport },
+      { key: 'history', label: 'History', iconType: 'history', color: '#c75c28', onClick: onChatHistory },
+      { key: 'settings', label: 'Settings', iconType: 'settings', color: '#374151', onClick: onSettings },
     ],
     [onChat, onChatHistory, onImage, onPdfExport, onSettings]
   )
