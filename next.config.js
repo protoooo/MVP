@@ -75,7 +75,7 @@ const nextConfig = {
         test: /\.afm$/,
         type: 'asset/resource',
         generator: {
-          filename: 'static/chunks/[path][name].[hash][ext]'
+          filename: 'server/app/api/upload/processSession/data/[name][ext]'
         }
       })
     }
@@ -85,6 +85,11 @@ const nextConfig = {
     ]
     
     return config
+  },
+  
+  // Ensure font data files are copied to the output directory for production
+  outputFileTracingIncludes: {
+    '/api/upload/processSession': ['./app/api/upload/processSession/data/**/*'],
   },
 }
 
