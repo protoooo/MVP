@@ -41,11 +41,13 @@ const supabase = SUPABASE_URL && SUPABASE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } })
   : null
 
-// Timeout helper
-function withTimeout(promise, ms, label = 'TIMEOUT') {
+// Timeout helper with descriptive error messages
+function withTimeout(promise, ms, label = 'Operation') {
   return Promise.race([
     promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(label)), ms))
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    )
   ])
 }
 
@@ -83,7 +85,7 @@ async function searchRegulations(query, topK = 5) {
         truncate: 'END',
       }),
       10000,
-      'EMBEDDING_TIMEOUT'
+      'Embedding generation'
     )
 
     // Validate embedding response structure
@@ -134,26 +136,71 @@ async function searchRegulations(query, topK = 5) {
   }
 }
 
-// Extract JSON from AI response
+// Extract JSON from AI response with robust error handling
 function extractJsonFromResponse(text) {
   const s = String(text || '').trim()
   if (!s) return null
   
-  const start = s.indexOf('{')
-  if (start === -1) return null
+  // Try to find JSON block with multiple strategies
   
-  let depth = 0
-  for (let i = start; i < s.length; i++) {
-    if (s[i] === '{') depth++
-    if (s[i] === '}') depth--
-    if (depth === 0) {
-      try {
-        return JSON.parse(s.slice(start, i + 1))
-      } catch {
-        return null
+  // Strategy 1: Look for complete JSON object with balanced braces
+  const start = s.indexOf('{')
+  if (start !== -1) {
+    let depth = 0
+    for (let i = start; i < s.length; i++) {
+      if (s[i] === '{') depth++
+      if (s[i] === '}') depth--
+      if (depth === 0) {
+        try {
+          const jsonStr = s.slice(start, i + 1)
+          return JSON.parse(jsonStr)
+        } catch (parseErr) {
+          console.warn('[aiAnalysis] JSON parse error (strategy 1):', parseErr.message)
+        }
       }
     }
   }
+  
+  // Strategy 2: Try to extract JSON from markdown code blocks
+  const codeBlockMatch = s.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/)
+  if (codeBlockMatch && codeBlockMatch[1]) {
+    try {
+      return JSON.parse(codeBlockMatch[1])
+    } catch (parseErr) {
+      console.warn('[aiAnalysis] JSON parse error (strategy 2):', parseErr.message)
+    }
+  }
+  
+  // Strategy 3: Try the entire string as JSON
+  if (s.startsWith('{') && s.endsWith('}')) {
+    try {
+      return JSON.parse(s)
+    } catch (parseErr) {
+      console.warn('[aiAnalysis] JSON parse error (strategy 3):', parseErr.message)
+    }
+  }
+  
+  // Strategy 4: Try to clean and fix common JSON issues
+  try {
+    // Remove trailing commas, fix common issues
+    let cleaned = s.slice(start !== -1 ? start : 0)
+    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+    cleaned = cleaned.replace(/[\r\n\t]/g, ' ') // Remove newlines and tabs
+    cleaned = cleaned.replace(/\s+/g, ' ') // Normalize whitespace
+    
+    // Find the last complete JSON object
+    let lastCloseBrace = cleaned.lastIndexOf('}')
+    if (lastCloseBrace !== -1) {
+      const firstOpenBrace = cleaned.indexOf('{')
+      if (firstOpenBrace !== -1 && firstOpenBrace < lastCloseBrace) {
+        const jsonStr = cleaned.slice(firstOpenBrace, lastCloseBrace + 1)
+        return JSON.parse(jsonStr)
+      }
+    }
+  } catch (parseErr) {
+    console.warn('[aiAnalysis] JSON parse error (strategy 4):', parseErr.message)
+  }
+  
   return null
 }
 
@@ -220,6 +267,8 @@ export async function analyzeImage(imageInput) {
     console.warn('[aiAnalysis] Cohere API key not configured, returning placeholder result')
     return {
       violation: null,
+      violation_type: 'None',
+      category: 'Core',
       findings: [],
       citations: [],
       severity: 'info',
@@ -310,7 +359,7 @@ Focus on these key areas:
         })
       }),
       30000,
-      'VISION_TIMEOUT'
+      'Vision API analysis'
     )
 
     if (!response.ok) {
@@ -333,15 +382,22 @@ Focus on these key areas:
     const analysis = extractJsonFromResponse(responseText)
     
     if (!analysis) {
-      console.warn('[aiAnalysis] Could not parse JSON from response:', responseText.slice(0, 200))
+      console.error('[aiAnalysis] Could not parse JSON from response')
+      console.error('[aiAnalysis] Response text (first 500 chars):', responseText.slice(0, 500))
+      console.error('[aiAnalysis] Response text (last 500 chars):', responseText.slice(-500))
+      
+      // Return a safe default result instead of failing
       return {
         violation: null,
+        violation_type: 'Unknown',
+        category: 'Core',
         findings: [],
         citations: [],
         severity: 'info',
-        confidence: 0.5,
+        confidence: 0.3,
         analyzed: true,
-        raw_response: responseText.slice(0, 500)
+        error: 'Failed to parse AI response - response format was invalid',
+        raw_response_preview: responseText.slice(0, 200)
       }
     }
 
@@ -349,6 +405,8 @@ Focus on these key areas:
     if (!analysis.has_violations || !analysis.findings?.length) {
       return {
         violation: null,
+        violation_type: 'None',
+        category: 'Core',
         findings: [],
         citations: [],
         severity: 'info',
@@ -425,6 +483,8 @@ Focus on these key areas:
     console.error('[aiAnalysis] Analysis failed:', err.message)
     return {
       violation: null,
+      violation_type: 'Unknown',
+      category: 'Core',
       findings: [],
       citations: [],
       severity: 'info',
@@ -452,6 +512,8 @@ export async function analyzeImageBatch(imagePaths) {
     const batchResults = await Promise.all(
       batch.map(imgPath => analyzeImage(imgPath).catch(err => ({
         violation: null,
+        violation_type: 'Unknown',
+        category: 'Core',
         findings: [],
         citations: [],
         severity: 'info',
