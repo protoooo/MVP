@@ -17,7 +17,7 @@
     "send-reminders": "node scripts/send-trial-reminders.js",
     "test-emails": "node scripts/test-emails.js",
     "cleanup-webhooks": "node scripts/cleanup-webhook-events.js",
-    "postinstall": "python scripts/generate_icons.py"
+    "postinstall": "python scripts/generate_icons.py && node scripts/copy-pdfkit-fonts.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

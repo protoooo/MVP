@@ -66,6 +66,17 @@ const nextConfig = {
       }
     }
     
+    // Copy pdfkit font data files to output directory
+    if (isServer) {
+      config.module.rules.push({
+        test: /\.afm$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'static/chunks/[path][name].[hash][ext]'
+        }
+      })
+    }
+    
     config.ignoreWarnings = [
       { module: /node_modules/ },
     ]

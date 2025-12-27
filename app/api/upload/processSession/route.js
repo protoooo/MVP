@@ -251,7 +251,6 @@ export async function POST(req) {
           citation: r.citation,
           findings: r.findings,
           citations: r.citations,
-          analyzed: r.analyzed,
           error: r.error || null
         }
         if (!user.isAnonymous) {
