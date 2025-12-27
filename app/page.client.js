@@ -1698,8 +1698,8 @@ export default function Page() {
   )
 
   const handleShareResults = useCallback(
-    async (message) => {
-      const text = buildReportText(message)
+    async (message, shareAll = false) => {
+      const text = buildReportText(message, shareAll)
       if (!text || typeof navigator === 'undefined') return
 
       try {
