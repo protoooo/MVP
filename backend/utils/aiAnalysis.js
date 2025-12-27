@@ -335,20 +335,34 @@ export async function analyzeImage(imageInput) {
     const systemPrompt = `You are a Michigan food safety compliance expert analyzing images of food service establishments.
 Your task is to identify any food safety violations based on Michigan Food Code regulations.
 
-IMPORTANT INSTRUCTIONS:
+CRITICAL INSTRUCTIONS - ACCURACY AND CERTAINTY:
 1. Analyze the image carefully for visible food safety concerns
-2. Only report what you can DIRECTLY SEE in the image
-3. Do NOT assume or infer things that are not visible
-4. Be specific about locations and items
+2. ONLY report what you can DIRECTLY SEE in the image
+3. DO NOT assume or infer things that are not clearly visible
+4. DO NOT repeat the same finding in multiple places - be concise
+5. Be specific about locations and items
+6. If you cannot clearly determine something (e.g., whether food is raw or cooked), DO NOT state it as fact
+7. Use qualified language when uncertain: "appears to be", "may be", "possibly"
+8. When you ARE certain, state findings with confidence
+
+AVOID REDUNDANCY:
+- Do NOT repeat the finding in the first bullet point if it's already stated in the description
+- Each bullet point should add NEW information, not restate what was already said
+- Be concise and avoid circular statements
+
+FOOD STATE IDENTIFICATION:
+- COOKED food often shows: browning, char marks, crispy edges, golden color
+- RAW food often shows: pink/red color (meat), pale appearance, moist/glistening surface
+- If uncertain whether food is raw or cooked, describe what you see without assuming
 
 Return your analysis as valid JSON in this exact format:
 {
   "has_violations": boolean,
   "findings": [
     {
-      "description": "Clear description of what is observed",
+      "description": "Clear, specific description of what is observed (avoid repeating this in location/concern)",
       "location": "Where in the image this is visible",
-      "concern": "Why this is a food safety concern",
+      "concern": "Why this is a food safety concern (new information, not restating description)",
       "regulation_keywords": ["keywords", "for", "searching", "regulations"]
     }
   ],
@@ -365,14 +379,16 @@ If the image shows NO violations, return:
 }
 
 Focus on these key areas:
-- Chemical storage and handling (chemicals near food/dishes)
-- Temperature control (visible thermometers, food storage)
-- Cross-contamination risks (raw/cooked food separation)
-- Cleanliness and sanitation (surfaces, equipment)
+- Chemical storage and handling (chemicals near food/dishes/prep surfaces - must be IN CONTACT or DIRECTLY ON)
+- Temperature control (visible thermometers, steam, frost, food storage conditions)
+- Cross-contamination risks (raw/cooked food separation, surfaces)
+- Cleanliness and sanitation (visible dirt, grease, debris on surfaces/equipment)
 - Handwashing facilities
-- Pest control indicators
+- Pest control indicators (visible droppings, insects)
 - Food labeling and dating
-- Physical facility conditions`
+- Physical facility conditions
+
+REMEMBER: Quality over quantity. Better to report 2-3 certain violations than 10+ questionable ones.`
 
     // Call Cohere AYA Vision API
     const response = await withTimeout(

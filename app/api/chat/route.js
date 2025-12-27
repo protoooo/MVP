@@ -804,8 +804,10 @@ Rules:
   * NEXT TO or NEAR a sink (but not IN it with dishes)
   * UNDER a sink in a cabinet (standard storage)
   * ON a separate shelf or counter away from food-contact surfaces
+  * Adjacent to but not touching food prep areas
 - If you cannot tell the exact spatial relationship, state "unclear" in spatial_context and set is_violation to false
-- BE PRECISE: "next to" means no contact, "on" means resting on top of`,
+- BE PRECISE: "next to" means no contact, "on" means resting on top of
+- DO NOT flag normal placement of dish soap at/near a sink - this is REQUIRED for operations`,
     PREAMBLE_MAX_MIN
   )
 
@@ -889,6 +891,25 @@ VIOLATION CATEGORIES (Michigan Modified Food Code):
 - **Priority Foundation**: Supports Priority items (e.g., lack of proper handwashing facilities, inadequate equipment)
 - **Core**: General sanitation and operational issues (e.g., minor cleanliness issues, facility maintenance)
 
+CRITICAL - AVOID REDUNDANCY:
+- DO NOT repeat the finding in the first bullet point after stating the violation
+- The violation description should be the COMPLETE statement
+- Bullet points should provide ADDITIONAL context, concerns, or details only
+- Example of REDUNDANCY (BAD):
+  * VIOLATION: Stovetop is not clean with visible grease
+  * • Stovetop is not clean with visible grease  [REDUNDANT - DON'T DO THIS]
+- Example of GOOD formatting:
+  * VIOLATION: Stovetop is not clean with visible grease
+  * • Unsanitary conditions can lead to cross-contamination
+  * • Grease buildup increases fire hazard risk
+
+ACCURACY AND CERTAINTY:
+- DO NOT claim items are "raw" unless you can clearly see they are uncooked (pink/red color for meat, pale for breading)
+- COOKED food shows: browning, char marks, golden/crispy appearance
+- If uncertain about food state, use: "appears to be", "may be", "possibly"
+- When certain, state findings with confidence
+- Better to report 2-3 certain violations than many questionable ones
+
 NEVER MAKE ASSUMPTIONS:
 - DO NOT claim items are "wet" unless you see water, condensation, or glistening
 - DO NOT claim items are at wrong temperatures without visible thermometers or steam/frost
@@ -899,6 +920,7 @@ COMMON NON-VIOLATIONS (do NOT flag these):
 - Dish soap/detergent stored near or at a sink (this is REQUIRED for proper dish washing)
 - Items "next to" or "adjacent to" each other when there's no contact or contamination risk
 - Single-compartment residential sinks in home settings (only flag if this is clearly a commercial food establishment)
+- Cooling food on appropriate surfaces (stovetops, cooling racks are often acceptable for cooling)
 
 SPATIAL REASONING REQUIREMENTS:
 - Be EXPLICIT about spatial relationships: on, in, above, below, next to, touching, inside, etc.
@@ -927,6 +949,7 @@ IMPORTANT STYLE:
 - Do NOT write long explanations or assumptions
 - Do NOT list 10+ items
 - Each bullet: 1-2 short sentences max, stating ONLY observable facts
+- AVOID repeating the same information in multiple bullets
 
 Keep it factual, short, and useful for food service staff and managers.`
 }
