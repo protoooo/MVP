@@ -88,23 +88,27 @@ function calculatePricing(locationCount, devicesPerLocation) {
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <path
+        d="M5.5 7H9l1.3-2.3c.2-.4.6-.7 1-.7h2.4c.4 0 .8.3 1 .7L16 7h3.5A2.5 2.5 0 0 1 22 9.5v8A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5v-8A2.5 2.5 0 0 1 4.5 7Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="13.5" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   ArrowRight: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
       <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   Send: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
       <path d="M12 19V6.5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M6.5 11.5 12 6l5.5 5.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -114,11 +118,11 @@ const Icons = {
   // Use a single <path> with round caps so it ALWAYS looks like an “X”.
   X: () => (
     <svg
-      width="18"
-      height="18"
+      width="20"
+      height="20"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2.4"
+      strokeWidth="2.6"
       viewBox="0 0 24 24"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -134,14 +138,14 @@ const Icons = {
     </svg>
   ),
   Gear: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
       <path
-        d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
+        d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M19.4 13.5c.04-.5.04-1 0-1.5l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.3-.8l-.4-2.6H10.1l-.4 2.6c-.46.2-.9.46-1.3.8l-2.4-1-2 3.4 2 1.5c-.04.5-.04 1 0 1.5l-2 1.5 2 3.4 2.4-1c.4.34.84.6 1.3.8l.4 2.6h4.8l.4-2.6c.46-.2.9-.46 1.3-.8l2.4 1 2-3.4-2-1.5Z"
+        d="m19.2 9.5-.8-2 1.4-1.4-2.8-2.8-1.4 1.4-2-.8-1-.2-1 .2-2 .8-1.4-1.4-2.8 2.8 1.4 1.4-.8 2-.2 1 .2 1 .8 2-1.4 1.4 2.8 2.8 1.4-1.4 2 .8 1 .2 1-.2 2-.8 1.4 1.4 2.8-2.8-1.4-1.4.8-2 .2-1-.2-1Z"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -344,10 +348,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <LiquidGlass
-          variant="main"
-          className={`modal-card glass-modal landing-hero-card landing-hero-card--terms-style auth-modal ${plusJakarta.className}`}
-        >
+        <div className={`modal-card auth-surface ${plusJakarta.className}`}>
           <button onClick={onClose} className="modal-close" aria-label="Close" type="button">
             <Icons.X />
           </button>
@@ -432,7 +433,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
           </div>
 
           <RecaptchaBadge />
-        </LiquidGlass>
+        </div>
       </div>
     </div>
   )
@@ -1870,10 +1871,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           padding: 22px;
-          background: rgba(0, 0, 0, 0.3);
-            
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
+          background: rgba(0, 0, 0, 0.32);
           animation: modal-fade 0.14s ease;
         }
 
@@ -1888,60 +1886,23 @@ export default function Page() {
 
         .modal-container {
           width: 100%;
-          max-width: 560px;
+          max-width: 540px;
           display: flex;
           justify-content: center;
           align-items: center;
         }
 
-        /* ✅ Modal cards: FORCE light frosted glass + fix “blurry” text on iOS (compositing) */
-        .glass-modal.modal-card {
+        /* ✅ Matte auth surface */
+        .auth-surface {
           width: 100%;
           position: relative;
-          border-radius: 18px;
+          border-radius: 16px;
           padding: 22px;
-
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)) !important;
-          border: 1px solid rgba(255, 255, 255, 0.7) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 22px 65px rgba(10, 18, 35, 0.22) !important;
-
-          /* lift clarity to match landing + accept-terms glass */
-          backdrop-filter: blur(18px) saturate(165%) !important;
-          -webkit-backdrop-filter: blur(18px) saturate(165%) !important;
-
-          color: var(--glass-ink) !important;
-          color-scheme: light !important;
+          background: #f9f9f7;
+          border: 1px solid rgba(0, 0, 0, 0.07);
+          box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
+          color: var(--ink);
           overflow: hidden;
-
-          /* ✅ anti-blur / rasterization fixes */
-          transform: translate3d(0, 0, 0);
-          -webkit-transform: translate3d(0, 0, 0);
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          filter: none !important;
-          -webkit-filter: none !important;
-          -webkit-font-smoothing: antialiased;
-          text-rendering: optimizeLegibility;
-          -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* ✅ Auth + Pricing cards: brighten glass + reduce blur for text clarity */
-        .glass-modal.modal-card.auth-modal,
-        .glass-modal.modal-card.pricing-modal {
-          background: linear-gradient(150deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.18)) !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64), 0 24px 70px rgba(10, 18, 35, 0.2) !important;
-          border: 1px solid rgba(255, 255, 255, 0.72) !important;
-          backdrop-filter: blur(10px) saturate(140%) !important;
-          -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
-        }
-
-        .glass-modal.modal-card::before {
-          display: none; /* ✅ Remove gradient overlay that causes blurry text */
-        }
-
-        .glass-modal.modal-card > * {
-          position: relative;
-          z-index: 1;
         }
 
         .modal-close {
@@ -1951,16 +1912,16 @@ export default function Page() {
           width: 36px;
           height: 36px;
           border-radius: 12px;
-          border: 1px solid var(--border);
-          background: rgba(255, 255, 255, 0.78);
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          background: #ffffff;
           color: var(--ink);
           cursor: pointer;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           line-height: 0;
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-          transition: background 0.15s ease;
+          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+          transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         .modal-close svg {
@@ -1969,7 +1930,8 @@ export default function Page() {
         }
 
         .modal-close:hover {
-          background: rgba(255, 255, 255, 0.95);
+          background: #f5f5f4;
+          border-color: rgba(0, 0, 0, 0.12);
         }
 
         .modal-header {
@@ -1980,7 +1942,7 @@ export default function Page() {
         .modal-title {
           margin: 0;
           font-size: 18px;
-          font-weight: 850;
+          font-weight: 840;
           letter-spacing: -0.02em;
           color: var(--ink);
         }
@@ -2014,24 +1976,22 @@ export default function Page() {
 
         .form-input {
           width: 100%;
-          height: 44px;
+          height: 46px;
           padding: 0 12px;
           border-radius: 12px;
-          border: 1px solid var(--border);
-          background: rgba(255, 255, 255, 0.74);
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          background: #ffffff;
           color: var(--ink);
           font-size: 14px;
           font-weight: 650;
           transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-          backdrop-filter: blur(10px) saturate(120%);
-          -webkit-backdrop-filter: blur(10px) saturate(120%);
         }
 
         .form-input:focus {
           outline: none;
-          border-color: rgba(15, 23, 42, 0.28);
-          box-shadow: 0 0 0 3px rgba(95, 168, 255, 0.18);
-          background: rgba(255, 255, 255, 0.9);
+          border-color: rgba(0, 0, 0, 0.16);
+          box-shadow: 0 0 0 3px rgba(52, 120, 235, 0.16);
+          background: #ffffff;
         }
 
         .form-toggle-vis {
@@ -2040,40 +2000,41 @@ export default function Page() {
           height: 30px;
           padding: 0 10px;
           border-radius: 9999px;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          background: rgba(255, 255, 255, 0.75);
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          background: #f4f4f3;
           color: rgba(15, 23, 42, 0.82);
           cursor: pointer;
           font-weight: 800;
           font-size: 12px;
-          transition: background 0.15s ease;
+          transition: background 0.15s ease, border-color 0.15s ease;
         }
 
         .form-toggle-vis:hover {
-          background: rgba(255, 255, 255, 0.95);
+          background: #ecebea;
+          border-color: rgba(0, 0, 0, 0.12);
         }
 
         /* ✅ Match landing/chat CTA vibe (blue accent) */
         .btn-submit {
-          height: 44px;
-          border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          background: linear-gradient(180deg, rgba(95, 168, 255, 0.98), rgba(95, 168, 255, 0.78));
+          height: 46px;
+          border-radius: 12px;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          background: #2f7be5;
           color: #fff;
-          font-weight: 900;
+          font-weight: 820;
           cursor: pointer;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 10px;
-          box-shadow: 0 16px 44px rgba(95, 168, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-          transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+          box-shadow: 0 10px 26px rgba(47, 123, 229, 0.2);
+          transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
         }
 
         .btn-submit:hover:not(:disabled) {
           transform: translateY(-1px);
-          box-shadow: 0 18px 48px rgba(95, 168, 255, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-          filter: saturate(1.03);
+          box-shadow: 0 12px 30px rgba(47, 123, 229, 0.24);
+          border-color: rgba(0, 0, 0, 0.12);
         }
 
         .btn-submit:active:not(:disabled) {
