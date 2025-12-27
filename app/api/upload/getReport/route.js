@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
+import { ensureBucketExists, getPublicUrlSafe } from '../storageHelpers'
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -58,9 +59,7 @@ export async function POST(req) {
     if (error) throw error
 
     // Get public URL for PDF
-    const pdfUrl = data?.pdf_path
-      ? supabase.storage.from('reports').getPublicUrl(data.pdf_path).data?.publicUrl
-      : null
+    const pdfUrl = data?.pdf_path ? await getPublicUrlSafe('reports', data.pdf_path, supabase) : null
 
     return NextResponse.json({ ...data, pdf_url: pdfUrl })
   } catch (err) {
