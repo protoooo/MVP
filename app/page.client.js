@@ -54,7 +54,8 @@ const clearPolicyAcceptance = (userId) => {
 const MAX_TEXTAREA_HEIGHT = 120
 
 // Use local Next.js API routes for upload functionality
-const FUNCTION_BASE = '/api/upload'
+// Can be overridden via NEXT_PUBLIC_API_BASE_URL for different environments
+const FUNCTION_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/upload'
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const USER_API_KEY = process.env.NEXT_PUBLIC_USER_API_KEY || ''
 
@@ -1456,7 +1457,7 @@ export default function Page() {
       return
     }
     if (!uploadFiles.length) {
-      setUploadError('Select 30–50 images or videos to continue.')
+      setUploadError('Select at least one image or video to continue.')
       return
     }
 

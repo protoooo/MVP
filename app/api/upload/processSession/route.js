@@ -43,25 +43,28 @@ async function downloadToTemp(bucket, filePath) {
   return destPath
 }
 
-// Simplified image analysis that doesn't require external AI service
+// TODO: Implement actual image analysis using an AI/ML service
+// This is a placeholder that returns neutral results until real analysis is integrated
 async function analyzeImage(imagePath) {
-  // Return a placeholder analysis
-  // In production, this would call an AI service
+  // In production, this would call an AI service for compliance analysis
+  // For now, return a pending/neutral result to indicate analysis is needed
   return {
     findings: [],
-    compliant: true,
+    compliant: null, // null indicates pending/no analysis performed
     analyzed_at: new Date().toISOString(),
-    notes: 'Image analyzed for health code compliance',
+    notes: 'Pending manual review - automated analysis not yet configured',
   }
 }
 
-// Generate a simple report
+// TODO: Use pdfkit or similar library for proper PDF generation
+// This is a placeholder that generates a text-based report
 async function generateReport(sessionId, results) {
   const summary = {
     session_id: sessionId,
     total_media: results.length,
-    compliant_count: results.filter((r) => r.compliant).length,
-    violation_count: results.filter((r) => !r.compliant).length,
+    compliant_count: results.filter((r) => r.compliant === true).length,
+    pending_count: results.filter((r) => r.compliant === null).length,
+    violation_count: results.filter((r) => r.compliant === false).length,
     generated_at: new Date().toISOString(),
   }
 
@@ -70,20 +73,27 @@ async function generateReport(sessionId, results) {
     results,
   }
 
-  // Generate a simple PDF buffer (placeholder - in production use pdfkit)
-  const pdfContent = `Health Inspection Report
+  // Placeholder text report - in production, use pdfkit for proper PDF generation
+  const reportContent = `Health Inspection Report
 Session: ${sessionId}
 Generated: ${summary.generated_at}
 
 Summary:
 - Total Media Analyzed: ${summary.total_media}
 - Compliant: ${summary.compliant_count}
+- Pending Review: ${summary.pending_count}
 - Violations Found: ${summary.violation_count}
 
 Results:
-${results.map((r, i) => `${i + 1}. Media ${r.media_id}: ${r.compliant ? 'Compliant' : 'Violation Found'}`).join('\n')}
+${results.map((r, i) => {
+  const status = r.compliant === true ? 'Compliant' : r.compliant === false ? 'Violation Found' : 'Pending Review'
+  return `${i + 1}. Media ${r.media_id}: ${status}`
+}).join('\n')}
+
+Note: This is a preliminary report. Full PDF generation will be available in a future update.
 `
-  const pdfBuffer = Buffer.from(pdfContent, 'utf-8')
+  // Store as text for now - will be converted to proper PDF in production
+  const pdfBuffer = Buffer.from(reportContent, 'utf-8')
 
   return { jsonReport, pdfBuffer }
 }
@@ -124,12 +134,14 @@ export async function POST(req) {
         results.push({ media_id: item.id, ...analysis })
       } catch (downloadErr) {
         console.error('Download error for media item:', item.id, downloadErr)
+        // Mark as failed/uncertain when download fails - don't assume compliant
         results.push({
           media_id: item.id,
-          compliant: true,
+          compliant: null, // null indicates analysis could not be performed
           findings: [],
-          notes: 'Unable to analyze - file may be unavailable',
+          notes: 'Unable to analyze - file download failed',
           analyzed_at: new Date().toISOString(),
+          error: true,
         })
       }
     }
