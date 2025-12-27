@@ -11,31 +11,51 @@ export const supabase =
 // Cache bucket checks for the current runtime to avoid repeated network lookups.
 // If bucket visibility changes externally, restart the runtime to refresh.
 const ensuredBuckets = new Set()
+const bucketChecks = new Map()
+
+function isBucketNotFoundError(error) {
+  if (!error) return false
+  const status = Number(error?.status ?? error?.statusCode)
+  if (status === 404) return true
+  return Number.isNaN(status) && /not found/i.test(error?.message || '')
+}
+
+function isBucketAlreadyExistsError(error) {
+  if (!error) return false
+  const status = Number(error?.status ?? error?.statusCode)
+  if (status === 409 || status === 400) return true
+  return Number.isNaN(status) && /already exists/i.test(error?.message || '')
+}
 
 export async function ensureBucketExists(bucket, options = { public: true }, client = supabase) {
   const activeClient = client ?? supabase
   if (!activeClient) throw new Error('Supabase client is not configured')
   if (ensuredBuckets.has(bucket)) return
+  if (bucketChecks.has(bucket)) return bucketChecks.get(bucket)
 
-  const { data, error } = await activeClient.storage.getBucket(bucket)
-  if (data && !error) {
+  const ensurePromise = (async () => {
+    const { data, error } = await activeClient.storage.getBucket(bucket)
+    if (data && !error) {
+      ensuredBuckets.add(bucket)
+      return
+    }
+
+    if (error && !isBucketNotFoundError(error)) throw error
+
+    const { error: createError } = await activeClient.storage.createBucket(bucket, options)
+    if (createError && !isBucketAlreadyExistsError(createError)) {
+      throw createError
+    }
+
     ensuredBuckets.add(bucket)
-    return
+  })()
+
+  bucketChecks.set(bucket, ensurePromise)
+  try {
+    await ensurePromise
+  } finally {
+    bucketChecks.delete(bucket)
   }
-
-  const status = Number(error?.status ?? error?.statusCode)
-  const isMissing = status === 404 || (Number.isNaN(status) && /not found/i.test(error?.message || ''))
-  if (error && !isMissing) throw error
-
-  const { error: createError } = await activeClient.storage.createBucket(bucket, options)
-  if (createError) {
-    const createStatus = Number(createError?.status ?? createError?.statusCode)
-    const alreadyExists =
-      createStatus === 409 || createStatus === 400 || (Number.isNaN(createStatus) && /already exists/i.test(createError.message || ''))
-    if (!alreadyExists) throw createError
-  }
-
-  ensuredBuckets.add(bucket)
 }
 
 export async function uploadFile(bucket, filePath, fileBody, contentType) {
