@@ -1,0 +1,55 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { v4 as uuidv4 } from 'uuid'
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+const supabase =
+  supabaseUrl && supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
+    : null
+
+async function authorize(req) {
+  const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
+  const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
+  if (!apiKey) return null
+  
+  // Accept the anon key for authenticated users
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (apiKey === anonKey) {
+    // For anon key, we treat it as valid but return a placeholder user
+    return { id: 'anonymous' }
+  }
+  
+  const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
+  if (error || !data) return null
+  return data
+}
+
+export async function POST(req) {
+  if (!supabase) {
+    return NextResponse.json({ error: 'Supabase is not configured' }, { status: 500 })
+  }
+
+  try {
+    const user = await authorize(req)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { type = 'restaurant', area_tags = [] } = body
+    const sessionId = uuidv4()
+
+    const { error } = await supabase
+      .from('audit_sessions')
+      .insert([{ id: sessionId, user_id: user.id, type, area_tags }])
+
+    if (error) throw error
+
+    return NextResponse.json({ session_id: sessionId })
+  } catch (err) {
+    return NextResponse.json({ error: err.message || 'Failed to create session' }, { status: 500 })
+  }
+}
