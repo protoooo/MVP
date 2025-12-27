@@ -74,6 +74,9 @@ public/icon-512.png
 public/apple-touch-icon.png
 app/apple-icon.png
 
+# PDFKit font files (auto-generated during postinstall)
+app/api/upload/processSession/data/*.afm
+
 # Local test data
 test-uploads/
 temp/
