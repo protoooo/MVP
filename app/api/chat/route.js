@@ -744,18 +744,20 @@ Schema:
 {
   "found": boolean,
   "items": [
-    { "name": string, "location": string }
+    { "name": string, "location": string, "spatial_context": string }
   ]
 }
 
 Rules:
 - "found" true if you can SEE any cleaner/chemical container (Windex/bleach/degreaser/sanitizer spray bottle/etc.)
 - "location" must describe where it is (sink basin with dishes / drainboard near plates / counter by prep / etc.)
-- If you cannot tell, set found=false.`,
+- "spatial_context" must describe the EXACT spatial relationship: is it ON, IN, NEXT TO, ABOVE, TOUCHING, or NEAR food/dishes? Be explicit and accurate.
+- If you cannot tell the exact spatial relationship, state "unclear" in spatial_context.
+- DO NOT say something is "on" a surface if it is only "next to" or "adjacent to" that surface.`,
     PREAMBLE_MAX_MIN
   )
 
-  const userMessage = 'Scan the photo for any visible cleaning chemicals / spray bottles and where they are placed.'
+  const userMessage = 'Scan the photo for any visible cleaning chemicals / spray bottles. Describe their exact spatial relationship to food, dishes, or prep surfaces.'
 
   try {
     const resp = await withTimeout(
@@ -777,7 +779,11 @@ Rules:
 
     const items = Array.isArray(json.items) ? json.items : []
     const normalized = items
-      .map((it) => ({ name: safeLine(it?.name || ''), location: safeLine(it?.location || '') }))
+      .map((it) => ({ 
+        name: safeLine(it?.name || ''), 
+        location: safeLine(it?.location || ''),
+        spatial_context: safeLine(it?.spatial_context || '')
+      }))
       .filter((it) => it.name || it.location)
 
     for (const it of normalized) {
@@ -813,6 +819,17 @@ CRITICAL OUTPUT RULES:
 - For photos: ONLY report what you can directly see. Do NOT assume temps/times/missing items.
 - Add citations by appending bracketed IDs that match the provided POLICY EXCERPT list (e.g., [1] or [1][3]).
 - Only cite when an excerpt supports the bullet. If no excerpts are available, omit citations.
+
+SPATIAL REASONING REQUIREMENTS:
+- When describing object locations, be EXPLICIT about spatial relationships (on, in, above, below, next to, touching, etc.).
+- Differentiate clearly between objects that are:
+  * ON TOP OF each other (directly resting on surface)
+  * NEXT TO / ADJACENT (nearby but separate)
+  * TOUCHING (in contact but not stacked)
+  * NEAR (in same area but with clear separation)
+- If spatial relationship is UNCLEAR or AMBIGUOUS, state your uncertainty (e.g., "appears to be next to" or "possibly adjacent").
+- DO NOT assume an object is "on top of" something unless you can clearly see it is resting on that surface.
+- When objects are side-by-side or adjacent, describe them as "next to" or "adjacent to", NOT "on top of".
 
 IMPORTANT STYLE:
 - Do NOT write long explanations.
