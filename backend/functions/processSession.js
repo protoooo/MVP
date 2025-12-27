@@ -102,7 +102,7 @@ export default async function processSession(req) {
       .single()
     if (reportError) throw reportError
 
-    const publicPdfUrl = getPublicUrl('reports', pdfPath)
+    const publicPdfUrl = await getPublicUrl('reports', pdfPath)
 
     const response = new Response(
       JSON.stringify({

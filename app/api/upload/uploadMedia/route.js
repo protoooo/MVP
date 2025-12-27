@@ -10,6 +10,25 @@ const supabase =
     ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
     : null
 
+const ensuredBuckets = new Set()
+
+async function ensureBucketExists(bucket) {
+  if (ensuredBuckets.has(bucket)) return
+  const { data, error } = await supabase.storage.getBucket(bucket)
+  if (!error && data) {
+    ensuredBuckets.add(bucket)
+    return
+  }
+  if (error && error.status !== 404 && error.statusCode !== '404' && !/not found/i.test(error.message || '')) {
+    throw error
+  }
+  const { error: createError } = await supabase.storage.createBucket(bucket, { public: true })
+  if (createError && !/already exists/i.test(createError.message || '')) {
+    throw createError
+  }
+  ensuredBuckets.add(bucket)
+}
+
 async function authorize(req) {
   const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
   const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
@@ -59,6 +78,7 @@ export async function POST(req) {
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
     // Upload to Supabase Storage
+    await ensureBucketExists('media')
     const { error: uploadError } = await supabase.storage
       .from('media')
       .upload(objectPath, buffer, { upsert: true, contentType })

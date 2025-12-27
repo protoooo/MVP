@@ -33,7 +33,7 @@ export default async function getReport(req) {
       .single()
     if (error) throw error
 
-    const pdfUrl = data?.pdf_path ? getPublicUrl('reports', data.pdf_path) : null
+    const pdfUrl = data?.pdf_path ? await getPublicUrl('reports', data.pdf_path) : null
 
     return new Response(JSON.stringify({ ...data, pdf_url: pdfUrl }), {
       status: 200,
