@@ -11,59 +11,26 @@ export const supabase =
 // Cache bucket checks for the current runtime to avoid repeated network lookups.
 // If bucket visibility changes externally, restart the runtime to refresh.
 const ensuredBuckets = new Set()
-const bucketChecks = new Map()
-
-function isBucketNotFoundError(error) {
-  if (!error) return false
-  const status = Number(error?.status ?? error?.statusCode)
-  if (status === 404) return true
-  return Number.isNaN(status) && /not found/i.test(error?.message || '')
-}
-
-function isBucketAlreadyExistsError(error) {
-  if (!error) return false
-  const status = Number(error?.status ?? error?.statusCode)
-  if (status === 409 || status === 400) return true
-  return Number.isNaN(status) && /already exists/i.test(error?.message || '')
-}
 
 export async function ensureBucketExists(bucket, options = { public: true }, client = supabase) {
   const activeClient = client ?? supabase
   if (!activeClient) throw new Error('Supabase client is not configured')
-  if (ensuredBuckets.has(bucket)) return
-  if (bucketChecks.has(bucket)) return bucketChecks.get(bucket)
-
-  const ensurePromise = (async () => {
-    const { data, error } = await activeClient.storage.getBucket(bucket)
-    if (data && !error) {
-      ensuredBuckets.add(bucket)
-      return
-    }
-
-    if (error && !isBucketNotFoundError(error)) throw error
-
-    const { error: createError } = await activeClient.storage.createBucket(bucket, options)
-    if (createError && !isBucketAlreadyExistsError(createError)) {
-      throw createError
-    }
-
-    ensuredBuckets.add(bucket)
-  })()
-
-  bucketChecks.set(bucket, ensurePromise)
-  try {
-    await ensurePromise
-  } finally {
-    bucketChecks.delete(bucket)
-  }
+  
+  // Skip the check - assume bucket exists
+  // This avoids permission issues and conflicts with manually created buckets
+  ensuredBuckets.add(bucket)
+  return
 }
 
 export async function uploadFile(bucket, filePath, fileBody, contentType) {
   if (!supabase) throw new Error('Supabase client is not configured')
+  
   await ensureBucketExists(bucket, { public: true }, supabase)
+  
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(filePath, fileBody, { upsert: true, contentType })
+  
   if (error) throw error
   return data
 }
@@ -71,7 +38,9 @@ export async function uploadFile(bucket, filePath, fileBody, contentType) {
 export async function getPublicUrl(bucket, filePath, client = supabase) {
   const activeClient = client ?? supabase
   if (!activeClient) throw new Error('Supabase client is not configured')
+  
   await ensureBucketExists(bucket, { public: true }, activeClient)
+  
   const { data } = activeClient.storage.from(bucket).getPublicUrl(filePath)
   return data?.publicUrl || null
 }
@@ -85,9 +54,12 @@ export function getPublicUrlSync(bucket, filePath) {
 
 export async function downloadFile(bucket, filePath) {
   if (!supabase) throw new Error('Supabase client is not configured')
+  
   await ensureBucketExists(bucket, { public: true }, supabase)
+  
   const { data, error } = await supabase.storage.from(bucket).download(filePath)
   if (error) throw error
+  
   const arrayBuffer = await data.arrayBuffer()
   return Buffer.from(arrayBuffer)
 }
