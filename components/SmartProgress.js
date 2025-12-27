@@ -14,9 +14,9 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
   })
 
   const config = useMemo(() => {
-    // vision feels slower — give it a lower "cap" early so it feels honest
+    // vision/upload mode needs more gradual progress to feel honest
     return mode === 'vision'
-      ? { baseCap: 88, finalCap: 94, k: 0.030 }
+      ? { baseCap: 92, finalCap: 97, k: 0.025 }
       : { baseCap: 90, finalCap: 96, k: 0.040 }
   }, [mode])
 
@@ -37,11 +37,13 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
 
         // cap rises slowly over time so it feels like it's "getting closer"
         const cap =
-          elapsed < 1.5
-            ? config.baseCap - 8
-            : elapsed < 4
-              ? config.baseCap
-              : config.finalCap
+          elapsed < 2
+            ? config.baseCap - 10
+            : elapsed < 5
+              ? config.baseCap - 5
+              : elapsed < 10
+                ? config.baseCap
+                : config.finalCap
 
         // smooth monotonic ease-out: pct += (cap - pct) * k
         const next = refs.current.pct + (cap - refs.current.pct) * config.k
@@ -54,10 +56,10 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
 
         // phase text driven by progress (no jitter)
         const p = pctInt
-        if (p < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading question…')
-        else if (p < 45) setPhase('Searching Michigan excerpts…')
-        else if (p < 70) setPhase('Cross-checking requirements…')
-        else if (p < 90) setPhase('Building the best answer…')
+        if (p < 20) setPhase(mode === 'vision' ? 'Uploading files…' : 'Reading question…')
+        else if (p < 50) setPhase(mode === 'vision' ? 'Processing media…' : 'Searching Michigan excerpts…')
+        else if (p < 75) setPhase(mode === 'vision' ? 'Analyzing content…' : 'Cross-checking requirements…')
+        else if (p < 92) setPhase(mode === 'vision' ? 'Generating report…' : 'Building the best answer…')
         else setPhase('Finalizing…')
       }, 120)
 
