@@ -5,6 +5,9 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { ensureBucketExists, getPublicUrlSafe } from '../storageHelpers'
+import { analyzeImage, analyzeImageBatch } from '../../../../backend/utils/aiAnalysis.js'
+import { generateReport } from '../../../../backend/utils/reportGenerator.js'
+import { extractFrames, deduplicateFrames } from '../../../../backend/utils/frameExtractor.js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -46,65 +49,30 @@ async function downloadToTemp(bucket, filePath) {
   return destPath
 }
 
-// TODO: Implement actual image analysis using an AI/ML service
-// This is a placeholder that returns neutral results until real analysis is integrated
-async function analyzeImage(imagePath) {
-  // In production, this would call an AI service for compliance analysis
-  // For now, return a pending/neutral result to indicate analysis is needed
-  return {
-    findings: [],
-    compliant: null, // null indicates pending/no analysis performed
-    analyzed_at: new Date().toISOString(),
-    notes: 'Pending manual review - automated analysis not yet configured',
-  }
-}
-
-// TODO: Use pdfkit or similar library for proper PDF generation
-// This is a placeholder that generates a text-based report
-async function generateReport(sessionId, results) {
-  const summary = {
-    session_id: sessionId,
-    total_media: results.length,
-    compliant_count: results.filter((r) => r.compliant === true).length,
-    pending_count: results.filter((r) => r.compliant === null).length,
-    violation_count: results.filter((r) => r.compliant === false).length,
-    generated_at: new Date().toISOString(),
-  }
-
-  const jsonReport = {
-    summary,
-    results,
-  }
-
-  // Placeholder text report - in production, use pdfkit for proper PDF generation
-  const reportContent = `Health Inspection Report
-Session: ${sessionId}
-Generated: ${summary.generated_at}
-
-Summary:
-- Total Media Analyzed: ${summary.total_media}
-- Compliant: ${summary.compliant_count}
-- Pending Review: ${summary.pending_count}
-- Violations Found: ${summary.violation_count}
-
-Results:
-${results.map((r, i) => {
-  const status = r.compliant === true ? 'Compliant' : r.compliant === false ? 'Violation Found' : 'Pending Review'
-  return `${i + 1}. Media ${r.media_id}: ${status}`
-}).join('\n')}
-
-Note: This is a preliminary report. Full PDF generation will be available in a future update.
-`
-  // Store as text for now - will be converted to proper PDF in production
-  const pdfBuffer = Buffer.from(reportContent, 'utf-8')
-
-  return { jsonReport, pdfBuffer }
+// Clean up temporary files and directories
+function cleanupTemp(paths) {
+  paths.forEach((p) => {
+    try {
+      if (fs.existsSync(p)) {
+        const stat = fs.statSync(p)
+        if (stat.isDirectory()) {
+          fs.rmSync(p, { recursive: true, force: true })
+        } else {
+          fs.unlinkSync(p)
+        }
+      }
+    } catch (cleanupErr) {
+      console.error('Cleanup failed:', cleanupErr.message)
+    }
+  })
 }
 
 export async function POST(req) {
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase is not configured' }, { status: 500 })
   }
+
+  const tempPaths = []
 
   try {
     await Promise.all([
@@ -137,25 +105,132 @@ export async function POST(req) {
     const { data: media, error: mediaError } = await mediaQuery
     if (mediaError) throw mediaError
 
+    if (!media || media.length === 0) {
+      return NextResponse.json({ 
+        error: 'No media found for this session',
+        session_id: sessionId 
+      }, { status: 404 })
+    }
+
     const results = []
-    const tempPaths = []
 
     for (const item of media || []) {
       try {
-        const imagePath = await downloadToTemp('media', item.url)
-        tempPaths.push(imagePath)
-        const analysis = await analyzeImage(imagePath)
-        results.push({ media_id: item.id, ...analysis })
+        // Determine bucket based on media type
+        const bucket = item.type === 'video' ? 'audit-videos' : 'media'
+        
+        if (item.type === 'video') {
+          // Video processing: extract frames, deduplicate, and analyze
+          console.log(`[processSession] Processing video: ${item.id}`)
+          
+          const videoPath = await downloadToTemp(bucket, item.url)
+          tempPaths.push(videoPath)
+          
+          // Create frame output directory
+          const frameDir = path.join(os.tmpdir(), `${item.id}-frames`)
+          tempPaths.push(frameDir)
+          
+          // Extract frames from video (1 frame per second)
+          try {
+            await extractFrames(videoPath, frameDir)
+          } catch (extractErr) {
+            console.error(`[processSession] Frame extraction failed for video ${item.id}:`, extractErr.message)
+            results.push({
+              media_id: item.id,
+              media_type: 'video',
+              area: item.area || 'general',
+              violation: null,
+              findings: [],
+              citations: [],
+              severity: 'info',
+              confidence: 0,
+              analyzed: false,
+              error: `Frame extraction failed: ${extractErr.message}`
+            })
+            continue
+          }
+          
+          // Get all extracted frame files
+          const frameFiles = fs
+            .readdirSync(frameDir)
+            .map((f) => path.join(frameDir, f))
+            .filter((f) => f.endsWith('.jpg') || f.endsWith('.png'))
+            .sort() // Ensure chronological order
+          
+          if (frameFiles.length === 0) {
+            console.warn(`[processSession] No frames extracted from video ${item.id}`)
+            results.push({
+              media_id: item.id,
+              media_type: 'video',
+              area: item.area || 'general',
+              violation: null,
+              findings: [],
+              citations: [],
+              severity: 'info',
+              confidence: 0,
+              analyzed: false,
+              error: 'No frames could be extracted from video'
+            })
+            continue
+          }
+          
+          console.log(`[processSession] Extracted ${frameFiles.length} frames from video ${item.id}`)
+          
+          // Deduplicate frames using perceptual hashing
+          let uniqueFrames
+          try {
+            uniqueFrames = await deduplicateFrames(frameFiles)
+          } catch (dedupErr) {
+            console.error(`[processSession] Frame deduplication failed for video ${item.id}:`, dedupErr.message)
+            // Fall back to using all frames if deduplication fails
+            uniqueFrames = frameFiles
+          }
+          console.log(`[processSession] ${uniqueFrames.length} unique frames after deduplication`)
+          
+          // Analyze unique frames in batch for efficiency
+          const frameAnalyses = await analyzeImageBatch(uniqueFrames)
+          
+          // Add results with frame reference
+          frameAnalyses.forEach((analysis, idx) => {
+            results.push({
+              media_id: item.id,
+              media_type: 'video',
+              frame_number: idx + 1,
+              total_frames: uniqueFrames.length,
+              area: item.area || 'general',
+              ...analysis
+            })
+          })
+          
+        } else {
+          // Image processing: analyze directly
+          console.log(`[processSession] Processing image: ${item.id}`)
+          
+          const imagePath = await downloadToTemp(bucket, item.url)
+          tempPaths.push(imagePath)
+          
+          const analysis = await analyzeImage(imagePath)
+          results.push({
+            media_id: item.id,
+            media_type: 'image',
+            area: item.area || 'general',
+            ...analysis
+          })
+        }
       } catch (downloadErr) {
-        console.error('Download error for media item:', item.id, downloadErr)
-        // Mark as failed/uncertain when download fails - don't assume compliant
+        console.error('Processing error for media item:', item.id, downloadErr.message)
+        // Mark as failed/uncertain when processing fails
         results.push({
           media_id: item.id,
-          compliant: null, // null indicates analysis could not be performed
+          media_type: item.type,
+          area: item.area || 'general',
+          violation: null,
           findings: [],
-          notes: 'Unable to analyze - file download failed',
-          analyzed_at: new Date().toISOString(),
-          error: true,
+          citations: [],
+          severity: 'info',
+          confidence: 0,
+          analyzed: false,
+          error: downloadErr.message || 'Processing failed'
         })
       }
     }
@@ -164,21 +239,36 @@ export async function POST(req) {
     if (results.length) {
       // For anonymous users, omit user_id from the insert
       const insertRows = results.map((r) => {
-        const row = { id: uuidv4(), session_id: sessionId, ...r }
+        const row = { 
+          id: uuidv4(), 
+          session_id: sessionId,
+          media_id: r.media_id,
+          violation: r.violation,
+          violation_type: r.violation_type || r.type,
+          category: r.category,
+          severity: r.severity,
+          confidence: r.confidence,
+          citation: r.citation,
+          findings: r.findings,
+          citations: r.citations,
+          analyzed: r.analyzed,
+          error: r.error || null
+        }
         if (!user.isAnonymous) {
           row.user_id = user.id
         }
         return row
       })
+      
       const { error: insertError } = await supabase
         .from('compliance_results')
         .insert(insertRows)
       if (insertError) {
-        console.error('Failed to insert compliance results:', insertError)
+        console.error('Failed to insert compliance results:', insertError.message)
       }
     }
 
-    // Generate report
+    // Generate professional report with citations
     const { jsonReport, pdfBuffer } = await generateReport(sessionId, results)
     const pdfPath = `reports/${sessionId}.pdf`
 
@@ -187,7 +277,7 @@ export async function POST(req) {
       .from('reports')
       .upload(pdfPath, pdfBuffer, { upsert: true, contentType: 'application/pdf' })
     if (pdfUploadError) {
-      console.error('PDF upload error:', pdfUploadError)
+      console.error('PDF upload error:', pdfUploadError.message)
     }
 
     // Save report to database
@@ -200,28 +290,21 @@ export async function POST(req) {
     if (!user.isAnonymous) {
       reportData.user_id = user.id
     }
+    
     const { data: reportRow, error: reportError } = await supabase
       .from('reports')
       .upsert(reportData, { onConflict: 'session_id' })
       .select()
       .single()
     if (reportError) {
-      console.error('Report save error:', reportError)
+      console.error('Report save error:', reportError.message)
     }
 
     // Get public URL for PDF
     const publicPdfUrl = await getPublicUrlSafe('reports', pdfPath, supabase)
 
     // Cleanup temp files
-    tempPaths.forEach((p) => {
-      try {
-        if (fs.existsSync(p)) {
-          fs.unlinkSync(p)
-        }
-      } catch (cleanupErr) {
-        console.error('Cleanup failed', cleanupErr)
-      }
-    })
+    cleanupTemp(tempPaths)
 
     return NextResponse.json({
       status: 'processed',
@@ -230,6 +313,9 @@ export async function POST(req) {
       report: { ...reportRow, pdf_url: publicPdfUrl },
     })
   } catch (err) {
+    // Cleanup on error
+    cleanupTemp(tempPaths)
+    console.error('[processSession] Error:', err.message)
     return NextResponse.json({ error: err.message || 'Processing failed' }, { status: 500 })
   }
 }
