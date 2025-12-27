@@ -932,7 +932,7 @@ export default function Page() {
     // Always ensure page can scroll naturally
     document.body.style.overflow = ''
     document.documentElement.style.overflow = ''
-  }, [hasPaidAccess])
+  }, [])
 
   useEffect(() => {
     if (inputMode === 'chat') {
