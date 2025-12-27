@@ -924,23 +924,14 @@ export default function Page() {
     }
   }, [showAuthModal, showPricingModal])
 
-  // ✅ Tool-first UI: Always lock the page scroll so the tool input is reachable
+  // ✅ Tool-first UI: Allow natural page scrolling so content is reachable
+  // Previously locked scroll with overflow: hidden, but this prevented landscape
+  // users from scrolling to reach the Upload button
   useEffect(() => {
     if (typeof document === 'undefined') return
-    if (!hasPaidAccess) {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-      return
-    }
-    const prev = document.body.style.overflow
-    const prevHtml = document.documentElement.style.overflow
-    // Lock scroll when the chat interface is available
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-      document.documentElement.style.overflow = prevHtml
-    }
+    // Always ensure page can scroll naturally
+    document.body.style.overflow = ''
+    document.documentElement.style.overflow = ''
   }, [hasPaidAccess])
 
   useEffect(() => {

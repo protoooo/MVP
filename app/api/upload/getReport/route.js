@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { v4 as uuidv4 } from 'uuid'
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -14,9 +15,11 @@ async function authorize(req) {
   const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
   if (!apiKey) return null
   
+  // Accept the anon key for anonymous users - generate a valid UUID for them
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (apiKey === anonKey) {
-    return { id: 'anonymous' }
+    // For anon key, generate a valid UUID so database inserts don't fail
+    return { id: uuidv4(), isAnonymous: true }
   }
   
   const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
