@@ -9,7 +9,8 @@ const MIN_RECOMMENDED_FILES = 30
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
-  (process.env.NEXT_PUBLIC_SUPABASE_URL ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1` : '')
+  (process.env.NEXT_PUBLIC_SUPABASE_URL ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1` : '') ||
+  null
 const AUTH_HEADER = process.env.NEXT_PUBLIC_USER_API_KEY
   ? { Authorization: `Bearer ${process.env.NEXT_PUBLIC_USER_API_KEY}` }
   : {}
@@ -20,6 +21,8 @@ function buildUrl(path) {
 }
 
 async function requestJson(path, init = {}) {
+  if (!API_BASE) throw new Error('API base is not configured')
+
   const response = await fetch(buildUrl(path), {
     ...init,
     headers: {
@@ -32,7 +35,8 @@ async function requestJson(path, init = {}) {
   const data = text ? JSON.parse(text) : {}
 
   if (!response.ok) {
-    throw new Error(data?.error || 'Request failed')
+    const statusPart = response.status ? ` (HTTP ${response.status})` : ''
+    throw new Error((data?.error || response.statusText || 'Request failed') + statusPart)
   }
   return data
 }
@@ -121,7 +125,7 @@ export default function UploadPage() {
     if (status === 'uploading') return `Uploading ${uploadStep.current} of ${uploadStep.total}`
     if (status === 'processing') return 'Processing… please wait'
     if (status === 'ready') return 'Report ready'
-    if (status === 'error') return error || 'Something went wrong'
+    if (status === 'error') return error || 'Something went wrong. Check your API configuration.'
     return `Select ${MIN_RECOMMENDED_FILES}–${MAX_FILES} images or videos for best results`
   }, [status, uploadStep, error])
 
@@ -150,7 +154,7 @@ export default function UploadPage() {
       setStatus('ready')
     } catch (err) {
       console.error(err)
-      setError(err.message || 'Upload failed')
+      setError(err.message || 'Upload failed. Confirm API configuration and try again.')
       setStatus('error')
     } finally {
       setProgressActive(false)
@@ -342,7 +346,9 @@ export default function UploadPage() {
     </div>
   )
 }
+let fallbackCounter = 0
 const makeId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
-  return `id-${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`
+  fallbackCounter += 1
+  return `id-${Date.now().toString(16)}-${fallbackCounter}-${Math.random().toString(16).slice(2)}`
 }
