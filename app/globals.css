@@ -31,7 +31,7 @@ textarea:-webkit-autofill:focus {
   border-radius: inherit;
 }
 
-/* ✅ NOTION-INSPIRED GLOBAL DESIGN SYSTEM */
+/* ✅ NOTION/FIGMA-INSPIRED GLOBAL DESIGN SYSTEM - MATTE COLORS */
 :root {
   color-scheme: light;
 
@@ -47,26 +47,38 @@ textarea:-webkit-autofill:focus {
   --ink-40: rgba(26, 26, 26, 0.4);
 
   /* Border colors - light neutral gray */
-  --border: rgba(0, 0, 0, 0.1);
-  --border-strong: rgba(0, 0, 0, 0.15);
-  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --border-subtle: rgba(0, 0, 0, 0.04);
 
-  /* Accent colors - enterprise but colorful (used sparingly) */
-  --accent: #2383e2;           /* Blue - primary accent */
-  --accent-green: #0f7b6c;     /* Green - success */
-  --accent-yellow: #c29243;    /* Yellow - warning */
-  --accent-purple: #6940a5;    /* Purple - info */
-  --accent-red: #d44c47;       /* Red - error/danger */
-  --accent-orange: #cc5d27;    /* Orange - attention */
+  /* Matte accent colors - Notion/Figma style (desaturated, professional) */
+  --accent: #2383e2;           /* Blue - primary action */
+  --accent-muted: #6b9bd1;     /* Blue muted - secondary */
+  --accent-bg: rgba(35, 131, 226, 0.08); /* Blue background tint */
+  
+  --accent-green: #2a9d8f;     /* Green - success, matte teal-green */
+  --accent-green-bg: rgba(42, 157, 143, 0.08);
+  
+  --accent-red: #d65d5d;       /* Red - error/danger, matte coral-red */
+  --accent-red-bg: rgba(214, 93, 93, 0.08);
+  
+  --accent-yellow: #d4a156;    /* Yellow/amber - warning, matte gold */
+  --accent-yellow-bg: rgba(212, 161, 86, 0.08);
+  
+  --accent-purple: #8b6bc4;    /* Purple - info, matte lavender */
+  --accent-purple-bg: rgba(139, 107, 196, 0.08);
+  
+  --accent-orange: #e07b4e;    /* Orange - attention, matte peach */
+  --accent-orange-bg: rgba(224, 123, 78, 0.08);
 
   /* Focus state */
   --focus: var(--accent);
-  --focus-ring: rgba(35, 131, 226, 0.2);
+  --focus-ring: rgba(35, 131, 226, 0.15);
   
-  /* Shadows - minimal, no heavy shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.08);
+  /* Shadows - minimal, almost flat Notion/Figma style */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.06);
   
   /* Radius - soft but not excessive */
   --radius-xs: 4px;
