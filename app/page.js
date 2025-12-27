@@ -1,6 +1,6 @@
 // app/page.js (server wrapper)
 import { Suspense } from 'react'
-import AuditCollector from './protocol-collector/AuditCollector.client'
+import ClientPage from './page.client'
 import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 export default function Page() {
@@ -42,7 +42,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<div className="landing-loading">Loading...</div>}>
-      <AuditCollector />
+      <ClientPage />
     </Suspense>
   )
 }
