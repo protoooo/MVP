@@ -10,23 +10,27 @@ const supabase =
   supabaseUrl && supabaseServiceKey
     ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
     : null
+const BUCKET_NAME = 'audit-videos'
 // TEMP STORAGE DEBUG (remove after verification)
 if (supabase) {
   console.log('[TEMP STORAGE DEBUG] Supabase client initialized with URL:', supabaseUrl)
+}
+
+async function uploadMedia(filePath, fileBuffer, contentType = 'application/octet-stream') {
+  console.log('[DEBUG] Supabase project URL:', supabase.supabaseUrl)
+  console.log('[DEBUG] Bucket used for upload:', BUCKET_NAME)
+  await ensureBucketExists(BUCKET_NAME, { public: false }, supabase)
+  const { error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(filePath, fileBuffer, { upsert: true, contentType })
+  if (error) throw error
 }
 
 async function authorize(req) {
   const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
   const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
   if (!apiKey) return null
-  
-  // Accept the anon key for anonymous users - generate a valid UUID for them
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (apiKey === anonKey) {
-    // For anon key, generate a valid UUID so database inserts don't fail
-    return { id: uuidv4(), isAnonymous: true }
-  }
-  
+
   const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
   if (error || !data) return null
   return data
@@ -62,15 +66,7 @@ export async function POST(req) {
     const fileExt = lastDot > 0 ? fileName.slice(lastDot).toLowerCase() : ''
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
-    // Upload to Supabase Storage
-    console.log('[DEBUG] Supabase project URL:', supabase.supabaseUrl)
-    console.log('[DEBUG] Bucket used for upload:', 'audit-videos')
-    await ensureBucketExists('audit-videos', { public: false }, supabase)
-    const { error: uploadError } = await supabase.storage
-      .from('audit-videos')
-      .upload(objectPath, buffer, { upsert: true, contentType })
-    
-    if (uploadError) throw uploadError
+    await uploadMedia(objectPath, buffer, contentType)
 
     // Save media record to database - omit user_id for anonymous users
     const mediaRecord = {
