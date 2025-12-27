@@ -1,13 +1,45 @@
-const { supabase } = require('../utils/storage');
+import { supabase, getPublicUrl } from '../utils/storage.js'
 
-module.exports = async function getReport(req, res) {
-    const { session_id } = req.params;
+async function authorize(req) {
+  const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
+  const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
+  if (!apiKey) return null
+  const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
+  if (error || !data) return null
+  return data
+}
+
+export default async function getReport(req) {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
+  }
+
+  if (!supabase) {
+    return new Response(JSON.stringify({ error: 'Supabase is not configured' }), { status: 500 })
+  }
+
+  try {
+    const user = await authorize(req)
+    if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+
+    const { session_id: sessionId } = await req.json()
+    if (!sessionId) return new Response(JSON.stringify({ error: 'Missing session_id' }), { status: 400 })
+
     const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('session_id', session_id)
-        .single();
+      .from('reports')
+      .select('*')
+      .eq('session_id', sessionId)
+      .eq('user_id', user.id)
+      .single()
+    if (error) throw error
 
-    if (error) return res.status(404).json({ error: error.message });
-    res.json({ report: data.json_report, pdf_url: data.pdf_url });
-};
+    const pdfUrl = data?.pdf_path ? getPublicUrl('reports', data.pdf_path) : null
+
+    return new Response(JSON.stringify({ ...data, pdf_url: pdfUrl }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message || 'Report lookup failed' }), { status: 500 })
+  }
+}
