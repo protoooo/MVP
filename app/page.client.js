@@ -17,7 +17,6 @@ import SmartProgress from '@/components/SmartProgress'
 // because it’s rendering “in flow” on iOS/Safari due to containing-block issues.
 // import PricingModal from '@/components/PricingModal'
 import LiquidGlass from '@/components/ui/LiquidGlass'
-import RadialMenu from '@/components/RadialMenu'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
@@ -54,7 +53,13 @@ const clearPolicyAcceptance = (userId) => {
 
 // ✅ Panel UI constants
 const MAX_TEXTAREA_HEIGHT = 120
-const FILE_PICKER_DELAY_MS = 100 // Small delay to allow panel transition before opening file picker
+
+const FUNCTION_BASE =
+  typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`
+    : ''
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const USER_API_KEY = process.env.NEXT_PUBLIC_USER_API_KEY || ''
 
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
@@ -867,6 +872,12 @@ export default function Page() {
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
+  const [uploadFiles, setUploadFiles] = useState([])
+  const [uploadStatus, setUploadStatus] = useState('')
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSessionId, setUploadSessionId] = useState('')
+  const [uploadingCount, setUploadingCount] = useState(0)
+  const [reportData, setReportData] = useState(null)
 
   const [inputMode, setInputMode] = useState('photo') // 'photo' | 'chat'
   const [sendKey, setSendKey] = useState(0)
@@ -876,7 +887,7 @@ export default function Page() {
   const [historyReady, setHistoryReady] = useState(false)
   
   // ✅ Panel state: null = show radial menu, 'text' | 'image' | 'history' | 'settings'
-  const [activePanel, setActivePanel] = useState(null)
+  const [, setActivePanel] = useState(null)
 
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -905,6 +916,14 @@ export default function Page() {
       document.removeEventListener('touchstart', onDown)
     }
   }, [])
+
+  useEffect(() => {
+    return () => {
+      uploadFiles.forEach((item) => {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      })
+    }
+  }, [uploadFiles])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1018,6 +1037,7 @@ export default function Page() {
     el.scrollTo({ top: el.scrollHeight, behavior })
   }, [])
 
+  // eslint-disable-next-line no-unused-vars
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el) return
@@ -1326,6 +1346,7 @@ export default function Page() {
     }
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription, handleCheckout, isLoading])
 
+  // eslint-disable-next-line no-unused-vars
   const handleManageBilling = async () => {
     let loadingToast = null
     try {
@@ -1396,6 +1417,7 @@ export default function Page() {
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
   const handleNewChat = useCallback(() => {
     setCurrentChatId(null)
     setMessages([])
@@ -1405,6 +1427,7 @@ export default function Page() {
     setActivePanel(null)
   }, [])
 
+  // eslint-disable-next-line no-unused-vars
   const handleLoadHistory = useCallback(
     (entry) => {
       if (!entry) return
@@ -1427,6 +1450,132 @@ export default function Page() {
     []
   )
 
+  const callBackendFunction = useCallback(
+    async (name, { body, isForm = false } = {}) => {
+      if (!FUNCTION_BASE) throw new Error('Backend is not configured yet.')
+
+      const headers = {
+        Accept: 'application/json',
+        'x-api-key': USER_API_KEY,
+      }
+
+      if (ANON_KEY) {
+        headers.Authorization = `Bearer ${ANON_KEY}`
+        headers.apikey = ANON_KEY
+      }
+
+      const init = {
+        method: 'POST',
+        headers: isForm ? headers : { ...headers, 'Content-Type': 'application/json' },
+        body: isForm ? body : JSON.stringify(body || {}),
+      }
+
+      const res = await fetch(`${FUNCTION_BASE}/${name}`, init)
+      const text = await res.text()
+      const data = text ? JSON.parse(text) : {}
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Request failed')
+      }
+
+      return data
+    },
+    []
+  )
+
+  const handleFilesAdded = useCallback((fileList) => {
+    const incoming = Array.from(fileList || []).slice(0, 50)
+    const normalized = incoming.map((file, idx) => ({
+      id: `${file.name}-${idx}-${file.lastModified || Date.now()}`,
+      file,
+      name: file.name,
+      size: file.size,
+      type: file.type?.startsWith('video') ? 'video' : 'image',
+      previewUrl: file.type?.startsWith('image') ? URL.createObjectURL(file) : '',
+    }))
+
+    setUploadFiles(normalized)
+    setUploadError('')
+    setReportData(null)
+    setUploadingCount(0)
+    setUploadStatus('')
+  }, [])
+
+  const handleDropFiles = useCallback(
+    (e) => {
+      e.preventDefault()
+      const dropped = e.dataTransfer?.files
+      if (dropped?.length) handleFilesAdded(dropped)
+    },
+    [handleFilesAdded]
+  )
+
+  const handleUploadAndProcess = useCallback(async () => {
+    if (!uploadFiles.length) {
+      setUploadError('Select 30–50 images or videos to continue.')
+      return
+    }
+
+    setUploadError('')
+    setReportData(null)
+    setSendMode('vision')
+    setSendKey((k) => k + 1)
+    setIsSending(true)
+    setUploadStatus('Processing… please wait')
+    setUploadingCount(0)
+
+    try {
+      const sessionRes = await callBackendFunction('createSession', {
+        body: { type: 'restaurant', area_tags: ['general'] },
+      })
+      const sessionId = sessionRes?.session_id
+      if (!sessionId) throw new Error('Session could not be created.')
+      setUploadSessionId(sessionId)
+
+      for (let i = 0; i < uploadFiles.length; i += 1) {
+        const entry = uploadFiles[i]
+        const formData = new FormData()
+        formData.append('session_id', sessionId)
+        formData.append('area', 'general')
+        formData.append('file', entry.file, entry.name)
+        setUploadStatus(`Uploading ${i + 1} of ${uploadFiles.length}`)
+        await callBackendFunction('uploadMedia', { body: formData, isForm: true })
+        setUploadingCount(i + 1)
+      }
+
+      setUploadStatus('Processing… please wait')
+      await callBackendFunction('processSession', { body: { session_id: sessionId } })
+      setUploadStatus('Fetching report…')
+      const reportResponse = await callBackendFunction('getReport', { body: { session_id: sessionId } })
+      const finalReport = reportResponse?.report || reportResponse
+      setReportData(finalReport || null)
+      setUploadStatus('Report ready')
+    } catch (error) {
+      setUploadError(error?.message || 'Upload failed')
+      setUploadStatus('')
+    } finally {
+      setIsSending(false)
+    }
+  }, [callBackendFunction, uploadFiles])
+
+  const handleUnifiedReportDownload = useCallback(() => {
+    if (!reportData) return
+
+    if (reportData.json_report) {
+      const blob = new Blob([JSON.stringify(reportData.json_report, null, 2)], { type: 'application/json' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `report-${uploadSessionId || 'session'}.json`
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(link.href), 500)
+    }
+
+    if (reportData.pdf_url) {
+      window.open(reportData.pdf_url, '_blank', 'noopener,noreferrer')
+    }
+  }, [reportData, uploadSessionId])
+
+  // eslint-disable-next-line no-unused-vars
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if (isSending) return
@@ -1607,6 +1756,7 @@ export default function Page() {
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -5209,383 +5359,197 @@ export default function Page() {
 
       <div className="app-container">
         {hasPaidAccess ? (
-          <main className={`${plusJakarta.className} panel-centered-ui`}>
-            {/* Hidden file input for image upload */}
+          <main className={`${plusJakarta.className} min-h-screen bg-slate-50`}>
             <input
-              type="file"
               ref={fileInputRef}
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleImageChange}
+              type="file"
+              multiple
+              accept="image/*,video/*"
+              className="hidden"
+              onChange={(e) => handleFilesAdded(e.target.files)}
             />
 
-            {/* ✅ Centered Radial Menu (shown when no panel is active) */}
-            {activePanel === null && (
-              <div className="radial-menu-fullscreen">
-                <RadialMenu
-                  logoSrc={appleIcon}
-                  onChat={() => setActivePanel('text')}
-                  onImage={() => {
-                    setActivePanel('image')
-                    setTimeout(() => fileInputRef.current?.click(), FILE_PICKER_DELAY_MS)
-                  }}
-                  onPdfExport={() => {
-                    // ✅ Export full conversation if messages exist
-                    if (messages.length > 0) {
-                      handleDownloadReport(null, true) // Export all messages
-                    } else {
-                      alert('No conversation to export yet. Start a chat or scan an image first.')
-                    }
-                  }}
-                  onSettings={() => setActivePanel('settings')}
-                  onChatHistory={() => setActivePanel('history')}
-                />
-              </div>
-            )}
-
-            {/* ✅ Text Chat Panel */}
-            {activePanel === 'text' && (
-              <div className="panel-overlay">
-                <div className="panel-container">
-                  <LiquidGlass variant="main" className="panel-card text-panel">
-                    <button
-                      type="button"
-                      className="panel-close-btn"
-                      onClick={() => {
-                        setActivePanel(null)
-                        setMessages([])
-                        setInput('')
-                      }}
-                      aria-label="Close panel"
-                    >
-                      <Icons.X />
-                    </button>
-
-                    <div className="panel-header">
-                      <h2 className="panel-title">Ask a Question</h2>
-                      <p className="panel-subtitle">Michigan food safety regulations</p>
-                    </div>
-
-                    <div className="panel-body">
-                      {/* Messages display - always rendered for flex layout */}
-                      <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
-                        {messages.length > 0 ? (
-                          messages.map((msg, idx) => {
-                            const isAssistant = msg.role === 'assistant'
-                            const isPending = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
-
-                            return (
-                              <div key={idx} className={`panel-message ${isAssistant ? 'assistant' : 'user'}`}>
-                                {isAssistant ? (
-                                  <div className="panel-response">
-                                    {isPending ? (
-                                      <span className="panel-thinking">Thinking…</span>
-                                    ) : (
-                                      formatAssistantContent(msg.content, msg.citations)
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="panel-question">
-                                    <span className="panel-question-label">You asked:</span>
-                                    <p className="panel-question-text">{msg.content}</p>
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })
-                        ) : (
-                          <div className="panel-empty-state">
-                            <p>Your conversation will appear here.</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Input area */}
-                      <div className="panel-input-area">
-                        <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-                        <div className="panel-input-row">
-                          <div className="panel-input-wrapper">
-                            <textarea
-                              ref={textAreaRef}
-                              value={input}
-                              onChange={(e) => {
-                                setInput(e.target.value)
-                                if (textAreaRef.current) {
-                                  textAreaRef.current.style.height = 'auto'
-                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`
-                                }
-                              }}
-                              placeholder="Ask about food safety..."
-                              rows={1}
-                              className="panel-textarea"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault()
-                                  handleSend(e)
-                                }
-                              }}
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleSend}
-                            disabled={!safeTrim(input) || isSending}
-                            className="panel-send-btn"
-                            aria-label="Send message"
-                          >
-                            {isSending ? <span className="panel-spinner" /> : <Icons.Send />}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </LiquidGlass>
+            <section className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Single upload</p>
+                  <h1 className="text-3xl font-semibold text-slate-900">Upload → Process → Download</h1>
+                  <p className="text-sm text-slate-600">
+                    Drop 30–50 images or videos at once. We&apos;ll handle the upload, AI processing, and report delivery.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <BrandLink variant="chat" />
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                  >
+                    Sign out
+                  </button>
                 </div>
               </div>
-            )}
 
-            {/* ✅ Image Analysis Panel */}
-            {activePanel === 'image' && (
-              <div className="panel-overlay">
-                <div className="panel-container">
-                  <LiquidGlass variant="main" className="panel-card image-panel">
+              <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+                <div className="rounded-2xl border border-slate-200 bg-white/80 shadow-sm shadow-slate-100 backdrop-blur">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Upload</p>
+                      <h2 className="text-xl font-semibold text-slate-900">Images & Videos (30–50)</h2>
+                    </div>
                     <button
                       type="button"
-                      className="panel-close-btn"
-                      onClick={() => {
-                        setActivePanel(null)
-                        setMessages([])
-                        setInput('')
-                        setSelectedImage(null)
-                      }}
-                      aria-label="Close panel"
+                      onClick={handleUploadAndProcess}
+                      disabled={isSending || !uploadFiles.length}
+                      className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <Icons.X />
+                      {isSending ? 'Processing…' : 'Upload & Process'}
+                      <Icons.ArrowRight />
                     </button>
+                  </div>
 
-                    <div className="panel-header">
-                      <h2 className="panel-title">Image Analysis</h2>
-                      <p className="panel-subtitle">Scan photos for food safety violations</p>
-                    </div>
-
-                    <div className="panel-body">
-                      {/* Messages display - always rendered for flex layout */}
-                      <div className="panel-messages" ref={scrollRef} onScroll={handleScroll}>
-                        {/* Image preview at top of messages area */}
-                        {selectedImage && (
-                          <div className="panel-image-preview">
-                            <img src={selectedImage} alt="Selected for analysis" />
-                            <button
-                              type="button"
-                              className="panel-image-remove"
-                              onClick={() => setSelectedImage(null)}
-                              aria-label="Remove image"
-                            >
-                              <Icons.X />
-                            </button>
-                          </div>
-                        )}
-                        
-                        {messages.length > 0 ? (
-                          messages.map((msg, idx) => {
-                            const isAssistant = msg.role === 'assistant'
-                            const isPending = isAssistant && msg.content === '' && isSending && idx === messages.length - 1
-                            const hasImage = Boolean(msg.image) || msg.hasImage
-
-                            return (
-                              <div key={idx} className={`panel-message ${isAssistant ? 'assistant' : 'user'}`}>
-                                {!isAssistant && hasImage && msg.image && (
-                                  <div className="panel-user-image">
-                                    <img src={msg.image} alt="Uploaded" />
-                                  </div>
-                                )}
-                                {isAssistant ? (
-                                  <div className="panel-response">
-                                    {isPending ? (
-                                      <span className="panel-thinking">Analyzing image…</span>
-                                    ) : (
-                                      formatAssistantContent(msg.content, msg.citations)
-                                    )}
-                                  </div>
-                                ) : msg.content && (
-                                  <div className="panel-question">
-                                    <span className="panel-question-label">Your question:</span>
-                                    <p className="panel-question-text">{msg.content}</p>
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })
-                        ) : !selectedImage && (
-                          <div className="panel-empty-state">
-                            <p>Upload a photo to scan for violations.</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Input area */}
-                      <div className="panel-input-area">
-                        <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-                        <div className="panel-input-row">
+                    <div className="px-6 py-5">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => fileInputRef.current?.click()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            fileInputRef.current?.click()
+                          }
+                        }}
+                        onDrop={handleDropFiles}
+                        onDragOver={(e) => e.preventDefault()}
+                        className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-8 text-center transition hover:border-slate-300 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                      >
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 shadow-inner shadow-blue-100">
+                          <Icons.ArrowUp />
+                        </div>
+                        <p className="mt-3 text-base font-semibold text-slate-900">Drag & drop your files</p>
+                        <p className="text-sm text-slate-500">Images or videos · up to 50 files (best with 30–50 at once)</p>
+                        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="panel-camera-btn"
-                            aria-label="Upload photo"
-                            disabled={isSending}
+                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                           >
-                            <Icons.Camera />
+                            Select files
                           </button>
-                          <div className="panel-input-wrapper">
-                            <textarea
-                              ref={textAreaRef}
-                              value={input}
-                              onChange={(e) => {
-                                setInput(e.target.value)
-                                if (textAreaRef.current) {
-                                  textAreaRef.current.style.height = 'auto'
-                                  textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`
-                                }
-                              }}
-                              placeholder={selectedImage ? "Ask about this image..." : "Upload a photo..."}
-                              rows={1}
-                              className="panel-textarea"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault()
-                                  handleSend(e)
-                                }
-                              }}
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleSend}
-                            disabled={(!safeTrim(input) && !selectedImage) || isSending}
-                            className="panel-send-btn"
-                            aria-label="Analyze"
-                          >
-                            {isSending ? <span className="panel-spinner" /> : <Icons.Send />}
-                          </button>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">or drop anywhere</span>
                         </div>
                       </div>
-                    </div>
-                  </LiquidGlass>
-                </div>
-              </div>
-            )}
 
-            {/* ✅ Chat History Panel */}
-            {activePanel === 'history' && (
-              <div className="panel-overlay">
-                <div className="panel-container">
-                  <LiquidGlass variant="main" className="panel-card history-panel">
-                    <button
-                      type="button"
-                      className="panel-close-btn"
-                      onClick={() => setActivePanel(null)}
-                      aria-label="Close panel"
-                    >
-                      <Icons.X />
-                    </button>
-
-                    <div className="panel-header">
-                      <h2 className="panel-title">Chat History</h2>
-                      <p className="panel-subtitle">Your previous conversations</p>
-                    </div>
-
-                    <div className="panel-body">
-                      <div className="panel-history-list">
-                        {chatHistory.length > 0 ? (
-                          chatHistory.map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className="panel-history-item"
-                              onClick={() => handleLoadHistory(item)}
-                            >
-                              <div className="panel-history-content">
-                                <p className="panel-history-title">{item.title || 'Chat'}</p>
-                                <p className="panel-history-preview">
-                                  {item.preview || 'Resume this conversation'}
-                                </p>
+                      {uploadFiles.length > 0 && (
+                        <div className="mt-5 space-y-3">
+                          <div className="flex items-center justify-between text-sm text-slate-700">
+                            <span>{uploadFiles.length} file(s) ready</span>
+                            <span className="text-slate-500">Progressive upload with AI processing</span>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {uploadFiles.map((file) => (
+                              <div
+                                key={file.id}
+                                className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 shadow-inner shadow-slate-100"
+                              >
+                                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white shadow-inner shadow-slate-100">
+                                  {file.previewUrl ? (
+                                    <Image
+                                      src={file.previewUrl}
+                                      alt={file.name}
+                                      width={48}
+                                      height={48}
+                                      className="h-12 w-12 rounded-md object-cover"
+                                      unoptimized
+                                    />
+                                  ) : (
+                                    <Icons.Camera />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-slate-900">{file.name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {file.type.toUpperCase()} · {(file.size / (1024 * 1024)).toFixed(1)} MB
+                                  </p>
+                                </div>
                               </div>
-                              <span className="panel-history-date">
-                                {new Date(item.updatedAt || Date.now()).toLocaleDateString()}
-                              </span>
-                            </button>
-                          ))
-                        ) : (
-                          <div className="panel-history-empty">
-                            <p>No conversations yet</p>
-                            <p className="panel-history-empty-sub">Start a chat or scan an image to see your history here.</p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-6 space-y-2">
+                        <SmartProgress active={isSending} mode="vision" requestKey={sendKey} />
+                        <div className="flex items-center justify-between text-sm text-slate-600" aria-live="polite">
+                          <span>{uploadStatus || 'Waiting to start'}</span>
+                          {uploadingCount > 0 && uploadFiles.length ? (
+                            <span className="text-slate-500">
+                              {uploadingCount}/{uploadFiles.length} uploaded
+                            </span>
+                          ) : null}
+                        </div>
+                        {uploadError && (
+                          <div className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                            {uploadError}
                           </div>
                         )}
                       </div>
                     </div>
-                  </LiquidGlass>
                 </div>
-              </div>
-            )}
 
-            {/* ✅ Settings Panel */}
-            {activePanel === 'settings' && (
-              <div className="panel-overlay">
-                <div className="panel-container">
-                  <LiquidGlass variant="main" className="panel-card settings-panel">
-                    <button
-                      type="button"
-                      className="panel-close-btn"
-                      onClick={() => setActivePanel(null)}
-                      aria-label="Close panel"
-                    >
-                      <Icons.X />
-                    </button>
+                <div className="rounded-2xl border border-slate-200 bg-white/80 shadow-sm shadow-slate-100 backdrop-blur">
+                  <div className="border-b border-slate-100 px-6 py-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Session</p>
+                    <p className="text-lg font-semibold text-slate-900">Status & Report</p>
+                  </div>
 
-                    <div className="panel-header">
-                      <h2 className="panel-title">Settings</h2>
-                      <p className="panel-subtitle">Manage your account</p>
+                  <div className="space-y-4 px-6 py-5">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Session ID</p>
+                      <p className="font-mono text-sm text-slate-900">
+                        {uploadSessionId ? uploadSessionId : 'Not started yet'}
+                      </p>
                     </div>
 
-                    <div className="panel-body">
-                      <div className="panel-settings-list">
-                        <button
-                          type="button"
-                          className="panel-settings-item"
-                          onClick={() => {
-                            setActivePanel(null)
-                            if (hasActiveSubscription) {
-                              handleManageBilling()
-                            } else {
-                              setShowPricingModal(true)
-                            }
-                          }}
-                        >
-                          <span className="panel-settings-label">
-                            {hasActiveSubscription ? 'Manage Billing' : 'Start Trial'}
-                          </span>
-                          <Icons.ArrowRight />
-                        </button>
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" aria-live="polite">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
+                      <p className="text-sm font-medium text-slate-900">
+                        {uploadStatus || 'Waiting for files'}
+                      </p>
+                    </div>
 
-                        <div className="panel-settings-divider" />
+                    {reportData && (
+                      <div className="rounded-xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 px-4 py-4 shadow-inner shadow-slate-100">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">Report</p>
+                        <p className="mb-3 text-sm text-slate-700">
+                          JSON + PDF are ready. Download the combined report to keep both artifacts together.
+                        </p>
 
                         <button
                           type="button"
-                          className="panel-settings-item danger"
-                          onClick={handleSignOut}
+                          onClick={handleUnifiedReportDownload}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
                         >
-                          <span className="panel-settings-label">Log Out</span>
                           <Icons.ArrowRight />
+                          <span>Download JSON + PDF</span>
                         </button>
-                      </div>
 
-                      <div className="panel-settings-info">
-                        <p className="panel-settings-email">{session?.user?.email}</p>
+                        {reportData.pdf_url && (
+                          <a
+                            href={reportData.pdf_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-3 block text-center text-xs font-medium text-emerald-700 underline"
+                          >
+                            Open PDF in new tab
+                          </a>
+                        )}
                       </div>
-                    </div>
-                  </LiquidGlass>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+            </section>
           </main>
         ) : (
           <LandingPage
