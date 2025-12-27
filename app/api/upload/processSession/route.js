@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { ensureBucketExists, getPublicUrlSafe } from '../storageHelpers'
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -106,6 +107,11 @@ export async function POST(req) {
   }
 
   try {
+    await Promise.all([
+      ensureBucketExists('media', { public: true }, supabase),
+      ensureBucketExists('reports', { public: true }, supabase),
+    ])
+
     const user = await authorize(req)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -204,8 +210,7 @@ export async function POST(req) {
     }
 
     // Get public URL for PDF
-    const { data: urlData } = supabase.storage.from('reports').getPublicUrl(pdfPath)
-    const publicPdfUrl = urlData?.publicUrl
+    const publicPdfUrl = await getPublicUrlSafe('reports', pdfPath, supabase)
 
     // Cleanup temp files
     tempPaths.forEach((p) => {
