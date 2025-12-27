@@ -53,7 +53,7 @@ export default async function processSession(req) {
 
     for (const item of media || []) {
       if (item.type === 'video') {
-        const videoPath = await downloadToTemp('media', item.url)
+        const videoPath = await downloadToTemp('audit-videos', item.url)
         tempPaths.push(videoPath)
         const frameDir = path.join(os.tmpdir(), `${item.id}-frames`)
         await extractFrames(videoPath, frameDir)
@@ -69,7 +69,7 @@ export default async function processSession(req) {
         tempPaths.push(frameDir)
       } else {
         // image
-        const imagePath = await downloadToTemp('media', item.url)
+        const imagePath = await downloadToTemp('audit-videos', item.url)
         const analysis = await analyzeImage(imagePath)
         results.push({ media_id: item.id, ...analysis })
         tempPaths.push(imagePath)
@@ -85,9 +85,10 @@ export default async function processSession(req) {
 
     const { jsonReport, pdfBuffer } = await generateReport(sessionId, results)
     const pdfPath = `reports/${sessionId}.pdf`
-    await uploadFile('reports', pdfPath, pdfBuffer, 'application/pdf')
+    await uploadFile('audit-videos', pdfPath, pdfBuffer, 'application/pdf')
 
-    const { data: reportRow, error: reportError } = await supabase
+    // FIXED: Remove .single() from upsert and get first item from array
+    const { data: reportRows, error: reportError } = await supabase
       .from('reports')
       .upsert(
         {
@@ -99,10 +100,14 @@ export default async function processSession(req) {
         { onConflict: 'session_id' },
       )
       .select()
-      .single()
+    
     if (reportError) throw reportError
+    
+    // Get the first (and should be only) row from the result
+    const reportRow = reportRows && reportRows.length > 0 ? reportRows[0] : null
+    if (!reportRow) throw new Error('Failed to save report')
 
-    const publicPdfUrl = await getPublicUrl('reports', pdfPath)
+    const publicPdfUrl = await getPublicUrl('audit-videos', pdfPath)
 
     const response = new Response(
       JSON.stringify({
