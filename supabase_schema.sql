@@ -83,8 +83,11 @@ CREATE POLICY "Allow service role full access to code_usage" ON code_usage
 
 -- ============================================================================
 -- Function: Generate random 6-digit code
+-- Drop first to handle any existing function with different signature
 -- ============================================================================
-CREATE OR REPLACE FUNCTION generate_access_code()
+DROP FUNCTION IF EXISTS generate_access_code();
+
+CREATE FUNCTION generate_access_code()
 RETURNS VARCHAR(6)
 LANGUAGE plpgsql
 AS $$

@@ -61,7 +61,9 @@ CREATE POLICY "Allow service role full access to access_codes" ON access_codes F
 CREATE POLICY "Allow service role full access to code_usage" ON code_usage FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- Helper function
-CREATE OR REPLACE FUNCTION generate_access_code()
+DROP FUNCTION IF EXISTS generate_access_code();
+
+CREATE FUNCTION generate_access_code()
 RETURNS VARCHAR(6)
 LANGUAGE plpgsql
 AS $$
