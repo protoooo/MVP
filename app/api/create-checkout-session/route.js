@@ -1,4 +1,4 @@
-// app/api/create-checkout-session/route.js - SINGLE PLAN VERSION
+// app/api/create-checkout-session/route.js - ONE-TIME PAYMENT VERSION
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -12,11 +12,8 @@ export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// ✅ SINGLE PLAN - Only unlimited monthly
-const UNLIMITED_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
-
-// ✅ Only one allowed price
-const ALLOWED_PRICES = [UNLIMITED_MONTHLY].filter(Boolean)
+// ✅ ONE-TIME PAYMENT - $149 per inspection report
+const INSPECTION_REPORT_PRICE = 14900 // $149.00 in cents
 
 function getClientIp(request) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -46,29 +43,11 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { priceId, captchaToken, locationCount: rawLocationCount, devicesPerLocation: rawDevicesPerLocation } = body
-
-    const locationCount = Math.max(1, Math.min(500, parseInt(rawLocationCount || '1', 10)))
-    const devicesPerLocation = Math.max(1, Math.min(20, parseInt(rawDevicesPerLocation || '1', 10)))
-
-    const tier = locationCount >= 20 ? 'enterprise' : locationCount >= 5 ? 'multi' : 'single'
-    const pricePerLocation = tier === 'enterprise' ? 35 : tier === 'multi' ? 40 : 50
-    const devicePrice = tier === 'single' ? 20 : 15
-    const isMultiLocation = locationCount > 1
-
-    if (tier === 'enterprise') {
-      return NextResponse.json({ requiresContact: true, tier })
-    }
-
-    // ✅ Validate price ID - must be the unlimited plan
-    if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
-      logger.security('Invalid price ID attempted', { priceId, ip })
-      return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 })
-    }
+    const { captchaToken } = body
 
     // ✅ CAPTCHA verification
     if (!captchaToken) {
-      logger.security('Missing captcha token in checkout', { ip, priceId })
+      logger.security('Missing captcha token in checkout', { ip })
       return NextResponse.json(
         { error: 'Security verification required. Please try again.', code: 'CAPTCHA_MISSING' },
         { status: 403 }
@@ -82,7 +61,6 @@ export async function POST(request) {
         ip,
         error: captchaResult.error,
         score: captchaResult.score,
-        priceId,
       })
 
       return NextResponse.json(
@@ -91,7 +69,7 @@ export async function POST(request) {
       )
     }
 
-    logger.info('Checkout CAPTCHA verified', { ip, score: captchaResult.score, priceId })
+    logger.info('Checkout CAPTCHA verified', { ip, score: captchaResult.score })
 
     // ✅ Authentication
     const cookieStore = await cookies()
@@ -155,22 +133,6 @@ export async function POST(request) {
 
     logger.info('Email verification confirmed', { userId: user.id })
 
-    // ✅ Check for existing subscription BEFORE rate limiting
-    const { data: existingSubscription } = await supabase
-      .from('subscriptions')
-      .select('id, status')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
-      .maybeSingle()
-
-    if (existingSubscription) {
-      logger.warn('User already has active subscription', { userId: user.id })
-      return NextResponse.json({ 
-        error: 'You already have an active subscription',
-        code: 'ALREADY_SUBSCRIBED' 
-      }, { status: 400 })
-    }
-
     // ✅ Check for pending checkout sessions
     const { data: pendingSessions, error: pendingError } = await supabase
       .from('checkout_attempts')
@@ -220,7 +182,7 @@ export async function POST(request) {
       // ✅ Log checkout attempt
       const { error: insertError } = await supabase.from('checkout_attempts').insert({
         user_id: user.id,
-        price_id: priceId,
+        price_id: 'one_time_inspection',
         captcha_score: captchaResult.score,
         ip_address: ip,
         created_at: new Date().toISOString(),
@@ -239,61 +201,28 @@ export async function POST(request) {
       }, { status: 503 })
     }
 
-    const totalDevices = locationCount * devicesPerLocation
-    const additionalDevices = Math.max(0, totalDevices - locationCount)
-    const baseTotal = pricePerLocation * locationCount
-    const deviceTotal = devicePrice * additionalDevices
-
-    const lineItems = [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'protocolLM Location License' },
-          recurring: { interval: 'month' },
-          unit_amount: pricePerLocation * 100,
-        },
-        quantity: locationCount,
-      },
-    ]
-
-    if (additionalDevices > 0) {
-      lineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'Additional Device License' },
-          recurring: { interval: 'month' },
-          unit_amount: devicePrice * 100,
-        },
-        quantity: additionalDevices,
-      })
-    }
-
-    // ✅ Create Stripe checkout session
+    // ✅ Create Stripe checkout session for one-time payment
     const checkoutSession = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      mode: 'payment', // Changed from 'subscription' to 'payment'
       payment_method_types: ['card'],
       customer_email: user.email,
       client_reference_id: user.id,
-      line_items: lineItems,
-      subscription_data: {
-        trial_period_days: 14,
-        metadata: {
-          userId: user.id,
-          userEmail: user.email,
-          captchaScore: captchaResult.score?.toString() || 'unknown',
-          pricingTier: tier,
-          locationCount: locationCount.toString(),
-          devicesPerLocation: devicesPerLocation.toString(),
-          basePricePerLocation: pricePerLocation.toString(),
-          deviceAddonPrice: devicePrice.toString(),
-          totalDevices: totalDevices.toString(),
-          isMultiLocation: isMultiLocation ? 'true' : 'false',
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Restaurant Health Inspection Report',
+              description: 'Pre-inspection video analysis for Michigan food safety compliance (up to 25 minutes)',
+            },
+            unit_amount: INSPECTION_REPORT_PRICE,
+          },
+          quantity: 1,
         },
-      },
+      ],
       allow_promotion_codes: true,
       billing_address_collection: 'required',
       automatic_tax: { enabled: true },
-      tax_id_collection: { enabled: true },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
       metadata: {
@@ -302,28 +231,18 @@ export async function POST(request) {
         timestamp: Date.now().toString(),
         captchaScore: captchaResult.score?.toString() || 'unknown',
         ipAddress: ip || 'unknown',
-        pricingTier: tier,
-        locationCount: locationCount.toString(),
-        devicesPerLocation: devicesPerLocation.toString(),
-        basePricePerLocation: pricePerLocation.toString(),
-        deviceAddonPrice: devicePrice.toString(),
-        totalDevices: totalDevices.toString(),
-        isMultiLocation: isMultiLocation ? 'true' : 'false',
+        productType: 'inspection_report',
+        reportPrice: '149',
       },
     })
 
-    logger.audit('Checkout session created (single unlimited plan)', {
+    logger.audit('Checkout session created (one-time inspection report)', {
       sessionId: checkoutSession.id,
       userId: user.id,
       email: user.email,
-      priceId,
+      amount: 149,
       captchaScore: captchaResult.score,
       ip,
-      locationCount,
-      devicesPerLocation,
-      pricingTier: tier,
-      monthlyTotal: baseTotal + deviceTotal,
-      additionalDevices,
     })
 
     return NextResponse.json({ url: checkoutSession.url })
