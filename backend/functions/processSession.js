@@ -6,6 +6,7 @@ import { supabase, downloadFile, getPublicUrl, uploadFile } from '../utils/stora
 import { extractFrames, deduplicateFrames } from '../utils/frameExtractor.js'
 import { analyzeImage } from '../utils/aiAnalysis.js'
 import { generateReport } from '../utils/reportGenerator.js'
+import { getVideoDuration, logVideoUsage } from '../../lib/videoUsageTracking.js'
 
 async function authorize(req) {
   const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
@@ -40,6 +41,18 @@ export default async function processSession(req) {
     const { session_id: sessionId } = await req.json()
     if (!sessionId) return new Response(JSON.stringify({ error: 'Missing session_id' }), { status: 400 })
 
+    // Get user's sector for usage tracking
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('sector')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .order('current_period_end', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    
+    const userSector = subscription?.sector || 'food_safety'
+
     const { data: media, error: mediaError } = await supabase
       .from('media')
       .select('*')
@@ -48,13 +61,24 @@ export default async function processSession(req) {
     if (mediaError) throw mediaError
 
     const results = []
-
     const tempPaths = []
+    let totalVideoDurationSeconds = 0
+    let totalFramesAnalyzed = 0
 
     for (const item of media || []) {
       if (item.type === 'video') {
         const videoPath = await downloadToTemp('audit-videos', item.url)
         tempPaths.push(videoPath)
+        
+        // Track video duration for usage-based billing
+        let videoDuration = 0
+        try {
+          videoDuration = await getVideoDuration(videoPath)
+          totalVideoDurationSeconds += videoDuration
+        } catch (durationErr) {
+          console.error('Failed to get video duration:', durationErr.message)
+        }
+        
         const frameDir = path.join(os.tmpdir(), `${item.id}-frames`)
         await extractFrames(videoPath, frameDir)
         const frameFiles = fs
@@ -62,6 +86,9 @@ export default async function processSession(req) {
           .map((f) => path.join(frameDir, f))
           .filter((f) => f.endsWith('.jpg') || f.endsWith('.png'))
         const uniqueFrames = await deduplicateFrames(frameFiles)
+        
+        totalFramesAnalyzed += uniqueFrames.length
+        
         for (const framePath of uniqueFrames) {
           const analysis = await analyzeImage(framePath)
           results.push({ media_id: item.id, ...analysis })
@@ -86,6 +113,22 @@ export default async function processSession(req) {
     const { jsonReport, pdfBuffer } = await generateReport(sessionId, results)
     const pdfPath = `reports/${sessionId}.pdf`
     await uploadFile('audit-videos', pdfPath, pdfBuffer, 'application/pdf')
+
+    // Log video usage for tracking and billing (if applicable)
+    if (totalVideoDurationSeconds > 0) {
+      try {
+        await logVideoUsage({
+          userId: user.id,
+          sessionId,
+          sector: userSector,
+          videoDurationSeconds: totalVideoDurationSeconds,
+          framesAnalyzed: totalFramesAnalyzed,
+        })
+      } catch (usageErr) {
+        // Don't fail processing if usage logging fails
+        console.error('Video usage logging failed:', usageErr.message)
+      }
+    }
 
     // FIXED: Remove .single() from upsert and get first item from array
     const { data: reportRows, error: reportError } = await supabase
