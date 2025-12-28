@@ -469,7 +469,6 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
               </Link>
               .
             </p>
-            </p>
           </div>
         </div>
       </div>
