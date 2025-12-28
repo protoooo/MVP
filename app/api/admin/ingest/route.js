@@ -1,4 +1,4 @@
-// app/api/admin/ingest/route.js - COHERE INGEST (STATE + COUNTY)
+// app/api/admin/ingest/route.js - MULTI-SECTOR INGEST (COHERE)
 // ProtocolLM - Admin ingestion endpoint (deployment bundle PDFs -> Supabase rows)
 
 import { NextResponse } from "next/server"
@@ -7,6 +7,7 @@ import fs from "fs"
 import path from "path"
 import pdfParse from "pdf-parse"
 import { CohereClient } from "cohere-ai"
+import { SECTORS, SECTOR_DOCUMENT_FOLDERS, LEGACY_COLLECTIONS_TO_SECTOR } from "@/lib/sectors"
 
 export const runtime = "nodejs"
 export const maxDuration = 300 // 5 minutes
@@ -39,44 +40,105 @@ function chunkText(fullText) {
   return chunks
 }
 
-function resolveTargets({ collection }) {
-  // collection: "washtenaw" | "michigan" | "all"
+function resolveTargets({ collection, sector }) {
+  // Support both legacy collection-based and new sector-based approaches
+  // collection: "washtenaw" | "michigan" | "all" (legacy)
+  // sector: "food_safety" | "fire_life_safety" | "rental_housing" | "all" (new)
+  
   const base = path.join(process.cwd(), "public", "documents")
   const targets = []
 
-  const addTargetIfExistsAndHasPDFs = (dir, name) => {
+  const addTargetIfExistsAndHasPDFs = (dir, name, sectorId) => {
     if (!fs.existsSync(dir)) return
     const files = fs.readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".pdf"))
-    if (files.length > 0) targets.push({ dir, files, collection: name })
+    if (files.length > 0) {
+      targets.push({ 
+        dir, 
+        files, 
+        collection: name, 
+        sector: sectorId 
+      })
+    }
   }
 
-  if (collection === "washtenaw" || collection === "all") {
-    addTargetIfExistsAndHasPDFs(path.join(base, "washtenaw"), "washtenaw")
+  // New sector-based approach (preferred)
+  if (sector) {
+    if (sector === "all") {
+      // Ingest all sectors
+      Object.entries(SECTOR_DOCUMENT_FOLDERS).forEach(([sectorId, folderName]) => {
+        addTargetIfExistsAndHasPDFs(
+          path.join(base, folderName), 
+          folderName, 
+          sectorId
+        )
+      })
+    } else if (SECTOR_DOCUMENT_FOLDERS[sector]) {
+      // Ingest specific sector
+      const folderName = SECTOR_DOCUMENT_FOLDERS[sector]
+      addTargetIfExistsAndHasPDFs(
+        path.join(base, folderName), 
+        folderName, 
+        sector
+      )
+    }
+  } 
+  // Legacy collection-based approach (backward compatibility)
+  else if (collection) {
+    // Map legacy collection to sector
+    const mappedSector = LEGACY_COLLECTIONS_TO_SECTOR[collection]
+    
+    if (collection === "washtenaw" || collection === "all") {
+      addTargetIfExistsAndHasPDFs(
+        path.join(base, "washtenaw"), 
+        "washtenaw", 
+        mappedSector || SECTORS.FOOD_SAFETY
+      )
+    }
+
+    if (collection === "michigan" || collection === "all") {
+      addTargetIfExistsAndHasPDFs(
+        path.join(base, "michigan"), 
+        "michigan", 
+        mappedSector || SECTORS.FOOD_SAFETY
+      )
+    }
+    
+    // Also check new food_safety folder for backward compatibility
+    if (collection === "michigan" || collection === "all") {
+      addTargetIfExistsAndHasPDFs(
+        path.join(base, "food_safety"), 
+        "food_safety", 
+        SECTORS.FOOD_SAFETY
+      )
+    }
   }
 
-  if (collection === "michigan" || collection === "all") {
-    addTargetIfExistsAndHasPDFs(path.join(base, "michigan"), "michigan")
-  }
-
-  // Fallback: if nothing found in subfolders, try root as michigan
+  // Fallback: if nothing found, try food_safety folder
   if (targets.length === 0) {
-    addTargetIfExistsAndHasPDFs(base, "michigan")
+    addTargetIfExistsAndHasPDFs(
+      path.join(base, "food_safety"), 
+      "food_safety", 
+      SECTORS.FOOD_SAFETY
+    )
   }
 
   return targets
 }
 
-function buildMetadata({ file, collection, chunkIndex, totalChunks, pageEstimate }) {
+function buildMetadata({ file, collection, chunkIndex, totalChunks, pageEstimate, sector }) {
   const metadata = {
     source: file,
     source_path: `public/documents/${collection}/${file}`,
     chunk_index: chunkIndex,
     total_chunks: totalChunks,
-    collection, // "michigan" | "washtenaw"
+    collection, // legacy: "michigan" | "washtenaw" | folder name
     jurisdiction: collection === "michigan" ? "state" : "county",
+    sector: sector || SECTORS.FOOD_SAFETY, // Add sector field
   }
 
+  // Legacy county field for backward compatibility
   if (collection === "washtenaw") metadata.county = "washtenaw"
+  
   if (Number.isFinite(pageEstimate)) metadata.page_estimate = pageEstimate
 
   return metadata
@@ -106,14 +168,25 @@ async function embedWithRetry(cohere, batch, retries = 0) {
   }
 }
 
-async function wipeCollection(supabase, collection) {
-  // Safe scoped delete: only rows tagged with this collection
-  const { error } = await supabase
-    .from("documents")
-    .delete()
-    .eq("metadata->>collection", collection)
+async function wipeCollection(supabase, collection, sector) {
+  // Safe scoped delete: only rows tagged with this collection or sector
+  if (sector) {
+    // Delete by sector (preferred for new multi-sector approach)
+    const { error } = await supabase
+      .from("documents")
+      .delete()
+      .eq("metadata->>sector", sector)
+    
+    if (error) throw new Error(`Wipe failed for sector ${sector}: ${error.message}`)
+  } else if (collection) {
+    // Delete by collection (legacy approach)
+    const { error } = await supabase
+      .from("documents")
+      .delete()
+      .eq("metadata->>collection", collection)
 
-  if (error) throw new Error(`Wipe failed for ${collection}: ${error.message}`)
+    if (error) throw new Error(`Wipe failed for collection ${collection}: ${error.message}`)
+  }
 }
 
 export async function POST(req) {
@@ -128,16 +201,40 @@ export async function POST(req) {
       body = {}
     }
 
-    const collection = (body.collection || "washtenaw").toString().toLowerCase()
+    // Support both legacy 'collection' and new 'sector' parameters
+    const collection = body.collection ? body.collection.toString().toLowerCase() : null
+    const sector = body.sector ? body.sector.toString().toLowerCase() : null
     const wipe = Boolean(body.wipe)
 
-    const allowed = new Set(["washtenaw", "michigan", "all"])
-    if (!allowed.has(collection)) {
+    // Validate inputs
+    const allowedCollections = new Set(["washtenaw", "michigan", "all"])
+    const allowedSectors = new Set([
+      SECTORS.FOOD_SAFETY, 
+      SECTORS.FIRE_LIFE_SAFETY, 
+      SECTORS.RENTAL_HOUSING, 
+      "all"
+    ])
+    
+    if (sector && !allowedSectors.has(sector)) {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: `Invalid sector "${sector}". Use: ${Array.from(allowedSectors).join(" | ")}` 
+        },
+        { status: 400 }
+      )
+    }
+    
+    if (!sector && collection && !allowedCollections.has(collection)) {
       return NextResponse.json(
         { ok: false, error: `Invalid collection "${collection}". Use washtenaw | michigan | all.` },
         { status: 400 }
       )
     }
+    
+    // Default to food_safety sector if neither specified
+    const effectiveSector = sector
+    const effectiveCollection = collection || (sector ? null : "michigan")
 
     // -----------------------
     // Clients
@@ -152,14 +249,14 @@ export async function POST(req) {
     // -----------------------
     // Find PDFs
     // -----------------------
-    const targets = resolveTargets({ collection })
+    const targets = resolveTargets({ collection: effectiveCollection, sector: effectiveSector })
 
     if (!targets || targets.length === 0) {
       return NextResponse.json(
         {
           ok: false,
           error:
-            "No PDFs found. Put files in public/documents/washtenaw and/or public/documents/michigan (or root public/documents as fallback).",
+            "No PDFs found. Put files in public/documents/{sector_folder} (e.g., food_safety, fire_life_safety, rental_housing).",
         },
         { status: 404 }
       )
@@ -167,6 +264,7 @@ export async function POST(req) {
 
     console.log("Ingest targets:", targets.map(t => ({
       collection: t.collection,
+      sector: t.sector,
       dir: t.dir,
       pdfs: t.files.length
     })))
@@ -175,16 +273,31 @@ export async function POST(req) {
     // Optional wipe (scoped)
     // -----------------------
     if (wipe) {
-      const wipeTargets =
-        collection === "all"
-          ? Array.from(new Set(targets.map((t) => t.collection)))
-          : [collection]
+      if (effectiveSector) {
+        // Wipe by sector (preferred)
+        const wipeTargets =
+          effectiveSector === "all"
+            ? Array.from(new Set(targets.map((t) => t.sector)))
+            : [effectiveSector]
 
-      console.log("🧹 Wiping collections:", wipeTargets)
-      for (const c of wipeTargets) {
-        await wipeCollection(supabase, c)
+        console.log("🧹 Wiping sectors:", wipeTargets)
+        for (const s of wipeTargets) {
+          await wipeCollection(supabase, null, s)
+        }
+        console.log("✅ Wipe complete")
+      } else {
+        // Legacy collection-based wipe
+        const wipeTargets =
+          effectiveCollection === "all"
+            ? Array.from(new Set(targets.map((t) => t.collection)))
+            : [effectiveCollection]
+
+        console.log("🧹 Wiping collections:", wipeTargets)
+        for (const c of wipeTargets) {
+          await wipeCollection(supabase, c, null)
+        }
+        console.log("✅ Wipe complete")
       }
-      console.log("✅ Wipe complete")
     }
 
     // -----------------------
@@ -195,11 +308,11 @@ export async function POST(req) {
     const processedFiles = []
 
     for (const target of targets) {
-      const { dir, files, collection: targetCollection } = target
+      const { dir, files, collection: targetCollection, sector: targetSector } = target
 
       for (const file of files) {
         totalFiles += 1
-        console.log(`Processing: ${targetCollection}/${file}`)
+        console.log(`Processing: ${targetSector || targetCollection}/${file}`)
 
         const pdfBuffer = fs.readFileSync(path.join(dir, file))
         const parsed = await pdfParse(pdfBuffer)
@@ -246,6 +359,7 @@ export async function POST(req) {
                 chunkIndex: i + idx,
                 totalChunks: chunks.length,
                 pageEstimate,
+                sector: targetSector, // Add sector to metadata
               }),
             }
 
