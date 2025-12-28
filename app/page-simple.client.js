@@ -350,10 +350,12 @@ export default function SimplePage() {
                         }}
                         placeholder="Enter 6-digit code"
                         maxLength={6}
-                        className="w-full rounded-md border px-4 py-3 text-center text-2xl font-mono tracking-wider"
+                        className="w-full rounded-md border px-4 py-3 text-center font-semibold"
                         style={{
                           borderColor: accessCodeError ? 'var(--accent-red)' : 'var(--border)',
                           color: 'var(--ink)',
+                          fontSize: '15px',
+                          letterSpacing: '0.05em'
                         }}
                       />
                       {accessCodeError && (
