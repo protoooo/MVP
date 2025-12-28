@@ -119,7 +119,7 @@ export default function KnowledgeBase() {
           </Link>
           <nav className="flex gap-4">
             <Link href="/resources" className="text-slate-300 hover:text-white">
-              Knowledge Base
+              Q&A
             </Link>
             <Link href="/signup" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
               Get $149 Analysis
@@ -131,11 +131,11 @@ export default function KnowledgeBase() {
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 py-16 text-center">
         <h1 className="text-5xl font-bold mb-6">
-          Michigan Food Safety Knowledge Base
+          Michigan Food Safety Q&A
         </h1>
         <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto">
-          Get instant answers about Michigan food safety regulations. 
-          Search 200+ requirements from the Michigan Modified Food Code.
+          Ask questions about Michigan food safety regulations and get instant AI-powered answers. 
+          Analyze photos for compliance issues. 50 free questions and 10 free image analyses per month.
         </p>
 
         {/* Search Bar */}
@@ -162,7 +162,7 @@ export default function KnowledgeBase() {
         {/* Rate limit info */}
         {results?.remaining !== undefined && (
           <p className="text-sm text-slate-400">
-            {results.remaining} searches remaining (5/day, 20/week limit)
+            {results.remaining} of 50 free questions remaining this month
           </p>
         )}
       </section>
@@ -269,7 +269,7 @@ export default function KnowledgeBase() {
             <h2 className="text-2xl font-bold mb-6">Free Image Compliance Check</h2>
             <p className="text-slate-300 mb-6">
               Upload a photo from your establishment to get a quick compliance check. 
-              Limited to 3 free analyses per day and 10 per week.
+              Limited to 10 free analyses per month.
             </p>
 
             <div className="space-y-4">
@@ -350,7 +350,7 @@ export default function KnowledgeBase() {
 
                 {imageAnalysis.remaining !== undefined && (
                   <p className="text-sm text-slate-400 text-center">
-                    {imageAnalysis.remaining} free analyses remaining today
+                    {imageAnalysis.remaining} of 10 free analyses remaining this month
                   </p>
                 )}
 

@@ -1,7 +1,7 @@
 // app/api/knowledge-base/analyze-image/route.js
 // Free image analysis teaser for knowledge base users
 import { NextResponse } from 'next/server'
-import { checkMultipleRateLimits, getIpAddress, RATE_LIMITS } from '@/lib/rateLimiting'
+import { checkRateLimit, getIpAddress, RATE_LIMITS } from '@/lib/rateLimiting'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -80,18 +80,15 @@ export async function POST(request) {
       )
     }
     
-    // Rate limiting by IP - check both daily and weekly limits
+    // Rate limiting by IP - 10 images per month
     const ip = getIpAddress(request)
-    const rateLimit = await checkMultipleRateLimits(ip, [
-      RATE_LIMITS.FREE_IMAGE_ANALYSIS_DAILY,
-      RATE_LIMITS.FREE_IMAGE_ANALYSIS_WEEKLY
-    ])
+    const rateLimit = await checkRateLimit(ip, RATE_LIMITS.FREE_IMAGE_ANALYSIS)
     
     if (!rateLimit.allowed) {
       logger.info('Free image analysis rate limit exceeded', { ip, email, retryAfter: rateLimit.retryAfter })
       return NextResponse.json(
         {
-          error: `You've used your free analyses. Get unlimited checks with our $149 video analysis package.`,
+          error: `You've reached your monthly limit of 10 free image analyses. Get unlimited checks with our $149 video analysis package.`,
           code: 'RATE_LIMIT_EXCEEDED',
           remaining: 0,
           upgradeUrl: '/signup?plan=video_analysis'
@@ -100,8 +97,8 @@ export async function POST(request) {
       )
     }
     
-    // Show modal after 2nd daily image (when remaining is 1)
-    const showUpgradeModal = rateLimit.remaining === 1
+    // Show modal when nearing limit (3 remaining or less)
+    const showUpgradeModal = rateLimit.remaining <= 3
     
     // Validate image
     const imageValidation = validateImageData(imageInput)

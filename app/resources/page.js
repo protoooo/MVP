@@ -3,12 +3,12 @@ import { Suspense } from 'react'
 import KnowledgeBaseClient from './page.client'
 
 export const metadata = {
-  title: 'Michigan Food Safety Knowledge Base | ProtocolLM',
-  description: 'Free semantic search for Michigan food safety regulations. Get instant answers about the Michigan Modified Food Code.',
-  keywords: 'Michigan food safety, food code, restaurant regulations, health inspection, compliance',
+  title: 'Michigan Food Safety Q&A | ProtocolLM',
+  description: 'Ask questions about Michigan food safety regulations and get instant AI-powered answers. 50 free questions per month.',
+  keywords: 'Michigan food safety, food code, restaurant regulations, health inspection, compliance, Q&A',
   openGraph: {
-    title: 'Michigan Food Safety Knowledge Base',
-    description: 'Free semantic search for Michigan food safety regulations',
+    title: 'Michigan Food Safety Q&A',
+    description: 'Free Q&A about Michigan food safety regulations with AI-powered answers',
     type: 'website'
   }
 }
