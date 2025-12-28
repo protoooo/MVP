@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
 export default function KnowledgeBase() {
@@ -8,12 +8,6 @@ export default function KnowledgeBase() {
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [showImageUpload, setShowImageUpload] = useState(false)
-  const [imageFile, setImageFile] = useState(null)
-  const [imageAnalysis, setImageAnalysis] = useState(null)
-  const [email, setEmail] = useState('')
-  const [analyzingImage, setAnalyzingImage] = useState(false)
-  const fileInputRef = useRef(null)
 
   const handleSearch = async (e) => {
     e.preventDefault()
@@ -44,71 +38,6 @@ export default function KnowledgeBase() {
     }
   }
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file')
-      return
-    }
-
-    setImageFile(file)
-    setError(null)
-  }
-
-  const handleAnalyzeImage = async () => {
-    if (!imageFile || !email.trim()) {
-      setError('Please provide an email and select an image')
-      return
-    }
-
-    setAnalyzingImage(true)
-    setError(null)
-
-    try {
-      // Convert image to base64
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        try {
-          const response = await fetch('/api/knowledge-base/analyze-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              email,
-              image: e.target.result 
-            })
-          })
-
-          const data = await response.json()
-
-          if (!response.ok) {
-            throw new Error(data.error || 'Analysis failed')
-          }
-
-          setImageAnalysis(data)
-          
-          // Show upgrade modal if needed
-          if (data.showUpgradeModal) {
-            setTimeout(() => {
-              if (window.confirm(data.upgradeMessage + '\n\nGo to pricing page?')) {
-                window.location.href = '/signup?plan=video_analysis'
-              }
-            }, 2000)
-          }
-        } catch (err) {
-          setError(err.message)
-        } finally {
-          setAnalyzingImage(false)
-        }
-      }
-      reader.readAsDataURL(imageFile)
-    } catch (err) {
-      setError(err.message)
-      setAnalyzingImage(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100" style={{ color: 'var(--ink)' }}>
       {/* Header */}
@@ -132,7 +61,7 @@ export default function KnowledgeBase() {
         </h1>
         <p className="text-xl mb-8 max-w-3xl mx-auto" style={{ color: 'var(--ink-60)' }}>
           Ask questions about Michigan food safety regulations and get instant AI-powered answers. 
-          Analyze photos for compliance issues. 50 free questions and 10 free image analyses per month.
+          50 free questions per month.
         </p>
 
         {/* Search Bar */}
@@ -249,134 +178,8 @@ export default function KnowledgeBase() {
                   </p>
                 </div>
               )}
-
-              {/* Image Upload Teaser */}
-              {!showImageUpload && (
-                <div className="mt-8 text-center">
-                  <button
-                    onClick={() => setShowImageUpload(true)}
-                    className="underline transition"
-                    style={{ color: 'var(--accent)' }}
-                  >
-                    Upload a photo to check compliance →
-                  </button>
-                </div>
-              )}
             </>
           )}
-        </section>
-      )}
-
-      {/* Image Upload Section */}
-      {showImageUpload && (
-        <section className="max-w-4xl mx-auto px-4 pb-16">
-          <div className="rounded-lg p-8" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' }}>
-            <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--ink)' }}>Free Image Compliance Check</h2>
-            <p className="mb-6" style={{ color: 'var(--ink-60)' }}>
-              Upload a photo from your establishment to get a quick compliance check. 
-              Limited to 10 free analyses per month.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>Email Address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-2 rounded-lg border focus:outline-none"
-                  style={{ background: 'var(--clay)', borderColor: 'var(--border)', color: 'var(--ink)' }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>Upload Image</label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:text-white hover:file:opacity-90 file:cursor-pointer"
-                  style={{ color: 'var(--ink)' }}
-                />
-                <style jsx>{`
-                  input[type="file"]::file-selector-button {
-                    background: var(--accent);
-                  }
-                `}</style>
-              </div>
-
-              {imageFile && (
-                <div className="text-sm" style={{ color: 'var(--ink-60)' }}>
-                  Selected: {imageFile.name}
-                </div>
-              )}
-
-              <button
-                onClick={handleAnalyzeImage}
-                disabled={analyzingImage || !imageFile || !email}
-                className="w-full px-6 py-3 rounded-lg font-semibold transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: 'var(--accent)' }}
-              >
-                {analyzingImage ? 'Analyzing...' : 'Analyze Image'}
-              </button>
-            </div>
-
-            {/* Image Analysis Results */}
-            {imageAnalysis && (
-              <div className="mt-6 space-y-4">
-                <div className="rounded-lg p-6" style={{ background: 'var(--clay)' }}>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <div className="text-3xl font-bold" style={{ color: 'var(--accent-green)' }}>
-                        {imageAnalysis.compliantItems}
-                      </div>
-                      <div className="text-sm" style={{ color: 'var(--ink-60)' }}>Compliant Items</div>
-                    </div>
-                    <div>
-                      <div className="text-3xl font-bold" style={{ color: '#f97316' }}>
-                        {imageAnalysis.issuesDetected}
-                      </div>
-                      <div className="text-sm" style={{ color: 'var(--ink-60)' }}>Potential Issues</div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {imageAnalysis.issues?.map((issue, idx) => (
-                      <div key={idx} className="rounded p-3 text-sm" style={{ background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
-                        {issue}
-                      </div>
-                    ))}
-                  </div>
-
-                  <p className="text-sm mt-4" style={{ color: 'var(--ink-60)' }}>
-                    {imageAnalysis.detailMessage}
-                  </p>
-                </div>
-
-                {imageAnalysis.remaining !== undefined && (
-                  <p className="text-sm text-center" style={{ color: 'var(--ink-60)' }}>
-                    {imageAnalysis.remaining} of 10 free analyses remaining this month
-                  </p>
-                )}
-
-                <div className="rounded-lg p-6 text-center" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent)' }}>
-                  <p className="text-lg font-semibold mb-4" style={{ color: 'var(--ink)' }}>
-                    {imageAnalysis.conversionCta}
-                  </p>
-                  <Link 
-                    href="/"
-                    className="inline-block px-8 py-3 rounded-lg font-semibold transition-colors text-white"
-                    style={{ background: 'var(--accent)' }}
-                  >
-                    Buy License →
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
         </section>
       )}
 
