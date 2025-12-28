@@ -28,6 +28,9 @@ const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
 const HISTORY_KEY_BASE = 'plm_chat_history_v1'
 const POLICY_VERSION = '1'
 
+// Video file size warning threshold (1GB)
+const MAX_VIDEO_FILE_SIZE_BYTES = 1000 * 1024 * 1024
+
 const getPolicyStorageKey = (userId) => `plm_policy_v${POLICY_VERSION}_${userId}`
 const hasCachedPolicyAcceptance = (userId) => {
   if (typeof window === 'undefined' || !userId) return false
@@ -1408,7 +1411,7 @@ export default function Page() {
     // Rough estimate: 1 minute of 1080p video ≈ 40-150 MB depending on compression
     // 25 minutes ≈ 1000 MB (1 GB) conservative estimate
     const largeVideos = normalized.filter(f => 
-      f.type === 'video' && f.size > 1000 * 1024 * 1024
+      f.type === 'video' && f.size > MAX_VIDEO_FILE_SIZE_BYTES
     )
     if (largeVideos.length > 0) {
       setUploadError(
