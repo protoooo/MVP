@@ -110,19 +110,16 @@ export default function KnowledgeBase() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100" style={{ color: 'var(--ink)' }}>
       {/* Header */}
-      <header className="border-b border-slate-700 bg-slate-900/50 backdrop-blur">
+      <header className="border-b bg-white/80 backdrop-blur" style={{ borderColor: 'var(--border)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold">
+          <Link href="/" className="text-2xl font-bold" style={{ color: 'var(--ink)' }}>
             ProtocolLM
           </Link>
           <nav className="flex gap-4">
-            <Link href="/resources" className="text-slate-300 hover:text-white">
-              Q&A
-            </Link>
-            <Link href="/signup" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
-              Get $149 Analysis
+            <Link href="/" className="px-4 py-2 rounded-lg font-medium text-white transition" style={{ background: 'var(--accent)' }}>
+              Buy License
             </Link>
           </nav>
         </div>
@@ -130,10 +127,10 @@ export default function KnowledgeBase() {
 
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-5xl font-bold mb-6">
+        <h1 className="text-5xl font-bold mb-6" style={{ color: 'var(--ink)' }}>
           Michigan Food Safety Q&A
         </h1>
-        <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto">
+        <p className="text-xl mb-8 max-w-3xl mx-auto" style={{ color: 'var(--ink-60)' }}>
           Ask questions about Michigan food safety regulations and get instant AI-powered answers. 
           Analyze photos for compliance issues. 50 free questions and 10 free image analyses per month.
         </p>
@@ -146,13 +143,19 @@ export default function KnowledgeBase() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ask anything about Michigan food safety..."
-              className="flex-1 px-6 py-4 rounded-lg bg-slate-800 border border-slate-600 focus:border-blue-500 focus:outline-none text-lg"
+              className="flex-1 px-6 py-4 rounded-lg border focus:outline-none text-lg"
+              style={{ 
+                background: 'var(--surface)', 
+                borderColor: 'var(--border)',
+                color: 'var(--ink)'
+              }}
               disabled={loading}
             />
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors"
+              className="px-8 py-4 rounded-lg font-semibold text-lg transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: 'var(--accent)' }}
             >
               {loading ? 'Searching...' : 'Search'}
             </button>
@@ -161,7 +164,7 @@ export default function KnowledgeBase() {
 
         {/* Rate limit info */}
         {results?.remaining !== undefined && (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm" style={{ color: 'var(--ink-40)' }}>
             {results.remaining} of 50 free questions remaining this month
           </p>
         )}
@@ -170,7 +173,7 @@ export default function KnowledgeBase() {
       {/* Error Display */}
       {error && (
         <div className="max-w-4xl mx-auto px-4 mb-8">
-          <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-200">
+          <div className="rounded-lg p-4" style={{ background: 'var(--accent-red-bg)', color: 'var(--accent-red)', border: '1px solid var(--accent-red)' }}>
             {error}
           </div>
         </div>
@@ -180,32 +183,32 @@ export default function KnowledgeBase() {
       {results && (
         <section className="max-w-4xl mx-auto px-4 pb-16">
           {results.results.length === 0 ? (
-            <div className="text-center text-slate-400">
+            <div className="text-center" style={{ color: 'var(--ink-60)' }}>
               <p className="text-lg mb-4">{results.message}</p>
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-bold mb-6">
+              <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--ink)' }}>
                 Results for &quot;{results.query}&quot;
               </h2>
 
               {/* Main Results */}
               <div className="space-y-6 mb-8">
                 {results.results.map((result, idx) => (
-                  <div key={idx} className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+                  <div key={idx} className="rounded-lg p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
                     <div className="flex items-start justify-between mb-3">
-                      <div className="text-sm text-slate-400">
+                      <div className="text-sm" style={{ color: 'var(--ink-60)' }}>
                         {result.source} {result.page !== 'N/A' && `(Page ${result.page})`}
                       </div>
-                      <div className="text-xs text-blue-400">
+                      <div className="text-xs" style={{ color: 'var(--accent)' }}>
                         {Math.round((result.relevance || 0) * 100)}% relevant
                       </div>
                     </div>
-                    <p className="text-slate-100 mb-4 leading-relaxed">
+                    <p className="mb-4 leading-relaxed" style={{ color: 'var(--ink)' }}>
                       {result.regulation}
                     </p>
                     {result.example && (
-                      <div className="bg-blue-900/20 border border-blue-700/30 rounded p-3 text-sm text-blue-200">
+                      <div className="rounded p-3 text-sm" style={{ background: 'var(--accent-bg)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
                         <strong>Practical Example:</strong> {result.example}
                       </div>
                     )}
@@ -216,14 +219,14 @@ export default function KnowledgeBase() {
               {/* Related Requirements */}
               {results.relatedRequirements?.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">Related Requirements</h3>
+                  <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--ink)' }}>Related Requirements</h3>
                   <div className="grid gap-4">
                     {results.relatedRequirements.map((req, idx) => (
-                      <div key={idx} className="bg-slate-800/30 border border-slate-700 rounded-lg p-4">
-                        <div className="text-xs text-slate-400 mb-2">
+                      <div key={idx} className="rounded-lg p-4" style={{ background: 'var(--clay)', border: '1px solid var(--border)' }}>
+                        <div className="text-xs mb-2" style={{ color: 'var(--ink-60)' }}>
                           {req.source} {req.page !== 'N/A' && `(Page ${req.page})`}
                         </div>
-                        <p className="text-sm text-slate-300">{req.regulation}</p>
+                        <p className="text-sm" style={{ color: 'var(--ink)' }}>{req.regulation}</p>
                       </div>
                     ))}
                   </div>
@@ -232,15 +235,16 @@ export default function KnowledgeBase() {
 
               {/* Conversion CTA */}
               {results.conversionMessage && (
-                <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-700 rounded-lg p-6 text-center">
-                  <p className="text-lg mb-4">{results.conversionMessage}</p>
+                <div className="rounded-lg p-6 text-center" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent)' }}>
+                  <p className="text-lg mb-4" style={{ color: 'var(--ink)' }}>{results.conversionMessage}</p>
                   <Link 
-                    href="/signup?plan=video_analysis"
-                    className="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-lg transition-colors"
+                    href="/"
+                    className="inline-block px-8 py-3 rounded-lg font-semibold text-lg transition-colors text-white"
+                    style={{ background: 'var(--accent)' }}
                   >
-                    Get $149 Video Analysis →
+                    Buy License →
                   </Link>
-                  <p className="text-sm text-slate-400 mt-3">
+                  <p className="text-sm mt-3" style={{ color: 'var(--ink-60)' }}>
                     We recently caught violations in 34% of video analyses
                   </p>
                 </div>
@@ -251,7 +255,8 @@ export default function KnowledgeBase() {
                 <div className="mt-8 text-center">
                   <button
                     onClick={() => setShowImageUpload(true)}
-                    className="text-blue-400 hover:text-blue-300 underline"
+                    className="underline transition"
+                    style={{ color: 'var(--accent)' }}
                   >
                     Upload a photo to check compliance →
                   </button>
@@ -265,44 +270,51 @@ export default function KnowledgeBase() {
       {/* Image Upload Section */}
       {showImageUpload && (
         <section className="max-w-4xl mx-auto px-4 pb-16">
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-8">
-            <h2 className="text-2xl font-bold mb-6">Free Image Compliance Check</h2>
-            <p className="text-slate-300 mb-6">
+          <div className="rounded-lg p-8" style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' }}>
+            <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--ink)' }}>Free Image Compliance Check</h2>
+            <p className="mb-6" style={{ color: 'var(--ink-60)' }}>
               Upload a photo from your establishment to get a quick compliance check. 
               Limited to 10 free analyses per month.
             </p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Email Address</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>Email Address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-2 rounded-lg border focus:outline-none"
+                  style={{ background: 'var(--clay)', borderColor: 'var(--border)', color: 'var(--ink)' }}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Upload Image</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--ink)' }}>Upload Image</label>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="block w-full text-sm text-slate-300
+                  className="block w-full text-sm
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-lg file:border-0
                     file:text-sm file:font-semibold
-                    file:bg-blue-600 file:text-white
-                    hover:file:bg-blue-700 file:cursor-pointer"
+                    file:text-white
+                    hover:file:opacity-90 file:cursor-pointer"
+                  style={{ color: 'var(--ink)' }}
                 />
+                <style jsx>{`
+                  input[type="file"]::file-selector-button {
+                    background: var(--accent);
+                  }
+                `}</style>
               </div>
 
               {imageFile && (
-                <div className="text-sm text-slate-400">
+                <div className="text-sm" style={{ color: 'var(--ink-60)' }}>
                   Selected: {imageFile.name}
                 </div>
               )}
@@ -310,7 +322,8 @@ export default function KnowledgeBase() {
               <button
                 onClick={handleAnalyzeImage}
                 disabled={analyzingImage || !imageFile || !email}
-                className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
+                className="w-full px-6 py-3 rounded-lg font-semibold transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: 'var(--accent)' }}
               >
                 {analyzingImage ? 'Analyzing...' : 'Analyze Image'}
               </button>
@@ -319,50 +332,51 @@ export default function KnowledgeBase() {
             {/* Image Analysis Results */}
             {imageAnalysis && (
               <div className="mt-6 space-y-4">
-                <div className="bg-slate-900 rounded-lg p-6">
+                <div className="rounded-lg p-6" style={{ background: 'var(--clay)' }}>
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <div className="text-3xl font-bold text-green-400">
+                      <div className="text-3xl font-bold" style={{ color: 'var(--accent-green)' }}>
                         {imageAnalysis.compliantItems}
                       </div>
-                      <div className="text-sm text-slate-400">Compliant Items</div>
+                      <div className="text-sm" style={{ color: 'var(--ink-60)' }}>Compliant Items</div>
                     </div>
                     <div>
-                      <div className="text-3xl font-bold text-orange-400">
+                      <div className="text-3xl font-bold" style={{ color: '#f97316' }}>
                         {imageAnalysis.issuesDetected}
                       </div>
-                      <div className="text-sm text-slate-400">Potential Issues</div>
+                      <div className="text-sm" style={{ color: 'var(--ink-60)' }}>Potential Issues</div>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     {imageAnalysis.issues?.map((issue, idx) => (
-                      <div key={idx} className="bg-orange-900/20 border border-orange-700/30 rounded p-3 text-sm">
+                      <div key={idx} className="rounded p-3 text-sm" style={{ background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
                         {issue}
                       </div>
                     ))}
                   </div>
 
-                  <p className="text-sm text-slate-400 mt-4">
+                  <p className="text-sm mt-4" style={{ color: 'var(--ink-60)' }}>
                     {imageAnalysis.detailMessage}
                   </p>
                 </div>
 
                 {imageAnalysis.remaining !== undefined && (
-                  <p className="text-sm text-slate-400 text-center">
+                  <p className="text-sm text-center" style={{ color: 'var(--ink-60)' }}>
                     {imageAnalysis.remaining} of 10 free analyses remaining this month
                   </p>
                 )}
 
-                <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-700 rounded-lg p-6 text-center">
-                  <p className="text-lg font-semibold mb-4">
+                <div className="rounded-lg p-6 text-center" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent)' }}>
+                  <p className="text-lg font-semibold mb-4" style={{ color: 'var(--ink)' }}>
                     {imageAnalysis.conversionCta}
                   </p>
                   <Link 
-                    href="/signup?plan=video_analysis"
-                    className="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+                    href="/"
+                    className="inline-block px-8 py-3 rounded-lg font-semibold transition-colors text-white"
+                    style={{ background: 'var(--accent)' }}
                   >
-                    Get Full Video Analysis →
+                    Buy License →
                   </Link>
                 </div>
               </div>
@@ -373,7 +387,7 @@ export default function KnowledgeBase() {
 
       {/* Popular Questions */}
       <section className="max-w-4xl mx-auto px-4 pb-16">
-        <h2 className="text-2xl font-bold mb-6 text-center">Popular Questions</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: 'var(--ink)' }}>Popular Questions</h2>
         <div className="grid md:grid-cols-2 gap-4">
           {POPULAR_QUESTIONS.map((q, idx) => (
             <button
@@ -382,7 +396,8 @@ export default function KnowledgeBase() {
                 setQuery(q)
                 handleSearch({ preventDefault: () => {} })
               }}
-              className="text-left p-4 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-lg transition-colors"
+              className="text-left p-4 rounded-lg transition-colors"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--ink)' }}
             >
               {q}
             </button>
@@ -391,8 +406,8 @@ export default function KnowledgeBase() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-700 bg-slate-900/50 py-8">
-        <div className="max-w-6xl mx-auto px-4 text-center text-slate-400">
+      <footer className="border-t py-8" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+        <div className="max-w-6xl mx-auto px-4 text-center" style={{ color: 'var(--ink-60)' }}>
           <p>© 2024 ProtocolLM. Michigan Food Safety Compliance.</p>
         </div>
       </footer>
