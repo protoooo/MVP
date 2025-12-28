@@ -322,8 +322,9 @@ export default function SimplePage() {
           <section className="mx-auto max-w-4xl px-6 py-12">
             {/* Title */}
             <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--ink)' }}>
-                Pre-Inspection Photo Analysis
+              <h1 className="text-3xl font-bold tracking-tight leading-tight" style={{ color: 'var(--ink)' }}>
+                Catch violations before{' '}
+                <span className="whitespace-nowrap">health inspections</span>
               </h1>
               <p className="mt-2 text-base" style={{ color: 'var(--ink-60)' }}>
                 Upload restaurant photos. Get comprehensive compliance reports for Michigan health codes. Starting at $49 for 200 photos.
@@ -350,7 +351,7 @@ export default function SimplePage() {
                           setAccessCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 13))
                           setAccessCodeError('')
                         }}
-                        placeholder="BASIC-XXXXX or PREMIUM-XXXXX"
+                        placeholder="Enter access code"
                         maxLength={13}
                         className="w-full rounded-md border px-4 py-3 text-center font-semibold"
                         style={{
@@ -710,9 +711,6 @@ export default function SimplePage() {
                 >
                   Resources
                 </Link>
-              </div>
-              <div className="mt-3 text-center text-xs" style={{ color: 'var(--ink-40)' }}>
-                Resources is our free tier Q&A about ingested documents
               </div>
             </div>
           </footer>
