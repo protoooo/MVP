@@ -154,7 +154,7 @@ export default function AcceptTermsPage() {
       }
     >
       <div className="info-section">
-        <h2 className="info-section-title">What You're Agreeing To</h2>
+        <h2 className="info-section-title">What You&apos;re Agreeing To</h2>
         <ul>
           <li>protocolLM is a reference tool; human review is required for compliance decisions.</li>
           <li>LLM outputs may be imperfect; always verify with official Michigan guidance.</li>

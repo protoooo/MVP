@@ -65,7 +65,7 @@ export default function NotificationOptInModal({
               Stay informed! 📬
             </h2>
             <p className="text-slate-300 text-sm">
-              We'll help you stay ahead of inspections and regulations
+              We&apos;ll help you stay ahead of inspections and regulations
             </p>
           </div>
         </div>

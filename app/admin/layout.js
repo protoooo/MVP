@@ -2,6 +2,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { Outfit, Inter } from 'next/font/google'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700', '800'] })
@@ -57,9 +58,9 @@ export default async function AdminLayout({ children }) {
               <a href="/admin/ingest" className="text-sm text-slate-600 hover:text-slate-900 font-medium">
                 Ingest
               </a>
-              <a href="/" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+              <Link href="/" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
                 Back to App →
-              </a>
+              </Link>
             </nav>
           </div>
         </div>
