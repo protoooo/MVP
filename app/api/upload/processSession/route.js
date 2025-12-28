@@ -9,6 +9,13 @@ import { analyzeImage, analyzeImageBatch } from '../../../../backend/utils/aiAna
 import { generateReport } from '../../../../backend/utils/reportGenerator.js'
 import { extractFrames, deduplicateFrames, validateVideoDuration } from '../../../../backend/utils/frameExtractor.js'
 
+// ✅ VIDEO PROCESSING COST ESTIMATES
+// Maximum video duration: 60 minutes (1 hour)
+// Estimated processing cost: $2.75 per minute
+// 60 minutes × $2.75/min = $165 total processing cost
+// Customer charge: $149 per inspection report
+// Note: Actual costs may vary based on video complexity and AI usage
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
