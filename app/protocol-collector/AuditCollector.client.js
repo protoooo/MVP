@@ -104,12 +104,29 @@ export default function AuditCollector() {
     const selected = Array.from(files).slice(0, 50)
     if (!selected.length) return
 
-    const newItems = selected.map((file) => ({
+    // Filter out video files and show error if any are rejected
+    const imageFiles = selected.filter(file => {
+      const type = file.type || '';
+      const name = file.name || '';
+      const ext = name.toLowerCase().split('.').pop();
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'heic'];
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/heic'];
+      
+      return allowedMimeTypes.includes(type) || allowedExtensions.includes(ext);
+    });
+    
+    if (imageFiles.length < selected.length) {
+      setStatusMessage('Videos not supported. Please upload photos only (.jpg, .png, .heic).');
+    }
+    
+    if (!imageFiles.length) return;
+
+    const newItems = imageFiles.map((file) => ({
       id: crypto.randomUUID(),
       file,
       name: file.name,
       size: file.size,
-      type: file.type.startsWith('video') ? 'video' : 'image',
+      type: 'image',
       previewUrl: URL.createObjectURL(file),
       status: 'pending',
       progress: 0,
@@ -254,7 +271,7 @@ export default function AuditCollector() {
                   Restaurant Compliance Collector
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm text-slate-600">
-                  Upload kitchen, counter, and storage walkthroughs. Track progress, preview evidence, and generate a
+                  Upload kitchen, counter, and storage photos. Track progress, preview evidence, and generate a
                   clean report without juggling chat threads.
                 </p>
               </div>
@@ -443,7 +460,7 @@ export default function AuditCollector() {
                           uploadInputs.current[area.id] = node
                         }}
                         type="file"
-                        accept="image/*,video/*"
+                        accept="image/jpeg,image/png,image/heic,.jpg,.jpeg,.png,.heic"
                         multiple
                         className="hidden"
                         onChange={(e) => handleFileSelect(area.id, e.target.files)}
@@ -455,7 +472,7 @@ export default function AuditCollector() {
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       {areaState.items.length === 0 && (
                         <div className="col-span-1 flex min-h-[160px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
-                          Drop up to 50 photos or videos
+                          Drop up to 50 photos
                         </div>
                       )}
                       {areaState.items.map((item) => (
@@ -465,23 +482,13 @@ export default function AuditCollector() {
                         >
                           <div className="flex items-start gap-3 p-3">
                             <div className="relative h-20 w-28 overflow-hidden rounded-xl bg-slate-100">
-                              {item.type === 'image' ? (
-                                <Image
-                                  src={item.previewUrl}
-                                  alt={item.name}
-                                  fill
-                                  sizes="112px"
-                                  className="object-cover"
-                                />
-                              ) : (
-                                <video
-                                  src={item.previewUrl}
-                                  className="h-full w-full object-cover"
-                                  muted
-                                  playsInline
-                                  aria-label={`${item.name} video preview`}
-                                />
-                              )}
+                              <Image
+                                src={item.previewUrl}
+                                alt={item.name}
+                                fill
+                                sizes="112px"
+                                className="object-cover"
+                              />
                             </div>
                             <div className="flex flex-1 flex-col gap-2">
                               <div className="flex items-center justify-between">

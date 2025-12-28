@@ -3,7 +3,6 @@ import path from 'path'
 import os from 'os'
 import { v4 as uuidv4 } from 'uuid'
 import { supabase, downloadFile, getPublicUrl, uploadFile } from '../utils/storage.js'
-import { extractFrames, deduplicateFrames } from '../utils/frameExtractor.js'
 import { analyzeImage } from '../utils/aiAnalysis.js'
 import { generateReport } from '../utils/reportGenerator.js'
 
@@ -52,28 +51,11 @@ export default async function processSession(req) {
     const tempPaths = []
 
     for (const item of media || []) {
-      if (item.type === 'video') {
-        const videoPath = await downloadToTemp('audit-videos', item.url)
-        tempPaths.push(videoPath)
-        const frameDir = path.join(os.tmpdir(), `${item.id}-frames`)
-        await extractFrames(videoPath, frameDir)
-        const frameFiles = fs
-          .readdirSync(frameDir)
-          .map((f) => path.join(frameDir, f))
-          .filter((f) => f.endsWith('.jpg') || f.endsWith('.png'))
-        const uniqueFrames = await deduplicateFrames(frameFiles)
-        for (const framePath of uniqueFrames) {
-          const analysis = await analyzeImage(framePath)
-          results.push({ media_id: item.id, ...analysis })
-        }
-        tempPaths.push(frameDir)
-      } else {
-        // image
-        const imagePath = await downloadToTemp('audit-videos', item.url)
-        const analysis = await analyzeImage(imagePath)
-        results.push({ media_id: item.id, ...analysis })
-        tempPaths.push(imagePath)
-      }
+      // Only process images
+      const imagePath = await downloadToTemp('audit-videos', item.url)
+      const analysis = await analyzeImage(imagePath)
+      results.push({ media_id: item.id, ...analysis })
+      tempPaths.push(imagePath)
     }
 
     if (results.length) {

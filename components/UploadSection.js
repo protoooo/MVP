@@ -10,13 +10,43 @@ export default function UploadSection() {
 
   const handleFiles = (e) => {
     const selected = Array.from(e.target.files);
-    setFiles(selected.slice(0, 50)); // limit to 50 files
+    // Filter out video files
+    const imageFiles = selected.filter(file => {
+      const type = file.type || '';
+      const name = file.name || '';
+      const ext = name.toLowerCase().split('.').pop();
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'heic'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/heic'];
+      
+      return allowedTypes.includes(type) || allowedExtensions.includes(ext);
+    });
+    
+    if (imageFiles.length < selected.length) {
+      alert('Videos not supported. Please upload photos only (.jpg, .png, .heic).');
+    }
+    
+    setFiles(imageFiles.slice(0, 50)); // limit to 50 files
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     const dropped = Array.from(e.dataTransfer.files);
-    setFiles(dropped.slice(0, 50));
+    // Filter out video files
+    const imageFiles = dropped.filter(file => {
+      const type = file.type || '';
+      const name = file.name || '';
+      const ext = name.toLowerCase().split('.').pop();
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'heic'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/heic'];
+      
+      return allowedTypes.includes(type) || allowedExtensions.includes(ext);
+    });
+    
+    if (imageFiles.length < dropped.length) {
+      alert('Videos not supported. Please upload photos only (.jpg, .png, .heic).');
+    }
+    
+    setFiles(imageFiles.slice(0, 50));
   };
 
   const handleUpload = async () => {
@@ -39,7 +69,7 @@ export default function UploadSection() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow-sm rounded-md border border-gray-100">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800">Upload Images & Videos</h2>
+      <h2 className="text-2xl font-semibold mb-4 text-gray-800">Upload Photos</h2>
       
       <div
         onDrop={handleDrop}
@@ -49,20 +79,20 @@ export default function UploadSection() {
         <input
           type="file"
           multiple
-          accept="image/*,video/*"
+          accept="image/jpeg,image/png,image/heic,.jpg,.jpeg,.png,.heic"
           onChange={handleFiles}
           className="hidden"
           id="fileUpload"
         />
         <label htmlFor="fileUpload" className="cursor-pointer text-gray-500 hover:text-gray-700">
-          Drag & drop files here or click to select
+          Drag & drop photos here or click to select
         </label>
-        <p className="mt-2 text-sm text-gray-400">Up to 50 files (images or videos)</p>
+        <p className="mt-2 text-sm text-gray-400">Up to 50 photos (.jpg, .png, .heic)</p>
       </div>
 
       {files.length > 0 && (
         <div className="mb-4">
-          <p className="text-gray-600 mb-2">{files.length} file(s) selected</p>
+          <p className="text-gray-600 mb-2">{files.length} photo(s) selected</p>
           <ul className="text-gray-500 text-sm space-y-1">
             {files.map((f, idx) => <li key={idx}>{f.name}</li>)}
           </ul>

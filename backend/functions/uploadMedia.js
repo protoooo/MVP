@@ -33,11 +33,22 @@ export default async function uploadMedia(req) {
       return new Response(JSON.stringify({ error: 'Missing session or file' }), { status: 400 })
     }
 
-    const mediaId = uuidv4()
+    // Validate that only images are accepted
     const contentType = file.type || 'application/octet-stream'
+    const fileExt = (path.extname(file.name || '') || '').toLowerCase()
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.heic']
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/heic']
+
+    if (!allowedExtensions.includes(fileExt) && !allowedMimeTypes.includes(contentType)) {
+      return new Response(
+        JSON.stringify({ error: 'Please upload photos only (.jpg, .png, .heic). Videos are not supported.' }),
+        { status: 400 }
+      )
+    }
+
+    const mediaId = uuidv4()
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
-    const fileExt = (path.extname(file.name || '') || '').toLowerCase()
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
     await uploadFile('audit-videos', objectPath, buffer, contentType)
@@ -48,7 +59,7 @@ export default async function uploadMedia(req) {
         session_id: sessionId,
         user_id: user.id,
         url: objectPath,
-        type: contentType.startsWith('video') ? 'video' : 'image',
+        type: 'image',
         area,
       },
     ])
