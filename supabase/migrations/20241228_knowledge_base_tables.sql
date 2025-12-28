@@ -2,7 +2,10 @@
 -- Description: Tables for rate limiting, query tracking, and analytics
 
 -- Rate limiting table
-CREATE TABLE IF NOT EXISTS rate_limits (
+-- Drop and recreate to ensure correct schema
+DROP TABLE IF EXISTS rate_limits CASCADE;
+
+CREATE TABLE rate_limits (
   id BIGSERIAL PRIMARY KEY,
   identifier TEXT NOT NULL,
   limit_type TEXT NOT NULL,
@@ -12,9 +15,9 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_rate_limits_identifier_type 
+CREATE INDEX idx_rate_limits_identifier_type 
   ON rate_limits(identifier, limit_type);
-CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start 
+CREATE INDEX idx_rate_limits_window_start 
   ON rate_limits(window_start);
 
 -- Knowledge base queries tracking
