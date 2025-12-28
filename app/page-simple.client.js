@@ -49,6 +49,7 @@ export default function SimplePage() {
   const [purchaseEmail, setPurchaseEmail] = useState('')
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false)
+  const [purchaseError, setPurchaseError] = useState('')
 
   const handleAccessCodeSubmit = async (e) => {
     e.preventDefault()
@@ -145,14 +146,17 @@ export default function SimplePage() {
 
   const handlePurchaseClick = () => {
     // Show email prompt to collect user's email
+    setPurchaseError('')
     setShowEmailPrompt(true)
   }
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault()
+    setPurchaseError('')
     
-    if (!purchaseEmail || !purchaseEmail.includes('@')) {
-      alert('Please enter a valid email address')
+    // Basic email validation (HTML5 input type='email' provides additional validation)
+    if (!purchaseEmail || !purchaseEmail.includes('@') || !purchaseEmail.includes('.')) {
+      setPurchaseError('Please enter a valid email address')
       return
     }
 
@@ -168,14 +172,18 @@ export default function SimplePage() {
 
       const data = await res.json()
 
-      if (!res.ok || !data.url) {
+      if (!res.ok) {
         throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      if (!data.url) {
+        throw new Error('Invalid response from server')
       }
 
       // Redirect to Stripe checkout
       window.location.href = data.url
     } catch (error) {
-      alert(error.message || 'Failed to start checkout. Please try again.')
+      setPurchaseError(error.message || 'Failed to start checkout. Please try again.')
       setIsCreatingCheckout(false)
     }
   }
@@ -341,18 +349,27 @@ export default function SimplePage() {
                           <input
                             type="email"
                             value={purchaseEmail}
-                            onChange={(e) => setPurchaseEmail(e.target.value)}
+                            onChange={(e) => {
+                              setPurchaseEmail(e.target.value)
+                              setPurchaseError('')
+                            }}
                             placeholder="your@email.com"
                             className="w-full rounded-md border px-4 py-3"
                             style={{
-                              borderColor: 'var(--border)',
+                              borderColor: purchaseError ? 'var(--accent-red)' : 'var(--border)',
                               color: 'var(--ink)',
                             }}
                             required
                           />
-                          <p className="mt-2 text-xs" style={{ color: 'var(--ink-40)' }}>
-                            You'll receive your access code at this email after payment
-                          </p>
+                          {purchaseError ? (
+                            <p className="mt-2 text-sm" style={{ color: 'var(--accent-red)' }}>
+                              {purchaseError}
+                            </p>
+                          ) : (
+                            <p className="mt-2 text-xs" style={{ color: 'var(--ink-40)' }}>
+                              You'll receive your access code at this email after payment
+                            </p>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -360,6 +377,7 @@ export default function SimplePage() {
                             onClick={() => {
                               setShowEmailPrompt(false)
                               setPurchaseEmail('')
+                              setPurchaseError('')
                             }}
                             className="flex-1 rounded-md px-6 py-3 font-semibold transition"
                             style={{ background: 'var(--clay)', color: 'var(--ink-60)' }}
