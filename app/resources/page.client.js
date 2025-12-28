@@ -298,12 +298,7 @@ export default function KnowledgeBase() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="block w-full text-sm
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-lg file:border-0
-                    file:text-sm file:font-semibold
-                    file:text-white
-                    hover:file:opacity-90 file:cursor-pointer"
+                  className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:text-white hover:file:opacity-90 file:cursor-pointer"
                   style={{ color: 'var(--ink)' }}
                 />
                 <style jsx>{`
