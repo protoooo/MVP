@@ -213,7 +213,7 @@ export async function POST(request) {
             currency: 'usd',
             product_data: {
               name: 'Restaurant Health Inspection Report',
-              description: 'Pre-inspection video analysis for Michigan food safety compliance (up to 25 minutes)',
+              description: 'Pre-inspection video analysis for Michigan food safety compliance (up to 1 hour)',
             },
             unit_amount: INSPECTION_REPORT_PRICE,
           },

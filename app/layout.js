@@ -9,7 +9,7 @@ const appFont = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '
 
 export const metadata = {
   title: 'protocolLM - Pre-Inspection Video Analysis for Michigan Restaurants',
-  description: 'Find health code violations before the inspector does. Upload a video walkthrough of your Michigan restaurant and get a comprehensive compliance report in 4 hours. $149 per inspection.',
+  description: 'Find health code violations before the inspector does. Upload up to 1 hour video walkthrough of your Michigan restaurant and get a comprehensive compliance report with downloadable PDF. $149 per inspection. Allow time for video processing.',
   manifest: '/manifest.json',
   icons: {
     icon: [

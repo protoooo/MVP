@@ -3,8 +3,10 @@ import fs from 'fs'
 import path from 'path'
 import imageHash from 'image-hash'
 
-// Maximum video duration in seconds (25 minutes)
-const MAX_VIDEO_DURATION_SECONDS = 25 * 60
+// Maximum video duration in seconds (60 minutes = 1 hour)
+// Cost estimate: $2.75/min for video processing
+// 60 minutes × $2.75 = $165 (charged at $149)
+const MAX_VIDEO_DURATION_SECONDS = 60 * 60
 
 /**
  * Get video metadata including duration
@@ -50,8 +52,8 @@ export async function validateVideoDuration(videoPath) {
         duration: metadata.duration,
         durationMinutes,
         maxDuration: MAX_VIDEO_DURATION_SECONDS,
-        maxDurationMinutes: 25,
-        error: `Video duration (${durationMinutes} minutes) exceeds maximum allowed length of 25 minutes. Please trim your video to 25 minutes or less.`
+        maxDurationMinutes: 60,
+        error: `Video duration (${durationMinutes} minutes) exceeds maximum allowed length of 60 minutes. Please trim your video to 60 minutes or less.`
       }
     }
     
@@ -60,7 +62,7 @@ export async function validateVideoDuration(videoPath) {
       duration: metadata.duration,
       durationMinutes,
       maxDuration: MAX_VIDEO_DURATION_SECONDS,
-      maxDurationMinutes: 25,
+      maxDurationMinutes: 60,
     }
   } catch (err) {
     return {
@@ -68,7 +70,7 @@ export async function validateVideoDuration(videoPath) {
       duration: 0,
       durationMinutes: 0,
       maxDuration: MAX_VIDEO_DURATION_SECONDS,
-      maxDurationMinutes: 25,
+      maxDurationMinutes: 60,
       error: `Failed to validate video: ${err.message}`
     }
   }

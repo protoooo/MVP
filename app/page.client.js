@@ -28,8 +28,9 @@ const SUBSCRIPTION_STATUS_TRIALING = 'trialing'
 const HISTORY_KEY_BASE = 'plm_chat_history_v1'
 const POLICY_VERSION = '1'
 
-// Video file size warning threshold (1GB)
-const MAX_VIDEO_FILE_SIZE_BYTES = 1000 * 1024 * 1024
+// Video file size warning threshold (4GB for 1 hour video)
+// Estimated at ~4GB for 1 hour of video at reasonable quality
+const MAX_VIDEO_FILE_SIZE_BYTES = 4000 * 1024 * 1024
 
 const getPolicyStorageKey = (userId) => `plm_policy_v${POLICY_VERSION}_${userId}`
 const hasCachedPolicyAcceptance = (userId) => {
@@ -389,10 +390,6 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
           </button>
 
           <div className="pricing-top">
-            <div className="pricing-pill">
-              <span className="pricing-pill-dot" aria-hidden="true" />
-              <span>14-day free trial</span>
-            </div>
             <h2 className="modal-title pricing-title">Inspection Report</h2>
             <p className="pricing-sub">Pre-inspection video analysis for Michigan restaurants. One-time payment per report.</p>
           </div>
@@ -414,7 +411,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Up to 25 minutes of video processing
+                Up to 1 hour of video processing
               </li>
               <li>
                 <span className="pricing-check" aria-hidden="true">
@@ -432,7 +429,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                4-hour turnaround time
+                Allow time for video to process
               </li>
               <li>
                 <span className="pricing-check" aria-hidden="true">
@@ -451,18 +448,18 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
               >
                 {loading ? (
                   <>
-                    <span className="spinner" /> Starting…
+                    <span className="spinner" /> Processing…
                   </>
                 ) : (
                   <>
-                    Start Free Trial <span aria-hidden="true">→</span>
+                    Purchase Report <span aria-hidden="true">→</span>
                   </>
                 )}
               </button>
             </div>
 
             <p className="pricing-fineprint">
-              By starting your trial, you agree to our{' '}
+              By proceeding with purchase, you agree to our{' '}
               <Link href="/terms" className="pricing-link">
                 Terms
               </Link>{' '}
@@ -471,6 +468,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 Privacy Policy
               </Link>
               .
+            </p>
             </p>
           </div>
         </div>
@@ -783,6 +781,7 @@ export default function Page() {
   const [uploadError, setUploadError] = useState('')
   const [uploadSessionId, setUploadSessionId] = useState('')
   const [uploadingCount, setUploadingCount] = useState(0)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [reportData, setReportData] = useState(null)
 
   const [inputMode, setInputMode] = useState('photo') // 'photo' | 'chat'
@@ -1386,6 +1385,58 @@ export default function Page() {
     []
   )
 
+  // Upload file with real progress tracking using XMLHttpRequest
+  const uploadFileWithProgress = useCallback((url, formData, onProgress) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100)
+          onProgress(percentComplete)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText)
+            resolve(response)
+          } catch (err) {
+            reject(new Error('Invalid response from server'))
+          }
+        } else {
+          try {
+            const errorData = JSON.parse(xhr.responseText)
+            reject(new Error(errorData?.error || 'Upload failed'))
+          } catch {
+            reject(new Error(`Upload failed with status ${xhr.status}`))
+          }
+        }
+      })
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error during upload'))
+      })
+
+      xhr.addEventListener('abort', () => {
+        reject(new Error('Upload cancelled'))
+      })
+
+      xhr.open('POST', url)
+
+      // Add headers
+      xhr.setRequestHeader('Accept', 'application/json')
+      xhr.setRequestHeader('x-api-key', USER_API_KEY)
+      if (ANON_KEY) {
+        xhr.setRequestHeader('Authorization', `Bearer ${ANON_KEY}`)
+        xhr.setRequestHeader('apikey', ANON_KEY)
+      }
+
+      xhr.send(formData)
+    })
+  }, [])
+
   const handleFilesAdded = useCallback((fileList) => {
     if (isLocked) {
       requestAccess()
@@ -1407,16 +1458,16 @@ export default function Page() {
     setUploadingCount(0)
     setUploadStatus('')
     
-    // ✅ Show warning if any video files are suspiciously large (> 1 GB suggests > 25 min)
+    // ✅ Show warning if any video files are suspiciously large (> 4 GB suggests > 60 min)
     // Rough estimate: 1 minute of 1080p video ≈ 40-150 MB depending on compression
-    // 25 minutes ≈ 1000 MB (1 GB) conservative estimate
+    // 60 minutes ≈ 4000 MB (4 GB) conservative estimate
     const largeVideos = normalized.filter(f => 
       f.type === 'video' && f.size > MAX_VIDEO_FILE_SIZE_BYTES
     )
     if (largeVideos.length > 0) {
       setUploadError(
-        `⚠️ Warning: ${largeVideos.length} video file(s) appear large and may exceed the 25-minute limit. ` +
-        `If processing fails, please trim your video to 25 minutes or less.`
+        `⚠️ Warning: ${largeVideos.length} video file(s) appear large and may exceed the 60-minute limit. ` +
+        `If processing fails, please trim your video to 60 minutes or less.`
       )
     }
   }, [isLocked, requestAccess])
@@ -1451,6 +1502,7 @@ export default function Page() {
     setIsSending(true)
     setUploadStatus('Processing… please wait')
     setUploadingCount(0)
+    setUploadProgress(0)
 
     try {
       const sessionRes = await callBackendFunction('createSession', {
@@ -1468,24 +1520,35 @@ export default function Page() {
         formData.append('area', 'general')
         formData.append('file', entry.file, entry.name)
         setUploadStatus(`Uploading ${i + 1} of ${uploadFiles.length}`)
-        await callBackendFunction('uploadMedia', { body: formData, isForm: true })
+        setUploadProgress(0)
+        
+        // Use XMLHttpRequest for real upload progress tracking
+        const uploadUrl = `${FUNCTION_BASE}/uploadMedia`
+        await uploadFileWithProgress(uploadUrl, formData, (progress) => {
+          setUploadProgress(progress)
+        })
+        
         setUploadingCount(i + 1)
+        setUploadProgress(100)
       }
 
-      setUploadStatus('Processing… please wait')
+      setUploadStatus('Processing video… please wait (this may take several minutes)')
+      setUploadProgress(0)
       await callBackendFunction('processSession', { body: { session_id: sessionId } })
       setUploadStatus('Fetching report…')
       const reportResponse = await callBackendFunction('getReport', { body: { session_id: sessionId } })
       const finalReport = reportResponse?.report || reportResponse
       setReportData(finalReport || null)
       setUploadStatus('Report ready')
+      setUploadProgress(100)
     } catch (error) {
       setUploadError(error?.message || 'Upload failed')
       setUploadStatus('')
+      setUploadProgress(0)
     } finally {
       setIsSending(false)
     }
-  }, [callBackendFunction, isLocked, requestAccess, uploadFiles])
+  }, [callBackendFunction, isLocked, requestAccess, uploadFiles, uploadFileWithProgress])
 
   const handleUnifiedReportDownload = useCallback(() => {
     if (!reportData) return
@@ -5418,7 +5481,7 @@ export default function Page() {
                     Drop video files here to upload
                   </p>
                   <p className="mt-1 text-xs sm:text-sm" style={{ color: 'var(--ink-60)' }}>
-                    Video up to 25 minutes · MP4, MOV, or AVI format
+                    Video up to 1 hour · MP4, MOV, or AVI format · Allow time for video to process
                   </p>
                   <button
                     type="button"
@@ -5497,7 +5560,21 @@ export default function Page() {
 
                 {/* Progress & Status */}
                 <div className="px-6 py-4">
-                  {isSending && (
+                  {isSending && uploadingCount > 0 && uploadProgress < 100 && (
+                    <div className="mb-4">
+                      <div className="mb-2 flex items-center justify-between text-sm">
+                        <span style={{ color: 'var(--ink-60)' }}>Uploading file {uploadingCount} of {uploadFiles.length}</span>
+                        <span style={{ color: 'var(--ink-60)' }}>{uploadProgress}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-slate-200/60 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {isSending && uploadingCount === uploadFiles.length && (
                     <div className="mb-4">
                       <SmartProgress active={isSending} mode="vision" requestKey={sendKey} />
                     </div>
