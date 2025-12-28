@@ -1094,7 +1094,7 @@ export async function POST(request) {
       if (!userId || !data?.user) {
         logger.info('Unauthenticated chat attempt')
         return NextResponse.json(
-          { error: 'Sign up for your 14-day free trial to start scanning.', code: 'AUTH_REQUIRED' },
+          { error: 'Sign up and purchase an inspection report ($149) to start scanning.', code: 'AUTH_REQUIRED' },
           { status: 401 }
         )
       }
