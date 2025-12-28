@@ -87,7 +87,7 @@ Created `database_schema_access_codes.sql` with:
 ### Access Code Testing
 1. Test with codes like BASIC-12345 and PREMIUM-67890
 2. Verify validation works correctly
-3. Test the simplified "XXXXXX" placeholder is clear to users
+3. Verify the "Enter access code" placeholder is clear and helpful to users
 
 ## Files Modified
 1. `/app/resources/page.client.js` - Michigan Food Safety Q&A page
