@@ -83,6 +83,7 @@ export default function SessionGuard() {
           '/reset-password',
           '/accept-terms',
           '/register-location',
+          '/resources',
         ]
         const isPublicPage = publicPaths.some((path) => window.location.pathname.startsWith(path))
 
@@ -142,6 +143,7 @@ export default function SessionGuard() {
           '/reset-password',
           '/accept-terms',
           '/register-location',
+          '/resources',
         ]
         const isPublicPage = publicPaths.some((path) => window.location.pathname.startsWith(path))
 
