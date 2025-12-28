@@ -13,7 +13,10 @@ export const runtime = 'nodejs'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 // ✅ ONE-TIME PAYMENT - $149 per inspection report
-const INSPECTION_REPORT_PRICE = 14900 // $149.00 in cents
+// Recommended Stripe Price ID: price_inspection_report_1hr_149
+// Set NEXT_PUBLIC_STRIPE_PRICE_INSPECTION_REPORT in your .env file
+const INSPECTION_REPORT_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_INSPECTION_REPORT
+const INSPECTION_REPORT_PRICE = 14900 // $149.00 in cents (fallback if no Price ID)
 
 function getClientIp(request) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -202,24 +205,34 @@ export async function POST(request) {
     }
 
     // ✅ Create Stripe checkout session for one-time payment
+    // Use Price ID if configured, otherwise use price_data for dynamic pricing
+    const lineItems = INSPECTION_REPORT_PRICE_ID
+      ? [
+          {
+            price: INSPECTION_REPORT_PRICE_ID,
+            quantity: 1,
+          },
+        ]
+      : [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: 'Restaurant Health Inspection Report',
+                description: 'Pre-inspection video analysis for Michigan food safety compliance (up to 1 hour)',
+              },
+              unit_amount: INSPECTION_REPORT_PRICE,
+            },
+            quantity: 1,
+          },
+        ]
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'payment', // Changed from 'subscription' to 'payment'
       payment_method_types: ['card'],
       customer_email: user.email,
       client_reference_id: user.id,
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Restaurant Health Inspection Report',
-              description: 'Pre-inspection video analysis for Michigan food safety compliance (up to 1 hour)',
-            },
-            unit_amount: INSPECTION_REPORT_PRICE,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       allow_promotion_codes: true,
       billing_address_collection: 'required',
       automatic_tax: { enabled: true },
