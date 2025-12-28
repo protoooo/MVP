@@ -175,7 +175,7 @@ export default function SignupPage() {
             <Image src={appleIcon} alt="" width={40} height={40} />
             <span className="text-lg font-bold text-white">protocolLM</span>
           </Link>
-          <Link href="/auth" className="text-sm text-white/70 hover:text-white">
+          <Link href="/" className="text-sm text-white/70 hover:text-white">
             Already have an account? Sign in
           </Link>
         </div>
