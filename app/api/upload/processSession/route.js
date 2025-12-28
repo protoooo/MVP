@@ -7,7 +7,7 @@ import os from 'os'
 import { ensureBucketExists, getPublicUrlSafe } from '../storageHelpers'
 import { analyzeImage, analyzeImageBatch } from '../../../../backend/utils/aiAnalysis.js'
 import { generateReport } from '../../../../backend/utils/reportGenerator.js'
-import { extractFrames, deduplicateFrames } from '../../../../backend/utils/frameExtractor.js'
+import { extractFrames, deduplicateFrames, validateVideoDuration } from '../../../../backend/utils/frameExtractor.js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -125,6 +125,29 @@ export async function POST(req) {
           
           const videoPath = await downloadToTemp(bucket, item.url)
           tempPaths.push(videoPath)
+          
+          // ✅ Validate video duration before processing
+          console.log(`[processSession] Validating video duration for: ${item.id}`)
+          const durationCheck = await validateVideoDuration(videoPath)
+          
+          if (!durationCheck.valid) {
+            console.error(`[processSession] Video duration validation failed:`, durationCheck.error)
+            results.push({
+              media_id: item.id,
+              media_type: 'video',
+              area: item.area || 'general',
+              violation: null,
+              findings: [],
+              citations: [],
+              severity: 'error',
+              confidence: 0,
+              analyzed: false,
+              error: durationCheck.error
+            })
+            continue
+          }
+          
+          console.log(`[processSession] Video duration validated: ${durationCheck.durationMinutes} minutes (max: ${durationCheck.maxDurationMinutes})`)
           
           // Create frame output directory
           const frameDir = path.join(os.tmpdir(), `${item.id}-frames`)

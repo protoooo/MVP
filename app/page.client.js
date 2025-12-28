@@ -1403,6 +1403,19 @@ export default function Page() {
     setReportData(null)
     setUploadingCount(0)
     setUploadStatus('')
+    
+    // ✅ Show warning if any video files are suspiciously large (> 1 GB suggests > 25 min)
+    // Rough estimate: 1 minute of 1080p video ≈ 40-150 MB depending on compression
+    // 25 minutes ≈ 1000 MB (1 GB) conservative estimate
+    const largeVideos = normalized.filter(f => 
+      f.type === 'video' && f.size > 1000 * 1024 * 1024
+    )
+    if (largeVideos.length > 0) {
+      setUploadError(
+        `⚠️ Warning: ${largeVideos.length} video file(s) appear large and may exceed the 25-minute limit. ` +
+        `If processing fails, please trim your video to 25 minutes or less.`
+      )
+    }
   }, [isLocked, requestAccess])
 
   const handleDropFiles = useCallback(
