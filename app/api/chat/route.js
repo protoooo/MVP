@@ -24,6 +24,7 @@ import { validateCSRF } from '@/lib/csrfProtection'
 import { logUsageForAnalytics, checkAccess, logModelUsageDetail } from '@/lib/usage'
 import { validateDeviceLicense } from '@/lib/licenseValidation'
 import { getUserMemory, updateMemory, buildMemoryContext } from '@/lib/conversationMemory'
+import { SECTORS, getSectorFromCounty } from '@/lib/sectors'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -447,10 +448,10 @@ function buildExcerptBlock(contextDocs, maxChars = 520) {
     .join('\n\n')
 }
 
-async function fetchPinnedPolicyDocs(searchDocumentsFn, county) {
+async function fetchPinnedPolicyDocs(searchDocumentsFn, county, sectorId) {
   try {
     const tasks = PINNED_POLICY_QUERIES.map((q) =>
-      withTimeout(searchDocumentsFn(q, county, 6), PINNED_RETRIEVAL_TIMEOUT_MS, 'PINNED_TIMEOUT').catch(() => [])
+      withTimeout(searchDocumentsFn(q, county, 6, sectorId), PINNED_RETRIEVAL_TIMEOUT_MS, 'PINNED_TIMEOUT').catch(() => [])
     )
     const results = await Promise.all(tasks)
     const flat = dedupeByText(results.flat().filter(Boolean))
@@ -1053,6 +1054,8 @@ export async function POST(request) {
     if (!userMessage) return NextResponse.json({ error: 'Missing user message' }, { status: 400 })
 
     const county = safeLine(body?.county || 'washtenaw') || 'washtenaw'
+    // Support explicit sector parameter, otherwise derive from county for backward compatibility
+    const requestedSector = body?.sector || getSectorFromCounty(county)
     const effectivePrompt = userMessage
 
     const fullAudit = wantsFullAudit(effectivePrompt) || Boolean(body?.fullAudit)
@@ -1120,14 +1123,38 @@ export async function POST(request) {
       }
 
       try {
-        const accessCheck = await checkAccess(userId)
+        const accessCheck = await checkAccess(userId, requestedSector)
         if (!accessCheck?.valid) {
           return NextResponse.json(
             { error: 'Your trial has ended. Please subscribe to continue using protocolLM.', code: 'TRIAL_EXPIRED' },
             { status: 402 }
           )
         }
+        
+        // Store access check results for use in document retrieval
+        const userSector = accessCheck.sector
+        const isAdmin = accessCheck.isAdmin
+        
+        logger.info('Sector access granted', { 
+          userId, 
+          requestedSector, 
+          userSector,
+          isAdmin 
+        })
       } catch (error) {
+        // Handle sector-specific access denial
+        if (error.code === 'SECTOR_ACCESS_DENIED') {
+          return NextResponse.json(
+            { 
+              error: error.message, 
+              code: 'SECTOR_ACCESS_DENIED',
+              requestedSector: error.requestedSector,
+              subscribedSector: error.subscribedSector
+            },
+            { status: 403 }
+          )
+        }
+        
         logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
         return NextResponse.json(
           { error: 'Unable to verify subscription. Please sign in again.', code: 'ACCESS_CHECK_FAILED' },
@@ -1172,7 +1199,7 @@ export async function POST(request) {
       .join(' ')
       .slice(0, 900)
 
-    const pinnedPolicyDocsPromise = fetchPinnedPolicyDocs(searchDocumentsFn, county)
+    const pinnedPolicyDocsPromise = fetchPinnedPolicyDocs(searchDocumentsFn, county, requestedSector)
 
     let userDocs = []
     let rerankUsed = false
@@ -1180,7 +1207,7 @@ export async function POST(request) {
 
     try {
       const initialDocs = await withTimeout(
-        searchDocumentsFn(searchQuery, county, TOPK_PER_QUERY),
+        searchDocumentsFn(searchQuery, county, TOPK_PER_QUERY, requestedSector),
         RETRIEVAL_TIMEOUT_MS,
         'RETRIEVAL_TIMEOUT'
       )
