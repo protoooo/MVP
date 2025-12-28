@@ -30,7 +30,7 @@ export async function POST(request) {
   const startTime = Date.now()
   
   try {
-    // Rate limiting by IP
+    // Rate limiting by IP - 50 questions per month
     const ip = getIpAddress(request)
     const rateLimit = await checkRateLimit(ip, RATE_LIMITS.KNOWLEDGE_BASE_SEARCH)
     
@@ -38,7 +38,7 @@ export async function POST(request) {
       logger.info('Knowledge base search rate limit exceeded', { ip, retryAfter: rateLimit.retryAfter })
       return NextResponse.json(
         {
-          error: `You've reached the search limit. Try again in ${rateLimit.retryAfter} minutes or contact us for API access.`,
+          error: `You've reached your monthly search limit of 50 questions. Try again next month or contact us for API access.`,
           code: 'RATE_LIMIT_EXCEEDED',
           retryAfter: rateLimit.retryAfter
         },
