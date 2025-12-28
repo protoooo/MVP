@@ -379,7 +379,7 @@ export default function VerifyEmailPage() {
                 <div className="verify-step-content">
                   <div className="verify-step-title">Check your email</div>
                   <div className="verify-step-text">
-                    Click the verification link to activate your account and start your free trial.
+                    Click the verification link to activate your account and get started.
                   </div>
                 </div>
               </div>
@@ -413,7 +413,7 @@ export default function VerifyEmailPage() {
             </div>
 
             <p className="verify-note">
-             After verifying, you'll be redirected to start your 14-day free trial
+             After verifying, you'll be able to purchase inspection reports ($149 each)
             </p>
           </div>
         </div>

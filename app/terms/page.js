@@ -83,22 +83,22 @@ export default function TermsOfService() {
       </div>
 
       <div className="info-section">
-        <h2 className="info-section-title">5. Subscription & Cancellation</h2>
+        <h2 className="info-section-title">5. Payment & Usage</h2>
         <ul>
           <li>
-           <strong>Free Trial:</strong> A 14-day trial may be offered. Unless cancelled before the trial ends, your
-            subscription will convert to a paid plan at $50/month.
+           <strong>Pricing:</strong> Inspection reports are available for a one-time payment of $149 per report.
+            Each report supports up to 1 hour of video processing and includes a downloadable PDF compliance report.
           </li>
           <li>
-            <strong>Cancellation:</strong> You may cancel at any time via the self-service billing portal to stop future 
-            billing cycles. Access continues until the end of your current billing period.
+            <strong>Video Processing:</strong> Video processing may take time depending on video length and complexity.
+            Allow sufficient time for processing (typically several minutes to hours for longer videos).
           </li>
           <li>
-            <strong>Refunds:</strong> We do not provide refunds for partial months or unused portions of the Service.
+            <strong>Refunds:</strong> We do not provide refunds once video processing has begun.
           </li>
           <li>
-            <strong>Usage:</strong> Unlimited checks per month. Access may be interrupted for technical maintenance or 
-            service issues.
+            <strong>Usage Limits:</strong> Each $149 payment covers one inspection report with up to 1 hour of video.
+            Videos exceeding 60 minutes will be rejected.
           </li>
         </ul>
       </div>

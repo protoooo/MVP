@@ -5650,7 +5650,7 @@ export default function Page() {
                       <div className="flex-1">
                         <p className="font-medium" style={{ color: 'var(--ink)' }}>Sign in to upload files</p>
                         <p className="mt-0.5 text-sm" style={{ color: 'var(--ink-60)' }}>
-                          Start a free trial to generate compliance reports.
+                          Purchase inspection reports to generate compliance reports.
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
