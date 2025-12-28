@@ -11,7 +11,7 @@ import SmartProgress from '@/components/SmartProgress'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
-const STRIPE_PAYMENT_LINK = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || 'https://buy.stripe.com/test_your_link_here'
+// Payment is handled via API endpoint - no direct link needed
 
 const Icons = {
   ArrowUp: () => (
@@ -46,6 +46,10 @@ export default function SimplePage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
   const [reportData, setReportData] = useState(null)
+  const [purchaseEmail, setPurchaseEmail] = useState('')
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false)
+  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false)
+  const [purchaseError, setPurchaseError] = useState('')
 
   const handleAccessCodeSubmit = async (e) => {
     e.preventDefault()
@@ -141,13 +145,47 @@ export default function SimplePage() {
   }
 
   const handlePurchaseClick = () => {
-    // Direct to Stripe payment link (no authentication required)
-    // User will receive access code via email after payment
-    if (!STRIPE_PAYMENT_LINK || STRIPE_PAYMENT_LINK.includes('your_link_here')) {
-      alert('Payment link not configured. Please contact support@protocollm.org')
+    // Show email prompt to collect user's email
+    setPurchaseError('')
+    setShowEmailPrompt(true)
+  }
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault()
+    setPurchaseError('')
+    
+    // Basic email validation (HTML5 input type='email' provides additional validation)
+    if (!purchaseEmail || !purchaseEmail.includes('@') || !purchaseEmail.includes('.')) {
+      setPurchaseError('Please enter a valid email address')
       return
     }
-    window.location.href = STRIPE_PAYMENT_LINK
+
+    setIsCreatingCheckout(true)
+
+    try {
+      // Call the API to create a checkout session
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: purchaseEmail }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      if (!data.url) {
+        throw new Error('Invalid response from server')
+      }
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url
+    } catch (error) {
+      setPurchaseError(error.message || 'Failed to start checkout. Please try again.')
+      setIsCreatingCheckout(false)
+    }
   }
 
   return (
@@ -283,17 +321,81 @@ export default function SimplePage() {
                   <p className="mb-4 text-sm font-medium" style={{ color: 'var(--ink-40)' }}>
                     — or —
                   </p>
-                  <button
-                    type="button"
-                    onClick={handlePurchaseClick}
-                    className="w-full rounded-md px-6 py-3 font-semibold text-white transition"
-                    style={{ background: 'var(--accent-green)' }}
-                  >
-                    Purchase License ($149)
-                  </button>
-                  <p className="mt-3 text-xs" style={{ color: 'var(--ink-40)' }}>
-                    One-time payment • Up to 1 hour of video • Non-refundable
-                  </p>
+                  
+                  {!showEmailPrompt ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePurchaseClick}
+                        className="w-full rounded-md px-6 py-3 font-semibold text-white transition"
+                        style={{ background: 'var(--accent-green)' }}
+                      >
+                        Purchase License ($149)
+                      </button>
+                      <p className="mt-3 text-xs" style={{ color: 'var(--ink-40)' }}>
+                        One-time payment • Up to 1 hour of video • Non-refundable
+                      </p>
+                    </>
+                  ) : (
+                    <div
+                      className="rounded-xl p-6"
+                      style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-md)' }}
+                    >
+                      <h3 className="mb-4 text-lg font-semibold" style={{ color: 'var(--ink)' }}>
+                        Enter your email
+                      </h3>
+                      <form onSubmit={handleEmailSubmit} className="space-y-4">
+                        <div>
+                          <input
+                            type="email"
+                            value={purchaseEmail}
+                            onChange={(e) => {
+                              setPurchaseEmail(e.target.value)
+                              setPurchaseError('')
+                            }}
+                            placeholder="your@email.com"
+                            className="w-full rounded-md border px-4 py-3"
+                            style={{
+                              borderColor: purchaseError ? 'var(--accent-red)' : 'var(--border)',
+                              color: 'var(--ink)',
+                            }}
+                            required
+                          />
+                          {purchaseError ? (
+                            <p className="mt-2 text-sm" style={{ color: 'var(--accent-red)' }}>
+                              {purchaseError}
+                            </p>
+                          ) : (
+                            <p className="mt-2 text-xs" style={{ color: 'var(--ink-40)' }}>
+                              You'll receive your access code at this email after payment
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowEmailPrompt(false)
+                              setPurchaseEmail('')
+                              setPurchaseError('')
+                            }}
+                            className="flex-1 rounded-md px-6 py-3 font-semibold transition"
+                            style={{ background: 'var(--clay)', color: 'var(--ink-60)' }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isCreatingCheckout}
+                            className="flex-1 rounded-md px-6 py-3 font-semibold text-white transition disabled:opacity-50"
+                            style={{ background: 'var(--accent-green)' }}
+                          >
+                            {isCreatingCheckout ? 'Processing...' : 'Continue to Payment'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
                 </div>
 
                 {/* Support Info */}
