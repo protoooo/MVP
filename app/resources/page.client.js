@@ -72,7 +72,7 @@ export default function KnowledgeBase() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ask anything about Michigan food safety..."
-              className="flex-1 px-6 py-4 rounded-lg border focus:outline-none text-lg"
+              className="flex-1 px-4 sm:px-6 py-4 rounded-lg border focus:outline-none text-base sm:text-lg"
               style={{ 
                 background: 'var(--surface)', 
                 borderColor: 'var(--border)',
@@ -83,10 +83,15 @@ export default function KnowledgeBase() {
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="px-8 py-4 rounded-lg font-semibold text-lg transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 sm:px-8 py-4 rounded-lg font-semibold text-base sm:text-lg transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               style={{ background: 'var(--accent)' }}
             >
-              {loading ? 'Searching...' : 'Search'}
+              <span className="hidden sm:inline">{loading ? 'Searching...' : 'Search'}</span>
+              <span className="sm:hidden">
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
             </button>
           </div>
         </form>
@@ -206,7 +211,7 @@ export default function KnowledgeBase() {
       {/* Footer */}
       <footer className="border-t py-8" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
         <div className="max-w-6xl mx-auto px-4 text-center" style={{ color: 'var(--ink-60)' }}>
-          <p>© 2024 ProtocolLM. Michigan Food Safety Compliance.</p>
+          <p>© 2025 ProtocolLM. Michigan Food Safety Compliance.</p>
         </div>
       </footer>
     </div>
