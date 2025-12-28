@@ -33,6 +33,18 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid access code format' }, { status: 400 })
     }
 
+    // Check Supabase configuration
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      logger.error('Supabase not configured', {
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      })
+      return NextResponse.json(
+        { error: 'Database not configured. Check environment variables.' },
+        { status: 500 }
+      )
+    }
+
     // Look up the access code
     const { data: accessCode, error: lookupError } = await supabase
       .from('access_codes')
@@ -40,7 +52,26 @@ export async function POST(request) {
       .eq('code', code)
       .single()
 
-    if (lookupError || !accessCode) {
+    if (lookupError) {
+      logger.warn('Access code lookup error', { 
+        code, 
+        error: lookupError.message,
+        hint: lookupError.hint,
+        details: lookupError.details,
+        ip 
+      })
+      
+      // Check if table doesn't exist
+      if (lookupError.message?.includes('relation') || lookupError.message?.includes('does not exist')) {
+        return NextResponse.json({ 
+          error: 'Database tables not created. Run the SQL schema in Supabase first.' 
+        }, { status: 500 })
+      }
+      
+      return NextResponse.json({ error: 'Invalid access code' }, { status: 404 })
+    }
+
+    if (!accessCode) {
       logger.warn('Invalid access code attempt', { code, ip })
       return NextResponse.json({ error: 'Invalid access code' }, { status: 404 })
     }

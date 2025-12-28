@@ -11,7 +11,7 @@ import SmartProgress from '@/components/SmartProgress'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
-const STRIPE_PAYMENT_LINK = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || 'https://buy.stripe.com/test_your_link_here'
+const STRIPE_PAYMENT_LINK = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || ''
 
 const Icons = {
   ArrowUp: () => (
@@ -62,7 +62,16 @@ export default function SimplePage() {
       const data = await res.json()
 
       if (!res.ok || !data.valid) {
-        setAccessCodeError(data.error || 'Invalid access code')
+        // Provide helpful error messages
+        let errorMsg = data.error || 'Invalid access code'
+        
+        if (res.status === 404) {
+          errorMsg = `Code "${accessCode}" not found. Make sure you:\n1. Ran the SQL schema in Supabase\n2. Entered the code correctly\n3. Code is 800869 for admin testing`
+        } else if (res.status === 500) {
+          errorMsg = 'Server error validating code. Check:\n1. NEXT_PUBLIC_SUPABASE_URL is set\n2. SUPABASE_SERVICE_ROLE_KEY is set\n3. SQL schema was run in Supabase'
+        }
+        
+        setAccessCodeError(errorMsg)
         setValidatedCode(null)
         return
       }
@@ -74,7 +83,8 @@ export default function SimplePage() {
         setReportData(data.reportData)
       }
     } catch (error) {
-      setAccessCodeError('Failed to validate code. Please try again.')
+      console.error('Validation error:', error)
+      setAccessCodeError(`Failed to validate code: ${error.message}\n\nCheck browser console for details.`)
     } finally {
       setIsValidating(false)
     }
@@ -143,8 +153,8 @@ export default function SimplePage() {
   const handlePurchaseClick = () => {
     // Direct to Stripe payment link (no authentication required)
     // User will receive access code via email after payment
-    if (!STRIPE_PAYMENT_LINK || STRIPE_PAYMENT_LINK.includes('your_link_here')) {
-      alert('Payment link not configured. Please contact support@protocollm.org')
+    if (!STRIPE_PAYMENT_LINK || STRIPE_PAYMENT_LINK.trim() === '') {
+      alert('Payment link not configured yet.\n\nTo set up:\n1. Create a Stripe Payment Link ($149)\n2. Set NEXT_PUBLIC_STRIPE_PAYMENT_LINK environment variable\n3. Redeploy\n\nFor now, use admin code 800869 to test.')
       return
     }
     window.location.href = STRIPE_PAYMENT_LINK
@@ -262,9 +272,9 @@ export default function SimplePage() {
                         }}
                       />
                       {accessCodeError && (
-                        <p className="mt-2 text-sm" style={{ color: 'var(--accent-red)' }}>
+                        <div className="mt-2 text-sm whitespace-pre-line rounded-md bg-red-50 p-3 border border-red-200" style={{ color: 'var(--accent-red)' }}>
                           {accessCodeError}
-                        </p>
+                        </div>
                       )}
                     </div>
                     <button
