@@ -672,6 +672,38 @@ export default function SimplePage() {
               </div>
             )}
           </section>
+
+          {/* Footer */}
+          <footer className="border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+            <div className="mx-auto max-w-6xl px-6 py-6">
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
+                <Link
+                  href="/terms"
+                  className="font-medium transition hover:underline"
+                  style={{ color: 'var(--ink-60)' }}
+                >
+                  Terms
+                </Link>
+                <Link
+                  href="/privacy"
+                  className="font-medium transition hover:underline"
+                  style={{ color: 'var(--ink-60)' }}
+                >
+                  Privacy
+                </Link>
+                <Link
+                  href="/resources"
+                  className="font-medium transition hover:underline"
+                  style={{ color: 'var(--ink-60)' }}
+                >
+                  Resources
+                </Link>
+              </div>
+              <div className="mt-3 text-center text-xs" style={{ color: 'var(--ink-40)' }}>
+                Resources is our free tier Q&A about ingested documents
+              </div>
+            </div>
+          </footer>
         </main>
 
         {/* Notification Opt-In Modal */}
