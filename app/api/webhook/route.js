@@ -88,10 +88,117 @@ export async function POST(req) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object
+        const sessionMetadata = session.metadata || {}
+        const productType = sessionMetadata.productType
+
+        // ============================================================================
+        // ONE-TIME PAYMENT - Inspection Report Purchase
+        // ============================================================================
+        if (session.mode === 'payment' && productType === 'inspection_report') {
+          const customerEmail = session.customer_email || session.customer_details?.email
+          const paymentIntentId = session.payment_intent
+          const amountTotal = session.amount_total // in cents
+
+          if (!customerEmail) {
+            logger.error('Missing customer email in one-time payment', {
+              sessionId: session.id,
+              paymentIntentId,
+            })
+            return NextResponse.json({ error: 'Missing customer email' }, { status: 400 })
+          }
+
+          logger.info('Processing one-time inspection report purchase', {
+            email: customerEmail.substring(0, 3) + '***',
+            amount: amountTotal / 100,
+            sessionId: session.id,
+          })
+
+          // Generate 6-digit access code
+          let accessCode = null
+          let codeGenerated = false
+          let attempts = 0
+          const maxAttempts = 10
+
+          while (!codeGenerated && attempts < maxAttempts) {
+            attempts++
+            // Generate random 6-digit code
+            const randomCode = Math.floor(100000 + Math.random() * 900000).toString()
+
+            // Try to insert it (will fail if code already exists due to UNIQUE constraint)
+            const { data: insertedCode, error: insertError } = await supabase
+              .from('access_codes')
+              .insert({
+                code: randomCode,
+                email: customerEmail,
+                stripe_payment_intent_id: paymentIntentId,
+                stripe_session_id: session.id,
+                status: 'unused',
+                created_at: new Date().toISOString(),
+                is_admin: false,
+                max_video_duration_seconds: 3600, // 1 hour
+                total_video_duration_seconds: 0,
+              })
+              .select()
+              .single()
+
+            if (!insertError && insertedCode) {
+              accessCode = insertedCode
+              codeGenerated = true
+              logger.info('Access code generated', {
+                code: randomCode,
+                email: customerEmail.substring(0, 3) + '***',
+              })
+            } else if (insertError?.code === '23505') {
+              // Unique constraint violation - code already exists, try again
+              logger.warn('Duplicate code generated, retrying', { attempt: attempts })
+            } else {
+              logger.error('Failed to insert access code', {
+                error: insertError?.message,
+                attempt: attempts,
+              })
+              throw new Error('Failed to generate access code')
+            }
+          }
+
+          if (!codeGenerated || !accessCode) {
+            logger.error('Could not generate unique access code after max attempts')
+            return NextResponse.json({ error: 'Failed to generate access code' }, { status: 500 })
+          }
+
+          // Send purchase confirmation email with access code
+          try {
+            const customerName = session.customer_details?.name || customerEmail.split('@')[0]
+            
+            await emails.sendPurchaseConfirmation(
+              customerEmail,
+              customerName,
+              accessCode.code,
+              amountTotal / 100
+            )
+
+            logger.audit('Purchase confirmation email sent', {
+              email: customerEmail.substring(0, 3) + '***',
+              code: accessCode.code,
+              amount: amountTotal / 100,
+            })
+          } catch (emailError) {
+            logger.error('Failed to send purchase confirmation email', {
+              error: emailError?.message,
+              email: customerEmail.substring(0, 3) + '***',
+            })
+            // Don't fail the webhook - code is still created
+          }
+
+          await markEventProcessed(event.id, event.type)
+          return NextResponse.json({ received: true, accessCode: accessCode.code })
+        }
+
+        // ============================================================================
+        // SUBSCRIPTION MODE - Existing multi-location logic
+        // ============================================================================
         const userId = session.metadata?.userId
         const subscriptionId = session.subscription
         const customerId = session.customer
-        const sessionMetadata = session.metadata || {}
         let locationCount = parseInt(sessionMetadata.locationCount || '1', 10) || 1
         let devicesPerLocation = parseInt(sessionMetadata.devicesPerLocation || '1', 10) || 1
         let totalDevices =
