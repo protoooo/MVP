@@ -372,11 +372,9 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 }
 
 /**
- * Simplified pricing modal: $25 per device / month
+ * Simplified pricing modal: $149 per inspection report
  */
 function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
-  const [quantity, setQuantity] = useState(1)
-
   if (!isOpen) return null
 
   return (
@@ -392,19 +390,19 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
               <span className="pricing-pill-dot" aria-hidden="true" />
               <span>14-day free trial</span>
             </div>
-            <h2 className="modal-title pricing-title">Device licenses</h2>
-            <p className="pricing-sub">Unlimited questions + photo scans. $25 per device per month.</p>
+            <h2 className="modal-title pricing-title">Inspection Report</h2>
+            <p className="pricing-sub">Pre-inspection video analysis for Michigan restaurants. One-time payment per report.</p>
           </div>
 
           <div className="pricing-content">
             <div className="pricing-card-head">
               <div className="pricing-plan">
-                <span className="pricing-plan-name">Device License</span>
-                <span className="pricing-plan-badge">Monthly</span>
+                <span className="pricing-plan-name">Compliance Report</span>
+                <span className="pricing-plan-badge">Per Inspection</span>
               </div>
               <div className="pricing-price">
-                <span className="pricing-price-amount">$25</span>
-                <span className="pricing-price-term">/ device / month</span>
+                <span className="pricing-price-amount">$149</span>
+                <span className="pricing-price-term">/ inspection report</span>
               </div>
             </div>
 
@@ -413,63 +411,40 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Unlimited questions and photo scans
+                Up to 25 minutes of video processing
               </li>
               <li>
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Michigan knowledge base
+                Michigan food safety health codes
               </li>
               <li>
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Cohere-powered privacy + security
+                Detailed PDF compliance report
               </li>
               <li>
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                One registered device per license
+                4-hour turnaround time
+              </li>
+              <li>
+                <span className="pricing-check" aria-hidden="true">
+                  ✓
+                </span>
+                Frame-by-frame violation detection
               </li>
             </ul>
 
             <div className="pricing-actions">
-              <div className="multi-location-selector">
-                <label className="multi-location-label">Number of devices:</label>
-                <div className="multi-location-input-row">
-                  <button
-                    type="button"
-                    className="multi-location-btn"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Math.min(500, parseInt(e.target.value) || 1)))}
-                    className="multi-location-input"
-                  />
-                  <button
-                    type="button"
-                    className="multi-location-btn"
-                    onClick={() => setQuantity(Math.min(500, quantity + 1))}
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="multi-location-total">Total: ${25 * quantity}/month</div>
-              </div>
-
               <button
                 type="button"
                 className="pricing-primary"
                 disabled={!!loading}
-                onClick={() => onCheckout({ quantity })}
+                onClick={() => onCheckout({ quantity: 1 })}
               >
                 {loading ? (
                   <>
@@ -477,7 +452,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                   </>
                 ) : (
                   <>
-                    Start ({quantity} device{quantity > 1 ? 's' : ''}) <span aria-hidden="true">→</span>
+                    Start Free Trial <span aria-hidden="true">→</span>
                   </>
                 )}
               </button>
@@ -5345,10 +5320,10 @@ export default function Page() {
               {/* Hero Title - more compact */}
               <div className="mb-6 sm:mb-10 text-center">
                 <h1 className="text-lg sm:text-3xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
-                  Upload → Process → Download
+                  Pre-Inspection Video Analysis for Michigan Restaurants
                 </h1>
                 <p className="mt-1 sm:mt-2 text-sm sm:text-base" style={{ color: 'var(--ink-60)' }}>
-                  Upload videos or images of your establishment. Get a comprehensive compliance report that cross-checks Michigan state food safety regulations.
+                  Upload a video walkthrough of your restaurant. Get a comprehensive compliance report that identifies potential health code violations before the inspector arrives. $149 per inspection.
                 </p>
               </div>
 
@@ -5424,10 +5399,10 @@ export default function Page() {
                     <Icons.ArrowUp />
                   </div>
                   <p className="text-base sm:text-lg font-semibold" style={{ color: 'var(--ink)' }}>
-                    Drop files here to upload
+                    Drop video files here to upload
                   </p>
                   <p className="mt-1 text-xs sm:text-sm" style={{ color: 'var(--ink-60)' }}>
-                    Images or videos · up to 50 files
+                    Video up to 25 minutes · MP4, MOV, or AVI format
                   </p>
                   <button
                     type="button"

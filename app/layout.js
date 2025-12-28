@@ -8,8 +8,8 @@ import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supaba
 const appFont = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 export const metadata = {
-  title: 'protocolLM',
-  description: 'Health Code Compliance for Michigan',
+  title: 'protocolLM - Pre-Inspection Video Analysis for Michigan Restaurants',
+  description: 'Find health code violations before the inspector does. Upload a video walkthrough of your Michigan restaurant and get a comprehensive compliance report in 4 hours. $149 per inspection.',
   manifest: '/manifest.json',
   icons: {
     icon: [
