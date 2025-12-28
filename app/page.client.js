@@ -390,19 +390,19 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
           </button>
 
           <div className="pricing-top">
-            <h2 className="modal-title pricing-title">Inspection Report</h2>
-            <p className="pricing-sub">Pre-inspection video analysis for Michigan restaurants. One-time payment per report.</p>
+            <h2 className="modal-title pricing-title">Photo Analysis Plans</h2>
+            <p className="pricing-sub">Photo analysis for Michigan restaurant food safety. One-time payment per plan.</p>
           </div>
 
           <div className="pricing-content">
             <div className="pricing-card-head">
               <div className="pricing-plan">
-                <span className="pricing-plan-name">Compliance Report</span>
-                <span className="pricing-plan-badge">Per Inspection</span>
+                <span className="pricing-plan-name">Basic Plan</span>
+                <span className="pricing-plan-badge">200 Photos</span>
               </div>
               <div className="pricing-price">
-                <span className="pricing-price-amount">$149</span>
-                <span className="pricing-price-term">/ inspection report</span>
+                <span className="pricing-price-amount">$49</span>
+                <span className="pricing-price-term">/ one-time</span>
               </div>
             </div>
 
@@ -411,7 +411,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Up to 1 hour of video processing
+                Up to 200 photos
               </li>
               <li>
                 <span className="pricing-check" aria-hidden="true">
@@ -429,13 +429,13 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Allow time for video to process
+                Instant report generation
               </li>
               <li>
                 <span className="pricing-check" aria-hidden="true">
                   ✓
                 </span>
-                Frame-by-frame violation detection
+                Photo-by-photo violation detection
               </li>
             </ul>
 
@@ -444,7 +444,7 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
                 type="button"
                 className="pricing-primary"
                 disabled={!!loading}
-                onClick={() => onCheckout({ quantity: 1 })}
+                onClick={() => onCheckout({ tier: 'BASIC' })}
               >
                 {loading ? (
                   <>

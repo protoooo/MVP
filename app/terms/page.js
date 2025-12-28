@@ -86,19 +86,22 @@ export default function TermsOfService() {
         <h2 className="info-section-title">5. Payment & Usage</h2>
         <ul>
           <li>
-           <strong>Pricing:</strong> Inspection reports are available for a one-time payment of $149 per report.
-            Each report supports up to 1 hour of video processing and includes a downloadable PDF compliance report.
+           <strong>Pricing:</strong> Inspection reports are available as one-time payments:
+            <ul>
+              <li>Basic Plan: $49 for up to 200 photos</li>
+              <li>Premium Plan: $99 for up to 500 photos</li>
+            </ul>
+            Each plan includes a downloadable PDF compliance report with instant results.
           </li>
           <li>
-            <strong>Video Processing:</strong> Video processing may take time depending on video length and complexity.
-            Allow sufficient time for processing (typically several minutes to hours for longer videos).
+            <strong>Photo Processing:</strong> Photo processing is instant. Results are generated immediately after clicking "Process Report".
           </li>
           <li>
-            <strong>Refunds:</strong> We do not provide refunds once video processing has begun.
+            <strong>Refunds:</strong> We do not provide refunds once photo processing has begun.
           </li>
           <li>
-            <strong>Usage Limits:</strong> Each $149 payment covers one inspection report with up to 1 hour of video.
-            Videos exceeding 60 minutes will be rejected.
+            <strong>Usage Limits:</strong> Each payment covers one inspection report with the specified photo limit.
+            Photos exceeding the limit will be rejected. After processing, the access code is locked and cannot be used for new uploads.
           </li>
         </ul>
       </div>
