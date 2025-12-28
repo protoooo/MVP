@@ -2,12 +2,14 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import appleIcon from './apple-icon.png'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import SmartProgress from '@/components/SmartProgress'
+import NotificationOptInModal from '@/components/NotificationOptInModal'
+import AccessCodeRetrieval from '@/components/AccessCodeRetrieval'
 
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
@@ -33,6 +35,7 @@ const Icons = {
 
 export default function SimplePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const fileInputRef = useRef(null)
 
   const [accessCode, setAccessCode] = useState('')
@@ -50,6 +53,56 @@ export default function SimplePage() {
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
+
+  // Notification opt-in modal state
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
+  const [customerEmailForNotification, setCustomerEmailForNotification] = useState('')
+
+  // Check for payment success and show notification modal
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment')
+    const sessionId = searchParams.get('session_id')
+    
+    if (paymentStatus === 'success' && sessionId) {
+      // Extract email from localStorage or session if available
+      const storedEmail = localStorage.getItem('checkout_email')
+      if (storedEmail) {
+        setCustomerEmailForNotification(storedEmail)
+        setShowNotificationModal(true)
+        localStorage.removeItem('checkout_email') // Clean up
+      }
+      
+      // Remove payment params from URL
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [searchParams])
+
+  const handleNotificationOptInSubmit = async (preferences) => {
+    try {
+      const response = await fetch('/api/notification-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: customerEmailForNotification,
+          inspectionReminders: preferences.inspectionReminders,
+          regulationUpdates: preferences.regulationUpdates,
+          establishmentType: preferences.establishmentType,
+        }),
+      })
+
+      if (response.ok) {
+        setShowNotificationModal(false)
+        // Optionally show a success message
+        console.log('Notification preferences saved')
+      } else {
+        const data = await response.json()
+        console.error('Failed to save preferences:', data.error)
+      }
+    } catch (error) {
+      console.error('Failed to save notification preferences:', error)
+    }
+  }
 
   const handleAccessCodeSubmit = async (e) => {
     e.preventDefault()
@@ -163,6 +216,9 @@ export default function SimplePage() {
     setIsCreatingCheckout(true)
 
     try {
+      // Store email in localStorage so we can use it for notification opt-in after redirect
+      localStorage.setItem('checkout_email', purchaseEmail)
+
       // Call the API to create a checkout session
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -185,6 +241,7 @@ export default function SimplePage() {
     } catch (error) {
       setPurchaseError(error.message || 'Failed to start checkout. Please try again.')
       setIsCreatingCheckout(false)
+      localStorage.removeItem('checkout_email') // Clean up on error
     }
   }
 
@@ -367,7 +424,7 @@ export default function SimplePage() {
                             </p>
                           ) : (
                             <p className="mt-2 text-xs" style={{ color: 'var(--ink-40)' }}>
-                              You'll receive your access code at this email after payment
+                              You&apos;ll receive your access code at this email after payment
                             </p>
                           )}
                         </div>
@@ -410,6 +467,9 @@ export default function SimplePage() {
                     </a>
                   </p>
                 </div>
+
+                {/* Access Code Retrieval */}
+                <AccessCodeRetrieval />
               </div>
             ) : (
               /* Upload Interface */
@@ -613,6 +673,14 @@ export default function SimplePage() {
             )}
           </section>
         </main>
+
+        {/* Notification Opt-In Modal */}
+        <NotificationOptInModal
+          isOpen={showNotificationModal}
+          onClose={() => setShowNotificationModal(false)}
+          onSubmit={handleNotificationOptInSubmit}
+          customerEmail={customerEmailForNotification}
+        />
       </div>
     </>
   )
