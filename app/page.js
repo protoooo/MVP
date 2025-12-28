@@ -1,6 +1,6 @@
-// app/page.js (server wrapper)
+// app/page.js (server wrapper) - Updated for access code system
 import { Suspense } from 'react'
-import ClientPage from './page.client'
+import SimplePage from './page-simple.client'
 import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 export default function Page() {
@@ -42,7 +42,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<div className="landing-loading">Loading...</div>}>
-      <ClientPage />
+      <SimplePage />
     </Suspense>
   )
 }

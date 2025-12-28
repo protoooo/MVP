@@ -1,8 +1,7 @@
-// middleware.js - COMPLETE: CSRF token generation + authentication checks
-import { createServerClient } from '@supabase/ssr'
+// middleware.js - UPDATED for access code system (no authentication required)
 import { NextResponse } from 'next/server'
 import { generateCSRFToken } from '@/lib/csrfProtection'
-import { isSupabaseConfigured, missingSupabaseConfigMessage, supabaseAnonKey, supabaseUrl } from '@/lib/supabaseConfig'
+import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl
@@ -40,7 +39,7 @@ export async function middleware(request) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
   // ============================================================================
-  // Public Routes (no authentication required)
+  // Public Routes (no authentication required - all routes are public now)
   // ============================================================================
   const publicRoutes = [
     '/auth',
@@ -62,67 +61,9 @@ export async function middleware(request) {
   }
 
   // ============================================================================
-  // Authentication Check (for protected routes)
+  // NO AUTHENTICATION CHECK - Access code system doesn't require login
   // ============================================================================
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value
-        },
-        set(name, value, options) {
-          request.cookies.set({ name, value, ...options })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          request.cookies.set({ name, value: '', ...options })
-          response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Root path auth flow
-  if (pathname === '/' && user) {
-    if (!user.email_confirmed_at) {
-      return NextResponse.redirect(new URL('/verify-email', request.url))
-    }
-
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('id, status, trial_end')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
-      .maybeSingle()
-
-    if (!subscription) {
-      return NextResponse.redirect(new URL('/?showPricing=true', request.url))
-    }
-
-    if (subscription.status === 'trialing' && subscription.trial_end) {
-      const trialEnd = new Date(subscription.trial_end)
-      if (trialEnd < new Date()) {
-        return NextResponse.redirect(new URL('/?showPricing=true', request.url))
-      }
-    }
-
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('accepted_terms, accepted_privacy')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (!profile || !profile.accepted_terms || !profile.accepted_privacy) {
-      return NextResponse.redirect(new URL('/accept-terms', request.url))
-    }
-  }
-
+  
   return response
 }
 
