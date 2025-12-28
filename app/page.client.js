@@ -5314,7 +5314,7 @@ export default function Page() {
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/*,video/*"
+              accept="image/jpeg,image/png,image/heic,.jpg,.jpeg,.png,.heic"
               className="hidden"
               onChange={(e) => handleFilesAdded(e.target.files)}
             />

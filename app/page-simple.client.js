@@ -50,6 +50,7 @@ export default function SimplePage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [reportData, setReportData] = useState(null)
   const [purchaseEmail, setPurchaseEmail] = useState('')
+  const [selectedTier, setSelectedTier] = useState('BASIC')
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
@@ -183,7 +184,7 @@ export default function SimplePage() {
         await new Promise((resolve) => setTimeout(resolve, 200))
       }
 
-      setUploadStatus('Processing video...')
+      setUploadStatus('Processing photos...')
       // Simulate processing
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
@@ -197,9 +198,10 @@ export default function SimplePage() {
     }
   }
 
-  const handlePurchaseClick = () => {
-    // Show email prompt to collect user's email
+  const handlePurchaseClick = (tier) => {
+    // Show email prompt to collect user's email and store selected tier
     setPurchaseError('')
+    setSelectedTier(tier)
     setShowEmailPrompt(true)
   }
 
@@ -223,7 +225,7 @@ export default function SimplePage() {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: purchaseEmail }),
+        body: JSON.stringify({ email: purchaseEmail, tier: selectedTier }),
       })
 
       const data = await res.json()
