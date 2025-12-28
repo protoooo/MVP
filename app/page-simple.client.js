@@ -50,6 +50,7 @@ export default function SimplePage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [reportData, setReportData] = useState(null)
   const [purchaseEmail, setPurchaseEmail] = useState('')
+  const [selectedTier, setSelectedTier] = useState('BASIC')
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
@@ -183,7 +184,7 @@ export default function SimplePage() {
         await new Promise((resolve) => setTimeout(resolve, 200))
       }
 
-      setUploadStatus('Processing video...')
+      setUploadStatus('Processing photos...')
       // Simulate processing
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
@@ -197,9 +198,10 @@ export default function SimplePage() {
     }
   }
 
-  const handlePurchaseClick = () => {
-    // Show email prompt to collect user's email
+  const handlePurchaseClick = (tier) => {
+    // Show email prompt to collect user's email and store selected tier
     setPurchaseError('')
+    setSelectedTier(tier)
     setShowEmailPrompt(true)
   }
 
@@ -223,7 +225,7 @@ export default function SimplePage() {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: purchaseEmail }),
+        body: JSON.stringify({ email: purchaseEmail, tier: selectedTier }),
       })
 
       const data = await res.json()
@@ -321,10 +323,10 @@ export default function SimplePage() {
             {/* Title */}
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--ink)' }}>
-                Pre-Inspection Video Analysis
+                Pre-Inspection Photo Analysis
               </h1>
               <p className="mt-2 text-base" style={{ color: 'var(--ink-60)' }}>
-                Upload restaurant walkthrough videos. Get comprehensive compliance reports for Michigan health codes. $149 per inspection.
+                Upload restaurant photos. Get comprehensive compliance reports for Michigan health codes. Starting at $49 for 200 photos.
               </p>
             </div>
 
@@ -345,11 +347,11 @@ export default function SimplePage() {
                         type="text"
                         value={accessCode}
                         onChange={(e) => {
-                          setAccessCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                          setAccessCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 13))
                           setAccessCodeError('')
                         }}
-                        placeholder="Enter 6-digit code"
-                        maxLength={6}
+                        placeholder="BASIC-XXXXX or PREMIUM-XXXXX"
+                        maxLength={13}
                         className="w-full rounded-md border px-4 py-3 text-center font-semibold"
                         style={{
                           borderColor: accessCodeError ? 'var(--accent-red)' : 'var(--border)',
@@ -366,7 +368,7 @@ export default function SimplePage() {
                     </div>
                     <button
                       type="submit"
-                      disabled={accessCode.length !== 6 || isValidating}
+                      disabled={accessCode.length < 6 || isValidating}
                       className="w-full rounded-md px-6 py-3 font-semibold text-white transition disabled:opacity-50"
                       style={{ background: 'var(--accent)' }}
                     >
@@ -382,19 +384,27 @@ export default function SimplePage() {
                   </p>
                   
                   {!showEmailPrompt ? (
-                    <>
+                    <div className="space-y-4">
                       <button
                         type="button"
-                        onClick={handlePurchaseClick}
+                        onClick={() => handlePurchaseClick('BASIC')}
                         className="w-full rounded-md px-6 py-3 font-semibold text-white transition"
                         style={{ background: 'var(--accent-green)' }}
                       >
-                        Purchase License ($149)
+                        Basic Plan - $49 (200 Photos)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePurchaseClick('PREMIUM')}
+                        className="w-full rounded-md px-6 py-3 font-semibold text-white transition"
+                        style={{ background: 'var(--accent-blue)', backgroundColor: '#3b82f6' }}
+                      >
+                        Premium Plan - $99 (500 Photos)
                       </button>
                       <p className="mt-3 text-xs" style={{ color: 'var(--ink-40)' }}>
-                        One-time payment • Up to 1 hour of video • Non-refundable
+                        One-time payment • Instant results • Non-refundable
                       </p>
-                    </>
+                    </div>
                   ) : (
                     <div
                       className="rounded-xl p-6"
@@ -482,16 +492,16 @@ export default function SimplePage() {
                   style={{ background: 'var(--accent-green-bg)', border: '1px solid var(--accent-green)' }}
                 >
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>
-                        Access Code: {validatedCode.code}
-                      </p>
-                      <p className="mt-1 text-sm" style={{ color: 'var(--ink-60)' }}>
-                        {validatedCode.canProcess
-                          ? `${Math.floor(validatedCode.remainingSeconds / 60)} minutes remaining`
-                          : 'Processing complete'}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>
+                      Access Code: {validatedCode.code}
+                    </p>
+                    <p className="mt-1 text-sm" style={{ color: 'var(--ink-60)' }}>
+                      {validatedCode.canProcess
+                        ? `${validatedCode.remainingPhotos} / ${validatedCode.maxPhotos} photos remaining`
+                        : 'Processing complete'}
+                    </p>
+                  </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -529,10 +539,10 @@ export default function SimplePage() {
                         <Icons.ArrowUp />
                       </div>
                       <p className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>
-                        Drop video files here to upload
+                        Drop photo files here to upload
                       </p>
                       <p className="mt-1 text-sm" style={{ color: 'var(--ink-60)' }}>
-                        Video up to 1 hour · MP4, MOV, or AVI format
+                        Photos (.jpg, .png, .heic) · Multiple files supported
                       </p>
                     </div>
 
