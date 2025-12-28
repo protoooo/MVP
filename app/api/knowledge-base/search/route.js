@@ -1,7 +1,7 @@
 // app/api/knowledge-base/search/route.js
 // Public semantic search endpoint for Michigan food safety regulations
 import { NextResponse } from 'next/server'
-import { checkRateLimit, getIpAddress, RATE_LIMITS } from '@/lib/rateLimiting'
+import { checkMultipleRateLimits, getIpAddress, RATE_LIMITS } from '@/lib/rateLimiting'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -30,9 +30,12 @@ export async function POST(request) {
   const startTime = Date.now()
   
   try {
-    // Rate limiting by IP
+    // Rate limiting by IP - check both daily and weekly limits
     const ip = getIpAddress(request)
-    const rateLimit = await checkRateLimit(ip, RATE_LIMITS.KNOWLEDGE_BASE_SEARCH)
+    const rateLimit = await checkMultipleRateLimits(ip, [
+      RATE_LIMITS.KNOWLEDGE_BASE_SEARCH_DAILY,
+      RATE_LIMITS.KNOWLEDGE_BASE_SEARCH_WEEKLY
+    ])
     
     if (!rateLimit.allowed) {
       logger.info('Knowledge base search rate limit exceeded', { ip, retryAfter: rateLimit.retryAfter })

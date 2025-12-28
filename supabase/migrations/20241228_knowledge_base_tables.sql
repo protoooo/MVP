@@ -35,6 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_kb_queries_ip
 -- Free image analyses tracking
 CREATE TABLE IF NOT EXISTS free_image_analyses (
   id BIGSERIAL PRIMARY KEY,
+  ip_address TEXT NOT NULL,
   email TEXT NOT NULL,
   issues_detected INTEGER DEFAULT 0,
   duration_ms INTEGER DEFAULT 0,
@@ -43,6 +44,8 @@ CREATE TABLE IF NOT EXISTS free_image_analyses (
 
 CREATE INDEX IF NOT EXISTS idx_free_images_timestamp 
   ON free_image_analyses(timestamp);
+CREATE INDEX IF NOT EXISTS idx_free_images_ip 
+  ON free_image_analyses(ip_address);
 CREATE INDEX IF NOT EXISTS idx_free_images_email 
   ON free_image_analyses(email);
 

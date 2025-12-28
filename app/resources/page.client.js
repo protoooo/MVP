@@ -162,7 +162,7 @@ export default function KnowledgeBase() {
         {/* Rate limit info */}
         {results?.remaining !== undefined && (
           <p className="text-sm text-slate-400">
-            {results.remaining} searches remaining this hour
+            {results.remaining} searches remaining (5/day, 20/week limit)
           </p>
         )}
       </section>
@@ -269,7 +269,7 @@ export default function KnowledgeBase() {
             <h2 className="text-2xl font-bold mb-6">Free Image Compliance Check</h2>
             <p className="text-slate-300 mb-6">
               Upload a photo from your establishment to get a quick compliance check. 
-              Limited to 3 free analyses per 24 hours.
+              Limited to 3 free analyses per day and 10 per week.
             </p>
 
             <div className="space-y-4">

@@ -14,8 +14,15 @@ Free semantic search knowledge base for Michigan food safety regulations to driv
 - Related requirements section
 
 ### 2. Rate Limiting
-- **Knowledge base search**: 10 queries per IP address per hour
-- **Free image analysis**: 3 images per email per 24-hour period
+- **Knowledge base search**: 
+  - 5 queries per day per IP address
+  - 20 queries per week per IP address
+  - Both limits must be satisfied
+- **Free image analysis**: 
+  - 3 images per day per IP address
+  - 10 images per week per IP address
+  - Both limits must be satisfied
+  - Email address required for tracking
 - Uses Supabase to track limits
 - Clear error messages with upgrade paths
 

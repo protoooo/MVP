@@ -63,21 +63,25 @@
 **Location:** `/lib/rateLimiting.js`
 
 **Knowledge Base Search:**
-- 10 queries per IP per hour
+- 5 queries per day per IP
+- 20 queries per week per IP
+- Both limits must be satisfied
 - Sliding window implementation
 - Clear error messages: "You've reached the search limit. Try again in X minutes or contact us for API access."
 
 **Free Image Analysis:**
-- 3 images per email per 24 hours
-- Email validation required
-- Modal after 2nd image: "You have 1 free analysis left. Want comprehensive coverage?"
+- 3 images per day per IP
+- 10 images per week per IP
+- Both limits must be satisfied
+- Email address required for tracking and analytics
+- Modal after 2nd daily image: "You have 1 free analysis left. Want comprehensive coverage?"
 - Upgrade prompt when limit reached
 
 **Technical Implementation:**
-- Supabase-backed tracking
+- Supabase-backed tracking with dual time windows (daily + weekly)
 - Automatic cleanup of old records (7+ days)
 - Fail-open on database errors (doesn't block users)
-- Returns remaining count and reset time
+- Returns remaining count (minimum of daily/weekly) and reset time
 
 ### 5. ✅ Static Landing Pages for SEO
 

@@ -1,7 +1,7 @@
 // app/api/knowledge-base/analyze-image/route.js
 // Free image analysis teaser for knowledge base users
 import { NextResponse } from 'next/server'
-import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimiting'
+import { checkMultipleRateLimits, getIpAddress, RATE_LIMITS } from '@/lib/rateLimiting'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -72,7 +72,7 @@ export async function POST(request) {
     const email = body?.email?.trim()
     const imageInput = body?.image || body?.imageBase64 || body?.imageDataUrl
     
-    // Validate email
+    // Validate email (still required for tracking, but rate limiting is by IP)
     if (!email || !validateEmail(email)) {
       return NextResponse.json(
         { error: 'Valid email address required' },
@@ -80,14 +80,18 @@ export async function POST(request) {
       )
     }
     
-    // Rate limiting by email
-    const rateLimit = await checkRateLimit(email, RATE_LIMITS.FREE_IMAGE_ANALYSIS)
+    // Rate limiting by IP - check both daily and weekly limits
+    const ip = getIpAddress(request)
+    const rateLimit = await checkMultipleRateLimits(ip, [
+      RATE_LIMITS.FREE_IMAGE_ANALYSIS_DAILY,
+      RATE_LIMITS.FREE_IMAGE_ANALYSIS_WEEKLY
+    ])
     
     if (!rateLimit.allowed) {
-      logger.info('Free image analysis rate limit exceeded', { email, retryAfter: rateLimit.retryAfter })
+      logger.info('Free image analysis rate limit exceeded', { ip, email, retryAfter: rateLimit.retryAfter })
       return NextResponse.json(
         {
-          error: `You've used your 3 free analyses. Get unlimited checks with our $149 video analysis package.`,
+          error: `You've used your free analyses. Get unlimited checks with our $149 video analysis package.`,
           code: 'RATE_LIMIT_EXCEEDED',
           remaining: 0,
           upgradeUrl: '/signup?plan=video_analysis'
@@ -96,7 +100,7 @@ export async function POST(request) {
       )
     }
     
-    // Show modal after 2nd image
+    // Show modal after 2nd daily image (when remaining is 1)
     const showUpgradeModal = rateLimit.remaining === 1
     
     // Validate image
@@ -109,6 +113,7 @@ export async function POST(request) {
     }
     
     logger.info('Free image analysis', { 
+      ip,
       email, 
       remaining: rateLimit.remaining 
     })
@@ -130,9 +135,10 @@ export async function POST(request) {
     const duration = Date.now() - startTime
     
     // Track analysis
-    await trackImageAnalysis(email, limitedResults.issuesDetected, duration)
+    await trackImageAnalysis(ip, email, limitedResults.issuesDetected, duration)
     
     logger.info('Free image analysis completed', {
+      ip,
       email,
       issuesDetected: limitedResults.issuesDetected,
       durationMs: duration
@@ -195,7 +201,7 @@ function generateLimitedResults(analysis) {
 /**
  * Track image analysis for conversion optimization
  */
-async function trackImageAnalysis(email, issuesDetected, duration) {
+async function trackImageAnalysis(ip, email, issuesDetected, duration) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return
   }
@@ -208,6 +214,7 @@ async function trackImageAnalysis(email, issuesDetected, duration) {
     )
 
     await supabase.from('free_image_analyses').insert({
+      ip_address: ip,
       email,
       issues_detected: issuesDetected,
       duration_ms: duration,
