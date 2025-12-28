@@ -141,6 +141,12 @@ export default function SimplePage() {
   }
 
   const handlePurchaseClick = () => {
+    // Direct to Stripe payment link (no authentication required)
+    // User will receive access code via email after payment
+    if (!STRIPE_PAYMENT_LINK || STRIPE_PAYMENT_LINK.includes('your_link_here')) {
+      alert('Payment link not configured. Please contact support@protocollm.org')
+      return
+    }
     window.location.href = STRIPE_PAYMENT_LINK
   }
 
