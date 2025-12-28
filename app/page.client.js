@@ -783,7 +783,6 @@ export default function Page() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [reportData, setReportData] = useState(null)
 
-  const [inputMode, setInputMode] = useState('photo') // 'photo' | 'chat'
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
   const [chatHistory, setChatHistory] = useState([])
@@ -910,22 +909,6 @@ export default function Page() {
     document.body.style.overflow = ''
     document.documentElement.style.overflow = ''
   }, [])
-
-  useEffect(() => {
-    if (inputMode === 'chat') {
-      setSelectedImage(null)
-      if (textAreaRef.current) {
-        textAreaRef.current.style.height = 'auto'
-        textAreaRef.current.focus()
-      }
-      return
-    }
-
-    setInput('')
-    if (textAreaRef.current) {
-      textAreaRef.current.style.height = 'auto'
-    }
-  }, [inputMode])
 
   const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
@@ -1749,20 +1732,6 @@ export default function Page() {
       })
     } finally {
       setIsSending(false)
-    }
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  const handleImageChange = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      if (inputMode !== 'photo') setInputMode('photo')
-      const compressed = await compressImage(file)
-      setSelectedImage(compressed)
-    } catch (error) {
-      console.error('Image compression error', error)
-      alert('Failed to process image.')
     }
   }
 
@@ -4583,11 +4552,6 @@ export default function Page() {
 
           .chat-mode-toggle {
             grid-template-columns: 1fr;
-          }
-
-          .chat-input-row.photo-mode {
-            flex-direction: column;
-            align-items: stretch;
           }
 
           .landing-topbar {
