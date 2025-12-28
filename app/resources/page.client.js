@@ -186,7 +186,7 @@ export default function KnowledgeBase() {
           ) : (
             <>
               <h2 className="text-2xl font-bold mb-6">
-                Results for "{results.query}"
+                Results for &quot;{results.query}&quot;
               </h2>
 
               {/* Main Results */}
