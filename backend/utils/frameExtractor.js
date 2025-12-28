@@ -6,6 +6,8 @@ import imageHash from 'image-hash'
 // Maximum video duration in seconds (60 minutes = 1 hour)
 // Cost estimate: $2.75/min for video processing
 // 60 minutes × $2.75 = $165 (charged at $149)
+// NOTE: Customer charge ($149) is below estimated processing cost ($165).
+// This may need review for business viability, but reflects current pricing decision.
 const MAX_VIDEO_DURATION_SECONDS = 60 * 60
 
 /**

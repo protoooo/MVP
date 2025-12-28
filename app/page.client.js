@@ -1391,8 +1391,13 @@ export default function Page() {
 
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable && onProgress) {
-          const percentComplete = Math.round((e.loaded / e.total) * 100)
-          onProgress(percentComplete)
+          try {
+            const percentComplete = Math.round((e.loaded / e.total) * 100)
+            onProgress(percentComplete)
+          } catch (progressErr) {
+            console.error('Progress callback error:', progressErr)
+            // Don't fail the upload if progress callback fails
+          }
         }
       })
 
@@ -1401,8 +1406,8 @@ export default function Page() {
           try {
             const response = JSON.parse(xhr.responseText)
             resolve(response)
-          } catch (err) {
-            reject(new Error('Invalid response from server'))
+          } catch (parseErr) {
+            reject(new Error(`Invalid JSON response from server: ${parseErr.message}`))
           }
         } else {
           try {
