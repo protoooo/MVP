@@ -483,18 +483,24 @@ REMEMBER: Quality over quantity. Better to report ${MIN_VIOLATIONS_QUALITY}-${MI
     const allCitations = []
 
     for (const finding of analysis.findings || []) {
-      // Build search query from finding
-      const searchQuery = [
-        finding.description,
-        finding.concern,
-        ...(finding.regulation_keywords || [])
-      ].filter(Boolean).join(' ')
-
-      // Search for relevant regulations
-      const citations = await searchRegulations(searchQuery, 3)
-      
-      // Infer violation details
+      // Infer violation details FIRST to determine severity
       const { type, category, severity } = inferViolationDetails(finding.description + ' ' + finding.concern)
+      
+      // OPTIMIZATION: Only search for regulations on critical/major violations
+      // This reduces Rerank API costs by 70-80% (Rerank is 92% of total cost)
+      // Minor violations don't need regulatory citations for advisory reports
+      let citations = []
+      if (severity === 'critical' || severity === 'major') {
+        // Build search query from finding
+        const searchQuery = [
+          finding.description,
+          finding.concern,
+          ...(finding.regulation_keywords || [])
+        ].filter(Boolean).join(' ')
+
+        // Search for relevant regulations (includes expensive Rerank API call)
+        citations = await searchRegulations(searchQuery, 3)
+      }
 
       processedFindings.push({
         description: finding.description,
