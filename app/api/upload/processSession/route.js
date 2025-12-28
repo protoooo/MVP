@@ -244,6 +244,29 @@ export async function POST(req) {
     // Get public URL for PDF
     const publicPdfUrl = await getPublicUrlSafe('reports', pdfPath, supabase)
 
+    // Log cost and photo count
+    const photoCount = media.length
+    const costPerPhoto = 0.01 // $0.01 per photo
+    const totalCost = photoCount * costPerPhoto
+
+    try {
+      await supabase
+        .from('processing_costs')
+        .insert({
+          session_id: sessionId,
+          user_id: user.isAnonymous ? null : user.id,
+          photo_count: photoCount,
+          api_cost: totalCost,
+          cost_per_photo: costPerPhoto,
+          timestamp: new Date().toISOString(),
+        })
+      
+      console.log(`[processSession] Cost logged: ${photoCount} photos @ $${costPerPhoto} each = $${totalCost.toFixed(2)}`)
+    } catch (costLogError) {
+      // Don't fail the request if cost logging fails
+      console.error('[processSession] Failed to log processing cost:', costLogError.message)
+    }
+
     // Cleanup temp files
     cleanupTemp(tempPaths)
 
