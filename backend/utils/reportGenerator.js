@@ -87,7 +87,7 @@ export async function generateReport(sessionId, results) {
     // Header
     doc.fontSize(24).font('Helvetica-Bold').text('Restaurant Health Inspection Report', { align: 'center' })
     doc.moveDown(0.5)
-    doc.fontSize(12).font('Helvetica').text('Pre-Inspection Video Analysis for Michigan Restaurants', { align: 'center' })
+    doc.fontSize(12).font('Helvetica').text('Photo Analysis for Michigan Restaurants', { align: 'center' })
     doc.fontSize(10).text('protocolLM - Find health code violations before the inspector does', { align: 'center' })
     doc.moveDown()
     
