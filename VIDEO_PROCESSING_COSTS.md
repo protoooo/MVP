@@ -46,6 +46,15 @@ The $2.75/minute estimate includes:
 - Maximum profitable video duration: $149 ÷ $2.75/min = **54.2 minutes**
 - Videos longer than 54 minutes result in a loss
 
+**Profitability by Video Length:**
+- 20 minutes: $55 cost, $149 revenue = **$94 profit (63% margin)**
+- 30 minutes: $82.50 cost, $149 revenue = **$66.50 profit (45% margin)**
+- 40 minutes: $110 cost, $149 revenue = **$39 profit (26% margin)**
+- 54 minutes: $148.50 cost, $149 revenue = **$0.50 profit (break-even)**
+- 60 minutes: $165 cost, $149 revenue = **-$16 loss (-11% margin)**
+
+**Note:** Actual profitability depends on average video length. If most customers submit 30-40 minute videos, the current pricing is profitable. However, allowing 60-minute videos creates risk of losses on longer submissions.
+
 ### Recommendations
 
 1. **Enforce 54-minute maximum** instead of 60 minutes to maintain profitability
