@@ -66,7 +66,9 @@ async function sendInspectionReminders() {
     let failureCount = 0
 
     for (const user of users) {
-      const customerName = user.email.split('@')[0]
+      const customerName = user.email.includes('@') 
+        ? user.email.split('@')[0] 
+        : user.email.substring(0, 10) // Fallback if no @ found
 
       try {
         if (isDryRun) {

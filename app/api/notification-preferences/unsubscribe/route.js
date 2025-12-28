@@ -28,7 +28,12 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
 
-    if (!token || typeof token !== 'string') {
+    if (!token || typeof token !== 'string' || token.length > 128) {
+      return NextResponse.json({ error: 'Invalid unsubscribe token' }, { status: 400 })
+    }
+
+    // Validate token format (should be hex string)
+    if (!/^[a-f0-9]+$/i.test(token)) {
       return NextResponse.json({ error: 'Invalid unsubscribe token' }, { status: 400 })
     }
 

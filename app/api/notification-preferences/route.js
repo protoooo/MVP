@@ -45,6 +45,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
     }
 
+    // More thorough email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
+    }
+
     // Validate booleans
     if (typeof inspectionReminders !== 'boolean' || typeof regulationUpdates !== 'boolean') {
       return NextResponse.json({ error: 'Invalid preference values' }, { status: 400 })

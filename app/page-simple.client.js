@@ -424,7 +424,7 @@ export default function SimplePage() {
                             </p>
                           ) : (
                             <p className="mt-2 text-xs" style={{ color: 'var(--ink-40)' }}>
-                              You&apos;ll receive your access code at this email after payment
+                              You'll receive your access code at this email after payment
                             </p>
                           )}
                         </div>
