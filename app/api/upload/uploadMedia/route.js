@@ -56,15 +56,27 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing session or file' }, { status: 400 })
     }
 
-    const mediaId = uuidv4()
     const contentType = file.type || 'application/octet-stream'
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
     
     // Get file extension
     const fileName = file.name || ''
     const lastDot = fileName.lastIndexOf('.')
     const fileExt = lastDot > 0 ? fileName.slice(lastDot).toLowerCase() : ''
+    
+    // Validate that only images are accepted
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.heic']
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/heic']
+
+    if (!allowedExtensions.includes(fileExt) && !allowedMimeTypes.includes(contentType)) {
+      return NextResponse.json(
+        { error: 'Please upload photos only (.jpg, .png, .heic). Videos are not supported.' },
+        { status: 400 }
+      )
+    }
+
+    const mediaId = uuidv4()
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
     const objectPath = `media/${sessionId}/${mediaId}${fileExt}`
 
     await uploadMedia(objectPath, buffer, contentType)
@@ -73,7 +85,7 @@ export async function POST(req) {
       id: mediaId,
       session_id: sessionId,
       url: objectPath,
-      type: contentType.startsWith('video') ? 'video' : 'image',
+      type: 'image',
       user_id: user.id,
     }
 
