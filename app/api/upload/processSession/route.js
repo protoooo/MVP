@@ -7,14 +7,10 @@ import os from 'os'
 import { ensureBucketExists, getPublicUrlSafe } from '../storageHelpers'
 import { analyzeImage, analyzeImageBatch } from '../../../../backend/utils/aiAnalysis.js'
 import { generateReport } from '../../../../backend/utils/reportGenerator.js'
-import { extractFrames, deduplicateFrames, validateVideoDuration } from '../../../../backend/utils/frameExtractor.js'
 
-// ✅ VIDEO PROCESSING COST ESTIMATES
-// Maximum video duration: 60 minutes (1 hour)
-// Estimated processing cost: $2.75 per minute
-// 60 minutes × $2.75/min = $165 total processing cost
-// Customer charge: $149 per inspection report
-// Note: Actual costs may vary based on video complexity and AI usage
+// ✅ IMAGE PROCESSING COST ESTIMATES
+// Cost per image: $0.01
+// Using Cohere Vision API (c4ai-aya-vision-32b)
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -123,136 +119,25 @@ export async function POST(req) {
 
     for (const item of media || []) {
       try {
-        // Determine bucket based on media type
-        const bucket = item.type === 'video' ? 'audit-videos' : 'media'
+        // Only process images
+        console.log(`[processSession] Processing image: ${item.id}`)
         
-        if (item.type === 'video') {
-          // Video processing: extract frames, deduplicate, and analyze
-          console.log(`[processSession] Processing video: ${item.id}`)
-          
-          const videoPath = await downloadToTemp(bucket, item.url)
-          tempPaths.push(videoPath)
-          
-          // ✅ Validate video duration before processing
-          console.log(`[processSession] Validating video duration for: ${item.id}`)
-          const durationCheck = await validateVideoDuration(videoPath)
-          
-          if (!durationCheck.valid) {
-            console.error(`[processSession] Video duration validation failed:`, durationCheck.error)
-            results.push({
-              media_id: item.id,
-              media_type: 'video',
-              area: item.area || 'general',
-              violation: null,
-              findings: [],
-              citations: [],
-              severity: 'error',
-              confidence: 0,
-              analyzed: false,
-              error: durationCheck.error
-            })
-            continue
-          }
-          
-          console.log(`[processSession] Video duration validated: ${durationCheck.durationMinutes} minutes (max: ${durationCheck.maxDurationMinutes})`)
-          
-          // Create frame output directory
-          const frameDir = path.join(os.tmpdir(), `${item.id}-frames`)
-          tempPaths.push(frameDir)
-          
-          // Extract frames from video (1 frame per second)
-          try {
-            await extractFrames(videoPath, frameDir)
-          } catch (extractErr) {
-            console.error(`[processSession] Frame extraction failed for video ${item.id}:`, extractErr.message)
-            results.push({
-              media_id: item.id,
-              media_type: 'video',
-              area: item.area || 'general',
-              violation: null,
-              findings: [],
-              citations: [],
-              severity: 'info',
-              confidence: 0,
-              analyzed: false,
-              error: `Frame extraction failed: ${extractErr.message}`
-            })
-            continue
-          }
-          
-          // Get all extracted frame files
-          const frameFiles = fs
-            .readdirSync(frameDir)
-            .map((f) => path.join(frameDir, f))
-            .filter((f) => f.endsWith('.jpg') || f.endsWith('.png'))
-            .sort() // Ensure chronological order
-          
-          if (frameFiles.length === 0) {
-            console.warn(`[processSession] No frames extracted from video ${item.id}`)
-            results.push({
-              media_id: item.id,
-              media_type: 'video',
-              area: item.area || 'general',
-              violation: null,
-              findings: [],
-              citations: [],
-              severity: 'info',
-              confidence: 0,
-              analyzed: false,
-              error: 'No frames could be extracted from video'
-            })
-            continue
-          }
-          
-          console.log(`[processSession] Extracted ${frameFiles.length} frames from video ${item.id}`)
-          
-          // Deduplicate frames using perceptual hashing
-          let uniqueFrames
-          try {
-            uniqueFrames = await deduplicateFrames(frameFiles)
-          } catch (dedupErr) {
-            console.error(`[processSession] Frame deduplication failed for video ${item.id}:`, dedupErr.message)
-            // Fall back to using all frames if deduplication fails
-            uniqueFrames = frameFiles
-          }
-          console.log(`[processSession] ${uniqueFrames.length} unique frames after deduplication`)
-          
-          // Analyze unique frames in batch for efficiency
-          const frameAnalyses = await analyzeImageBatch(uniqueFrames)
-          
-          // Add results with frame reference
-          frameAnalyses.forEach((analysis, idx) => {
-            results.push({
-              media_id: item.id,
-              media_type: 'video',
-              frame_number: idx + 1,
-              total_frames: uniqueFrames.length,
-              area: item.area || 'general',
-              ...analysis
-            })
-          })
-          
-        } else {
-          // Image processing: analyze directly
-          console.log(`[processSession] Processing image: ${item.id}`)
-          
-          const imagePath = await downloadToTemp(bucket, item.url)
-          tempPaths.push(imagePath)
-          
-          const analysis = await analyzeImage(imagePath)
-          results.push({
-            media_id: item.id,
-            media_type: 'image',
-            area: item.area || 'general',
-            ...analysis
-          })
-        }
+        const imagePath = await downloadToTemp('media', item.url)
+        tempPaths.push(imagePath)
+        
+        const analysis = await analyzeImage(imagePath)
+        results.push({
+          media_id: item.id,
+          media_type: 'image',
+          area: item.area || 'general',
+          ...analysis
+        })
       } catch (downloadErr) {
         console.error('Processing error for media item:', item.id, downloadErr.message)
         // Mark as failed/uncertain when processing fails
         results.push({
           media_id: item.id,
-          media_type: item.type,
+          media_type: 'image',
           area: item.area || 'general',
           violation: null,
           findings: [],
@@ -358,6 +243,29 @@ export async function POST(req) {
 
     // Get public URL for PDF
     const publicPdfUrl = await getPublicUrlSafe('reports', pdfPath, supabase)
+
+    // Log cost and photo count
+    const photoCount = media.length
+    const costPerPhoto = 0.01 // $0.01 per photo
+    const totalCost = photoCount * costPerPhoto
+
+    try {
+      await supabase
+        .from('processing_costs')
+        .insert({
+          session_id: sessionId,
+          user_id: user.isAnonymous ? null : user.id,
+          photo_count: photoCount,
+          api_cost: totalCost,
+          cost_per_photo: costPerPhoto,
+          timestamp: new Date().toISOString(),
+        })
+      
+      console.log(`[processSession] Cost logged: ${photoCount} photos @ $${costPerPhoto} each = $${totalCost.toFixed(2)}`)
+    } catch (costLogError) {
+      // Don't fail the request if cost logging fails
+      console.error('[processSession] Failed to log processing cost:', costLogError.message)
+    }
 
     // Cleanup temp files
     cleanupTemp(tempPaths)
