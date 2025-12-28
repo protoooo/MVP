@@ -98,6 +98,8 @@ export async function POST(req) {
           const customerEmail = session.customer_email || session.customer_details?.email
           const paymentIntentId = session.payment_intent
           const amountTotal = session.amount_total // in cents
+          const tier = sessionMetadata.tier || 'BASIC' // BASIC or PREMIUM
+          const photoLimit = parseInt(sessionMetadata.photoLimit || '200', 10)
 
           if (!customerEmail) {
             logger.error('Missing customer email in one-time payment', {
@@ -110,10 +112,12 @@ export async function POST(req) {
           logger.info('Processing one-time inspection report purchase', {
             email: customerEmail.substring(0, 3) + '***',
             amount: amountTotal / 100,
+            tier,
+            photoLimit,
             sessionId: session.id,
           })
 
-          // Generate 6-digit access code
+          // Generate access code with tier prefix (BASIC-XXXXX or PREMIUM-XXXXX)
           let accessCode = null
           let codeGenerated = false
           let attempts = 0
@@ -121,22 +125,24 @@ export async function POST(req) {
 
           while (!codeGenerated && attempts < maxAttempts) {
             attempts++
-            // Generate random 6-digit code
-            const randomCode = Math.floor(100000 + Math.random() * 900000).toString()
+            // Generate random 5-digit code and add tier prefix
+            const randomDigits = Math.floor(10000 + Math.random() * 90000).toString()
+            const codeWithPrefix = `${tier}-${randomDigits}`
 
             // Try to insert it (will fail if code already exists due to UNIQUE constraint)
             const { data: insertedCode, error: insertError } = await supabase
               .from('access_codes')
               .insert({
-                code: randomCode,
+                code: codeWithPrefix,
                 email: customerEmail,
                 stripe_payment_intent_id: paymentIntentId,
                 stripe_session_id: session.id,
                 status: 'unused',
                 created_at: new Date().toISOString(),
                 is_admin: false,
-                max_video_duration_seconds: 3600, // 1 hour
-                total_video_duration_seconds: 0,
+                max_photos: photoLimit,
+                total_photos_uploaded: 0,
+                tier: tier,
               })
               .select()
               .single()
@@ -145,7 +151,9 @@ export async function POST(req) {
               accessCode = insertedCode
               codeGenerated = true
               logger.info('Access code generated', {
-                code: randomCode,
+                code: codeWithPrefix,
+                tier,
+                photoLimit,
                 email: customerEmail.substring(0, 3) + '***',
               })
             } else if (insertError?.code === '23505') {
@@ -173,12 +181,16 @@ export async function POST(req) {
               customerEmail,
               customerName,
               accessCode.code,
-              amountTotal / 100
+              amountTotal / 100,
+              tier,
+              photoLimit
             )
 
             logger.audit('Purchase confirmation email sent', {
               email: customerEmail.substring(0, 3) + '***',
               code: accessCode.code,
+              tier,
+              photoLimit,
               amount: amountTotal / 100,
             })
           } catch (emailError) {

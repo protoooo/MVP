@@ -28,8 +28,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Access code is required' }, { status: 400 })
     }
 
-    // Validate code format (6 digits)
-    if (!/^\d{6}$/.test(code)) {
+    // Validate code format (BASIC-XXXXX or PREMIUM-XXXXX or legacy 6 digits)
+    if (!/^(BASIC|PREMIUM)-\d{5}$/.test(code) && !/^\d{6}$/.test(code)) {
       return NextResponse.json({ error: 'Invalid access code format' }, { status: 400 })
     }
 
@@ -61,16 +61,18 @@ export async function POST(request) {
     const hasReport = !!accessCode.report_data && !!accessCode.report_generated_at
     const canAccessReport = hasReport
 
-    // Calculate remaining time
-    const remainingSeconds = Math.max(0, 
-      accessCode.max_video_duration_seconds - (accessCode.total_video_duration_seconds || 0)
-    )
+    // Calculate remaining photos (support both new photo-based and legacy video-based codes)
+    const maxPhotos = accessCode.max_photos || 200 // Default to 200 if not set
+    const totalPhotosUploaded = accessCode.total_photos_uploaded || 0
+    const remainingPhotos = Math.max(0, maxPhotos - totalPhotosUploaded)
 
     logger.info('Access code validated', { 
       code, 
       status: accessCode.status,
+      tier: accessCode.tier || 'LEGACY',
       canProcess,
       hasReport,
+      remainingPhotos,
       ip 
     })
 
@@ -78,16 +80,16 @@ export async function POST(request) {
       valid: true,
       code: accessCode.code,
       status: accessCode.status,
+      tier: accessCode.tier || 'LEGACY',
       isAdmin: accessCode.is_admin || false,
       canProcess,
       canAccessReport,
       hasReport,
-      remainingSeconds,
-      maxDurationSeconds: accessCode.max_video_duration_seconds,
-      usedSeconds: accessCode.total_video_duration_seconds || 0,
+      remainingPhotos,
+      maxPhotos,
+      totalPhotosUploaded,
       reportData: hasReport ? {
         generatedAt: accessCode.report_generated_at,
-        // Include minimal report metadata for preview
         hasData: true
       } : null
     })
