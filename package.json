@@ -17,6 +17,8 @@
     "send-reminders": "node scripts/send-trial-reminders.js",
     "test-emails": "node scripts/test-emails.js",
     "cleanup-webhooks": "node scripts/cleanup-webhook-events.js",
+    "send-inspection-reminders": "node scripts/send-inspection-reminders.js",
+    "send-regulation-updates": "node scripts/send-regulation-updates.js",
     "postinstall": "python scripts/generate_icons.py && node scripts/copy-pdfkit-fonts.js"
   },
   "dependencies": {
