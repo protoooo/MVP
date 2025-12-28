@@ -1,7 +1,7 @@
 -- Access Codes Table Schema
 -- This table stores access codes for the photo analysis system
--- Access codes use the format: BASIC-XXXXX or PREMIUM-XXXXX (5-digit random number with tier prefix)
--- Total length: 11-12 characters (BASIC-12345 or PREMIUM-67890)
+-- Access codes use the format: TIER-NNNNN where TIER is BASIC or PREMIUM, and NNNNN is a 5-digit number
+-- Examples: BASIC-12345 (11 chars), PREMIUM-67890 (13 chars)
 
 CREATE TABLE IF NOT EXISTS access_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

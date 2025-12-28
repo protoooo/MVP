@@ -351,7 +351,7 @@ export default function SimplePage() {
                           setAccessCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 13))
                           setAccessCodeError('')
                         }}
-                        placeholder="XXXXXX"
+                        placeholder="Enter access code"
                         maxLength={13}
                         className="w-full rounded-md border px-4 py-3 text-center font-semibold"
                         style={{
