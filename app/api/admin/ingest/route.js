@@ -1,5 +1,6 @@
-// app/api/admin/ingest/route.js - MULTI-SECTOR INGEST (COHERE)
+// app/api/admin/ingest/route.js - FOOD SAFETY INGEST (COHERE)
 // ProtocolLM - Admin ingestion endpoint (deployment bundle PDFs -> Supabase rows)
+// NOTE: Only supports food_safety sector
 
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
@@ -41,9 +42,8 @@ function chunkText(fullText) {
 }
 
 function resolveTargets({ collection, sector }) {
-  // Support both legacy collection-based and new sector-based approaches
-  // collection: "washtenaw" | "michigan" | "all" (legacy)
-  // sector: "food_safety" | "fire_life_safety" | "rental_housing" | "all" (new)
+  // Support legacy collection-based approach for backward compatibility
+  // sector: "food_safety" only - other sectors have been removed
   
   const base = path.join(process.cwd(), "public", "documents")
   const targets = []
@@ -61,67 +61,16 @@ function resolveTargets({ collection, sector }) {
     }
   }
 
-  // New sector-based approach (preferred)
-  if (sector) {
-    if (sector === "all") {
-      // Ingest all sectors
-      Object.entries(SECTOR_DOCUMENT_FOLDERS).forEach(([sectorId, folderName]) => {
-        addTargetIfExistsAndHasPDFs(
-          path.join(base, folderName), 
-          folderName, 
-          sectorId
-        )
-      })
-    } else if (SECTOR_DOCUMENT_FOLDERS[sector]) {
-      // Ingest specific sector
-      const folderName = SECTOR_DOCUMENT_FOLDERS[sector]
-      addTargetIfExistsAndHasPDFs(
-        path.join(base, folderName), 
-        folderName, 
-        sector
-      )
-    }
-  } 
-  // Legacy collection-based approach (backward compatibility)
-  else if (collection) {
-    // Map legacy collection to sector
-    const mappedSector = LEGACY_COLLECTIONS_TO_SECTOR[collection]
-    
-    if (collection === "washtenaw" || collection === "all") {
-      addTargetIfExistsAndHasPDFs(
-        path.join(base, "washtenaw"), 
-        "washtenaw", 
-        mappedSector || SECTORS.FOOD_SAFETY
-      )
-    }
-
-    if (collection === "michigan" || collection === "all") {
-      addTargetIfExistsAndHasPDFs(
-        path.join(base, "michigan"), 
-        "michigan", 
-        mappedSector || SECTORS.FOOD_SAFETY
-      )
-    }
-    
-    // Also check new food_safety folder for backward compatibility
-    if (collection === "michigan" || collection === "all") {
-      addTargetIfExistsAndHasPDFs(
-        path.join(base, "food_safety"), 
-        "food_safety", 
-        SECTORS.FOOD_SAFETY
-      )
-    }
-  }
-
-  // Fallback: if nothing found, try food_safety folder
-  if (targets.length === 0) {
-    addTargetIfExistsAndHasPDFs(
-      path.join(base, "food_safety"), 
-      "food_safety", 
-      SECTORS.FOOD_SAFETY
-    )
-  }
-
+  // ✅ FOOD SAFETY ONLY: Only process food_safety documents
+  const sectorId = SECTORS.FOOD_SAFETY
+  const folderName = SECTOR_DOCUMENT_FOLDERS[sectorId]
+  
+  addTargetIfExistsAndHasPDFs(
+    path.join(base, folderName), 
+    folderName, 
+    sectorId
+  )
+  
   return targets
 }
 
