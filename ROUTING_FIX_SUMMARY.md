@@ -30,17 +30,23 @@ export default function Page() {
 // app/page.js - New simplified landing page for payment-based food safety app (no authentication)
 import SimpleLanding from './simple/page.client'
 
-export const metadata = {
-  title: 'Michigan Food Safety Photo Analysis - $50 Reports & API Access',
-  description: 'Upload restaurant photos, get instant Michigan health code compliance reports. No signup required. $50 per report or buy API access.',
-}
-
 export default function HomePage() {
   return <SimpleLanding />
 }
 ```
 
-### 2. Updated `.gitignore`
+### 2. Updated `/app/layout.js`
+Updated the root layout metadata to match the new payment-based branding:
+
+```javascript
+export const metadata = {
+  title: 'Michigan Food Safety Photo Analysis - $50 Reports & API Access',
+  description: 'Upload restaurant photos, get instant Michigan health code compliance reports. No signup required. $50 per report or buy API access.',
+  // ... icons and manifest remain the same
+}
+```
+
+### 3. Updated `.gitignore`
 Added `.backup/` to exclude backup files from version control.
 
 ## Result
