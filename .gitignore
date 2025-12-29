@@ -83,3 +83,4 @@ temp/
 
 # Stripe CLI
 .stripe/
+.backup/
