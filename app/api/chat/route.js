@@ -1091,19 +1091,15 @@ export async function POST(request) {
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
+      // ✅ BYPASS AUTH for local testing - allow unauthenticated access
       if (!userId || !data?.user) {
-        logger.info('Unauthenticated chat attempt')
-        return NextResponse.json(
-          { error: 'Sign up and purchase an inspection report ($149) to start scanning.', code: 'AUTH_REQUIRED' },
-          { status: 401 }
-        )
-      }
-
-      if (!data.user.email_confirmed_at) {
-        return NextResponse.json(
-          { error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' },
-          { status: 403 }
-        )
+        logger.info('Unauthenticated chat attempt - ALLOWING (auth disabled for testing)')
+        // Generate a temporary anonymous user ID for this session
+        userId = sessionInfo?.userId || 'anonymous-' + Date.now()
+        // Don't return 401, continue with anonymous access
+      } else if (!data.user.email_confirmed_at) {
+        logger.info('Email not verified - ALLOWING (auth disabled for testing)')
+        // Don't return 403, continue anyway
       }
 
       const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}`
@@ -1124,11 +1120,14 @@ export async function POST(request) {
 
       try {
         const accessCheck = await checkAccess(userId, requestedSector)
+        // ✅ BYPASS ACCESS CHECK for local testing - always allow access
         if (!accessCheck?.valid) {
-          return NextResponse.json(
-            { error: 'Your trial has ended. Please subscribe to continue using protocolLM.', code: 'TRIAL_EXPIRED' },
-            { status: 402 }
-          )
+          logger.info('Access check failed - ALLOWING (auth disabled for testing)')
+          // Don't return 402, continue anyway
+          // Create a mock access check result
+          const userSector = requestedSector || 'michigan'
+          // Set a mock valid access check
+          accessCheck = { valid: true, sector: userSector }
         }
         
         // Store access check results for use in document retrieval
@@ -1142,39 +1141,28 @@ export async function POST(request) {
           isAdmin 
         })
       } catch (error) {
+        // ✅ BYPASS ACCESS CHECK ERRORS for local testing - always allow access
         // Handle sector-specific access denial
         if (error.code === 'SECTOR_ACCESS_DENIED') {
-          return NextResponse.json(
-            { 
-              error: error.message, 
-              code: 'SECTOR_ACCESS_DENIED',
-              requestedSector: error.requestedSector,
-              subscribedSector: error.subscribedSector
-            },
-            { status: 403 }
-          )
+          logger.info('Sector access denied - ALLOWING (auth disabled for testing)')
+          // Don't return 403, create mock valid access
+          const userSector = error.requestedSector || 'michigan'
+          // Continue with mock sector
+        } else {
+          logger.info('Access check failed - ALLOWING (auth disabled for testing)')
+          // Don't return 402, create mock valid access
+          const userSector = requestedSector || 'michigan'
+          // Continue with mock sector
         }
-        
-        logger.error('Access check failed (fail-closed)', { error: error?.message, userId })
-        return NextResponse.json(
-          { error: 'Unable to verify subscription. Please sign in again.', code: 'ACCESS_CHECK_FAILED' },
-          { status: 402 }
-        )
       }
 
       const deviceCheck = await validateDeviceLicense(userId, sessionInfo)
+      // ✅ BYPASS DEVICE LICENSE CHECK for local testing - always allow access
       if (!deviceCheck.valid) {
-        return NextResponse.json(
-          {
-            error: deviceCheck.error || 'Device validation failed',
-            code: deviceCheck.code || 'DEVICE_VALIDATION_FAILED',
-            message:
-              deviceCheck.error ||
-              'This license is already active on another device. Please purchase an additional device license.',
-            suggestedPrice: deviceCheck.suggestedPrice || 79,
-          },
-          { status: 403 }
-        )
+        logger.info('Device validation failed - ALLOWING (auth disabled for testing)')
+        // Don't return 403, continue anyway
+        // Create mock valid device check
+        deviceCheck.valid = true
       }
 
       try {

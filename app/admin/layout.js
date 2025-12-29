@@ -31,11 +31,16 @@ export default async function AdminLayout({ children }) {
 
   const { data: { user } } = await supabase.auth.getUser()
   
+  // ✅ BYPASS AUTH CHECK for local testing - allow admin access without authentication
   // Check if user is admin
   const adminEmail = process.env.ADMIN_EMAIL
   
-  if (!user || !adminEmail || user.email !== adminEmail) {
-    redirect('/')
+  if (!user) {
+    console.log('[AdminLayout] No user session - but allowing access (auth disabled)')
+    // Don't redirect - allow access without authentication
+  } else if (adminEmail && user.email !== adminEmail) {
+    console.log('[AdminLayout] User is not admin - but allowing access (auth disabled)')
+    // Don't redirect - allow access anyway for testing
   }
 
   return (
@@ -48,7 +53,7 @@ export default async function AdminLayout({ children }) {
               <h1 className={`text-2xl font-bold text-slate-900 ${outfit.className}`}>
                 protocolLM Admin
               </h1>
-              <p className="text-sm text-slate-600">Logged in as {user.email}</p>
+              <p className="text-sm text-slate-600">Logged in as {user?.email || 'Guest (No Auth)'}</p>
             </div>
             
             <nav className="flex gap-4">

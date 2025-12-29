@@ -23,17 +23,20 @@ const supabase =
 async function authorize(req) {
   const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
   const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
-  if (!apiKey) return null
   
+  // ✅ BYPASS AUTH for local testing - always return anonymous user
   // Accept the anon key for anonymous users - generate a valid UUID for them
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (apiKey === anonKey) {
-    // For anon key, generate a valid UUID so database inserts don't fail
+  if (!apiKey || apiKey === anonKey) {
+    // For anon key or no key, generate a valid UUID so database inserts don't fail
     return { id: uuidv4(), isAnonymous: true }
   }
   
   const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
-  if (error || !data) return null
+  if (error || !data) {
+    // ✅ BYPASS AUTH - return anonymous user instead of null
+    return { id: uuidv4(), isAnonymous: true }
+  }
   return data
 }
 

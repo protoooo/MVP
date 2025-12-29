@@ -1,7 +1,6 @@
-// middleware.js - UPDATED for access code system (no authentication required)
+// middleware.js - DISABLED authentication for local testing
 import { NextResponse } from 'next/server'
 import { generateCSRFToken } from '@/lib/csrfProtection'
-import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl
@@ -39,31 +38,10 @@ export async function middleware(request) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
   // ============================================================================
-  // Public Routes (no authentication required - all routes are public now)
+  // NO AUTHENTICATION CHECK - Disabled for local testing
+  // ALL routes are accessible without authentication
   // ============================================================================
-  const publicRoutes = [
-    '/auth',
-    '/login',
-    '/terms',
-    '/privacy',
-    '/contact',
-    '/verify-email',
-    '/reset-password',
-    '/accept-terms',
-    '/register-location',
-  ]
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
-  if (isPublicRoute) return response
-
-  if (!isSupabaseConfigured) {
-    console.error(`[middleware] ${missingSupabaseConfigMessage}`)
-    response.headers.set('X-Supabase-Config', 'missing')
-    return response
-  }
-
-  // ============================================================================
-  // NO AUTHENTICATION CHECK - Access code system doesn't require login
-  // ============================================================================
+  console.log('[middleware] Auth disabled - all routes accessible')
   
   return response
 }
@@ -73,5 +51,3 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
-
-// test change

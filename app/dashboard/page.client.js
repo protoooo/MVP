@@ -30,8 +30,11 @@ export default function DashboardClient() {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         
+        // ✅ BYPASS AUTH CHECK for local testing
         if (!session) {
-          router.push('/auth')
+          console.log('[Dashboard] No session - but continuing anyway (auth disabled)')
+          // Don't redirect to /auth - allow access without authentication
+          setLoading(false)
           return
         }
 
