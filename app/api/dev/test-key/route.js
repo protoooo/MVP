@@ -1,5 +1,6 @@
-// API route to generate API keys for prepaid credit packs
-// Called by Stripe webhook when Payment Link purchase is completed
+// Development-only test key generation
+// POST /api/dev/test-key - Generate test API key (dev only)
+// Only works when NODE_ENV !== 'production'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
@@ -12,36 +13,37 @@ const supabase = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
   : null
 
-// Generate a secure API key
 function generateApiKey() {
   return `sk_${crypto.randomBytes(32).toString('hex')}`
 }
 
 export async function POST(req) {
+  // Only allow in development
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ 
+      error: 'Not available in production. Use Stripe payment flow or admin API.' 
+    }, { status: 403 })
+  }
+
   if (!supabase) {
     return NextResponse.json({ error: 'Service not configured' }, { status: 500 })
   }
 
   try {
-    const body = await req.json()
-    const { credits, customerEmail, stripeSessionId, tier } = body
+    const body = await req.json().catch(() => ({}))
+    const { 
+      credits = 1000, 
+      tier = 'test',
+      customerEmail = 'dev@localhost'
+    } = body
 
-    if (!credits || !customerEmail) {
-      return NextResponse.json(
-        { error: 'Missing required fields: credits, customerEmail' },
-        { status: 400 }
-      )
-    }
-
-    // Generate API key
     const apiKey = generateApiKey()
     const keyId = uuidv4()
 
-    // Calculate expiration (1 year from now)
+    // Test keys expire in 30 days
     const expiresAt = new Date()
-    expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+    expiresAt.setDate(expiresAt.getDate() + 30)
 
-    // Save to database
     const { data, error } = await supabase
       .from('api_keys')
       .insert([{
@@ -51,36 +53,32 @@ export async function POST(req) {
         total_credits: credits,
         customer_email: customerEmail,
         expires: expiresAt.toISOString(),
-        stripe_session_id: stripeSessionId,
         tier,
         active: true,
       }])
       .select()
       .single()
 
-    if (error) {
-      console.error('[generate-api-key] Database error:', error)
-      throw error
-    }
+    if (error) throw error
 
-    console.log(`[generate-api-key] Generated API key for ${customerEmail}`)
-    console.log(`[generate-api-key] Key ID: ${keyId}, Credits: ${credits}, Tier: ${tier}`)
+    console.log(`[dev/test-key] Created test API key for ${customerEmail}`)
 
-    // Return key ID for dashboard redirect (key is stored securely in DB)
     return NextResponse.json({
       success: true,
+      message: 'Test API key created (development only)',
       keyId,
+      apiKey, // Return full key for testing
       credits,
       tier,
       expires: expiresAt.toISOString(),
-      // Dashboard URL where user can view their key
-      dashboardUrl: `/dashboard/${keyId}`
+      dashboardUrl: `/dashboard/${keyId}?new=true`,
+      testWith: {
+        curl: `curl -X POST http://localhost:3000/api/audit-photos -H "X-Api-Key: ${apiKey}" -H "Content-Type: application/json" -d '{"images":["https://example.com/test.jpg"]}'`
+      }
     })
+
   } catch (error) {
-    console.error('[generate-api-key] Error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to generate API key' },
-      { status: 500 }
-    )
+    console.error('[dev/test-key] Error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
