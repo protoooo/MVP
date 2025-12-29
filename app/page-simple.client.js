@@ -303,7 +303,7 @@ export default function SimplePage() {
           <header className="border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
               <Link href="/" className="flex items-center gap-3">
-                <Image src={appleIcon} alt="protocolLM" width={48} height={48} priority />
+                <Image src={appleIcon} alt="proto" width={48} height={48} priority />
                 <span className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>
                   protocolLM
                 </span>
