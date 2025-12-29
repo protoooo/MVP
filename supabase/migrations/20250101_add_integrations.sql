@@ -70,8 +70,8 @@ GRANT ALL ON integrations TO service_role;
 -- Add comments for documentation
 COMMENT ON TABLE integrations IS 'Stores OAuth tokens and status for third-party integrations like Jolt and Lightspeed';
 COMMENT ON COLUMN integrations.integration_type IS 'Type of integration: jolt, lightspeed';
-COMMENT ON COLUMN integrations.access_token IS 'OAuth access token (encrypted at rest)';
-COMMENT ON COLUMN integrations.refresh_token IS 'OAuth refresh token (encrypted at rest)';
+COMMENT ON COLUMN integrations.access_token IS 'OAuth access token (stored as text, consider encryption at application level for production)';
+COMMENT ON COLUMN integrations.refresh_token IS 'OAuth refresh token (stored as text, consider encryption at application level for production)';
 COMMENT ON COLUMN integrations.status IS 'Connection status: connected, disconnected, error';
 COMMENT ON COLUMN integrations.last_sync_at IS 'Timestamp of last successful sync';
 COMMENT ON COLUMN integrations.metadata IS 'Additional integration-specific metadata';

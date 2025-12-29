@@ -1,4 +1,3 @@
-// app/login/page.js (server wrapper)
 import { Suspense } from 'react'
 import LoginPageClient from './page.client'
 
@@ -9,7 +8,7 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="landing-loading">Loading...</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
       <LoginPageClient />
     </Suspense>
   )

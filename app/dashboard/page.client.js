@@ -385,7 +385,7 @@ export default function DashboardClient() {
               </div>
               {integrations.find(i => i.integration_type === 'jolt' && i.status === 'connected') && (
                 <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem' }}>
-                  Last sync: {new Date(integrations.find(i => i.integration_type === 'jolt').last_sync_at || Date.now()).toLocaleString()}
+                  Last sync: {new Date(integrations.find(i => i.integration_type === 'jolt' && i.status === 'connected')?.last_sync_at || Date.now()).toLocaleString()}
                 </div>
               )}
             </div>

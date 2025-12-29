@@ -14,6 +14,10 @@ const supabase = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
   : null
 
+// Configuration constants
+const MAX_IMAGES_PER_WEBHOOK = 100
+const IMAGE_DOWNLOAD_TIMEOUT_MS = 30000 // 30 seconds
+
 async function verifyLightspeedWebhook(req, body) {
   // Verify webhook signature (Lightspeed sends X-Lightspeed-Signature header)
   const signature = req.headers.get('x-lightspeed-signature')
@@ -100,13 +104,13 @@ export async function POST(req) {
     const tempPaths = []
 
     try {
-      for (let i = 0; i < Math.min(images.length, 100); i++) { // Limit to 100 images
+      for (let i = 0; i < Math.min(images.length, MAX_IMAGES_PER_WEBHOOK); i++) {
         const imageUrl = images[i]
         
         try {
           const imageResponse = await fetch(imageUrl, {
             headers: { 'User-Agent': 'ProtocolLM-Lightspeed/1.0' },
-            signal: AbortSignal.timeout(30000)
+            signal: AbortSignal.timeout(IMAGE_DOWNLOAD_TIMEOUT_MS)
           })
 
           if (!imageResponse.ok) {
