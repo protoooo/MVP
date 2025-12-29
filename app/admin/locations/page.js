@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
@@ -9,11 +9,7 @@ export default function AdminLocationsPage() {
   const supabase = createClient()
   const router = useRouter()
 
-  useEffect(() => {
-    loadLocationData()
-  }, [])
-
-  async function loadLocationData() {
+  const loadLocationData = useCallback(async () => {
     setLoading(true)
     
     try {
@@ -77,7 +73,11 @@ export default function AdminLocationsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase, router])
+
+  useEffect(() => {
+    loadLocationData()
+  }, [loadLocationData])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Never'

@@ -21,19 +21,21 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
   }, [mode])
 
   useEffect(() => {
+    const refsSnapshot = refs.current
+    
     // reset when a new request starts
     if (active) {
       setVisible(true)
       setProgress(0)
       setPhase(mode === 'vision' ? 'Uploading image…' : 'Sending…')
 
-      refs.current.pct = 0
-      refs.current.startedAt = Date.now()
+      refsSnapshot.pct = 0
+      refsSnapshot.startedAt = Date.now()
 
-      if (refs.current.timer) clearInterval(refs.current.timer)
+      if (refsSnapshot.timer) clearInterval(refsSnapshot.timer)
 
-      refs.current.timer = setInterval(() => {
-        const elapsed = (Date.now() - refs.current.startedAt) / 1000
+      refsSnapshot.timer = setInterval(() => {
+        const elapsed = (Date.now() - refsSnapshot.startedAt) / 1000
 
         // cap rises slowly over time so it feels like it's "getting closer"
         const cap =
@@ -46,12 +48,12 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
                 : config.finalCap
 
         // smooth monotonic ease-out: pct += (cap - pct) * k
-        const next = refs.current.pct + (cap - refs.current.pct) * config.k
+        const next = refsSnapshot.pct + (cap - refsSnapshot.pct) * config.k
 
         // guarantee never decreasing
-        refs.current.pct = Math.max(refs.current.pct, next)
+        refsSnapshot.pct = Math.max(refsSnapshot.pct, next)
 
-        const pctInt = Math.min(99, Math.floor(refs.current.pct)) // hold at 99 until done
+        const pctInt = Math.min(99, Math.floor(refsSnapshot.pct)) // hold at 99 until done
         setProgress(pctInt)
 
         // phase text driven by progress (no jitter)
@@ -64,13 +66,14 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
       }, 120)
 
       return () => {
-        if (refs.current.timer) clearInterval(refs.current.timer)
+        if (refsSnapshot.timer) clearInterval(refsSnapshot.timer)
       }
     }
 
     // when request completes, finish smoothly to 100 and fade out
     if (!active && visible) {
-      if (refs.current.timer) clearInterval(refs.current.timer)
+      const refsSnapshot = refs.current
+      if (refsSnapshot.timer) clearInterval(refsSnapshot.timer)
 
       setProgress(100)
       setPhase('Done')
