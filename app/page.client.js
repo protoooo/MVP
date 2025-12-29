@@ -216,9 +216,22 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 
     try {
       const captchaToken = await executeRecaptcha(mode)
+      
+      // Better error handling for Turnstile issues
       if (!captchaToken || captchaToken === 'turnstile_unavailable') {
         setMessageKind('err')
-        setMessage('Security verification failed. Please ensure Cloudflare Turnstile is allowed, then try again.')
+        // Check if Turnstile site key is configured
+        const hasSiteKey = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+        if (!hasSiteKey) {
+          setMessage('Cloudflare Turnstile is not configured. Please contact support.')
+        } else {
+          setMessage('Security verification failed. Please refresh the page and try again, or ensure Cloudflare Turnstile is not blocked by your browser/extensions.')
+        }
+        console.error('Turnstile verification failed:', { 
+          token: captchaToken, 
+          hasSiteKey,
+          mode 
+        })
         return
       }
 
