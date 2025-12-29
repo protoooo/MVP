@@ -76,8 +76,16 @@ export async function POST(request) {
   let tierName = 'Basic'
   
   if (tier === 'pro') {
-    // Use Pro tier price ID if available, otherwise fall back to basic
-    priceId = process.env.STRIPE_PRICE_PRO_MONTHLY || DEVICE_PRICE_ID
+    // Require Pro tier price ID to be configured
+    const proPriceId = process.env.STRIPE_PRICE_PRO_MONTHLY
+    if (!proPriceId) {
+      logger.error('Missing Stripe price id for Pro tier')
+      return NextResponse.json({ 
+        error: 'Pro tier not configured',
+        message: 'Pro tier pricing is not available. Please contact support or select Basic tier.'
+      }, { status: 503 })
+    }
+    priceId = proPriceId
     tierName = 'Pro'
   }
 
