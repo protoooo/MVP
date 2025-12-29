@@ -1,7 +1,7 @@
--- Database schema for payment-based food safety app (no authentication)
+-- Database schema for pure API/Webhook food safety compliance engine
 -- Run this in Supabase SQL Editor
 
--- Table for API keys (prepaid credit packs)
+-- Table for API keys (prepaid credit packs and subscriptions)
 CREATE TABLE IF NOT EXISTS api_keys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT UNIQUE NOT NULL,
@@ -10,41 +10,43 @@ CREATE TABLE IF NOT EXISTS api_keys (
   remaining_credits INTEGER NOT NULL DEFAULT 0,
   total_credits INTEGER NOT NULL DEFAULT 0,
   total_used INTEGER NOT NULL DEFAULT 0,
-  tier TEXT, -- 'small', 'medium', 'large'
+  tier TEXT, -- 'starter', 'pro', 'enterprise', 'growth', 'chain', 'enterprise_sub'
+  subscription_type TEXT, -- NULL for prepaid, 'growth', 'chain', 'enterprise_sub' for subscriptions
   stripe_session_id TEXT,
+  stripe_customer_id TEXT, -- For subscription management
+  stripe_subscription_id TEXT, -- For active subscriptions
   active BOOLEAN NOT NULL DEFAULT true,
-  expires TIMESTAMPTZ,
+  expires TIMESTAMPTZ, -- For prepaid packs (1 year validity)
   last_used_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  
+  -- Subscription-specific fields
+  monthly_included_images INTEGER, -- For Growth/Chain: 3000/20000
+  extra_image_rate DECIMAL(10,4), -- For Growth/Chain: 0.03/0.025
+  is_unlimited BOOLEAN DEFAULT false -- For Enterprise subscription
 );
 
 -- Index for fast key lookup
 CREATE INDEX IF NOT EXISTS idx_api_keys_key ON api_keys(key);
 CREATE INDEX IF NOT EXISTS idx_api_keys_customer_email ON api_keys(customer_email);
 CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys(active);
+CREATE INDEX IF NOT EXISTS idx_api_keys_stripe_customer_id ON api_keys(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_stripe_subscription_id ON api_keys(stripe_subscription_id);
 
--- Table for one-off $50 reports
-CREATE TABLE IF NOT EXISTS one_off_reports (
+-- Table for usage tracking (optional, for subscription metered billing)
+CREATE TABLE IF NOT EXISTS usage_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID, -- Links to audit_sessions after processing
-  customer_email TEXT,
-  stripe_session_id TEXT,
-  file_count INTEGER NOT NULL DEFAULT 0,
-  file_data JSONB, -- Store file metadata
-  status TEXT NOT NULL DEFAULT 'pending_payment', -- 'pending_payment', 'paid', 'processing', 'completed', 'failed'
-  payment_amount INTEGER, -- Amount in cents
-  paid_at TIMESTAMPTZ,
-  completed_at TIMESTAMPTZ,
-  error TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  api_key_id UUID REFERENCES api_keys(id) ON DELETE CASCADE,
+  images_processed INTEGER NOT NULL DEFAULT 0,
+  session_id UUID, -- Links to audit_sessions
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+  billed BOOLEAN DEFAULT false -- For tracking which usage has been billed
 );
 
--- Index for fast report lookup
-CREATE INDEX IF NOT EXISTS idx_one_off_reports_stripe_session ON one_off_reports(stripe_session_id);
-CREATE INDEX IF NOT EXISTS idx_one_off_reports_status ON one_off_reports(status);
-CREATE INDEX IF NOT EXISTS idx_one_off_reports_session_id ON one_off_reports(session_id);
+CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key_id ON usage_logs(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_usage_logs_timestamp ON usage_logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_usage_logs_billed ON usage_logs(billed);
 
 -- Update timestamp trigger for api_keys
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -58,12 +60,9 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_api_keys_updated_at BEFORE UPDATE ON api_keys
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_one_off_reports_updated_at BEFORE UPDATE ON one_off_reports
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 -- Enable Row Level Security (RLS)
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE one_off_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE usage_logs ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for api_keys (allow service role access)
 CREATE POLICY "Service role can manage api_keys"
@@ -71,12 +70,12 @@ CREATE POLICY "Service role can manage api_keys"
   FOR ALL
   USING (auth.role() = 'service_role');
 
--- RLS Policies for one_off_reports (allow service role access)
-CREATE POLICY "Service role can manage one_off_reports"
-  ON one_off_reports
+-- RLS Policies for usage_logs (allow service role access)
+CREATE POLICY "Service role can manage usage_logs"
+  ON usage_logs
   FOR ALL
   USING (auth.role() = 'service_role');
 
 -- Grant necessary permissions
 GRANT ALL ON api_keys TO service_role;
-GRANT ALL ON one_off_reports TO service_role;
+GRANT ALL ON usage_logs TO service_role;
