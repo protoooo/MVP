@@ -16,7 +16,7 @@ import { CohereClient } from 'cohere-ai'
 import { getProfileById, getZeroConfigProfile } from '@/lib/standardsProfiles'
 import { assembleAnalysisPrompt, buildZeroConfigPrompt } from '@/lib/promptAssembly'
 import { getWebhookForApiKey, deliverWebhook } from '@/lib/webhooks'
-import { searchRegulations } from '@/lib/searchDocs'
+import { searchDocuments } from '@/lib/searchDocs'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -244,7 +244,8 @@ export async function POST(req) {
       if (profile?.document_ids && profile.document_ids.length > 0) {
         // Build search query from metadata and profile
         const searchQuery = `${profile.industry} ${profile.task_type} ${metadata.location || ''}`
-        documentChunks = await searchRegulations(searchQuery, 5) || []
+        // Use food_safety sector for now (can be enhanced to map industry to sector)
+        documentChunks = await searchDocuments(searchQuery, 'general', 5, 'food_safety') || []
       }
     } else {
       // Zero-config mode - use default profile
