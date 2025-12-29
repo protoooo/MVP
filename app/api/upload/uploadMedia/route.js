@@ -30,10 +30,15 @@ async function uploadMedia(filePath, fileBuffer, contentType = 'application/octe
 async function authorize(req) {
   const rawKey = req.headers.get('x-api-key') || req.headers.get('authorization') || ''
   const apiKey = rawKey.replace(/^Bearer\s+/i, '').trim()
-  if (!apiKey) return null
+
+  // ✅ BYPASS AUTH for local testing - always return anonymous user
+  if (!apiKey) return { id: uuidv4(), isAnonymous: true }
 
   const { data, error } = await supabase.from('users').select('id').eq('api_key', apiKey).single()
-  if (error || !data) return null
+  if (error || !data) {
+    // ✅ BYPASS AUTH - return anonymous user instead of null
+    return { id: uuidv4(), isAnonymous: true }
+  }
   return data
 }
 

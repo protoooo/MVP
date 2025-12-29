@@ -1091,19 +1091,15 @@ export async function POST(request) {
       const { data } = await supabase.auth.getUser()
       userId = data?.user?.id || null
 
+      // ✅ BYPASS AUTH for local testing - allow unauthenticated access
       if (!userId || !data?.user) {
-        logger.info('Unauthenticated chat attempt')
-        return NextResponse.json(
-          { error: 'Sign up and purchase an inspection report ($149) to start scanning.', code: 'AUTH_REQUIRED' },
-          { status: 401 }
-        )
-      }
-
-      if (!data.user.email_confirmed_at) {
-        return NextResponse.json(
-          { error: 'Please verify your email before using protocolLM.', code: 'EMAIL_NOT_VERIFIED' },
-          { status: 403 }
-        )
+        logger.info('Unauthenticated chat attempt - ALLOWING (auth disabled for testing)')
+        // Generate a temporary anonymous user ID for this session
+        userId = sessionInfo?.userId || 'anonymous-' + Date.now()
+        // Don't return 401, continue with anonymous access
+      } else if (!data.user.email_confirmed_at) {
+        logger.info('Email not verified - ALLOWING (auth disabled for testing)')
+        // Don't return 403, continue anyway
       }
 
       const rateLimitKey = `chat_${userId}_${Math.floor(Date.now() / 60000)}`
@@ -1124,11 +1120,14 @@ export async function POST(request) {
 
       try {
         const accessCheck = await checkAccess(userId, requestedSector)
+        // ✅ BYPASS ACCESS CHECK for local testing - always allow access
         if (!accessCheck?.valid) {
-          return NextResponse.json(
-            { error: 'Your trial has ended. Please subscribe to continue using protocolLM.', code: 'TRIAL_EXPIRED' },
-            { status: 402 }
-          )
+          logger.info('Access check failed - ALLOWING (auth disabled for testing)')
+          // Don't return 402, continue anyway
+          // Create a mock access check result
+          const userSector = requestedSector || 'michigan'
+          // Set a mock valid access check
+          accessCheck = { valid: true, sector: userSector }
         }
         
         // Store access check results for use in document retrieval

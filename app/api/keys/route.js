@@ -63,8 +63,10 @@ export async function GET(req) {
 
   try {
     const user = await getUserFromAuth(req)
+    // ✅ BYPASS AUTH for local testing - return empty keys list for anonymous users
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('[keys] No user - returning empty list (auth disabled)')
+      return NextResponse.json({ keys: [] })
     }
 
     const { data: keys, error } = await supabase
