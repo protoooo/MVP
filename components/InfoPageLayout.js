@@ -295,14 +295,7 @@ export default function InfoPageLayout({
         <main className="info-content">
           <div className="info-hero-card">
             <div className="info-hero-top">
-              <Link href="/" className="info-brand">
-                <span className="info-brand-inner">
-                  <span className="info-brand-mark">
-                    <Image src={appleIcon} alt="" width={brandSize} height={brandSize} priority />
-                  </span>
-                  <span className="info-brand-text">protocolLM</span>
-                </span>
-              </Link>
+              {/* Logo removed per user request */}
               <div className="info-actions">
                 <Link href={backHref} className="info-back-link">
                   ← Back
