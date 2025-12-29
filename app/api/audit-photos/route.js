@@ -54,7 +54,7 @@ export async function POST(req) {
   const tempPaths = []
 
   try {
-    // Get API key from header
+    // Get API key from header or body
     const apiKey = req.headers.get('x-api-key') || req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
     
     const authData = await authorizeApiKey(apiKey)
@@ -63,30 +63,69 @@ export async function POST(req) {
     }
     
     if (authData.insufficient_credits) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.com'
       return NextResponse.json({ 
         error: 'Insufficient credits',
-        remaining_credits: 0
+        remaining_credits: 0,
+        buy_more: `${baseUrl}#pricing`
       }, { status: 402 })
     }
 
-    const formData = await req.formData()
-    const files = formData.getAll('files')
-    const location = formData.get('location') || 'general'
+    // Support both JSON payload and multipart/form-data
+    const contentType = req.headers.get('content-type') || ''
+    let files = []
+    let location = 'general'
+    let imageUrls = []
 
-    if (!files || files.length === 0) {
-      return NextResponse.json({ error: 'No files provided' }, { status: 400 })
+    if (contentType.includes('application/json')) {
+      // JSON payload with image URLs
+      const body = await req.json()
+      imageUrls = body.images || []
+      location = body.location || 'general'
+      
+      if (!apiKey && body.api_key) {
+        // Re-authorize with api_key from body if not in header
+        const authData2 = await authorizeApiKey(body.api_key)
+        if (!authData2 || authData2.insufficient_credits) {
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.com'
+          return NextResponse.json({ 
+            error: 'Invalid API key or insufficient credits',
+            buy_more: `${baseUrl}#pricing`
+          }, { status: authData2?.insufficient_credits ? 402 : 401 })
+        }
+      }
+      
+      if (!imageUrls || imageUrls.length === 0) {
+        return NextResponse.json({ error: 'No images provided' }, { status: 400 })
+      }
+    } else {
+      // Multipart form-data
+      const formData = await req.formData()
+      files = formData.getAll('files')
+      location = formData.get('location') || 'general'
+
+      if (!files || files.length === 0) {
+        return NextResponse.json({ error: 'No files provided' }, { status: 400 })
+      }
     }
 
-    if (files.length > 200) {
-      return NextResponse.json({ error: 'Maximum 200 files per request' }, { status: 400 })
+    const totalImages = imageUrls.length + files.length
+    if (totalImages === 0) {
+      return NextResponse.json({ error: 'No images provided' }, { status: 400 })
+    }
+
+    if (totalImages > 200) {
+      return NextResponse.json({ error: 'Maximum 200 images per request' }, { status: 400 })
     }
     
     // Check if enough credits for this request
-    if (authData.remaining_credits < files.length) {
+    if (authData.remaining_credits < totalImages) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.com'
       return NextResponse.json({ 
         error: 'Insufficient credits for this request',
         remaining_credits: authData.remaining_credits,
-        required_credits: files.length
+        required_credits: totalImages,
+        buy_more: `${baseUrl}#pricing`
       }, { status: 402 })
     }
 
@@ -107,9 +146,10 @@ export async function POST(req) {
         area_tags: [location]
       }])
 
-    // Process files
+    // Process files and URLs
     const results = []
     
+    // Process uploaded files
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       const mediaId = uuidv4()
@@ -163,6 +203,75 @@ export async function POST(req) {
       }
     }
 
+    // Process image URLs
+    for (let i = 0; i < imageUrls.length; i++) {
+      const imageUrl = imageUrls[i]
+      const mediaId = uuidv4()
+      
+      try {
+        // Download image from URL
+        const response = await fetch(imageUrl)
+        if (!response.ok) {
+          throw new Error(`Failed to download image: ${response.statusText}`)
+        }
+        
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        
+        // Detect extension from URL or content-type
+        const urlPath = new URL(imageUrl).pathname
+        let ext = path.extname(urlPath) || '.jpg'
+        const contentType = response.headers.get('content-type')
+        if (contentType?.includes('png')) ext = '.png'
+        else if (contentType?.includes('jpeg') || contentType?.includes('jpg')) ext = '.jpg'
+        
+        // Save to temp file
+        const tempPath = path.join(os.tmpdir(), `${uuidv4()}${ext}`)
+        fs.writeFileSync(tempPath, buffer)
+        tempPaths.push(tempPath)
+
+        // Upload to storage
+        const objectPath = `media/${sessionId}/${mediaId}${ext}`
+        await supabase.storage
+          .from('media')
+          .upload(objectPath, buffer, { upsert: true, contentType: contentType || 'image/jpeg' })
+
+        // Save media record
+        await supabase.from('media').insert([{
+          id: mediaId,
+          session_id: sessionId,
+          url: objectPath,
+          type: 'image',
+          user_id: authData.user_id,
+          area: location
+        }])
+
+        // Analyze image
+        const analysis = await analyzeImage(tempPath)
+        results.push({
+          media_id: mediaId,
+          media_type: 'image',
+          area: location,
+          image_url: imageUrl,
+          ...analysis
+        })
+      } catch (err) {
+        console.error(`[audit-photos] Failed to process URL ${i}:`, err)
+        results.push({
+          media_id: mediaId,
+          media_type: 'image',
+          area: location,
+          image_url: imageUrl,
+          violation: null,
+          findings: [],
+          severity: 'info',
+          confidence: 0,
+          analyzed: false,
+          error: err.message
+        })
+      }
+    }
+
     // Save compliance results
     const insertRows = results.map(r => ({
       id: uuidv4(),
@@ -204,7 +313,7 @@ export async function POST(req) {
     const publicPdfUrl = await getPublicUrlSafe('reports', pdfPath, supabase)
     
     // Deduct credits for processed images
-    const creditsUsed = files.length
+    const creditsUsed = totalImages
     await supabase
       .from('api_keys')
       .update({ 
@@ -225,21 +334,47 @@ export async function POST(req) {
     const violationItems = results.filter(r => r.violation && r.severity !== 'info').length
     const score = totalItems > 0 ? Math.round(((totalItems - violationItems) / totalItems) * 100) : 100
 
+    // Extract Michigan code references from citations
+    const michiganCodeRefs = []
+    results.forEach(r => {
+      if (r.citations && Array.isArray(r.citations)) {
+        r.citations.forEach(citation => {
+          // Extract code reference like "3-501.16" from citation text
+          const codeMatch = citation.match(/(\d+-\d+\.\d+)/g)
+          if (codeMatch) {
+            michiganCodeRefs.push(...codeMatch)
+          }
+        })
+      }
+      // Also check citation field (singular)
+      if (r.citation) {
+        const codeMatch = r.citation.match(/(\d+-\d+\.\d+)/g)
+        if (codeMatch) {
+          michiganCodeRefs.push(...codeMatch)
+        }
+      }
+    })
+
+    // Return format matching specification
     return NextResponse.json({
-      session_id: sessionId,
+      violations: results.filter(r => r.violation).map(r => r.violation),
       score,
+      michigan_code_refs: [...new Set(michiganCodeRefs)], // Remove duplicates
+      // Additional useful data
+      session_id: sessionId,
       report_url: publicPdfUrl,
       summary: jsonReport.summary,
       analyzed_count: totalItems,
       violation_count: violationItems,
       credits_used: creditsUsed,
       remaining_credits: authData.remaining_credits - creditsUsed,
-      violations: results.filter(r => r.violation).map(r => ({
+      detailed_violations: results.filter(r => r.violation).map(r => ({
         description: r.violation,
         type: r.violation_type,
         severity: r.severity,
         confidence: r.confidence,
-        location: r.area
+        location: r.area,
+        citations: r.citations || []
       }))
     })
 
