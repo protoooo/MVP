@@ -72,7 +72,6 @@ export default function SmartProgress({ active, mode = 'text', requestKey = 0 })
 
     // when request completes, finish smoothly to 100 and fade out
     if (!active && visible) {
-      const refsSnapshot = refs.current
       if (refsSnapshot.timer) clearInterval(refsSnapshot.timer)
 
       setProgress(100)
