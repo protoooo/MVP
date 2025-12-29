@@ -39,6 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_standards_profiles_task_type ON standards_profile
 CREATE INDEX IF NOT EXISTS idx_standards_profiles_user_id ON standards_profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_standards_profiles_is_system ON standards_profiles(is_system_profile);
 CREATE INDEX IF NOT EXISTS idx_standards_profiles_active ON standards_profiles(active);
+CREATE INDEX IF NOT EXISTS idx_standards_profiles_system_name ON standards_profiles(is_system_profile, profile_name) WHERE is_system_profile = true;
 
 -- Webhook configuration table
 CREATE TABLE IF NOT EXISTS webhook_configs (

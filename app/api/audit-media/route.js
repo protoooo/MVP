@@ -18,6 +18,11 @@ import { assembleAnalysisPrompt, buildZeroConfigPrompt } from '@/lib/promptAssem
 import { getWebhookForApiKey, deliverWebhook } from '@/lib/webhooks'
 import { searchDocuments } from '@/lib/searchDocs'
 
+// Configuration constants
+const MAX_IMAGES_PER_REQUEST = 200
+const MAX_RECOMMENDED_RULES = 50
+const MAX_DOCUMENT_CHUNKS = 10
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -137,6 +142,22 @@ async function analyzeImageWithProfile(imagePath, profile, documentChunks = [], 
 }
 
 /**
+ * Map industry to sector for document search
+ */
+function mapIndustryToSector(industry) {
+  const industryToSector = {
+    'food': 'food_safety',
+    'retail': 'food_safety', // Can use food safety docs for retail food sections
+    'logistics': 'food_safety', // Warehouses often handle food
+    'construction': 'food_safety',
+    'healthcare': 'food_safety',
+    'general': 'food_safety'
+  }
+  
+  return industryToSector[industry] || 'food_safety'
+}
+
+/**
  * Main POST handler
  */
 export async function POST(req) {
@@ -218,8 +239,8 @@ export async function POST(req) {
       return NextResponse.json({ error: 'No images or videos provided' }, { status: 400 })
     }
 
-    if (totalImages > 200) {
-      return NextResponse.json({ error: 'Maximum 200 media items per request' }, { status: 400 })
+    if (totalImages > MAX_IMAGES_PER_REQUEST) {
+      return NextResponse.json({ error: `Maximum ${MAX_IMAGES_PER_REQUEST} media items per request` }, { status: 400 })
     }
     
     // Check sufficient credits
@@ -244,8 +265,9 @@ export async function POST(req) {
       if (profile?.document_ids && profile.document_ids.length > 0) {
         // Build search query from metadata and profile
         const searchQuery = `${profile.industry} ${profile.task_type} ${metadata.location || ''}`
-        // Use food_safety sector for now (can be enhanced to map industry to sector)
-        documentChunks = await searchDocuments(searchQuery, 'general', 5, 'food_safety') || []
+        // Map industry to appropriate sector for document search
+        const sector = mapIndustryToSector(profile.industry)
+        documentChunks = await searchDocuments(searchQuery, 'general', 5, sector) || []
       }
     } else {
       // Zero-config mode - use default profile
