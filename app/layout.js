@@ -1,13 +1,10 @@
 import './globals.css'
-import { Plus_Jakarta_Sans } from 'next/font/google'
 import CookieConsent from '@/components/CookieConsent'
 import Analytics from '@/components/Analytics'
 
-const appFont = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
-
 export const metadata = {
-  title: 'Michigan Food Safety Photo Analysis - $50 Reports & API Access',
-  description: 'Upload restaurant photos, get instant Michigan health code compliance reports. No signup required. $50 per report or buy API access.',
+  title: 'Michigan Food Safety Compliance API - Webhook & API Integration',
+  description: 'Pure API/Webhook integration for automatic photo compliance checks. Powered by Cohere Vision. No UI. No accounts.',
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -27,7 +24,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png" />
         <link rel="icon" href="/icon-512.png" sizes="512x512" type="image/png" />
       </head>
-      <body className={appFont.className}>
+      <body style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         <Analytics />
         {/* ✅ Flat background - NO IMAGE, just off-white color via CSS */}
         <div className="plm-bg" aria-hidden="true" />

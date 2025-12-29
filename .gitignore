@@ -84,3 +84,4 @@ temp/
 # Stripe CLI
 .stripe/
 .backup/
+.env.local

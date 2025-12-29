@@ -3,10 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus_Jakarta_Sans } from 'next/font/google'
 import appleIcon from '@/app/apple-icon.png'
-
-const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['500', '600', '700'] })
 
 export default function InfoPageLayout({ 
   title, 
@@ -291,7 +288,7 @@ export default function InfoPageLayout({
         }
       `}</style>
 
-      <div className={`${plusJakarta.className} info-page-root`}>
+      <div className="info-page-root" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         <main className="info-content">
           <div className="info-hero-card">
             <div className="info-hero-top">
