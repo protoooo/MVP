@@ -15,15 +15,21 @@ A developer-focused food safety compliance API that integrates into existing wor
 - **Your Cost**: $0.01/image (Cohere Vision)
 - **Pricing**: $0.03-$0.04/image (300-400% margin)
 
-### Prepaid Packs (No commitment)
-- **Starter**: 1,000 images - $39 ($0.039/image)
-- **Pro**: 10,000 images - $349 ($0.035/image)  
-- **Enterprise**: 100,000 images - $3,000 ($0.03/image)
+### Free Tier (For Testing)
+- **Free**: $0/mo → 100 images per month
+- Perfect for testing and evaluation
+- No credit card required
+- Instant API key generation
 
 ### Subscriptions (Unlimited webhooks)
 - **Growth**: $99/mo → 3,000 images included + $0.03/extra
 - **Chain**: $499/mo → 20,000 images included + $0.025/extra
 - **Enterprise**: $1,999/mo → Unlimited images
+
+### Prepaid Packs (Optional - No commitment)
+- **Starter**: 1,000 images - $39 ($0.039/image)
+- **Pro**: 10,000 images - $349 ($0.035/image)  
+- **Enterprise**: 100,000 images - $3,000 ($0.03/image)
 
 ## Single Endpoint
 
@@ -189,7 +195,15 @@ COHERE_API_KEY=your_cohere_api_key
 
 ### 3. Stripe Configuration
 
-#### A. Create Prepaid Products
+**For detailed step-by-step Stripe setup instructions, see [STRIPE_SETUP.md](STRIPE_SETUP.md)**
+
+The application includes 4 pricing tiers:
+- **Free**: $0/month - 100 images (no Stripe required, direct API key generation)
+- **Growth**: $99/month - 3,000 images
+- **Chain**: $499/month - 20,000 images
+- **Enterprise**: $1,999/month - Unlimited images
+
+#### A. Create Prepaid Products (Optional)
 
 1. Go to Stripe Dashboard → Products
 2. Create 3 one-time payment products:
