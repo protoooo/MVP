@@ -6,8 +6,8 @@ import Analytics from '@/components/Analytics'
 const appFont = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 export const metadata = {
-  title: 'protocolLM - Pre-Inspection Photo Analysis for Michigan Restaurants',
-  description: 'Find health code violations before the inspector does. Upload photos of your Michigan restaurant and get a comprehensive compliance report with downloadable PDF. Starting at $49 for 200 photos. Instant results.',
+  title: 'Michigan Food Safety Photo Analysis - $50 Reports & API Access',
+  description: 'Upload restaurant photos, get instant Michigan health code compliance reports. No signup required. $50 per report or buy API access.',
   manifest: '/manifest.json',
   icons: {
     icon: [
