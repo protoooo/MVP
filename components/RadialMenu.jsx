@@ -2,6 +2,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import AgentIcon from './AgentIcon'
 
 /**
@@ -76,7 +77,7 @@ export default function RadialMenu({
             aria-label="ProtocolLM menu"
           >
             {logoSrc ? (
-              <img src={logoSrc?.src || logoSrc} alt="ProtocolLM" className="radial-center-logo" />
+              <Image src={logoSrc?.src || logoSrc} alt="ProtocolLM" className="radial-center-logo" width={120} height={120} />
             ) : (
               <span className="radial-center-dot" />
             )}
