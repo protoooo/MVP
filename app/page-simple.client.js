@@ -289,7 +289,7 @@ export default function SimplePage() {
       `}</style>
 
       <div className={plusJakarta.className}>
-        <main className="min-h-screen" style={{ background: 'var(--paper)' }}>
+        <main className="flex min-h-screen flex-col" style={{ background: 'var(--paper)' }}>
           <input
             ref={fileInputRef}
             type="file"
@@ -319,7 +319,7 @@ export default function SimplePage() {
           </header>
 
           {/* Main Content */}
-          <section className="mx-auto max-w-4xl px-6 py-12">
+          <section className="flex-1 mx-auto max-w-4xl px-6 py-12">
             {/* Title */}
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold tracking-tight leading-tight" style={{ color: 'var(--ink)' }}>
@@ -492,8 +492,8 @@ export default function SimplePage() {
                   className="mb-6 rounded-xl p-4"
                   style={{ background: 'var(--accent-green-bg)', border: '1px solid var(--accent-green)' }}
                 >
-                  <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>
                       Access Code: {validatedCode.code}
                     </p>
@@ -511,7 +511,7 @@ export default function SimplePage() {
                         setUploadFiles([])
                         setReportData(null)
                       }}
-                      className="text-sm font-medium"
+                      className="text-sm font-medium self-start sm:self-auto whitespace-nowrap"
                       style={{ color: 'var(--ink-60)' }}
                     >
                       Use different code
