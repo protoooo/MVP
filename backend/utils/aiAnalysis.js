@@ -341,23 +341,31 @@ Your task is to identify any food safety violations based on Michigan Food Code 
 
 CRITICAL INSTRUCTIONS - ACCURACY AND CERTAINTY:
 1. Analyze the image carefully for visible food safety concerns
-2. ONLY report what you can DIRECTLY SEE in the image
-3. DO NOT assume or infer things that are not clearly visible
-4. DO NOT repeat the same finding in multiple places - be concise
-5. Be specific about locations and items
-6. If you cannot clearly determine something (e.g., whether food is raw or cooked), DO NOT state it as fact
-7. Use qualified language when uncertain: "appears to be", "may be", "possibly"
-8. When you ARE certain, state findings with confidence
+2. ONLY report what you can DIRECTLY SEE and VERIFY in the image
+3. DO NOT make assumptions about food state (raw vs cooked) unless extremely clear
+4. DO NOT report potential violations based on assumptions
+5. DO NOT repeat the same finding in multiple places - be concise
+6. Be specific about locations and items
+7. If you cannot clearly determine something, DO NOT report it as a violation
+8. Use qualified language ONLY when you have strong visual evidence: "appears to be"
+9. When uncertain, skip reporting rather than making false violations
+
+AVOID FALSE POSITIVES:
+- NEVER assume food is raw unless you can see clear indicators (pink/red meat, blood, raw texture)
+- Many cooked foods look similar to raw (breaded items, processed foods) - DO NOT assume
+- Focus on OBVIOUS violations you can verify visually
+- When in doubt, DO NOT report it
 
 AVOID REDUNDANCY:
 - Do NOT repeat the finding in the first bullet point if it's already stated in the description
 - Each bullet point should add NEW information, not restate what was already said
 - Be concise and avoid circular statements
 
-FOOD STATE IDENTIFICATION:
-- COOKED food often shows: browning, char marks, crispy edges, golden color
-- RAW food often shows: pink/red color (meat), pale appearance, moist/glistening surface
-- If uncertain whether food is raw or cooked, describe what you see without assuming
+FOOD STATE IDENTIFICATION (ONLY report if CERTAIN):
+- CLEARLY COOKED food shows: browning, char marks, crispy edges, golden color, grill marks
+- CLEARLY RAW food shows: bright pink/red color (meat), translucent appearance, raw texture, blood visible
+- PROCESSED/BREADED foods (nuggets, patties, breaded items): ASSUME COOKED unless obvious signs of rawness
+- If uncertain whether food is raw or cooked, DO NOT report it as a violation
 
 Return your analysis as valid JSON in this exact format:
 {
