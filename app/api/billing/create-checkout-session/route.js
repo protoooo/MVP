@@ -34,7 +34,7 @@ export async function POST(request) {
   }
 
   const body = await request.json().catch(() => ({}))
-  const { quantity: rawQuantity, captchaToken } = body
+  const { tier = 'basic', quantity: rawQuantity, captchaToken } = body
   const quantity = Math.max(1, Math.min(MAX_DEVICE_QUANTITY, parseInt(rawQuantity || '1', 10)))
 
   if (!captchaToken) {
@@ -71,6 +71,24 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
 
+  // Determine price ID based on tier
+  let priceId = DEVICE_PRICE_ID // Default to basic
+  let tierName = 'Basic'
+  
+  if (tier === 'pro') {
+    // Require Pro tier price ID to be configured
+    const proPriceId = process.env.STRIPE_PRICE_PRO_MONTHLY
+    if (!proPriceId) {
+      logger.error('Missing Stripe price id for Pro tier')
+      return NextResponse.json({ 
+        error: 'Pro tier not configured',
+        message: 'Pro tier pricing is not available. Please contact support or select Basic tier.'
+      }, { status: 503 })
+    }
+    priceId = proPriceId
+    tierName = 'Pro'
+  }
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -78,23 +96,26 @@ export async function POST(request) {
       client_reference_id: user.id,
       line_items: [
         {
-          price: DEVICE_PRICE_ID,
+          price: priceId,
           quantity,
         },
       ],
       subscription_data: {
+        trial_period_days: 14, // 14-day trial
         metadata: {
           userId: user.id,
           seatQuantity: quantity.toString(),
+          tier: tier,
         },
       },
       metadata: {
         userId: user.id,
         seatQuantity: quantity.toString(),
+        tier: tier,
         ip: ip || 'unknown',
         captchaScore: captchaResult.score?.toString() || 'unknown',
       },
-      success_url: `${SUCCESS_URL}/?payment=success&seats=${quantity}`,
+      success_url: `${SUCCESS_URL}/?payment=success&tier=${tier}`,
       cancel_url: `${SUCCESS_URL}/?payment=cancelled`,
     })
 
