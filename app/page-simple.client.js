@@ -289,7 +289,7 @@ export default function SimplePage() {
       `}</style>
 
       <div className={plusJakarta.className}>
-        <main className="min-h-screen" style={{ background: 'var(--paper)' }}>
+        <main className="flex min-h-screen flex-col" style={{ background: 'var(--paper)' }}>
           <input
             ref={fileInputRef}
             type="file"
@@ -319,7 +319,7 @@ export default function SimplePage() {
           </header>
 
           {/* Main Content */}
-          <section className="mx-auto max-w-4xl px-6 py-12">
+          <section className="flex-1 mx-auto max-w-4xl px-6 py-12">
             {/* Title */}
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold tracking-tight leading-tight" style={{ color: 'var(--ink)' }}>
@@ -492,8 +492,8 @@ export default function SimplePage() {
                   className="mb-6 rounded-xl p-4"
                   style={{ background: 'var(--accent-green-bg)', border: '1px solid var(--accent-green)' }}
                 >
-                  <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>
                       Access Code: {validatedCode.code}
                     </p>
@@ -511,7 +511,7 @@ export default function SimplePage() {
                         setUploadFiles([])
                         setReportData(null)
                       }}
-                      className="text-sm font-medium"
+                      className="text-sm font-medium self-start sm:self-auto whitespace-nowrap"
                       style={{ color: 'var(--ink-60)' }}
                     >
                       Use different code
@@ -671,7 +671,24 @@ export default function SimplePage() {
                         <div className="mt-4">
                           <button
                             type="button"
-                            onClick={() => alert('Download report functionality here')}
+                            onClick={() => {
+                              if (!reportData) return
+                              
+                              // Download JSON report
+                              if (reportData.json_report) {
+                                const blob = new Blob([JSON.stringify(reportData.json_report, null, 2)], { type: 'application/json' })
+                                const link = document.createElement('a')
+                                link.href = URL.createObjectURL(blob)
+                                link.download = `report-${reportData.session_id || 'session'}.json`
+                                link.click()
+                                setTimeout(() => URL.revokeObjectURL(link.href), 500)
+                              }
+                              
+                              // Open PDF in new tab if available
+                              if (reportData.pdf_url) {
+                                window.open(reportData.pdf_url, '_blank', 'noopener,noreferrer')
+                              }
+                            }}
                             className="rounded-md px-5 py-2 font-semibold text-white transition"
                             style={{ background: 'var(--accent-green)' }}
                           >
