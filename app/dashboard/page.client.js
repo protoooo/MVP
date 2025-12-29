@@ -230,6 +230,34 @@ export default function DashboardClient() {
     }
   }
 
+  const handleUpgradeToPro = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session.access_token
+
+      const res = await fetch('/api/purchase-api-access', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tier: 'pro' })
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url
+      } else {
+        alert('Failed to start upgrade process')
+      }
+    } catch (err) {
+      console.error('Failed to upgrade:', err)
+      alert('Failed to start upgrade process')
+    }
+  }
+
   if (loading) {
     return (
       <div className={plusJakarta.className} style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -292,9 +320,17 @@ export default function DashboardClient() {
                 <strong>Plan:</strong> {subscription.tier === 'pro' ? 'Pro ($99/mo)' : 'Basic ($49/mo)'}
               </p>
               {subscription.tier !== 'pro' && (
-                <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.75rem' }}>
-                  Upgrade to Pro for API access and native integrations (Jolt, Lightspeed)
-                </p>
+                <>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.75rem', marginBottom: '1rem' }}>
+                    Upgrade to Pro for API access and native integrations (Jolt, Lightspeed)
+                  </p>
+                  <button
+                    onClick={handleUpgradeToPro}
+                    style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.75rem 1.5rem', cursor: 'pointer', fontWeight: '600', fontSize: '0.875rem' }}
+                  >
+                    Upgrade to Pro ($99/mo)
+                  </button>
+                </>
               )}
             </div>
           ) : (
@@ -375,13 +411,33 @@ export default function DashboardClient() {
         <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#0f172a' }}>API Keys</h2>
-            <button
-              onClick={() => setShowNewKeyModal(true)}
-              style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
-            >
-              + New Key
-            </button>
+            {subscription?.tier === 'pro' ? (
+              <button
+                onClick={() => setShowNewKeyModal(true)}
+                style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
+              >
+                + New Key
+              </button>
+            ) : (
+              <button
+                onClick={handleUpgradeToPro}
+                style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
+              >
+                Upgrade to Generate Keys
+              </button>
+            )}
           </div>
+          
+          {subscription?.tier !== 'pro' && (
+            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+              <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                🔒 API keys are available with the Pro plan ($99/mo)
+              </p>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                Generate API keys to integrate our food safety audit API with your own applications and systems.
+              </p>
+            </div>
+          )}
           
           {apiKeys.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

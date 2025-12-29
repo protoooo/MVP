@@ -34,13 +34,13 @@ async function getUserFromAuth(req) {
   return user
 }
 
-// Check if user has active subscription
-async function hasActiveSubscription(userId) {
+// Check if user has active Pro subscription or API-only subscription
+async function hasApiAccess(userId) {
   if (!supabase) return false
   
   const { data, error } = await supabase
     .from('subscriptions')
-    .select('status, current_period_end')
+    .select('status, current_period_end, tier')
     .eq('user_id', userId)
     .in('status', ['active', 'trialing'])
     .maybeSingle()
@@ -49,8 +49,10 @@ async function hasActiveSubscription(userId) {
   
   const now = new Date()
   const endDate = data.current_period_end ? new Date(data.current_period_end) : null
+  const isActive = endDate && endDate > now
   
-  return endDate && endDate > now
+  // Allow if Pro tier or if tier is not set (legacy)
+  return isActive && (!data.tier || data.tier === 'pro')
 }
 
 // GET - List API keys
@@ -98,12 +100,12 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user has active subscription (Stripe gated)
-    const hasSubscription = await hasActiveSubscription(user.id)
-    if (!hasSubscription) {
+    // Check if user has API access (Pro subscription)
+    const hasAccess = await hasApiAccess(user.id)
+    if (!hasAccess) {
       return NextResponse.json({ 
-        error: 'Active subscription required',
-        message: 'You need an active subscription to generate API keys'
+        error: 'Pro subscription required',
+        message: 'You need a Pro subscription to generate API keys. Upgrade to Pro ($99/mo) for API access and native integrations.'
       }, { status: 403 })
     }
 
