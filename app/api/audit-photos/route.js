@@ -25,12 +25,17 @@ async function authorizeApiKey(apiKey) {
   
   const { data, error } = await supabase
     .from('api_keys')
-    .select('id, user_id, active')
+    .select('id, user_id, active, remaining_credits, customer_email')
     .eq('key', apiKey)
     .eq('active', true)
     .maybeSingle()
   
   if (error || !data) return null
+  
+  // Check if credits are available
+  if (data.remaining_credits <= 0) {
+    return { ...data, insufficient_credits: true }
+  }
   
   // Update last_used_at
   await supabase
@@ -56,6 +61,13 @@ export async function POST(req) {
     if (!authData) {
       return NextResponse.json({ error: 'Invalid or inactive API key' }, { status: 401 })
     }
+    
+    if (authData.insufficient_credits) {
+      return NextResponse.json({ 
+        error: 'Insufficient credits',
+        remaining_credits: 0
+      }, { status: 402 })
+    }
 
     const formData = await req.formData()
     const files = formData.getAll('files')
@@ -67,6 +79,15 @@ export async function POST(req) {
 
     if (files.length > 200) {
       return NextResponse.json({ error: 'Maximum 200 files per request' }, { status: 400 })
+    }
+    
+    // Check if enough credits for this request
+    if (authData.remaining_credits < files.length) {
+      return NextResponse.json({ 
+        error: 'Insufficient credits for this request',
+        remaining_credits: authData.remaining_credits,
+        required_credits: files.length
+      }, { status: 402 })
     }
 
     // Ensure buckets exist
@@ -181,6 +202,16 @@ export async function POST(req) {
       }, { onConflict: 'session_id' })
 
     const publicPdfUrl = await getPublicUrlSafe('reports', pdfPath, supabase)
+    
+    // Deduct credits for processed images
+    const creditsUsed = files.length
+    await supabase
+      .from('api_keys')
+      .update({ 
+        remaining_credits: authData.remaining_credits - creditsUsed,
+        total_used: (authData.total_used || 0) + creditsUsed
+      })
+      .eq('id', authData.id)
 
     // Cleanup temp files
     tempPaths.forEach(p => {
@@ -201,6 +232,8 @@ export async function POST(req) {
       summary: jsonReport.summary,
       analyzed_count: totalItems,
       violation_count: violationItems,
+      credits_used: creditsUsed,
+      remaining_credits: authData.remaining_credits - creditsUsed,
       violations: results.filter(r => r.violation).map(r => ({
         description: r.violation,
         type: r.violation_type,
