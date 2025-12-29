@@ -18,6 +18,7 @@ export default function DashboardClient() {
   const [apiKeys, setApiKeys] = useState([])
   const [reports, setReports] = useState([])
   const [stats, setStats] = useState({ total_reports: 0, total_photos: 0, total_violations: 0 })
+  const [integrations, setIntegrations] = useState([])
   
   const [showNewKeyModal, setShowNewKeyModal] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
@@ -66,6 +67,14 @@ export default function DashboardClient() {
           .limit(10)
         
         setReports(reportsData || [])
+
+        // Load integrations
+        const { data: integrationsData } = await supabase
+          .from('integrations')
+          .select('*')
+          .eq('user_id', session.user.id)
+        
+        setIntegrations(integrationsData || [])
 
         // Calculate stats
         const totalReports = reportsData?.length || 0
@@ -153,6 +162,102 @@ export default function DashboardClient() {
     navigator.clipboard.writeText(text)
   }
 
+  const handleConnectJolt = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session.access_token
+
+      // Redirect to Jolt OAuth flow
+      window.location.href = `/api/connect/jolt?token=${token}`
+    } catch (err) {
+      console.error('Failed to connect Jolt:', err)
+    }
+  }
+
+  const handleDisconnectIntegration = async (integrationType) => {
+    if (!confirm(`Are you sure you want to disconnect ${integrationType}?`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('integrations')
+        .update({ status: 'disconnected' })
+        .eq('user_id', user.id)
+        .eq('integration_type', integrationType)
+
+      if (error) throw error
+
+      // Reload integrations
+      const { data: integrationsData } = await supabase
+        .from('integrations')
+        .select('*')
+        .eq('user_id', user.id)
+      
+      setIntegrations(integrationsData || [])
+    } catch (err) {
+      console.error('Failed to disconnect integration:', err)
+    }
+  }
+
+  const handleSyncJolt = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session.access_token
+
+      const res = await fetch('/api/jolt/sync', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert(`Sync complete! Analyzed ${data.photos_analyzed} photos, found ${data.violations_found} violations.`)
+        
+        // Reload integrations
+        const { data: integrationsData } = await supabase
+          .from('integrations')
+          .select('*')
+          .eq('user_id', user.id)
+        
+        setIntegrations(integrationsData || [])
+      } else {
+        alert(`Sync failed: ${data.error || data.message}`)
+      }
+    } catch (err) {
+      console.error('Failed to sync Jolt:', err)
+      alert('Failed to sync Jolt')
+    }
+  }
+
+  const handleUpgradeToPro = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session.access_token
+
+      const res = await fetch('/api/purchase-api-access', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tier: 'pro' })
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url
+      } else {
+        alert('Failed to start upgrade process')
+      }
+    } catch (err) {
+      console.error('Failed to upgrade:', err)
+      alert('Failed to start upgrade process')
+    }
+  }
+
   if (loading) {
     return (
       <div className={plusJakarta.className} style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -211,26 +316,128 @@ export default function DashboardClient() {
               <p style={{ marginBottom: '0.5rem' }}>
                 <strong>Status:</strong> <span style={{ color: '#10b981', textTransform: 'capitalize' }}>{subscription.status}</span>
               </p>
-              <p>
-                <strong>Plan:</strong> {subscription.plan || 'Unlimited Monthly ($49/mo)'}
+              <p style={{ marginBottom: '0.5rem' }}>
+                <strong>Plan:</strong> {subscription.tier === 'pro' ? 'Pro ($99/mo)' : 'Basic ($49/mo)'}
               </p>
+              {subscription.tier !== 'pro' && (
+                <>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.75rem', marginBottom: '1rem' }}>
+                    Upgrade to Pro for API access and native integrations (Jolt, Lightspeed)
+                  </p>
+                  <button
+                    onClick={handleUpgradeToPro}
+                    style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.75rem 1.5rem', cursor: 'pointer', fontWeight: '600', fontSize: '0.875rem' }}
+                  >
+                    Upgrade to Pro ($99/mo)
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <p style={{ color: '#64748b' }}>No active subscription. <Link href="/" style={{ color: '#5fa8ff' }}>Start a trial</Link></p>
           )}
         </div>
 
+        {/* Integrations */}
+        {subscription?.tier === 'pro' && (
+          <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#0f172a' }}>Native Integrations</h2>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.5rem' }}>
+              Connect your existing systems for automatic photo auditing.
+            </p>
+
+            {/* Jolt Integration */}
+            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ fontWeight: '600', fontSize: '1rem' }}>Jolt</div>
+                  {integrations.find(i => i.integration_type === 'jolt' && i.status === 'connected') ? (
+                    <span style={{ color: '#10b981', fontSize: '0.875rem' }}>✓ Connected</span>
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Not connected</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {integrations.find(i => i.integration_type === 'jolt' && i.status === 'connected') ? (
+                    <>
+                      <button
+                        onClick={handleSyncJolt}
+                        style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}
+                      >
+                        Sync Now
+                      </button>
+                      <button
+                        onClick={() => handleDisconnectIntegration('jolt')}
+                        style={{ background: 'none', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}
+                      >
+                        Disconnect
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleConnectJolt}
+                      style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}
+                    >
+                      Connect
+                    </button>
+                  )}
+                </div>
+              </div>
+              {integrations.find(i => i.integration_type === 'jolt' && i.status === 'connected') && (
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem' }}>
+                  Last sync: {new Date(integrations.find(i => i.integration_type === 'jolt' && i.status === 'connected')?.last_sync_at || Date.now()).toLocaleString()}
+                </div>
+              )}
+            </div>
+
+            {/* Lightspeed Integration */}
+            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ fontWeight: '600', fontSize: '1rem' }}>Lightspeed</div>
+                  <span style={{ color: '#10b981', fontSize: '0.875rem' }}>✓ Webhook Ready</span>
+                </div>
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem' }}>
+                Webhook URL: <code style={{ background: '#fff', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontFamily: 'monospace' }}>
+                  {typeof window !== 'undefined' ? `${window.location.origin}/api/webhook/lightspeed` : '/api/webhook/lightspeed'}
+                </code>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* API Keys */}
         <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#0f172a' }}>API Keys</h2>
-            <button
-              onClick={() => setShowNewKeyModal(true)}
-              style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
-            >
-              + New Key
-            </button>
+            {subscription?.tier === 'pro' ? (
+              <button
+                onClick={() => setShowNewKeyModal(true)}
+                style={{ background: '#5fa8ff', color: '#fff', border: 'none', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
+              >
+                + New Key
+              </button>
+            ) : (
+              <button
+                onClick={handleUpgradeToPro}
+                style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '0.375rem', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
+              >
+                Upgrade to Generate Keys
+              </button>
+            )}
           </div>
+          
+          {subscription?.tier !== 'pro' && (
+            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+              <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                🔒 API keys are available with the Pro plan ($99/mo)
+              </p>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                Generate API keys to integrate our food safety audit API with your own applications and systems.
+              </p>
+            </div>
+          )}
           
           {apiKeys.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
