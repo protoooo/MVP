@@ -376,7 +376,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
 }
 
 /**
- * Simplified pricing modal: $149 per inspection report
+ * Pricing modal with subscription tiers: Basic ($49/mo) and Pro ($99/mo)
  */
 function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
@@ -390,86 +390,136 @@ function PricingModalLocal({ isOpen, onClose, onCheckout, loading }) {
           </button>
 
           <div className="pricing-top">
-            <h2 className="modal-title pricing-title">Photo Analysis Plans</h2>
-            <p className="pricing-sub">Photo analysis for Michigan restaurant food safety. One-time payment per plan.</p>
+            <h2 className="modal-title pricing-title">Choose Your Plan</h2>
+            <p className="pricing-sub">Michigan restaurant food safety compliance analysis with professional reports.</p>
           </div>
 
-          <div className="pricing-content">
-            <div className="pricing-card-head">
-              <div className="pricing-plan">
-                <span className="pricing-plan-name">Basic Plan</span>
-                <span className="pricing-plan-badge">200 Photos</span>
+          <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: '1fr', maxWidth: '600px', margin: '0 auto' }}>
+            {/* Basic Plan */}
+            <div className="pricing-content" style={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '20px' }}>
+              <div className="pricing-card-head">
+                <div className="pricing-plan">
+                  <span className="pricing-plan-name">Basic</span>
+                  <span className="pricing-plan-badge">Web App Only</span>
+                </div>
+                <div className="pricing-price">
+                  <span className="pricing-price-amount">$49</span>
+                  <span className="pricing-price-term">/ month</span>
+                </div>
               </div>
-              <div className="pricing-price">
-                <span className="pricing-price-amount">$49</span>
-                <span className="pricing-price-term">/ one-time</span>
+
+              <ul className="pricing-list">
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  Photo upload & analysis
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  Michigan health code compliance
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  Professional PDF reports
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  Violation detection & citations
+                </li>
+              </ul>
+
+              <div className="pricing-actions">
+                <button
+                  type="button"
+                  className="pricing-primary"
+                  disabled={!!loading}
+                  onClick={() => onCheckout({ tier: 'basic' })}
+                >
+                  {loading === 'basic' ? (
+                    <>
+                      <span className="spinner" /> Processing…
+                    </>
+                  ) : (
+                    <>
+                      Start Basic Trial <span aria-hidden="true">→</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
-            <ul className="pricing-list">
-              <li>
-                <span className="pricing-check" aria-hidden="true">
-                  ✓
-                </span>
-                Up to 200 photos
-              </li>
-              <li>
-                <span className="pricing-check" aria-hidden="true">
-                  ✓
-                </span>
-                Michigan food safety health codes
-              </li>
-              <li>
-                <span className="pricing-check" aria-hidden="true">
-                  ✓
-                </span>
-                Detailed PDF compliance report
-              </li>
-              <li>
-                <span className="pricing-check" aria-hidden="true">
-                  ✓
-                </span>
-                Instant report generation
-              </li>
-              <li>
-                <span className="pricing-check" aria-hidden="true">
-                  ✓
-                </span>
-                Photo-by-photo violation detection
-              </li>
-            </ul>
+            {/* Pro Plan */}
+            <div className="pricing-content" style={{ border: '2px solid #5fa8ff', borderRadius: '12px', padding: '20px', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: '#5fa8ff', color: 'white', padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px' }}>
+                RECOMMENDED
+              </div>
+              
+              <div className="pricing-card-head">
+                <div className="pricing-plan">
+                  <span className="pricing-plan-name">Pro</span>
+                  <span className="pricing-plan-badge" style={{ background: '#5fa8ff', color: 'white' }}>Full Access</span>
+                </div>
+                <div className="pricing-price">
+                  <span className="pricing-price-amount">$99</span>
+                  <span className="pricing-price-term">/ month</span>
+                </div>
+              </div>
 
-            <div className="pricing-actions">
-              <button
-                type="button"
-                className="pricing-primary"
-                disabled={!!loading}
-                onClick={() => onCheckout({ tier: 'BASIC' })}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner" /> Processing…
-                  </>
-                ) : (
-                  <>
-                    Purchase Report <span aria-hidden="true">→</span>
-                  </>
-                )}
-              </button>
+              <ul className="pricing-list">
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  <strong>Everything in Basic, plus:</strong>
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  API access for integrations
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  Jolt integration (auto-audit deliveries)
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  Lightspeed webhooks (inventory photos)
+                </li>
+                <li>
+                  <span className="pricing-check" aria-hidden="true">✓</span>
+                  Generate & manage API keys
+                </li>
+              </ul>
+
+              <div className="pricing-actions">
+                <button
+                  type="button"
+                  className="pricing-primary"
+                  style={{ background: '#5fa8ff' }}
+                  disabled={!!loading}
+                  onClick={() => onCheckout({ tier: 'pro' })}
+                >
+                  {loading === 'pro' ? (
+                    <>
+                      <span className="spinner" /> Processing…
+                    </>
+                  ) : (
+                    <>
+                      Start Pro Trial <span aria-hidden="true">→</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-
-            <p className="pricing-fineprint">
-              By proceeding with purchase, you agree to our{' '}
-              <Link href="/terms" className="pricing-link">
-                Terms
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="pricing-link">
-                Privacy Policy
-              </Link>
-              .
-            </p>
           </div>
+
+          <p className="pricing-fineprint" style={{ textAlign: 'center', marginTop: '20px' }}>
+            14-day free trial • Cancel anytime • By continuing, you agree to our{' '}
+            <Link href="/terms" className="pricing-link">
+              Terms
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="pricing-link">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </div>
@@ -958,7 +1008,7 @@ export default function Page() {
   }, [searchParams, isAuthenticated, hasActiveSubscription, subscription])
 
   const handleCheckout = useCallback(
-    async ({ quantity = 1 }) => {
+    async ({ tier = 'basic', quantity = 1 }) => {
       try {
         const { data } = await supabase.auth.getSession()
 
@@ -981,10 +1031,60 @@ export default function Page() {
           return
         }
 
-        setCheckoutLoading('checkout')
+        setCheckoutLoading(tier)
 
         const captchaToken = await executeRecaptcha('checkout')
         if (!captchaToken || captchaToken === 'turnstile_unavailable') {
+          throw new Error('Security verification failed. Please refresh and try again.')
+        }
+
+        const res = await fetch('/api/billing/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+          body: JSON.stringify({ tier, quantity, captchaToken }),
+          credentials: 'include',
+        })
+
+        const payload = await res.json().catch(() => ({}))
+
+        if (!res.ok) {
+          if (payload.code === 'EMAIL_NOT_VERIFIED') {
+            alert('Please verify your email before starting a trial.')
+            router.push('/verify-email')
+            return
+          }
+
+          if (payload.code === 'ALREADY_SUBSCRIBED') {
+            alert('You already have an active subscription.')
+            setShowPricingModal(false)
+            return
+          }
+
+          throw new Error(payload.error || 'Checkout failed')
+        }
+
+        if (payload.requiresContact) {
+          alert('Contact support for enterprise.')
+          return
+        }
+
+        if (payload.url) {
+          window.location.href = payload.url
+        } else {
+          throw new Error('No checkout URL returned')
+        }
+      } catch (error) {
+        console.error('Checkout error:', error)
+        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+      } finally {
+        setCheckoutLoading(null)
+      }
+    },
+    [supabase, captchaLoaded, executeRecaptcha, router]
+  )
           throw new Error('Security verification failed. Please refresh and try again.')
         }
 
