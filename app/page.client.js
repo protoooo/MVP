@@ -1085,56 +1085,6 @@ export default function Page() {
     },
     [supabase, captchaLoaded, executeRecaptcha, router]
   )
-          throw new Error('Security verification failed. Please refresh and try again.')
-        }
-
-        const res = await fetch('/api/billing/create-checkout-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${data.session.access_token}`,
-          },
-          body: JSON.stringify({ quantity, captchaToken }),
-          credentials: 'include',
-        })
-
-        const payload = await res.json().catch(() => ({}))
-
-        if (!res.ok) {
-          if (payload.code === 'EMAIL_NOT_VERIFIED') {
-            alert('Please verify your email before starting a trial.')
-            router.push('/verify-email')
-            return
-          }
-
-          if (payload.code === 'ALREADY_SUBSCRIBED') {
-            alert('You already have an active subscription.')
-            setShowPricingModal(false)
-            return
-          }
-
-          throw new Error(payload.error || 'Checkout failed')
-        }
-
-        if (payload.requiresContact) {
-          alert('Contact support for enterprise.')
-          return
-        }
-
-        if (payload.url) {
-          window.location.href = payload.url
-        } else {
-          throw new Error('No checkout URL returned')
-        }
-      } catch (error) {
-        console.error('Checkout error:', error)
-        alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
-      } finally {
-        setCheckoutLoading(null)
-      }
-    },
-    [supabase, captchaLoaded, executeRecaptcha, router]
-  )
 
   useEffect(() => {
     let isMounted = true
