@@ -39,8 +39,14 @@ export async function POST(req) {
         const subscriptionId = session.subscription
         const customerId = session.customer
         const userId = session.metadata?.userId || session.client_reference_id
+        const paymentType = session.metadata?.type
 
-        if (subscriptionId) {
+        // Handle different payment types
+        if (paymentType === 'one_off_report') {
+          await handleOneOffReport(session)
+        } else if (paymentType === 'api_credits') {
+          await handleApiCredits(session)
+        } else if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           await handleSubscriptionUpdate({ subscription, userId, customerId })
         }
@@ -91,4 +97,74 @@ async function handleSubscriptionUpdate({ subscription, userId, customerId }) {
     )
 
   await ensureSeatInventory({ purchaserUserId: userId, quantity })
+}
+
+// Handle one-off $50 report payment
+async function handleOneOffReport(session) {
+  const reportId = session.metadata?.reportId
+  const customerEmail = session.customer_details?.email || session.customer_email
+  
+  if (!reportId) {
+    logger.warn('One-off report missing reportId', { sessionId: session.id })
+    return
+  }
+
+  logger.info('Processing one-off report payment', { reportId, sessionId: session.id })
+  
+  // Update report status to trigger processing
+  await supabase
+    .from('one_off_reports')
+    .update({
+      status: 'paid',
+      stripe_session_id: session.id,
+      customer_email: customerEmail,
+      payment_amount: session.amount_total,
+      paid_at: new Date().toISOString(),
+    })
+    .eq('id', reportId)
+  
+  // Trigger report generation (will be handled by a separate process or queue)
+  // For now, we mark it as ready for processing
+  logger.info('One-off report marked as paid', { reportId })
+}
+
+// Handle API credits purchase
+async function handleApiCredits(session) {
+  const tier = session.metadata?.tier
+  const credits = parseInt(session.metadata?.credits || '0')
+  const customerEmail = session.customer_details?.email || session.customer_email
+  
+  if (!tier || !credits || !customerEmail) {
+    logger.warn('API credits purchase missing metadata', { sessionId: session.id })
+    return
+  }
+
+  logger.info('Processing API credits purchase', { tier, credits, customerEmail })
+  
+  // Generate API key via internal endpoint
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/generate-api-key`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        credits,
+        customerEmail,
+        stripeSessionId: session.id,
+        tier,
+      }),
+    })
+    
+    const data = await response.json()
+    if (data.success) {
+      logger.info('API key generated successfully', { 
+        keyId: data.keyId, 
+        credits, 
+        customerEmail 
+      })
+    } else {
+      logger.error('API key generation failed', { error: data.error })
+    }
+  } catch (error) {
+    logger.error('Failed to generate API key', { error: error.message })
+  }
 }
