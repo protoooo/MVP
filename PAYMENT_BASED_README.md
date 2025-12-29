@@ -3,22 +3,62 @@
 ## Overview
 
 A simplified, payment-based food safety compliance app with **NO ACCOUNTS**:
-- **$50 One-Off Reports**: Upload photos → Pay → Download PDF
-- **API Access**: Buy prepaid credits → Get API key → Integrate with your systems
+- **$50 One-Off Reports**: Upload photos → Pay → Get email with upload link → Upload → Download PDF
+- **API Access**: Buy prepaid credits → Get API key via email → Integrate with your systems
 
 ## Features
 
 ### 1. $50 Reports
-- Drag-and-drop image upload
-- Stripe Checkout payment
-- Instant Michigan health code compliance analysis
-- PDF report via email and download
+- Simple payment flow
+- Stripe Checkout integration
+- Michigan health code compliance analysis
+- Professional PDF reports
 
 ### 2. API Access
 Prepaid credit packs (no signup required):
 - **500 images** - $49 ($0.098/image)
 - **5,000 images** - $399 ($0.0798/image)
 - **500,000 images** - $3,499 ($0.007/image)
+
+## Current Implementation
+
+### What's Built
+✅ **Landing Page** (`/simple`)
+  - Clean two-section design
+  - Drag-drop interface for $50 reports
+  - API tier purchase buttons
+  
+✅ **Backend APIs**
+  - `/api/pay-report` - Stripe Checkout for reports
+  - `/api/audit-photos` - Credit-based photo analysis
+  - `/api/generate-api-key` - API key generation
+  - `/api/check-report` - Report status checking
+  - `/api/billing/webhook` - Stripe event handler
+  
+✅ **Database Schema**
+  - `api_keys` table with credit tracking
+  - `one_off_reports` table for payment tracking
+  
+✅ **Stripe Integration**
+  - Checkout sessions
+  - Webhook handling
+  - Payment Links support
+
+### What Needs Configuration
+⚠️ **Stripe Products & Payment Links**
+  - Create 3 products in Stripe Dashboard
+  - Set up Payment Links with metadata
+  - Configure webhook endpoint
+
+⚠️ **Email Service**
+  - Implement email delivery for API keys
+  - Use SendGrid, AWS SES, or similar
+  - Update `/api/generate-api-key/route.js`
+
+⚠️ **File Upload Flow for $50 Reports**
+  - Current: Stores payment intent
+  - Enhancement needed: File storage/upload after payment
+  - Recommendation: Use success page to collect files OR pre-upload to temp storage
 
 ## Setup Instructions
 
