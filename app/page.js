@@ -1,6 +1,6 @@
-// app/page.js (server wrapper) - Updated for access code system
+// app/page.js (server wrapper) - Full authentication system with Supabase Auth
 import { Suspense } from 'react'
-import SimplePage from './page-simple.client'
+import PageClient from './page.client'
 import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 export default function Page() {
@@ -42,7 +42,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<div className="landing-loading">Loading...</div>}>
-      <SimplePage />
+      <PageClient />
     </Suspense>
   )
 }
