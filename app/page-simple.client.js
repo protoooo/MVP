@@ -671,7 +671,24 @@ export default function SimplePage() {
                         <div className="mt-4">
                           <button
                             type="button"
-                            onClick={() => alert('Download report functionality here')}
+                            onClick={() => {
+                              if (!reportData) return
+                              
+                              // Download JSON report
+                              if (reportData.json_report) {
+                                const blob = new Blob([JSON.stringify(reportData.json_report, null, 2)], { type: 'application/json' })
+                                const link = document.createElement('a')
+                                link.href = URL.createObjectURL(blob)
+                                link.download = `report-${reportData.session_id || 'session'}.json`
+                                link.click()
+                                setTimeout(() => URL.revokeObjectURL(link.href), 500)
+                              }
+                              
+                              // Open PDF in new tab if available
+                              if (reportData.pdf_url) {
+                                window.open(reportData.pdf_url, '_blank', 'noopener,noreferrer')
+                              }
+                            }}
                             className="rounded-md px-5 py-2 font-semibold text-white transition"
                             style={{ background: 'var(--accent-green)' }}
                           >
