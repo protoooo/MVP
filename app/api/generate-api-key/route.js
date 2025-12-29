@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
 import crypto from 'crypto'
+import { emails } from '@/lib/emails'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -63,8 +64,30 @@ export async function POST(req) {
       throw error
     }
 
-    // TODO: Send email to customer with API key
-    // This would integrate with your email service (SendGrid, AWS SES, etc.)
+    // Send email to customer with API key
+    try {
+      const customerName = customerEmail.split('@')[0] // Extract name from email
+      const emailResult = await emails.apiKeyDelivery(
+        customerEmail,
+        customerName,
+        apiKey,
+        credits,
+        tier,
+        expiresAt.toISOString()
+      )
+
+      if (emailResult.success) {
+        console.log(`[generate-api-key] Email sent successfully to ${customerEmail}`)
+      } else {
+        console.error(`[generate-api-key] Email failed:`, emailResult.error)
+        // Note: We don't fail the API key generation if email fails
+        // The API key is still valid and stored in the database
+      }
+    } catch (emailError) {
+      console.error('[generate-api-key] Email exception:', emailError)
+      // Continue - email failure shouldn't prevent API key generation
+    }
+
     console.log(`[generate-api-key] Generated API key for ${customerEmail}: ${apiKey}`)
     console.log(`[generate-api-key] Credits: ${credits}, Tier: ${tier}`)
 
