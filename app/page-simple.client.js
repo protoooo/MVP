@@ -324,7 +324,7 @@ export default function SimplePage() {
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold tracking-tight leading-tight" style={{ color: 'var(--ink)' }}>
                 Catch violations before{' '}
-                <span className="whitespace-nowrap">health inspections</span>
+                <span className="whitespace-nowrap">they catch you</span>
               </h1>
               <p className="mt-2 text-base" style={{ color: 'var(--ink-60)' }}>
                 Upload restaurant photos. Get comprehensive compliance reports for Michigan health codes. Starting at $49 for 200 photos.
