@@ -218,25 +218,18 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = 
       const captchaToken = await executeRecaptcha(mode)
       
       // Better error handling for Turnstile issues
+      // Allow proceeding with failed/unavailable captcha - backend will handle bypass
       if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-        setMessageKind('err')
-        // Check if Turnstile site key is configured
-        const hasSiteKey = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-        if (!hasSiteKey) {
-          setMessage('Cloudflare Turnstile is not configured. Please contact support.')
-        } else {
-          setMessage('Security verification failed. Please refresh the page and try again, or ensure Cloudflare Turnstile is not blocked by your browser/extensions.')
-        }
-        console.error('Turnstile verification failed:', { 
+        console.warn('Turnstile verification failed, proceeding with bypass token:', { 
           token: captchaToken, 
-          hasSiteKey,
           mode 
         })
-        return
+        // Don't block the request - let backend decide if bypass is allowed
+        // The backend checks DISABLE_CAPTCHA environment variable
       }
 
       let endpoint = ''
-      const body = { email, captchaToken }
+      const body = { email, captchaToken: captchaToken || 'turnstile_unavailable' }
 
       if (mode === 'reset') {
         endpoint = '/api/auth/reset-password'
