@@ -1,9 +1,7 @@
 import './globals.css'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import CookieConsent from '@/components/CookieConsent'
-import SessionGuard from '@/components/SessionGuard'
 import Analytics from '@/components/Analytics'
-import { isSupabaseConfigured, missingSupabaseConfigMessage } from '@/lib/supabaseConfig'
 
 const appFont = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -36,23 +34,7 @@ export default function RootLayout({ children }) {
 
         {/* ✅ App content wrapper above background */}
         <div className="plm-app">
-          {!isSupabaseConfigured && (
-            <div
-              role="alert"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--ink)',
-                padding: '12px 14px',
-                borderRadius: '8px',
-                margin: '12px',
-                fontWeight: 600,
-              }}
-            >
-              {missingSupabaseConfigMessage}
-            </div>
-          )}
-          {isSupabaseConfigured && <SessionGuard />}
+          {/* Authentication removed - SessionGuard disabled */}
           {children}
           <CookieConsent />
         </div>

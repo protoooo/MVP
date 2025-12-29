@@ -172,20 +172,9 @@ function Portal({ children }) {
   return createPortal(children, document.body)
 }
 
+// Logo removed per user request - no branding needed
 function BrandLink({ variant = 'landing' }) {
-  const isChat = variant === 'chat'
-  const size = isChat ? 116 : 162
-
-  return (
-    <Link href="/" className={`plm-brand ${variant}`} aria-label="protocolLM home">
-      <span className="plm-brand-inner">
-        <span className="plm-brand-mark" aria-hidden="true">
-          <Image src={appleIcon} alt="" width={size} height={size} priority className="plm-logo-img" />
-        </span>
-        {!isChat && <span className="plm-brand-text">proto</span>}
-      </span>
-    </Link>
-  )
+  return null
 }
 
 function AuthModal({ isOpen, onClose, initialMode = 'signin', selectedPriceId = null }) {
@@ -854,9 +843,9 @@ export default function Page() {
   const shouldAutoScrollRef = useRef(true)
 
   const isAuthenticated = !!session
-  const hasPaidAccess = isAuthenticated && (hasActiveSubscription || subscription?.status === SUBSCRIPTION_STATUS_TRIALING)
-  const historyStorageKey = useMemo(() => `${HISTORY_KEY_BASE}-${session?.user?.id || 'guest'}`, [session?.user?.id])
-  const isLocked = !hasPaidAccess
+  const hasPaidAccess = true // Always grant access - no authentication required
+  const historyStorageKey = useMemo(() => `${HISTORY_KEY_BASE}-guest`, [])
+  const isLocked = false // Never lock - open access for all users
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const settingsRef = useRef(null)
@@ -1100,139 +1089,10 @@ export default function Page() {
       if (!isMounted) return
       setSession(s)
 
-      if (!s) {
-        setSubscription(null)
-        setHasActiveSubscription(false)
-        setShowPricingModal(false)
-
-        setIsLoading(false)
-        return
-      }
-
-      try {
-        if (!s.user.email_confirmed_at) {
-          console.log('❌ Email not verified - redirecting to verify page')
-          setSubscription(null)
-          setHasActiveSubscription(false)
-
-          setIsLoading(false)
-          router.replace('/verify-email')
-          return
-        }
-
-        const cachedPolicyAccepted = hasCachedPolicyAcceptance(s.user.id)
-        let profile = null
-        let profileError = null
-
-        // ✅ Only fetch profile if not cached (avoids unnecessary DB call)
-        if (!cachedPolicyAccepted) {
-          const { data, error } = await supabase
-            .from('user_profiles')
-            .select('accepted_terms, accepted_privacy')
-            .eq('id', s.user.id)
-            .maybeSingle()
-          profile = data
-          profileError = error
-          if (!profileError && profile?.accepted_terms && profile?.accepted_privacy) {
-            cachePolicyAcceptance(s.user.id)
-          }
-        }
-
-        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy) || cachedPolicyAccepted
-
-        if (profileError && !accepted) {
-          console.error('❌ Profile check error:', profileError)
-          setSubscription(null)
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        if (!accepted) {
-          setSubscription(null)
-          setHasActiveSubscription(false)
-
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-      } catch (e) {
-        console.error('❌ Policy check exception:', e)
-        setSubscription(null)
-        setHasActiveSubscription(false)
-
-        setIsLoading(false)
-        if (!hasCachedPolicyAcceptance(s?.user?.id)) {
-          router.replace('/accept-terms')
-          return
-        }
-      }
-
-      let active = false
-      let subData = null
-
-      try {
-        // ✅ Use single() instead of maybeSingle() when we expect exactly one result
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('status,current_period_end,trial_end,price_id,plan')
-          .eq('user_id', s.user.id)
-          .in('status', ['active', 'trialing'])
-          .order('current_period_end', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        subData = sub || null
-
-        const now = new Date()
-        const endDate =
-          sub?.current_period_end ? new Date(sub.current_period_end) : sub?.trial_end ? new Date(sub.trial_end) : null
-
-        if (endDate && endDate > now) active = true
-      } catch (e) {
-        console.error('Subscription check error', e)
-      }
-
-      if (!isMounted) return
-      setSubscription(subData)
-      setHasActiveSubscription(active)
-
-      const checkoutParam = searchParams?.get('checkout')
-      const showPricingParam = searchParams?.get('showPricing')
-
-      if (s?.user) {
-        console.log('🔐 Auth state:', {
-          userId: String(s.user.id || '').substring(0, 8) + '***',
-          emailVerified: !!s.user.email_confirmed_at,
-          hasSubscription: !!subData,
-          subscriptionStatus: subData?.status,
-          trialEnd: subData?.trial_end ? new Date(subData.trial_end).toISOString() : null,
-        })
-      }
-
-      if (!subData && !checkoutParam && showPricingParam !== 'true') {
-        console.log('💳 No subscription found - showing pricing modal')
-        setShowPricingModal(true)
-        setHasActiveSubscription(false)
-      }
-
-      if (subData?.status === 'trialing' && subData?.trial_end) {
-        const trialEnd = new Date(subData.trial_end)
-        const now = new Date()
-
-        if (trialEnd < now) {
-          console.log('❌ Trial expired - showing pricing')
-          if (!checkoutParam) setShowPricingModal(true)
-          setHasActiveSubscription(false)
-        } else {
-          const hoursLeft = (trialEnd - now) / (1000 * 60 * 60)
-          if (hoursLeft < 24 && hoursLeft > 0) {
-            console.log(`⚠️ Trial ends in ${Math.round(hoursLeft)} hours`)
-          }
-        }
-      }
-
+      // Authentication disabled - allow all users immediate access
+      setSubscription(null)
+      setHasActiveSubscription(false)
+      setShowPricingModal(false)
       setIsLoading(false)
     }
 
@@ -1353,8 +1213,7 @@ export default function Page() {
   }
 
   const requestAccess = useCallback(() => {
-    setUploadError('Start a trial or sign in to run uploads.')
-    setShowPricingModal(true)
+    // No longer needed - open access for all users
   }, [])
 
   // eslint-disable-next-line no-unused-vars
@@ -5345,24 +5204,7 @@ export default function Page() {
         }
       `}</style>
 
-      {/* ✅ Render modals via Portal so they always overlay correctly */}
-      <Portal>
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          initialMode={authInitialMode}
-          selectedPriceId={selectedPriceId}
-        />
-      </Portal>
-
-      <Portal>
-        <PricingModalLocal
-          isOpen={showPricingModal}
-          onClose={() => setShowPricingModal(false)}
-          onCheckout={handleCheckout}
-          loading={checkoutLoading}
-        />
-      </Portal>
+      {/* ✅ Modals removed - no authentication needed */}
 
       <div className="app-container">
         <main className={`${plusJakarta.className} min-h-screen`} style={{ background: 'var(--paper)' }}>
@@ -5379,41 +5221,10 @@ export default function Page() {
             <header className="border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
               <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-1">
                 <div className="flex items-center gap-3">
-                  <BrandLink variant="chat" />
+                  {/* Logo removed per user request */}
                 </div>
                 <div className="flex items-center gap-3">
-                  {hasPaidAccess ? (
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="rounded-md px-3 py-1.5 text-sm font-medium transition"
-                      style={{ color: 'var(--ink-60)', border: '1px solid var(--border)' }}
-                    >
-                      Sign out
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedPriceId(null)
-                          setShowPricingModal(true)
-                        }}
-                        className="rounded-md px-4 py-1.5 text-sm font-medium text-white transition"
-                        style={{ background: 'var(--accent)' }}
-                      >
-                        Start trial
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleShowSignIn}
-                        className="rounded-md px-3 py-1.5 text-sm font-medium transition"
-                        style={{ color: 'var(--ink)', border: '1px solid var(--border)' }}
-                      >
-                        Sign in
-                      </button>
-                    </div>
-                  )}
+                  {/* Authentication buttons removed - open access */}
                 </div>
               </div>
             </header>
@@ -5667,40 +5478,7 @@ export default function Page() {
                   </div>
                 )}
 
-                {/* Access Required Banner */}
-                {isLocked && (
-                  <div className="border-t px-6 py-5" style={{ borderColor: 'var(--border)', background: 'var(--accent-bg)' }}>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <p className="font-medium" style={{ color: 'var(--ink)' }}>Sign in to upload files</p>
-                        <p className="mt-0.5 text-sm" style={{ color: 'var(--ink-60)' }}>
-                          Purchase inspection reports to generate compliance reports.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedPriceId(null)
-                            setShowPricingModal(true)
-                          }}
-                          className="rounded-md px-4 py-2 text-sm font-medium text-white"
-                          style={{ background: 'var(--accent)' }}
-                        >
-                          Start trial
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleShowSignIn}
-                          className="rounded-md px-4 py-2 text-sm font-medium"
-                          style={{ color: 'var(--accent)', border: '1px solid var(--accent)' }}
-                        >
-                          Sign in
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Access Required Banner - REMOVED - open access for all */}
               </div>
 
 
