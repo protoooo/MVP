@@ -25,20 +25,36 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
     }
 
-    // Verify CAPTCHA
-    const captchaResult = await verifyCaptcha(captchaToken, 'signin', ip)
-    
-    if (!captchaResult.success) {
-      logger.security('CAPTCHA failed for signin', {
-        email: email.substring(0, 3) + '***',
-        ip,
-        error: captchaResult.error
-      })
+    // Verify CAPTCHA (allow bypass in development if Turnstile fails)
+    if (!captchaToken || captchaToken === 'turnstile_unavailable') {
+      // In non-production, allow bypass if token is missing
+      if (process.env.NODE_ENV !== 'production') {
+        logger.warn('CAPTCHA bypassed in development mode', { email: email.substring(0, 3) + '***' })
+      } else {
+        logger.security('Missing CAPTCHA token in production', {
+          email: email.substring(0, 3) + '***',
+          ip
+        })
+        return NextResponse.json(
+          { error: 'Security verification required.', code: 'CAPTCHA_REQUIRED' },
+          { status: 403 }
+        )
+      }
+    } else {
+      const captchaResult = await verifyCaptcha(captchaToken, 'signin', ip)
       
-      return NextResponse.json(
-        { error: 'Security verification failed. Please try again.', code: 'CAPTCHA_FAILED' },
-        { status: 403 }
-      )
+      if (!captchaResult.success) {
+        logger.security('CAPTCHA failed for signin', {
+          email: email.substring(0, 3) + '***',
+          ip,
+          error: captchaResult.error
+        })
+        
+        return NextResponse.json(
+          { error: 'Security verification failed. Please try again.', code: 'CAPTCHA_FAILED' },
+          { status: 403 }
+        )
+      }
     }
 
     const cookieStore = await cookies()
