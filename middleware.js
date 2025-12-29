@@ -43,6 +43,7 @@ export async function middleware(request) {
   // ============================================================================
   const publicRoutes = [
     '/auth',
+    '/login',
     '/terms',
     '/privacy',
     '/contact',
