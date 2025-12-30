@@ -5,6 +5,7 @@ import { extractFrames, cleanupFrames, getVideoMetadata } from '../../../../lib/
 import { createViolationSummary, deduplicateViolations } from '../../../../lib/violationAnalyzer.js'
 import { generateInspectionReport } from '../../../../lib/pdfGenerator.js'
 import { createClient } from '@supabase/supabase-js'
+import { checkRateLimit, createRateLimitResponse } from '@/lib/rateLimit'
 import fs from 'fs/promises'
 import { nanoid } from 'nanoid'
 
@@ -20,6 +21,13 @@ export async function POST(request) {
   let framesDir = null
 
   try {
+    // Rate limiting
+    const rateLimit = checkRateLimit(request, '/api/video/analyze')
+    if (!rateLimit.success) {
+      console.warn('Rate limit exceeded for video analysis')
+      return createRateLimitResponse()
+    }
+
     // Parse multipart form data
     const formData = await request.formData()
     
@@ -27,6 +35,64 @@ export async function POST(request) {
     const passcode = formData.get('passcode')
     const restaurantName = formData.get('restaurantName') || 'Restaurant'
     const framesPerSecond = parseFloat(formData.get('framesPerSecond') || '1')
+    
+    if (!passcode) {
+      return NextResponse.json(
+        { error: 'Passcode is required' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = getSupabaseClient()
+
+    // CRITICAL: Verify session exists
+    const { data: session, error: sessionError } = await supabase
+      .from('analysis_sessions')
+      .select('id, type, status, upload_completed')
+      .eq('passcode', passcode)
+      .single()
+
+    if (sessionError || !session) {
+      console.error('Session verification failed:', sessionError)
+      return NextResponse.json(
+        { error: 'Invalid passcode' },
+        { status: 404 }
+      )
+    }
+
+    // CRITICAL: Verify session type matches
+    if (session.type !== 'video') {
+      return NextResponse.json(
+        { error: 'This passcode is for image analysis, not video analysis' },
+        { status: 400 }
+      )
+    }
+
+    // CRITICAL: Check if already used
+    if (session.upload_completed) {
+      return NextResponse.json(
+        { error: 'This passcode has already been used' },
+        { status: 400 }
+      )
+    }
+
+    // CRITICAL: Verify payment completed for this session
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .select('status, amount')
+      .eq('session_id', session.id)
+      .eq('status', 'succeeded')
+      .single()
+
+    if (paymentError || !payment) {
+      console.error('Payment verification failed:', paymentError)
+      return NextResponse.json(
+        { error: 'Payment not completed for this session. Please complete payment first.' },
+        { status: 403 }
+      )
+    }
+
+    console.log(`Payment verified for session ${session.id} - Amount: $${payment.amount / 100}`)
     
     // Get uploaded video
     const videoFile = formData.get('video')
@@ -71,7 +137,7 @@ export async function POST(request) {
       const frameBuffer = await fs.readFile(frame.path)
       const uploadResult = await uploadFile(
         frameBuffer,
-        `frame-${frame.frameNumber}.jpg`,
+        `frame-${Date.now()}-${frame.frameNumber}.jpg`,
         'analysis-uploads',
         'image/jpeg'
       )
@@ -133,25 +199,27 @@ export async function POST(request) {
       }
     })
 
-    // Update session in database if passcode provided
-    if (passcode) {
-      const supabase = getSupabaseClient()
-      await supabase
-        .from('analysis_sessions')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          output_summary: summary,
-          pdf_url: pdfResult.pdfUrl,
-          upload_completed: true,
-          input_metadata: {
-            video_url: videoUploadResult.url,
-            duration: metadata.duration,
-            frames_analyzed: frameCount
-          }
-        })
-        .eq('passcode', passcode)
-    }
+    // Update session in database
+    await supabase
+      .from('analysis_sessions')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        output_summary: {
+          total: summary.total,
+          by_severity: summary.by_severity
+        },
+        pdf_url: pdfResult.pdfUrl,
+        upload_completed: true,
+        input_metadata: {
+          video_url: videoUploadResult.url,
+          duration: metadata.duration,
+          frames_analyzed: frameCount
+        }
+      })
+      .eq('passcode', passcode)
+
+    console.log(`Analysis completed for passcode ${passcode}`)
 
     // Cleanup temporary files
     if (tempVideoPath) {
