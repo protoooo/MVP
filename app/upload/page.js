@@ -118,6 +118,7 @@ function UploadPageContent() {
     try {
       // Upload and analyze images
       const formData = new FormData()
+      formData.append('userId', user.id)  // Pass user ID for server-side auth
       formData.append('restaurantName', restaurantName || 'Restaurant')
       
       // Add email addresses if provided

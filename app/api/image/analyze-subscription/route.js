@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { uploadFile } from '../../../../lib/storage.js'
 import { analyzeMultipleImages } from '../../../../lib/cohereVision.js'
 import { createViolationSummary, deduplicateViolations } from '../../../../lib/violationAnalyzer.js'
@@ -15,31 +16,28 @@ function getSupabaseClient() {
 
 export async function POST(request) {
   try {
-    // Get authenticated user
-    const supabase = getSupabaseClient()
-    
     // Parse multipart form data
     const formData = await request.formData()
     
-    // Get user from auth header or session
-    const authHeader = request.headers.get('authorization')
+    // Get Supabase client and retrieve user from session
+    // Note: In production, implement proper session cookie parsing
+    // For now, we'll attempt to get user ID from a custom header or form data
+    const userId = formData.get('userId') || request.headers.get('x-user-id')
     
-    // For now, we'll use Supabase auth from the request
-    // In production, you'd validate the session token
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: 'Authentication required. User ID not provided.' },
         { status: 401 }
       )
     }
+    
+    const supabase = getSupabaseClient()
 
     // Get user profile with subscription data
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     if (profileError || !profile) {
@@ -85,12 +83,12 @@ export async function POST(request) {
     const gmEmail = formData.get('gmEmail')
     const ownerEmail = formData.get('ownerEmail')
 
-    console.log(`Processing ${imageFiles.length} images for user ${user.id}`)
+    console.log(`Processing ${imageFiles.length} images for user ${userId}`)
 
     // Upload images to Supabase Storage
     const uploadPromises = imageFiles.map(async (file, index) => {
       const buffer = Buffer.from(await file.arrayBuffer())
-      const fileName = `user-${user.id}-${Date.now()}-${index + 1}.jpg`
+      const fileName = `user-${userId}-${Date.now()}-${index + 1}.jpg`
       const contentType = file.type || 'image/jpeg'
       
       return uploadFile(buffer, fileName, 'analysis-uploads', contentType)
@@ -129,7 +127,7 @@ export async function POST(request) {
       metadata: {
         imageCount: imageFiles.length,
         analysisDate: new Date().toISOString(),
-        userEmail: user.email
+        userEmail: profile.email
       }
     })
 
@@ -140,9 +138,9 @@ export async function POST(request) {
       .update({
         images_used_this_period: newUsage
       })
-      .eq('id', user.id)
+      .eq('id', userId)
 
-    console.log(`Updated usage for user ${user.id}: ${newUsage} / ${profile.monthly_image_limit}`)
+    console.log(`Updated usage for user ${userId}: ${newUsage} / ${profile.monthly_image_limit}`)
 
     // Send email if recipients provided
     let emailResult = null

@@ -84,7 +84,13 @@ export async function POST(request) {
         if (profile) {
           // Determine plan from price ID
           const priceId = subscription.items.data[0]?.price.lookup_key || subscription.items.data[0]?.price.id
-          const planConfig = PLAN_CONFIGS[priceId] || { imageLimit: 0, planName: 'unknown' }
+          const planConfig = PLAN_CONFIGS[priceId]
+          
+          if (!planConfig) {
+            console.error(`Unknown price ID: ${priceId}. Cannot determine plan config.`)
+            // Don't silently fail - throw error so webhook retries or alerts
+            throw new Error(`Unrecognized Stripe price ID: ${priceId}`)
+          }
 
           await supabase
             .from('user_profiles')
