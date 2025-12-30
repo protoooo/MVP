@@ -1,49 +1,26 @@
-// scripts/ingest-documents.js - COHERE VERSION
-// Updated: supports michigan + washtenaw collections, optional wipe, and correct metadata tagging
+// scripts/ingest-documents-ocr.js - Enhanced with OCR support
 import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
-import pdf from 'pdf-parse/lib/pdf-parse.js'
 import { createClient } from '@supabase/supabase-js'
 import { CohereClient } from 'cohere-ai'
+import { extractPDFText } from '../lib/pdfProcessorOCR.js'
 
 dotenv.config({ path: '.env.local' })
 
-// ----------------------------
-// ENV
-// ----------------------------
+// Environment variables
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const COHERE_KEY = process.env.COHERE_API_KEY
-
-const rawModel = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
-// normalize old naming people sometimes use
-const COHERE_EMBED_MODEL = rawModel === 'embed-english-v4.0' ? 'embed-v4.0' : rawModel
-
-// IMPORTANT: set this to match your Supabase `documents.embedding` vector dimension
-// Cohere embed-v4.0 commonly returns 1024 dims, but your env controls expected dims.
-// Keep this aligned with your DB column vector dimension.
+const COHERE_EMBED_MODEL = process.env.COHERE_EMBED_MODEL || 'embed-v4.0'
 const COHERE_EMBED_DIMS = Number(process.env.COHERE_EMBED_DIMS) || 1024
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false }
-})
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const cohere = new CohereClient({ token: COHERE_KEY })
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-console.log('='.repeat(70))
-console.log('📚 protocolLM Document Ingestion (Cohere)')
-console.log('='.repeat(70))
-
-// ----------------------------
-// CLI ARGS
-// ----------------------------
-// Examples:
-// node scripts/ingest-documents.js --collection michigan --wipe
-// node scripts/ingest-documents.js --collection washtenaw
-// node scripts/ingest-documents.js --collection all --wipe
-// node scripts/ingest-documents.js --dry-run
+// CLI arguments
 const args = process.argv.slice(2)
 const getArg = (name) => {
   const idx = args.indexOf(name)
@@ -51,53 +28,48 @@ const getArg = (name) => {
   return args[idx + 1] || true
 }
 
-const collectionArg = (getArg('--collection') || 'all').toString().toLowerCase()
+const collectionArg = (getArg('--collection') || 'michigan').toString().toLowerCase()
 const shouldWipe = args.includes('--wipe')
 const dryRun = args.includes('--dry-run')
+const forceOCR = args.includes('--force-ocr')
+const ocrOnly = args.includes('--ocr-only')  // Only process files that need OCR
 
-// Allowed collections
-const allowedCollections = new Set(['michigan', 'washtenaw', 'all'])
-if (!allowedCollections.has(collectionArg)) {
-  console.error(`\n❌ Invalid --collection "${collectionArg}". Use michigan | washtenaw | all`)
-  process.exit(1)
+console.log('='.repeat(70))
+console.log('📚 MI Health Inspection - Document Ingestion with OCR')
+console.log('='.repeat(70))
+console.log('\n🔍 Configuration:')
+console.log('Collection:', collectionArg)
+console.log('Wipe existing:', shouldWipe ? 'YES' : 'NO')
+console.log('Dry run:', dryRun ? 'YES' : 'NO')
+console.log('Force OCR:', forceOCR ? 'YES' : 'NO')
+console.log('OCR only mode:', ocrOnly ? 'YES' : 'NO')
+console.log('Cohere model:', COHERE_EMBED_MODEL)
+console.log('Embedding dims:', COHERE_EMBED_DIMS)
+
+// Statistics
+const stats = {
+  processedFiles: 0,
+  successfulChunks: 0,
+  failedChunks: 0,
+  nativeExtractions: 0,
+  ocrExtractions: 0,
+  lowCoverageFiles: [],
+  startTime: Date.now()
 }
-
-// ----------------------------
-// ENV CHECK
-// ----------------------------
-console.log('\n🔍 Environment Check:')
-console.log('SUPABASE_URL:', SUPABASE_URL ? `✅ ${SUPABASE_URL.substring(0, 40)}...` : '❌ MISSING')
-console.log('SUPABASE_SERVICE_ROLE_KEY:', SUPABASE_KEY ? `✅ ${SUPABASE_KEY.substring(0, 20)}...` : '❌ MISSING')
-console.log('COHERE_API_KEY:', COHERE_KEY ? `✅ ${COHERE_KEY.substring(0, 20)}...` : '❌ MISSING')
-console.log('COHERE_EMBED_MODEL:', `✅ ${COHERE_EMBED_MODEL}`)
-console.log('COHERE_EMBED_DIMS:', `✅ ${COHERE_EMBED_DIMS}`)
-console.log('MODE:', dryRun ? '✅ DRY RUN (no DB writes)' : '✅ LIVE')
-console.log('COLLECTION:', `✅ ${collectionArg}`)
-console.log('WIPE:', shouldWipe ? '✅ YES (collection-scoped)' : '❌ NO')
-
-if (!SUPABASE_URL || !SUPABASE_KEY || !COHERE_KEY) {
-  console.error('\n❌ Missing required environment variables!')
-  console.error('Make sure .env.local contains:')
-  console.error('  NEXT_PUBLIC_SUPABASE_URL')
-  console.error('  SUPABASE_SERVICE_ROLE_KEY (not anon key!)')
-  console.error('  COHERE_API_KEY')
-  process.exit(1)
-}
-
-// ----------------------------
-// HELPERS
-// ----------------------------
-const lowCoveragePDFs = []
 
 function chunkText(text, size = 1000, overlap = 150) {
   const words = text.split(/\s+/)
   const chunks = []
   let i = 0
+  
   while (i < words.length) {
     const chunk = words.slice(i, i + size).join(' ').trim()
-    if (chunk.length > 50) chunks.push(chunk)
+    if (chunk.length > 50) {
+      chunks.push(chunk)
+    }
     i += (size - overlap)
   }
+  
   return chunks
 }
 
@@ -113,18 +85,16 @@ async function getEmbeddings(texts, retries = 0) {
 
     const embeddings = response.embeddings.float
     const dims = embeddings?.[0]?.length || 0
+    
     if (dims !== COHERE_EMBED_DIMS) {
-      throw new Error(
-        `Embedding dimension mismatch (got ${dims}, expected ${COHERE_EMBED_DIMS}). ` +
-        `Fix COHERE_EMBED_DIMS to ${dims} OR resize your Supabase vector column to ${dims}.`
-      )
+      throw new Error(`Dimension mismatch: got ${dims}, expected ${COHERE_EMBED_DIMS}`)
     }
 
     return embeddings
   } catch (err) {
     if (err?.status === 429 && retries < 5) {
       const wait = Math.pow(2, retries) * 1000
-      console.log(`\n⏳ Rate limit, waiting ${(wait / 1000).toFixed(1)}s...`)
+      console.log(`⏳ Rate limit, waiting ${(wait / 1000).toFixed(1)}s...`)
       await sleep(wait)
       return getEmbeddings(texts, retries + 1)
     }
@@ -132,84 +102,13 @@ async function getEmbeddings(texts, retries = 0) {
   }
 }
 
-async function testSupabase() {
-  console.log('\n🔌 Testing Supabase...')
-  try {
-    const { error: readError } = await supabase
-      .from('documents')
-      .select('id')
-      .limit(1)
-
-    if (readError) {
-      console.error('❌ Cannot read from documents table:', readError.message)
-      return false
-    }
-    console.log('✅ Read access confirmed')
-    return true
-  } catch (err) {
-    console.error('❌ Supabase test failed:', err.message)
-    return false
-  }
-}
-
-async function testCohere() {
-  console.log('\n🤖 Testing Cohere...')
-  try {
-    const response = await cohere.embed({
-      texts: ['test connection'],
-      model: COHERE_EMBED_MODEL,
-      inputType: 'search_document',
-      embeddingTypes: ['float'],
-      truncate: 'END',
-    })
-    const embedding = response.embeddings.float[0]
-    console.log(`✅ Cohere connected (${embedding.length} dimensions)`)
-    return true
-  } catch (err) {
-    console.error('❌ Cohere test failed:', err.message)
-    if (err?.status === 401) console.error('   Invalid API key')
-    if (err?.status === 429) console.error('   Rate limit or quota exceeded')
-    return false
-  }
-}
-
-// Resolve doc directories by collection
-function resolveDocDirs() {
-  const root = path.join(process.cwd(), 'public', 'documents')
-  const michiganDir = path.join(root, 'michigan')
-  const washtenawDir = path.join(root, 'washtenaw')
-
-  // If you *only* have root PDFs and no subfolders, we treat root as michigan by default.
-  // This avoids your "Documents folder not found" style issues.
-  const dirs = []
-
-  const addIfHasPDFs = (dir, collectionName) => {
-    if (!fs.existsSync(dir)) return
-    const files = fs.readdirSync(dir).filter(f => f.toLowerCase().endsWith('.pdf'))
-    if (files.length > 0) dirs.push({ dir, files, collection: collectionName })
-  }
-
-  if (collectionArg === 'michigan' || collectionArg === 'all') addIfHasPDFs(michiganDir, 'michigan')
-  if (collectionArg === 'washtenaw' || collectionArg === 'all') addIfHasPDFs(washtenawDir, 'washtenaw')
-
-  // fallback: root PDFs
-  if (dirs.length === 0) {
-    addIfHasPDFs(root, 'michigan')
-  }
-
-  return dirs
-}
-
-// Wipe rows for a specific collection (safe scoped delete)
 async function wipeCollection(collectionName) {
-  console.log(`\n🧹 Wiping existing rows for collection: ${collectionName}`)
+  console.log(`\n🧹 Wiping collection: ${collectionName}`)
   if (dryRun) {
-    console.log('   (dry-run) skipping delete')
+    console.log('(dry-run) skipping delete')
     return
   }
 
-  // Your table uses a `metadata` json/jsonb field. We delete using json path.
-  // This is safe and won’t delete other collections.
   const { error } = await supabase
     .from('documents')
     .delete()
@@ -222,15 +121,17 @@ async function wipeCollection(collectionName) {
   console.log('✅ Wipe complete')
 }
 
-function buildMetadata({ file, collection, chunkIndex, totalChunks, pageEstimate, coverage }) {
+function buildMetadata({ file, collection, chunkIndex, totalChunks, pageEstimate, coverage, extractionMethod }) {
   const base = {
     source: file,
     source_path: `public/documents/${collection}/${file}`,
     chunk_index: chunkIndex,
     total_chunks: totalChunks,
     extraction_coverage: String(coverage),
-    collection,                 // "michigan" | "washtenaw"
+    extraction_method: extractionMethod,
+    collection,
     jurisdiction: collection === 'michigan' ? 'state' : 'county',
+    ingested_at: new Date().toISOString()
   }
 
   if (collection === 'washtenaw') {
@@ -245,47 +146,66 @@ function buildMetadata({ file, collection, chunkIndex, totalChunks, pageEstimate
 }
 
 async function processPDF({ file, fullPath, fileIndex, totalFiles, collection }) {
-  console.log(`\n[${fileIndex + 1}/${totalFiles}] 📄 ${file}  (${collection})`)
+  console.log(`\n[${ fileIndex + 1}/${totalFiles}] 📄 ${file} (${collection})`)
 
   try {
-    const buffer = fs.readFileSync(fullPath)
-    const parsed = await pdf(buffer)
+    // Check if we should process this file in OCR-only mode
+    if (ocrOnly) {
+      // Check if file already has good coverage in DB
+      const { data: existing } = await supabase
+        .from('documents')
+        .select('metadata')
+        .eq('metadata->>source', file)
+        .eq('metadata->>collection', collection)
+        .limit(1)
+        .single()
 
-    let text = parsed.text
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .replace(/[^\x20-\x7E\n]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-
-    console.log(`   📊 ${parsed.numpages} pages, ${text.length.toLocaleString()} characters`)
-
-    const avgCharsPerPage = text.length / Math.max(1, parsed.numpages)
-    const expectedCharsPerPage = 2000
-    const coverage = Math.min(100, (avgCharsPerPage / expectedCharsPerPage) * 100)
-    console.log(`   📈 Estimated text extraction: ${coverage.toFixed(0)}%`)
-
-    if (coverage < 70) {
-      lowCoveragePDFs.push({
-        file,
-        collection,
-        pages: parsed.numpages,
-        chars: text.length,
-        coverage: coverage.toFixed(0)
-      })
+      if (existing && parseFloat(existing.metadata.extraction_coverage) >= 70) {
+        console.log('   ⏭️  Skipping - already has good coverage')
+        return { success: 0, failed: 0 }
+      }
     }
 
-    if (text.length < 100) {
-      console.log('   ⚠️ Too little text, skipping')
+    // Extract text with OCR support
+    const extraction = await extractPDFText(fullPath, forceOCR)
+
+    if (!extraction.success) {
+      console.log('   ❌ Extraction failed')
       return { success: 0, failed: 0 }
     }
 
-    const chunks = chunkText(text, 1000, 150)
+    console.log(`   📊 Pages: ${extraction.pageCount}, Chars: ${extraction.text.length.toLocaleString()}`)
+    console.log(`   📈 Coverage: ${extraction.coverage.toFixed(0)}% (${extraction.method})`)
+
+    // Track statistics
+    if (extraction.method === 'native') {
+      stats.nativeExtractions++
+    } else {
+      stats.ocrExtractions++
+    }
+
+    if (extraction.coverage < 70) {
+      stats.lowCoverageFiles.push({
+        file,
+        collection,
+        pages: extraction.pageCount,
+        chars: extraction.text.length,
+        coverage: extraction.coverage.toFixed(0),
+        method: extraction.method
+      })
+    }
+
+    if (extraction.text.length < 100) {
+      console.log('   ⚠️  Too little text, skipping')
+      return { success: 0, failed: 0 }
+    }
+
+    // Create chunks
+    const chunks = chunkText(extraction.text, 1000, 150)
     console.log(`   📦 ${chunks.length} chunks created`)
 
     if (dryRun) {
-      console.log('   (dry-run) skipping embeddings + inserts')
+      console.log('   (dry-run) skipping upload')
       return { success: 0, failed: 0 }
     }
 
@@ -293,30 +213,34 @@ async function processPDF({ file, fullPath, fileIndex, totalFiles, collection })
     let failed = 0
     const BATCH_SIZE = 96
 
+    // Process in batches
     for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
       const batch = chunks.slice(i, Math.min(i + BATCH_SIZE, chunks.length))
-      const batchStart = i
 
       try {
+        // Get embeddings
         const embeddings = await getEmbeddings(batch)
 
+        // Prepare records
         const records = batch.map((chunk, idx) => ({
           content: chunk,
           embedding: embeddings[idx],
           metadata: buildMetadata({
             file,
             collection,
-            chunkIndex: batchStart + idx,
+            chunkIndex: i + idx,
             totalChunks: chunks.length,
-            pageEstimate: Math.floor(((batchStart + idx) / chunks.length) * parsed.numpages) + 1,
-            coverage: coverage.toFixed(0),
-          }),
+            pageEstimate: Math.floor(((i + idx) / chunks.length) * extraction.pageCount) + 1,
+            coverage: extraction.coverage.toFixed(0),
+            extractionMethod: extraction.method
+          })
         }))
 
+        // Insert batch
         const { error } = await supabase.from('documents').insert(records)
 
         if (error) {
-          console.error(`\n   ❌ Batch insert failed:`, error.message)
+          console.error(`\n   ❌ Batch insert failed: ${error.message}`)
           failed += batch.length
         } else {
           process.stdout.write('█'.repeat(batch.length))
@@ -325,13 +249,17 @@ async function processPDF({ file, fullPath, fileIndex, totalFiles, collection })
 
         await sleep(125)
       } catch (err) {
-        console.error(`\n   ❌ Batch error:`, err.message)
+        console.error(`\n   ❌ Batch error: ${err.message}`)
         process.stdout.write('✗'.repeat(batch.length))
         failed += batch.length
       }
     }
 
     console.log(`\n   ✅ Success: ${success}, Failed: ${failed}`)
+    stats.processedFiles++
+    stats.successfulChunks += success
+    stats.failedChunks += failed
+
     return { success, failed }
   } catch (err) {
     console.error('   ❌ Failed to process:', err.message)
@@ -339,98 +267,102 @@ async function processPDF({ file, fullPath, fileIndex, totalFiles, collection })
   }
 }
 
-// ----------------------------
-// MAIN
-// ----------------------------
 async function run() {
-  const supabaseOk = await testSupabase()
-  const cohereOk = await testCohere()
+  // Discover documents
+  const root = path.join(process.cwd(), 'public', 'documents')
+  const collectionDirs = {
+    michigan: path.join(root, 'michigan'),
+    washtenaw: path.join(root, 'washtenaw')
+  }
 
-  if (!supabaseOk || !cohereOk) {
-    console.error('\n❌ Connection tests failed. Cannot proceed.')
+  const collections = []
+
+  if (collectionArg === 'all' || collectionArg === 'michigan') {
+    const dir = collectionDirs.michigan
+    if (fs.existsSync(dir)) {
+      const files = fs.readdirSync(dir).filter(f => f.toLowerCase().endsWith('.pdf'))
+      if (files.length > 0) {
+        collections.push({ name: 'michigan', dir, files })
+      }
+    }
+  }
+
+  if (collectionArg === 'all' || collectionArg === 'washtenaw') {
+    const dir = collectionDirs.washtenaw
+    if (fs.existsSync(dir)) {
+      const files = fs.readdirSync(dir).filter(f => f.toLowerCase().endsWith('.pdf'))
+      if (files.length > 0) {
+        collections.push({ name: 'washtenaw', dir, files })
+      }
+    }
+  }
+
+  if (collections.length === 0) {
+    console.error('\n❌ No PDFs found in public/documents/michigan/ or public/documents/washtenaw/')
     process.exit(1)
   }
 
-  const targets = resolveDocDirs()
+  console.log('\n📁 Collections found:')
+  collections.forEach(c => {
+    console.log(`   ✅ ${c.name}: ${c.files.length} files`)
+  })
 
-  if (!targets || targets.length === 0) {
-    console.error('\n❌ No PDFs found!')
-    console.error('Put PDFs in one of:')
-    console.error('  public/documents/michigan/')
-    console.error('  public/documents/washtenaw/')
-    console.error('  public/documents/   (fallback treated as michigan)')
-    process.exit(1)
-  }
-
-  console.log('\n📁 Targets:')
-  for (const t of targets) {
-    console.log(`   ✅ ${t.collection}: ${t.files.length} PDFs in ${t.dir}`)
-  }
-
-  // optional wipe
+  // Optional wipe
   if (shouldWipe) {
-    const toWipe = collectionArg === 'all'
-      ? Array.from(new Set(targets.map(t => t.collection)))
-      : [collectionArg]
-
-    for (const c of toWipe) {
-      await wipeCollection(c)
+    for (const c of collections) {
+      await wipeCollection(c.name)
     }
   }
 
   if (!dryRun) {
-    console.log('\n⚠️  Ready to upload to Supabase')
-    console.log('Press Ctrl+C to cancel, or wait 3 seconds...\n')
+    console.log('\n⚠️  Starting ingestion in 3 seconds...')
+    console.log('Press Ctrl+C to cancel\n')
     await sleep(3000)
   }
 
-  const startTime = Date.now()
-  let totalSuccess = 0
-  let totalFailed = 0
-  let totalFiles = 0
-
-  for (const target of targets) {
-    const { dir, files, collection } = target
-    totalFiles += files.length
-
+  // Process each collection
+  for (const collection of collections) {
     console.log('\n' + '='.repeat(70))
-    console.log(`📚 Processing collection: ${collection}`)
+    console.log(`📚 Processing: ${collection.name}`)
     console.log('='.repeat(70))
 
-    for (let i = 0; i < files.length; i++) {
-      const { success, failed } = await processPDF({
-        file: files[i],
-        fullPath: path.join(dir, files[i]),
+    for (let i = 0; i < collection.files.length; i++) {
+      await processPDF({
+        file: collection.files[i],
+        fullPath: path.join(collection.dir, collection.files[i]),
         fileIndex: i,
-        totalFiles: files.length,
-        collection,
+        totalFiles: collection.files.length,
+        collection: collection.name
       })
 
-      totalSuccess += success
-      totalFailed += failed
-
-      if (i < files.length - 1) await sleep(750)
+      if (i < collection.files.length - 1) {
+        await sleep(500)
+      }
     }
   }
 
-  const duration = ((Date.now() - startTime) / 1000).toFixed(2)
+  // Final statistics
+  const duration = ((Date.now() - stats.startTime) / 1000).toFixed(2)
 
   console.log('\n' + '='.repeat(70))
   console.log('🎉 Ingestion Complete!')
   console.log('='.repeat(70))
-  console.log(`Collections: ${collectionArg}`)
-  console.log(`Files scanned: ${totalFiles}`)
-  console.log(`Chunks inserted: ${totalSuccess}`)
-  console.log(`Failed chunks: ${totalFailed}`)
+  console.log(`Files processed: ${stats.processedFiles}`)
+  console.log(`Chunks inserted: ${stats.successfulChunks}`)
+  console.log(`Failed chunks: ${stats.failedChunks}`)
+  console.log(`Native extractions: ${stats.nativeExtractions}`)
+  console.log(`OCR extractions: ${stats.ocrExtractions}`)
   console.log(`Duration: ${duration}s`)
 
-  if (lowCoveragePDFs.length > 0) {
+  if (stats.lowCoverageFiles.length > 0) {
     console.log('\n' + '='.repeat(70))
-    console.log('⚠️  LOW COVERAGE PDFs - May Need OCR / better source')
+    console.log('⚠️  Files with <70% Coverage')
     console.log('='.repeat(70))
-    lowCoveragePDFs.forEach(p => {
-      console.log(`   ${p.collection}/${p.file}`)
-      console.log(`      Pages: ${p.pages}, Chars: ${p.chars.toLocaleString()}, Coverage: ${p.coverage}%`)
+    stats.lowCoverageFiles.forEach(f => {
+      console.log(`\n   ${f.collection}/${f.file}`)
+      console.log(`   Pages: ${f.pages}, Chars: ${f.chars.toLocaleString()}`)
+      console.log(`   Coverage: ${f.coverage}%, Method: ${f.method}`)
+      console.log(`   💡 Suggestion: Run with --force-ocr for this file`)
     })
   }
 
@@ -438,7 +370,7 @@ async function run() {
     .from('documents')
     .select('*', { count: 'exact', head: true })
 
-  console.log(`\n📊 Total rows in documents table: ${count}`)
+  console.log(`\n📊 Total documents in database: ${count}`)
   console.log('='.repeat(70))
 }
 
