@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { DETROIT_STATS } from '@/lib/constants'
 
 export default function TenantLandingPage() {
   const router = useRouter()
@@ -88,8 +89,8 @@ export default function TenantLandingPage() {
               Critical: Michigan Landlord Non-Compliance Crisis
             </h3>
             <p className="text-sm text-dark-gray leading-relaxed">
-              <strong>Studies show nearly 90% of evicting landlords in Detroit are not compliant with city codes</strong>, 
-              and only <strong>10% of Detroit rentals</strong> meet full compliance standards. This means most tenants 
+              <strong>Studies show nearly {DETROIT_STATS.NON_COMPLIANT_PERCENTAGE}% of evicting landlords in Detroit are not compliant with city codes</strong>, 
+              and only <strong>{DETROIT_STATS.COMPLIANT_PERCENTAGE}% of Detroit rentals</strong> meet full compliance standards. This means most tenants 
               are living in conditions that violate Michigan housing law. This report helps you document violations 
               and assert your legal rights.
             </p>

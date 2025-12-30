@@ -7,6 +7,14 @@ import os from 'os'
 import crypto from 'crypto'
 import { extractExifMetadata, validateGpsLocation } from '@/backend/utils/exifMetadata'
 
+// Configuration constants
+const GPS_VALIDATION_THRESHOLD_MILES = 0.5 // Approx 2-3 city blocks
+// Note: 0.5 mile threshold chosen to balance fraud prevention with practical use cases
+// - Allows for GPS drift/inaccuracy (~50-100 feet typical)
+// - Covers large apartment complexes and multi-building properties
+// - Prevents obvious fraud (photos taken at different locations)
+// For rural properties, tenant can manually verify location in report
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
