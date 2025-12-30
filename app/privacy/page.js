@@ -1,95 +1,98 @@
+import Link from 'next/link'
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Privacy Policy
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Michigan Tenant Condition Report System
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            Last Updated: December 30, 2024
-          </p>
+      <header className="border-b border-[#E5E7EB] bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-5">
+          <Link href="/" className="text-xl font-normal text-[#0F172A] hover:text-[#4F7DF3]">
+            MI Health Inspection
+          </Link>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <div className="prose prose-gray max-w-none">
-          
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">1. Overview</h2>
-            <p className="text-gray-700 mb-4">
-              This Privacy Policy describes how we collect, use, and protect your information when you use 
-              the Michigan Tenant Condition Report System. We are committed to protecting your 
-              privacy and maintaining the confidentiality of your data.
+      <main className="max-w-4xl mx-auto px-6 py-10">
+        <h1 className="text-3xl font-medium text-[#0F172A] mb-8">Privacy Policy</h1>
+        
+        <div className="space-y-6 text-[#475569]">
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">Overview</h2>
+            <p>
+              MI Health Inspection (mihealthinspection.com) is a utility tool for Michigan food service 
+              establishments to prepare for health inspections. We collect minimal data and do not 
+              require user accounts.
             </p>
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-gray-800">
-                <strong>Key Principle:</strong> We implement a "burn after reading" policy. Your report and all 
-                uploaded photos are permanently deleted from our servers 48 hours after report generation.
-              </p>
-            </div>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">2. Information We Collect</h2>
-            
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">2.1 Information You Provide</h3>
-            <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-              <li><strong>Email Address:</strong> Used to send you the access code for your report</li>
-              <li><strong>Property Address:</strong> Optional; used for GPS validation and included in your report</li>
-              <li><strong>Photos:</strong> Images you upload of your rental unit conditions</li>
-            </ul>
-
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">2.2 Automatically Collected Information</h3>
-            <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-              <li><strong>Photo Metadata (EXIF):</strong> Timestamp, GPS coordinates, camera make/model</li>
-              <li><strong>Server Timestamps:</strong> Trusted timestamps when photos are uploaded</li>
-              <li><strong>IP Address:</strong> Used for rate limiting and abuse prevention only</li>
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">Data We Collect</h2>
+            <ul className="list-disc pl-6 space-y-2">
+              <li><strong>Payment Information:</strong> Processed securely through Stripe. We do not store credit card details.</li>
+              <li><strong>Uploaded Content:</strong> Images or videos you upload for analysis are temporarily stored for processing.</li>
+              <li><strong>Analysis Results:</strong> Your inspection analysis results and generated PDF reports.</li>
+              <li><strong>Questions:</strong> Compliance questions you submit for the free Q&A feature.</li>
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">3. Data Retention - 48 Hour Policy</h2>
-            <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg mb-4">
-              <p className="text-sm text-gray-800 font-semibold mb-2">⚠️ Critical Privacy Protection</p>
-              <p className="text-sm text-gray-700">
-                All reports and uploaded photos are permanently deleted from our servers <strong>48 hours</strong> after 
-                report generation. Download your PDF immediately.
-              </p>
-            </div>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">4. Data Security</h2>
-            <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-              <li>All data transmitted over HTTPS encryption</li>
-              <li>Secure cloud storage with access controls</li>
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">Data We Do NOT Collect</h2>
+            <ul className="list-disc pl-6 space-y-2">
               <li>No user accounts or passwords</li>
-              <li>Payment processing by Stripe (PCI compliant)</li>
+              <li>No personal identification beyond payment processing</li>
+              <li>No tracking cookies or analytics</li>
+              <li>No email addresses (except via Stripe for receipts)</li>
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">5. Contact Us</h2>
-            <p className="text-gray-700 mb-4">
-              Questions about privacy? Contact us via the email on our website.
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">How We Use Your Data</h2>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Process your payment via Stripe</li>
+              <li>Analyze your images/videos against Michigan food safety regulations</li>
+              <li>Generate compliance reports</li>
+              <li>Answer compliance questions using Michigan state documents</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">Data Retention</h2>
+            <p>
+              Uploaded images, videos, and analysis results are stored temporarily for PDF generation 
+              and download. We recommend downloading your report immediately after generation.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">Third-Party Services</h2>
+            <ul className="list-disc pl-6 space-y-2">
+              <li><strong>Stripe:</strong> Payment processing (subject to Stripe's privacy policy)</li>
+              <li><strong>Cohere:</strong> AI analysis of images, videos, and Q&A (subject to Cohere's privacy policy)</li>
+              <li><strong>Supabase:</strong> Database and storage (subject to Supabase's privacy policy)</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">Your Rights</h2>
+            <p>
+              Since we do not maintain user accounts, there is no personal data to access, modify, or delete. 
+              Each transaction is independent and stateless.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-medium text-[#0F172A] mb-3">Contact</h2>
+            <p>
+              For privacy concerns, contact us at privacy@mihealthinspection.com
+            </p>
+          </section>
+
+          <section className="pt-4 border-t border-[#E5E7EB]">
+            <p className="text-sm text-[#475569]">
+              Last updated: December 30, 2024
             </p>
           </section>
         </div>
       </main>
-
-      <footer className="border-t border-gray-200 mt-16">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <p className="text-sm text-gray-600 text-center">
-            <a href="/tenant" className="text-blue-600 hover:underline">← Back to Home</a>
-            {' | '}
-            <a href="/terms" className="text-blue-600 hover:underline">Terms of Service</a>
-          </p>
-        </div>
-      </footer>
     </div>
   )
 }
