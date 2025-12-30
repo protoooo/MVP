@@ -14,9 +14,11 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-  # 1. Install Python dependencies first so postinstall scripts can use them
-  'pip3 install --no-cache-dir PyMuPDF==1.23.8 pytesseract==0.3.10 Pillow==10.1.0',
-  # 2. Install Node dependencies (this will trigger your package.json postinstall)
+  # 1. Create Python virtual environment to avoid externally-managed environment error
+  'python3 -m venv /opt/venv',
+  # 2. Install Python dependencies in virtual environment
+  '/opt/venv/bin/pip install --no-cache-dir PyMuPDF==1.23.8 pytesseract==0.3.10 Pillow==10.1.0',
+  # 3. Install Node dependencies (this will trigger your package.json postinstall)
   'npm install --legacy-peer-deps --no-audit --prefer-offline'
 ]
 
@@ -27,12 +29,12 @@ cmds = [
 ]
 
 [start]
-cmd = 'npm run start'
+cmd = 'source /opt/venv/bin/activate && npm run start'
 
 [variables]
 NODE_ENV = 'production'
 NPM_CONFIG_PRODUCTION = 'false'
 NEXT_TELEMETRY_DISABLED = '1'
 NODE_OPTIONS = '--max-old-space-size=4096'
-# Ensures Python scripts can find the Tesseract binary in the Nix path
-PATH = '/usr/bin:/bin:/usr/local/bin:$PATH'
+# Ensures Python scripts can find the Tesseract binary and virtual environment binaries
+PATH = '/opt/venv/bin:/usr/bin:/bin:/usr/local/bin:$PATH'
