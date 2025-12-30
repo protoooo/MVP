@@ -1,329 +1,395 @@
-# Michigan Food Safety Photo Compliance Engine
+# Michigan Tenant Condition Report System
 
-**Pure API + Webhook Integration** - Automatic compliance checks for photos taken during normal operations.
+A web application that helps Michigan tenants document habitability issues in their rental units through professional photo analysis and automated PDF report generation.
 
 ## Overview
 
-A developer-focused food safety compliance API that integrates into existing workflows:
-- **Webhook/API Integration**: Photos taken during inventory, stocking, store scans → automatic compliance checks
-- **No UI Required**: Pure API for in-house system integration
-- **Flexible Output**: JSON response → store in DB, export to Excel, integrate anywhere
-- **Powered by Cohere**: Vision AYA-32B, Rerank 4.0, Embed 4.0
+This system allows tenants to:
+1. Upload photos of their rental unit (up to 200 photos)
+2. Get AI-powered analysis of visible habitability violations
+3. Receive a professional PDF report with legal references and landlord obligations
+4. Pay a one-time fee of $20 (no subscription or account required)
 
-## Cost & Pricing
+## What the System Can Analyze (Photographable Issues Only)
 
-- **Your Cost**: $0.01/image (Cohere Vision)
-- **Pricing**: $0.03-$0.04/image (300-400% margin)
+✅ **Visible Conditions**:
+- Mold, mildew, water damage, stains
+- Broken windows, doors, locks
+- Holes in walls, ceilings, floors
+- Visible pest infestations (roaches, droppings, bedbugs)
+- Exposed or damaged electrical wiring
+- Broken/missing smoke detectors (if visible)
+- Damaged or leaking plumbing fixtures
+- Structural damage (cracks, sagging)
+- Missing handrails on stairs
+- Peeling paint (lead paint concern in pre-1978 buildings)
+- Broken appliances (visual damage)
+- Trash accumulation, unsanitary conditions
 
-### Free Tier (For Testing)
-- **Free**: $0/mo → 100 images per month
-- Perfect for testing and evaluation
-- No credit card required
-- Instant API key generation
+❌ **Cannot Detect** (non-visible issues):
+- Heat/HVAC not working
+- No hot water
+- Electrical outlets not working
+- Gas leaks
+- Poor ventilation (unless visible mold/damage)
+- Noise issues
+- Pest infestations not visible in photos
 
-### Subscriptions (Unlimited webhooks)
-- **Growth**: $99/mo → 3,000 images included + $0.03/extra
-- **Chain**: $499/mo → 20,000 images included + $0.025/extra
-- **Enterprise**: $1,999/mo → Unlimited images
+The system includes a checklist in the report for tenants to document these non-visible issues.
 
-### Prepaid Packs (Optional - No commitment)
-- **Starter**: 1,000 images - $39 ($0.039/image)
-- **Pro**: 10,000 images - $349 ($0.035/image)  
-- **Enterprise**: 100,000 images - $3,000 ($0.03/image)
+## Technology Stack
 
-## Single Endpoint
+- **Frontend**: Next.js 15 (React 19)
+- **Backend**: Next.js API Routes
+- **AI Analysis**: Cohere AYA Vision (c4ai-aya-vision-32b)
+- **Database**: Supabase (PostgreSQL)
+- **Payments**: Stripe (one-time payments, no subscriptions)
+- **PDF Generation**: PDFKit
+- **Storage**: Supabase Storage
 
-### POST /api/audit-photos
+## Features
 
-**Request (JSON):**
-```json
-{
-  "images": ["https://example.com/kitchen.jpg"],
-  "api_key": "sk_your_api_key_here",
-  "location": "kitchen"
-}
-```
+### Tenant-Focused Features
+- **No Account Required**: Email-based access code system
+- **Simple Payment**: One-time $20 payment for up to 200 photos
+- **Drag & Drop Upload**: Easy photo upload with room/area tagging
+- **Progress Tracking**: Real-time upload and analysis progress
+- **Professional PDF Report** includes:
+  - Cover page with report metadata
+  - Executive summary of findings
+  - Issues organized by room/area
+  - Confidence levels (Clear violation, Likely issue, Requires assessment)
+  - Michigan tenant rights and legal code references
+  - Required landlord actions with timelines
+  - Consequences if issues are not corrected
+  - Checklist for non-photographable issues
+  - Michigan tenant resources and contacts
 
-**Response:**
-```json
-{
-  "violations": ["3-501.16 Cold storage <41°F"],
-  "score": 87,
-  "michigan_code_refs": ["3-501.16"],
-  "analyzed_count": 1,
-  "violation_count": 1,
-  "credits_used": 1,
-  "remaining_credits": 999
-}
-```
+### Technical Features
+- **AI-Powered Analysis**: Computer vision analysis of photos for habitability issues
+- **Confidence Scoring**: Three levels (Clear violation 0.8-1.0, Likely issue 0.5-0.79, Requires assessment 0.3-0.49)
+- **Abuse Prevention**:
+  - Duplicate photo detection
+  - Rate limiting per IP address
+  - Content hashing for fraud prevention
+- **Secure**: No PII stored, reports expire after 90 days
+- **Scalable**: Serverless architecture
 
-**Error (402 - Insufficient Credits):**
-```json
-{
-  "error": "Insufficient credits",
-  "remaining_credits": 0,
-  "buy_more": "https://protocollm.com/#pricing"
-}
-```
+## Installation & Setup
 
-## Quick Start
+### Prerequisites
+- Node.js 20.x
+- npm 10.x
+- Supabase account
+- Stripe account
+- Cohere API key
 
-### 1. Buy API Credits
-
-Visit the landing page and purchase a prepaid pack or subscription. You'll receive an API key via email instantly.
-
-### 2. Integration Examples
-
-#### cURL
-```bash
-curl -X POST https://your-app.railway.app/api/audit-photos \
-  -H "Content-Type: application/json" \
-  -d '{
-    "images": ["https://example.com/kitchen.jpg"],
-    "api_key": "sk_your_api_key_here"
-  }'
-```
-
-#### JavaScript / Node.js
-```javascript
-const response = await fetch('https://your-app.railway.app/api/audit-photos', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    images: ['https://example.com/kitchen.jpg'],
-    api_key: 'sk_your_api_key_here'
-  })
-})
-
-const data = await response.json()
-console.log('Score:', data.score)
-console.log('Violations:', data.violations)
-console.log('Michigan Codes:', data.michigan_code_refs)
-```
-
-#### Python
-```python
-import requests
-
-response = requests.post(
-    'https://your-app.railway.app/api/audit-photos',
-    json={
-        'images': ['https://example.com/kitchen.jpg'],
-        'api_key': 'sk_your_api_key_here'
-    }
-)
-
-data = response.json()
-print(f"Score: {data['score']}")
-print(f"Violations: {data['violations']}")
-print(f"Codes: {data['michigan_code_refs']}")
-```
-
-#### Webhook Integration Pattern
-```javascript
-// Webhook receiver in your in-house system
-app.post('/webhook/photos', async (req, res) => {
-  const { photos, location_id } = req.body
-  
-  // Send to compliance API
-  const result = await fetch('https://your-app.railway.app/api/audit-photos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      images: photos.map(p => p.url),
-      api_key: process.env.FOOD_SAFETY_API_KEY,
-      location: location_id
-    })
-  }).then(r => r.json())
-  
-  // Store in your database, Excel, or wherever
-  await db.compliance_logs.insert({
-    location_id,
-    score: result.score,
-    violations: result.violations,
-    michigan_codes: result.michigan_code_refs,
-    timestamp: new Date()
-  })
-  
-  res.json({ success: true })
-})
-```
-
-## Setup Instructions (For Deployment)
-
-### 1. Database Setup (Supabase)
-
-Run the SQL schema in your Supabase SQL Editor:
+### 1. Clone the Repository
 
 ```bash
-# Located in: database/schema-payment-based.sql
+git clone <repository-url>
+cd MVP
+npm install
+```
+
+### 2. Database Setup
+
+Run the tenant reports schema in your Supabase SQL Editor:
+
+```sql
+-- Copy and paste contents of database/schema-tenant-reports.sql
 ```
 
 This creates:
-- `api_keys` table - Stores prepaid API credits and subscriptions
-- `one_off_reports` table - Tracks report payments (legacy, can be removed)
+- `tenant_reports` - Main report tracking table
+- `tenant_photos` - Photo storage and analysis results
+- `rate_limits` - IP-based rate limiting
+- `tenant_non_visible_issues` - Non-photographable issues checklist
+- Helper functions for duplicate detection and rate limiting
 
-### 2. Environment Variables
+### 3. Environment Variables
 
-Create a `.env.local` file based on `.env.local.example`:
+Create a `.env.local` file:
 
 ```bash
-# Stripe Keys
-STRIPE_SECRET_KEY=sk_live_...
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Stripe Payment Links (create in Stripe Dashboard)
-NEXT_PUBLIC_STRIPE_LINK_STARTER=https://buy.stripe.com/...
-NEXT_PUBLIC_STRIPE_LINK_PRO=https://buy.stripe.com/...
-NEXT_PUBLIC_STRIPE_LINK_ENTERPRISE=https://buy.stripe.com/...
-NEXT_PUBLIC_STRIPE_LINK_GROWTH=https://buy.stripe.com/...
-NEXT_PUBLIC_STRIPE_LINK_CHAIN=https://buy.stripe.com/...
-NEXT_PUBLIC_STRIPE_LINK_ENTERPRISE_SUB=https://buy.stripe.com/...
-
-# Base URL
-NEXT_PUBLIC_BASE_URL=https://your-app.railway.app
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Cohere (Vision AYA-32B, Rerank 4.0, Embed 4.0)
+# Cohere AI
 COHERE_API_KEY=your_cohere_api_key
+COHERE_VISION_MODEL=c4ai-aya-vision-32b
+COHERE_EMBED_MODEL=embed-v4.0
+COHERE_RERANK_MODEL=rerank-v4.0-pro
+
+# Base URL
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-### 3. Stripe Configuration
+### 4. Stripe Configuration
 
-**For detailed step-by-step Stripe setup instructions, see [STRIPE_SETUP.md](STRIPE_SETUP.md)**
-
-The application includes 4 pricing tiers:
-- **Free**: $0/month - 100 images (no Stripe required, direct API key generation)
-- **Growth**: $99/month - 3,000 images
-- **Chain**: $499/month - 20,000 images
-- **Enterprise**: $1,999/month - Unlimited images
-
-#### A. Create Prepaid Products (Optional)
+#### Create Product for Tenant Reports
 
 1. Go to Stripe Dashboard → Products
-2. Create 3 one-time payment products:
-   - **Starter**: $39 one-time
-     - Metadata: `tier=starter`, `credits=1000`, `type=api_credits`
-   - **Pro**: $349 one-time
-     - Metadata: `tier=pro`, `credits=10000`, `type=api_credits`
-   - **Enterprise**: $3,000 one-time
-     - Metadata: `tier=enterprise`, `credits=100000`, `type=api_credits`
-3. Create Payment Links for each
+2. Create a product:
+   - **Name**: Michigan Tenant Condition Report
+   - **Description**: Professional habitability report for up to 200 photos
+   - **Price**: $20.00 (one-time payment)
+   - **Metadata**: 
+     - `type`: `tenant_report`
+     - `max_photos`: `200`
 
-#### B. Create Subscription Products
-
-1. Create 3 monthly subscription products:
-   - **Growth**: $99/month (metered billing available)
-     - Metadata: `tier=growth`, `included=3000`, `extra_rate=0.03`
-   - **Chain**: $499/month (metered billing available)
-     - Metadata: `tier=chain`, `included=20000`, `extra_rate=0.025`
-   - **Enterprise**: $1,999/month (unlimited)
-     - Metadata: `tier=enterprise_sub`, `unlimited=true`
-2. Create Payment Links for each
-
-#### C. Configure Webhooks
+#### Configure Webhook
 
 1. Go to Stripe Dashboard → Developers → Webhooks
-2. Add endpoint: `https://your-app.railway.app/api/billing/webhook`
+2. Add endpoint: `https://your-domain.com/api/billing/webhook`
 3. Select events:
    - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
 4. Copy webhook secret to `STRIPE_WEBHOOK_SECRET`
 
-### 4. Deploy to Railway
+### 5. Supabase Storage Setup
+
+Create two storage buckets:
+1. `tenant-photos` (public)
+2. `tenant-reports` (public)
+
+### 6. Run Development Server
 
 ```bash
-git push origin main
+npm run dev
 ```
 
-Railway will automatically deploy using the configuration in `railway.json`.
+Visit `http://localhost:3000/tenant` to see the tenant landing page.
 
-## Use Cases
+### 7. Build for Production
 
-### Restaurant Chains
-Every photo during store checks → instant compliance data → 100K+ photos/month
+```bash
+npm run build
+npm start
+```
 
-### Grocery & Retail  
-Inventory photos during normal stocking → auto-check food safety compliance
+## API Endpoints
 
-### Food Safety Systems
-Add compliance layer to existing photo workflows in any in-house system
+### Tenant Report Flow
 
-### Health Departments
-Inspection photos → instant violation detection with Michigan code references
+#### 1. Create Checkout Session
+```
+POST /api/tenant/create-checkout
+```
 
-## Michigan Food Code Focus
+**Request**:
+```json
+{
+  "customerEmail": "tenant@example.com",
+  "propertyAddress": "123 Main St, Detroit, MI",
+  "photoCount": 50
+}
+```
 
-The system is trained on 9 core Michigan Food Code violations:
+**Response**:
+```json
+{
+  "success": true,
+  "sessionId": "cs_test_...",
+  "url": "https://checkout.stripe.com/...",
+  "reportId": "uuid",
+  "accessCode": "ABC12345"
+}
+```
 
-1. **Temperature Control** (3-501.16, 3-501.17)
-   - Cold holding <41°F
-   - Hot holding >135°F
-   - Cooling/reheating procedures
+#### 2. Upload Photos
+```
+POST /api/tenant/upload-photos
+```
 
-2. **Cross Contamination** (3-302.11)
-   - Raw vs. ready-to-eat separation
-   - Proper storage practices
+**Request** (multipart/form-data):
+- `reportId`: Report UUID
+- `accessCode`: Access code from checkout
+- `photos`: Array of image files
+- `roomAreas`: Array of room identifiers (e.g., 'kitchen', 'bathroom')
 
-3. **Equipment & Facilities** (4-601.11, 4-202.16)
-   - Clean surfaces
-   - Proper equipment maintenance
+**Response**:
+```json
+{
+  "success": true,
+  "uploaded": 50,
+  "duplicates": 2,
+  "total_photos": 50,
+  "photos": [...]
+}
+```
 
-4. **Personal Hygiene** (2-301.11, 2-401.11)
-   - Handwashing compliance
-   - Proper glove usage
+#### 3. Generate Report
+```
+POST /api/tenant/generate-report
+```
 
-5. **Chemical Storage** (7-206.11, 7-207.11)
-   - Proper labeling
-   - Safe storage away from food
+**Request**:
+```json
+{
+  "reportId": "uuid",
+  "accessCode": "ABC12345",
+  "nonVisibleIssues": {
+    "no_heat": true,
+    "no_hot_water": false,
+    ...
+  }
+}
+```
 
-6. **Pest Control** (6-202.11)
-   - Evidence of pests
-   - Proper exclusion
+**Response**:
+```json
+{
+  "success": true,
+  "reportId": "uuid",
+  "accessCode": "ABC12345",
+  "pdfUrl": "https://...",
+  "summary": {
+    "violations_found": 5,
+    "clear_violations": 2,
+    "likely_issues": 3
+  }
+}
+```
 
-7. **Food Labeling** (3-602.11)
-   - Date marking
-   - Proper identification
+#### 4. Get Report
+```
+GET /api/tenant/get-report?code=ABC12345
+```
 
-8. **Sanitation** (4-501.11)
-   - Cleaning schedules
-   - Sanitizer concentrations
+**Response**:
+```json
+{
+  "reportId": "uuid",
+  "accessCode": "ABC12345",
+  "status": "completed",
+  "pdfUrl": "https://...",
+  "summary": {...}
+}
+```
 
-9. **Employee Health** (2-201.11)
-   - Illness reporting
-   - Exclusion criteria
+## User Flow
 
-## Architecture
+1. **Landing Page** (`/tenant`)
+   - Tenant enters email and property address
+   - Selects estimated number of photos
+   - Clicks "Continue to Payment"
 
-- **Frontend**: Next.js 15 (landing page only)
-- **API**: Next.js API Routes
-- **AI**: Cohere Vision AYA-32B, Rerank 4.0, Embed 4.0
-- **Database**: Supabase (PostgreSQL)
-- **Payments**: Stripe (Checkout + Webhooks)
-- **Deployment**: Railway
+2. **Stripe Checkout**
+   - Secure payment processing
+   - One-time $20 payment
+   - Redirects to upload page on success
 
-## Security
+3. **Upload Page** (`/tenant/upload`)
+   - Drag & drop photo upload
+   - Tag photos by room/area
+   - Fill out non-visible issues checklist
+   - Click "Generate Report"
 
-- No user accounts or passwords
-- API keys are cryptographically secure (256-bit)
-- Stripe handles all payment processing (PCI compliant)
-- Row Level Security (RLS) enabled on database tables
-- Webhook signature verification
-- Rate limiting on API endpoints
+4. **Processing**
+   - Photos uploaded to Supabase Storage
+   - AI analysis runs on each photo
+   - PDF report generated
+
+5. **Report Page** (`/tenant/report`)
+   - View summary statistics
+   - Download PDF report
+   - Access next steps and resources
+
+## Rate Limiting
+
+- **Payment attempts**: 5 per hour per IP
+- **Upload attempts**: 10 per hour per IP
+- **Download attempts**: Unlimited (with valid access code)
+
+## Abuse Prevention
+
+- **Duplicate Photo Detection**: Content hashing prevents same photos from being uploaded multiple times
+- **Cross-Report Detection**: Flags if same photo used in multiple reports within 24 hours
+- **Rate Limiting**: IP-based limits on payment and upload actions
+- **Report Expiration**: Reports automatically expire after 90 days
+
+## Security & Privacy
+
+- **No User Accounts**: No passwords, no PII storage
+- **Email-Only Access**: Reports accessed via unique codes sent to email
+- **Secure Payments**: All payment processing through Stripe
+- **Data Retention**: Reports expire after 90 days
+- **HTTPS**: All traffic encrypted in transit
+- **Row-Level Security**: Database policies enforce access controls
+
+## Legal Disclaimers
+
+The system includes prominent disclaimers that:
+- This is NOT legal advice
+- Does not create attorney-client relationship
+- Analysis based on AI review of photographs
+- May not capture all issues
+- Tenants should consult qualified attorney before legal action
+- Only analyzes VISIBLE conditions
+
+## Deployment
+
+### Railway / Vercel / Netlify
+
+1. Connect your Git repository
+2. Set environment variables
+3. Deploy
+
+### Environment Variables Required in Production
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `COHERE_API_KEY`
+- `NEXT_PUBLIC_BASE_URL`
+
+## Costs
+
+### Per Report
+- **Cohere Vision API**: ~$0.50-2.00 (depending on photo count)
+- **Supabase Storage**: Minimal (~$0.01)
+- **Stripe Fee**: $0.58 + 2.9% = $1.16 total
+
+**Total Cost**: ~$1.67-3.17 per report
+**Revenue**: $20.00 per report
+**Profit Margin**: ~$16.83-18.33 per report (84-92%)
+
+### Monthly Fixed Costs
+- **Supabase**: Free tier sufficient for low volume, $25/mo for Pro
+- **Domain**: ~$12/year
+- **Hosting**: Free on Vercel/Netlify
+
+## Future Enhancements
+
+- [ ] Email notifications when report is ready
+- [ ] Multi-language support (Spanish)
+- [ ] Integration with Michigan Legal Aid organizations
+- [ ] Mobile app version
+- [ ] Batch processing for multi-unit properties
+- [ ] Landlord response tracking
+- [ ] Court-ready evidence packages
 
 ## Support
 
-For issues or questions:
-- API Key not received: Check spam folder or contact support
-- Credits not deducted: Contact support with session_id
-- Integration help: See examples in this README
+For technical issues:
+- Check logs in Supabase Dashboard
+- Review Stripe webhook events
+- Contact Cohere support for API issues
+
+For tenant support:
+- Direct to Michigan Legal Help: https://michiganlegalhelp.org
+- Local legal aid organizations
+- Housing code enforcement
 
 ## License
 
-Proprietary - Michigan Food Safety Compliance System
+Proprietary - Michigan Tenant Condition Report System
+
+## Contributors
+
+Built with GitHub Copilot assistance.

@@ -1,6 +1,7 @@
-// app/page.js - Pure API/Webhook Michigan Food Safety Compliance Engine
-import ApiLanding from './api-landing/page.client'
+// app/page.js - Michigan Tenant Condition Report System
+import { redirect } from 'next/navigation'
 
 export default function HomePage() {
-  return <ApiLanding />
+  // Redirect to tenant landing page
+  redirect('/tenant')
 }
