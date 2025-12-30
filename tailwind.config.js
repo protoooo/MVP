@@ -38,12 +38,6 @@ export default {
           600: '#64748b', // Secondary text
           900: '#0f172a',
         },
-        // Legacy colors for compatibility
-        cream: '#FFFDF7',
-        'matte-blue': '#1e40af',
-        'dark-gray': '#0f172a',
-        'medium-gray': '#64748b',
-        'light-gray': '#e2e8f0',
       },
       fontFamily: {
         sans: [
