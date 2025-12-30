@@ -174,170 +174,186 @@ export default function MIHealthInspectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-[#E5E7EB] bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-5">
-          <h1 className="text-xl font-normal text-[#0F172A]">MI Health Inspection</h1>
-          <p className="text-sm text-[#475569] mt-1">mihealthinspection.com</p>
+    <div className="min-h-screen bg-[#F0F0F0] font-sans text-gray-900">
+      {/* Official Gov Banner */}
+      <div className="bg-[#1b1b1b] px-4 py-1">
+        <div className="max-w-5xl mx-auto flex items-center gap-2">
+          <span className="text-white text-[10px] uppercase tracking-wider font-semibold">
+            An official Michigan compliance tool
+          </span>
+        </div>
+      </div>
+
+      {/* Main Header */}
+      <header className="bg-white border-b-4 border-[#1a4480]">
+        <div className="max-w-5xl mx-auto px-6 py-6">
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-bold text-[#1a4480] tracking-tight">MI Health Inspection</h1>
+            <p className="text-base text-gray-600 mt-1">mihealthinspection.com — Food Safety Regulation Assistance</p>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-10">
-        <div className="space-y-6">
-          {/* Free Q&A Section */}
-          <section className="bg-[#F7F8FA] rounded-xl p-8 border border-[#E5E7EB]">
-            <h2 className="text-lg font-medium text-[#0F172A] mb-2">Ask a Compliance Question (Free)</h2>
-            <p className="text-sm text-[#475569] mb-6">Get answers grounded in Michigan food safety regulations.</p>
+      <main className="max-w-5xl mx-auto px-6 py-10">
+        <div className="grid grid-cols-1 gap-8">
+          
+          {/* Free Q&A Section - Styled as a Gov Form */}
+          <section className="bg-white p-8 border border-gray-300 shadow-sm rounded-sm">
+            <div className="mb-6 border-b border-gray-200 pb-4">
+              <h2 className="text-2xl font-bold text-[#1a4480]">Regulation Inquiry</h2>
+              <p className="text-gray-600 mt-2">Get answers grounded in Michigan food safety regulations (Free).</p>
+            </div>
             
-            <form onSubmit={handleQASubmit} className="space-y-4">
-              <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder="Example: What temperature must hot food be held at?"
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F7DF3] focus:border-transparent resize-none bg-white text-[#0F172A]"
-                rows={4}
-                required
-              />
+            <form onSubmit={handleQASubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-800 mb-2 uppercase tracking-wide">
+                  Your Question
+                </label>
+                <textarea
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="e.g., What temperature must hot food be held at?"
+                  className="w-full px-4 py-3 border-2 border-gray-400 rounded-none focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-[#1a4480] bg-white text-gray-900 min-h-[120px]"
+                  required
+                />
+              </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-8 py-3 bg-[#4F7DF3] text-white rounded-xl hover:bg-[#3D6BE0] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                className="px-6 py-3 bg-[#1a4480] text-white font-bold rounded-md hover:bg-[#112e5a] disabled:opacity-70 disabled:cursor-not-allowed shadow-sm transition-colors"
               >
-                {loading ? 'Processing...' : 'Ask Question'}
+                {loading ? 'Processing Inquiry...' : 'Submit Question'}
               </button>
             </form>
             
             {answer && (
-              <div className="mt-6 p-4 bg-white border border-[#E5E7EB] rounded-xl">
-                <p className="text-sm text-[#0F172A] whitespace-pre-wrap">{answer}</p>
+              <div className="mt-8 bg-blue-50 border-l-8 border-[#1a4480] p-6">
+                <h3 className="text-sm font-bold text-[#1a4480] uppercase mb-2">Response</h3>
+                <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{answer}</p>
               </div>
             )}
           </section>
 
-          {/* Paid Image Analysis */}
-          <section className="bg-[#F7F8FA] rounded-xl p-8 border border-[#E5E7EB]">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex-1">
-                <h2 className="text-lg font-medium text-[#0F172A] mb-2">Image Analysis</h2>
-                <p className="text-sm text-[#475569] mb-4">Analyze photos of your kitchen, prep areas, and storage against Michigan health codes</p>
-                <p className="text-xs text-[#475569]">Supported: JPG, JPEG, PNG, WEBP, HEIC</p>
-              </div>
-              <div className="text-right ml-6">
-                <div className="text-2xl font-normal text-[#0F172A]">$50</div>
-                <div className="text-xs text-[#475569]">one-time</div>
-              </div>
-            </div>
+          {/* Services Container */}
+          <div className="grid md:grid-cols-2 gap-8">
             
-            <ul className="space-y-2 mb-6 text-sm text-[#475569]">
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Upload or take photos (mobile camera + desktop)</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Violations identified with severity levels</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Plain-language explanations</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Downloadable PDF report</span>
-              </li>
-            </ul>
+            {/* Paid Image Analysis */}
+            <section className="bg-white p-8 border border-gray-300 shadow-sm rounded-sm flex flex-col h-full">
+              <div className="border-b border-gray-200 pb-4 mb-6">
+                <h2 className="text-xl font-bold text-[#1a4480]">Image Analysis</h2>
+                <p className="text-sm text-gray-600 mt-1">Upload photos of kitchen/prep areas.</p>
+              </div>
 
-            {/* Turnstile Widget for Image Analysis */}
-            <div className="mb-6">
-              <div id="turnstile-image" className="flex justify-center"></div>
-              {!turnstileLoaded && (
-                <div className="text-center py-4">
-                  <div className="inline-block w-6 h-6 border-2 border-[#4F7DF3] border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-xs text-[#475569] mt-2">Loading verification...</p>
+              <div className="flex-grow">
+                <div className="bg-gray-100 p-4 border border-gray-200 mb-6 rounded-sm">
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-bold text-gray-900">Fee</span>
+                    <span className="text-xl font-bold text-[#1a4480]">$50.00</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">One-time payment</p>
                 </div>
-              )}
-            </div>
-            
-            <button
-              onClick={handleImageAnalysis}
-              disabled={loading || !turnstileImageToken}
-              className="px-8 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-[#1e293b] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {loading ? 'Processing...' : 'Upload or Take Photos'}
-            </button>
-            
-            {!turnstileImageToken && turnstileLoaded && (
-              <p className="text-xs text-[#475569] mt-2">Please complete the verification above to continue</p>
-            )}
-          </section>
-
-          {/* Paid Video Analysis */}
-          <section className="bg-[#F7F8FA] rounded-xl p-8 border border-[#E5E7EB]">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex-1">
-                <h2 className="text-lg font-medium text-[#0F172A] mb-2">Video Analysis</h2>
-                <p className="text-sm text-[#475569] mb-4">Record or upload walkthrough video of your establishment for comprehensive analysis</p>
-                <p className="text-xs text-[#475569]">Supported: MP4, MOV, WEBM, M4V, AVI</p>
+                
+                <ul className="list-disc pl-5 space-y-2 mb-8 text-sm text-gray-700">
+                  <li>Detect violations via photo upload</li>
+                  <li>Severity level assessment</li>
+                  <li>Plain-language explanations</li>
+                  <li>Official PDF report generation</li>
+                </ul>
               </div>
-              <div className="text-right ml-6">
-                <div className="text-2xl font-normal text-[#0F172A]">$200</div>
-                <div className="text-xs text-[#475569]">30 min window</div>
-              </div>
-            </div>
-            
-            <ul className="space-y-2 mb-6 text-sm text-[#475569]">
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Upload or record video (mobile camera + desktop)</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Intelligent frame extraction and analysis</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Timeline-based violation reporting</span>
-              </li>
-              <li className="flex items-start">
-                <span className="mr-2">•</span>
-                <span>Downloadable PDF report</span>
-              </li>
-            </ul>
 
-            {/* Turnstile Widget for Video Analysis */}
-            <div className="mb-6">
-              <div id="turnstile-video" className="flex justify-center"></div>
-              {!turnstileLoaded && (
-                <div className="text-center py-4">
-                  <div className="inline-block w-6 h-6 border-2 border-[#4F7DF3] border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-xs text-[#475569] mt-2">Loading verification...</p>
+              <div className="mt-auto space-y-6">
+                {/* Turnstile Widget */}
+                <div className="bg-gray-50 p-4 border border-gray-200 flex justify-center rounded-sm">
+                  <div id="turnstile-image"></div>
+                  {!turnstileLoaded && (
+                    <span className="text-sm text-gray-500">Loading security check...</span>
+                  )}
                 </div>
-              )}
-            </div>
-            
-            <button
-              onClick={handleVideoAnalysis}
-              disabled={loading || !turnstileVideoToken}
-              className="px-8 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-[#1e293b] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {loading ? 'Processing...' : 'Upload or Take Video'}
-            </button>
-            
-            {!turnstileVideoToken && turnstileLoaded && (
-              <p className="text-xs text-[#475569] mt-2">Please complete the verification above to continue</p>
-            )}
-          </section>
+                
+                <button
+                  onClick={handleImageAnalysis}
+                  disabled={loading || !turnstileImageToken}
+                  className="w-full py-4 bg-[#1a4480] text-white font-bold rounded-md hover:bg-[#112e5a] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? 'Processing...' : 'Proceed to Image Upload'}
+                </button>
+                
+                {!turnstileImageToken && turnstileLoaded && (
+                  <p className="text-xs text-red-700 font-medium text-center bg-red-50 p-2 border border-red-100">
+                    Verification required
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {/* Paid Video Analysis */}
+            <section className="bg-white p-8 border border-gray-300 shadow-sm rounded-sm flex flex-col h-full">
+              <div className="border-b border-gray-200 pb-4 mb-6">
+                <h2 className="text-xl font-bold text-[#1a4480]">Video Analysis</h2>
+                <p className="text-sm text-gray-600 mt-1">Comprehensive walkthrough analysis.</p>
+              </div>
+
+              <div className="flex-grow">
+                <div className="bg-gray-100 p-4 border border-gray-200 mb-6 rounded-sm">
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-bold text-gray-900">Fee</span>
+                    <span className="text-xl font-bold text-[#1a4480]">$200.00</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">30-minute analysis window</p>
+                </div>
+                
+                <ul className="list-disc pl-5 space-y-2 mb-8 text-sm text-gray-700">
+                  <li>Upload or record walkthrough</li>
+                  <li>Frame-by-frame extraction</li>
+                  <li>Timeline-based reporting</li>
+                  <li>Official PDF report generation</li>
+                </ul>
+              </div>
+
+              <div className="mt-auto space-y-6">
+                {/* Turnstile Widget */}
+                <div className="bg-gray-50 p-4 border border-gray-200 flex justify-center rounded-sm">
+                  <div id="turnstile-video"></div>
+                  {!turnstileLoaded && (
+                    <span className="text-sm text-gray-500">Loading security check...</span>
+                  )}
+                </div>
+                
+                <button
+                  onClick={handleVideoAnalysis}
+                  disabled={loading || !turnstileVideoToken}
+                  className="w-full py-4 bg-[#1a4480] text-white font-bold rounded-md hover:bg-[#112e5a] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? 'Processing...' : 'Proceed to Video Upload'}
+                </button>
+                
+                {!turnstileVideoToken && turnstileLoaded && (
+                  <p className="text-xs text-red-700 font-medium text-center bg-red-50 p-2 border border-red-100">
+                    Verification required
+                  </p>
+                )}
+              </div>
+            </section>
+          </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#E5E7EB] bg-white mt-12">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <p className="text-xs text-[#475569]">
-            MI Health Inspection helps Michigan food service establishments prepare for health inspections. 
-            Analysis grounded in Michigan state food safety regulations.
-          </p>
+      <footer className="bg-[#1b1b1b] text-white mt-12">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4">About this tool</h3>
+              <p className="text-sm text-gray-300 leading-relaxed">
+                The MI Health Inspection tool assists Michigan food service establishments in preparing for official health inspections. 
+                All analysis is grounded in current Michigan state food safety regulations.
+              </p>
+            </div>
+            <div className="md:text-right">
+              <p className="text-sm text-gray-400">© {new Date().getFullYear()} MI Health Inspection</p>
+              <p className="text-xs text-gray-500 mt-2">Not an official government agency. For informational purposes only.</p>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
