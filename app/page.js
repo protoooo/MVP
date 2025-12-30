@@ -1,11 +1,69 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function MIHealthInspectionPage() {
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
   const [loading, setLoading] = useState(false)
+  const [turnstileImageToken, setTurnstileImageToken] = useState(null)
+  const [turnstileVideoToken, setTurnstileVideoToken] = useState(null)
+  const [turnstileLoaded, setTurnstileLoaded] = useState(false)
+
+  // Check if Turnstile script is loaded
+  useEffect(() => {
+    const checkTurnstile = setInterval(() => {
+      if (window.turnstile) {
+        setTurnstileLoaded(true)
+        clearInterval(checkTurnstile)
+      }
+    }, 100)
+
+    return () => clearInterval(checkTurnstile)
+  }, [])
+
+  // Render Turnstile widgets after script loads
+  useEffect(() => {
+    if (!turnstileLoaded) return
+
+    // Render Turnstile for image analysis
+    const imageWidget = document.getElementById('turnstile-image')
+    if (imageWidget && !imageWidget.hasAttribute('data-rendered')) {
+      window.turnstile.render('#turnstile-image', {
+        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+        theme: 'light',
+        callback: (token) => {
+          setTurnstileImageToken(token)
+        },
+        'error-callback': () => {
+          setTurnstileImageToken(null)
+        },
+        'expired-callback': () => {
+          setTurnstileImageToken(null)
+        }
+      })
+      imageWidget.setAttribute('data-rendered', 'true')
+    }
+
+    // Render Turnstile for video analysis
+    const videoWidget = document.getElementById('turnstile-video')
+    if (videoWidget && !videoWidget.hasAttribute('data-rendered')) {
+      window.turnstile.render('#turnstile-video', {
+        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+        theme: 'light',
+        callback: (token) => {
+          setTurnstileVideoToken(token)
+        },
+        'error-callback': () => {
+          setTurnstileVideoToken(null)
+        },
+        'expired-callback': () => {
+          setTurnstileVideoToken(null)
+        }
+      })
+      videoWidget.setAttribute('data-rendered', 'true')
+    }
+  }, [turnstileLoaded])
 
   const handleQASubmit = async (e) => {
     e.preventDefault()
@@ -34,40 +92,82 @@ export default function MIHealthInspectionPage() {
   }
 
   const handleImageAnalysis = async () => {
+    if (!turnstileImageToken) {
+      alert('Please complete the verification challenge')
+      return
+    }
+
     setLoading(true)
     try {
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'image' })
+        body: JSON.stringify({ 
+          type: 'image',
+          turnstileToken: turnstileImageToken 
+        })
       })
       
       const data = await response.json()
-      if (data.url) {
+      
+      if (response.ok && data.url) {
         window.location.href = data.url
+      } else {
+        alert(`Error: ${data.error || 'Failed to create payment session'}`)
+        // Reset Turnstile widget
+        setTurnstileImageToken(null)
+        if (window.turnstile) {
+          window.turnstile.reset('#turnstile-image')
+        }
       }
     } catch (error) {
       alert(`Error: ${error.message}`)
+      // Reset Turnstile widget
+      setTurnstileImageToken(null)
+      if (window.turnstile) {
+        window.turnstile.reset('#turnstile-image')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const handleVideoAnalysis = async () => {
+    if (!turnstileVideoToken) {
+      alert('Please complete the verification challenge')
+      return
+    }
+
     setLoading(true)
     try {
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'video' })
+        body: JSON.stringify({ 
+          type: 'video',
+          turnstileToken: turnstileVideoToken 
+        })
       })
       
       const data = await response.json()
-      if (data.url) {
+      
+      if (response.ok && data.url) {
         window.location.href = data.url
+      } else {
+        alert(`Error: ${data.error || 'Failed to create payment session'}`)
+        // Reset Turnstile widget
+        setTurnstileVideoToken(null)
+        if (window.turnstile) {
+          window.turnstile.reset('#turnstile-video')
+        }
       }
     } catch (error) {
       alert(`Error: ${error.message}`)
+      // Reset Turnstile widget
+      setTurnstileVideoToken(null)
+      if (window.turnstile) {
+        window.turnstile.reset('#turnstile-video')
+      }
     } finally {
       setLoading(false)
     }
@@ -147,14 +247,29 @@ export default function MIHealthInspectionPage() {
                 <span>Downloadable PDF report</span>
               </li>
             </ul>
+
+            {/* Turnstile Widget for Image Analysis */}
+            <div className="mb-6">
+              <div id="turnstile-image" className="flex justify-center"></div>
+              {!turnstileLoaded && (
+                <div className="text-center py-4">
+                  <div className="inline-block w-6 h-6 border-2 border-[#4F7DF3] border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-xs text-[#475569] mt-2">Loading verification...</p>
+                </div>
+              )}
+            </div>
             
             <button
               onClick={handleImageAnalysis}
-              disabled={loading}
+              disabled={loading || !turnstileImageToken}
               className="px-8 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-[#1e293b] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              Upload or Take Photos
+              {loading ? 'Processing...' : 'Upload or Take Photos'}
             </button>
+            
+            {!turnstileImageToken && turnstileLoaded && (
+              <p className="text-xs text-[#475569] mt-2">Please complete the verification above to continue</p>
+            )}
           </section>
 
           {/* Paid Video Analysis */}
@@ -189,14 +304,29 @@ export default function MIHealthInspectionPage() {
                 <span>Downloadable PDF report</span>
               </li>
             </ul>
+
+            {/* Turnstile Widget for Video Analysis */}
+            <div className="mb-6">
+              <div id="turnstile-video" className="flex justify-center"></div>
+              {!turnstileLoaded && (
+                <div className="text-center py-4">
+                  <div className="inline-block w-6 h-6 border-2 border-[#4F7DF3] border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-xs text-[#475569] mt-2">Loading verification...</p>
+                </div>
+              )}
+            </div>
             
             <button
               onClick={handleVideoAnalysis}
-              disabled={loading}
+              disabled={loading || !turnstileVideoToken}
               className="px-8 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-[#1e293b] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              Upload or Take Video
+              {loading ? 'Processing...' : 'Upload or Take Video'}
             </button>
+            
+            {!turnstileVideoToken && turnstileLoaded && (
+              <p className="text-xs text-[#475569] mt-2">Please complete the verification above to continue</p>
+            )}
           </section>
         </div>
       </main>
