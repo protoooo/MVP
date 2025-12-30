@@ -1,6 +1,7 @@
 [phases.setup]
 nixPkgs = [
   'nodejs_20',
+  'coreutils',
   'python311',
   'python311Packages.pip',
   'python311Packages.setuptools',
@@ -13,12 +14,10 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-  'echo "🧹 Cleaning build artifacts..."',
-  'rm -rf node_modules .next',
   'echo "📦 Installing Node dependencies..."',
   'npm install --legacy-peer-deps --no-audit --prefer-offline',
   'echo "🐍 Installing Python OCR dependencies..."',
-  'python3 -m pip install --user --no-cache-dir PyMuPDF==1.23.8 pytesseract==0.3.10 Pillow==10.1.0'
+  'python3 -m pip install --no-cache-dir PyMuPDF==1.23.8 pytesseract==0.3.10 Pillow==10.1.0'
 ]
 
 [phases.build]
@@ -36,5 +35,5 @@ NPM_CONFIG_PRODUCTION = 'false'
 NEXT_TELEMETRY_DISABLED = '1'
 NODE_OPTIONS = '--max-old-space-size=4096'
 NPM_CONFIG_LEGACY_PEER_DEPS = 'true'
-PYTHONUSERBASE = '/root/.local'
-PATH = '/root/.local/bin:$PATH'
+# Tesseract usually looks here for data files in Nix environments
+TESSDATA_PREFIX = '/usr/share/tessdata'
