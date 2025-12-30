@@ -212,6 +212,8 @@ ${context}`,
         answer_length: answerText.length,
         documents_used: relevantDocs.length,
       },
+    }).then(() => {
+      // Successfully created session record
     }).catch(err => {
       logger.warn('Failed to create session record', { error: err.message })
     })
