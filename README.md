@@ -1,19 +1,53 @@
-# Michigan Food Safety Photo Compliance Engine
+# Michigan Tenant Condition Report Generator
 
-**Pure API + Webhook Integration** - Automatic compliance checks for photos taken during normal operations.
+**Professional rental condition documentation for Michigan tenants** - Upload photos, pay $20, get a professional PDF report.
 
-## Overview
+## Quick Overview
 
-A developer-focused food safety compliance API that integrates into existing workflows:
-- **Webhook/API Integration**: Photos taken during inventory, stocking, store scans → automatic compliance checks
-- **No UI Required**: Pure API for in-house system integration
-- **Flexible Output**: JSON response → store in DB, export to Excel, integrate anywhere
-- **Powered by Cohere**: Vision AYA-32B, Rerank 4.0, Embed 4.0
+This application helps Michigan tenants document their rental unit conditions with a professional, AI-generated PDF report based on Michigan housing habitability standards.
 
-## Cost & Pricing
+- **$20 flat fee** for up to 200 photos
+- **No account required** - one-time purchase
+- **Michigan housing standards** - references MCL codes
+- **AI-powered analysis** - Cohere analyzes photos for issues
+- **Professional PDF** - Download immediately
 
-- **Your Cost**: $0.01/image (Cohere Vision)
-- **Pricing**: $0.03-$0.04/image (300-400% margin)
+![Screenshot](https://github.com/user-attachments/assets/cff0442f-27be-44d0-8520-a85c40fabafb)
+
+## Documentation
+
+For complete documentation, see [README_TENANT_REPORT.md](README_TENANT_REPORT.md)
+
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables (see .env.local.example)
+cp .env.local.example .env.local
+
+# Run development server
+npm run dev
+
+# Visit http://localhost:3000
+```
+
+## Architecture
+
+This is a complete pivot from the previous food safety compliance system to a tenant-focused documentation tool:
+
+- **Frontend**: Next.js 15 with minimal Adobe-style UI
+- **AI**: Cohere for image analysis
+- **PDF**: PDFKit for professional reports  
+- **Payments**: Stripe ($20 one-time)
+- **Focus**: Michigan tenant rights and habitability
+
+See the old README in the commit history for the previous food safety API system.
+
+---
+
+**For detailed setup, API documentation, and deployment instructions, see [README_TENANT_REPORT.md](README_TENANT_REPORT.md)**
 
 ### Free Tier (For Testing)
 - **Free**: $0/mo → 100 images per month
