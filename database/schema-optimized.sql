@@ -138,9 +138,13 @@ GRANT EXECUTE ON FUNCTION get_session_violations TO service_role;
 -- PERFORMANCE OPTIMIZATIONS
 -- ============================================================================
 
--- Increase work_mem for better query performance with large datasets
--- Note: This is a session-level setting, adjust based on your needs
--- ALTER SYSTEM SET work_mem = '256MB';
+-- NOTE: The work_mem setting below affects the entire PostgreSQL instance.
+-- Only use ALTER SYSTEM if you have a dedicated database instance.
+-- For shared instances, use session-level settings instead:
+--   SET work_mem = '256MB';  -- For current session only
+-- 
+-- Uncomment the line below ONLY for dedicated database instances:
+-- ALTER SYSTEM SET work_mem = '256MB';  -- Instance-wide setting (requires reload)
 
 -- Set optimal ivfflat lists for vector index based on row count
 -- If you have < 10k documents: lists = 100 (already set)
