@@ -1,12 +1,24 @@
 [phases.setup]
-nixPkgs = ['nodejs_20', 'python3', 'python311Packages.pymupdf', 'python311Packages.pytesseract', 'python311Packages.pillow', 'ffmpeg', 'tesseract', 'poppler_utils']
+nixPkgs = [
+  'nodejs_20',
+  'python311',
+  'python311Packages.pip',
+  'python311Packages.setuptools',
+  'python311Packages.wheel',
+  'ffmpeg',
+  'tesseract',
+  'poppler_utils',
+  'ghostscript'
+]
 
 [phases.install]
 cmds = [
   'echo "🧹 Cleaning build artifacts..."',
   'rm -rf node_modules .next',
   'echo "📦 Installing Node dependencies..."',
-  'npm install --legacy-peer-deps --no-audit --prefer-offline'
+  'npm install --legacy-peer-deps --no-audit --prefer-offline',
+  'echo "🐍 Installing Python OCR dependencies..."',
+  'python3 -m pip install --user --no-cache-dir PyMuPDF==1.23.8 pytesseract==0.3.10 Pillow==10.1.0'
 ]
 
 [phases.build]
@@ -24,3 +36,5 @@ NPM_CONFIG_PRODUCTION = 'false'
 NEXT_TELEMETRY_DISABLED = '1'
 NODE_OPTIONS = '--max-old-space-size=4096'
 NPM_CONFIG_LEGACY_PEER_DEPS = 'true'
+PYTHONUSERBASE = '/root/.local'
+PATH = '/root/.local/bin:$PATH'
