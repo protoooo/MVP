@@ -60,31 +60,7 @@ export async function POST(req) {
     const accessCode = generateAccessCode() // e.g., ABC12345
     const secretLink = generateSecretLink() // e.g., ax72-99p3-z218-k4m5
 
-    // Create initial tenant report record
-    const { data: reportData, error: reportError } = await supabase
-      .from('tenant_reports')
-      .insert({
-        customer_email: customerEmail,
-        property_address: propertyAddress || null,
-        total_photos: photoCount,
-        status: 'pending',
-        payment_status: 'pending',
-        access_code: accessCode,
-        secret_link: secretLink,
-        ip_address: ip,
-        user_agent: req.headers.get('user-agent') || null
-      })
-      .select()
-      .single()
-
-    if (reportError) {
-      console.error('[tenant-checkout] Failed to create report record:', reportError)
-      return NextResponse.json({ error: 'Failed to create report' }, { status: 500 })
-    }
-
-    const reportId = reportData.id
-
-    // Create Stripe checkout session
+    // Create Stripe checkout session FIRST (so we have the session ID for the database)
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     
     const session = await stripe.checkout.sessions.create({
@@ -105,7 +81,6 @@ export async function POST(req) {
       ],
       metadata: {
         type: 'tenant_report',
-        report_id: reportId,
         photo_count: photoCount,
         access_code: accessCode
       },
@@ -114,13 +89,40 @@ export async function POST(req) {
       expires_at: Math.floor(Date.now() / 1000) + 1800, // 30 minutes
     })
 
-    // Update report with Stripe session ID
-    await supabase
+    // Create tenant report record with stripe_session_id included
+    const { data: reportData, error: reportError } = await supabase
       .from('tenant_reports')
-      .update({ 
-        stripe_session_id: session.id 
+      .insert({
+        stripe_session_id: session.id,
+        customer_email: customerEmail,
+        property_address: propertyAddress || null,
+        total_photos: photoCount,
+        status: 'pending',
+        payment_status: 'pending',
+        access_code: accessCode,
+        secret_link: secretLink,
+        ip_address: ip,
+        user_agent: req.headers.get('user-agent') || null
       })
-      .eq('id', reportId)
+      .select()
+      .single()
+
+    if (reportError) {
+      console.error('[tenant-checkout] Failed to create report record:', reportError)
+      return NextResponse.json({ error: 'Failed to create report' }, { status: 500 })
+    }
+
+    const reportId = reportData.id
+
+    // Update Stripe session metadata with report_id (now that we have it)
+    await stripe.checkout.sessions.update(session.id, {
+      metadata: {
+        type: 'tenant_report',
+        report_id: reportId,
+        photo_count: photoCount,
+        access_code: accessCode
+      }
+    })
 
     // Record rate limit attempt
     await supabase.rpc('record_rate_limit_attempt', {
