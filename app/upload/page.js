@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
-export default function UploadPage() {
+function UploadPageContent() {
   const searchParams = useSearchParams()
   const urlPasscode = searchParams.get('passcode')
   
@@ -118,9 +119,9 @@ export default function UploadPage() {
       <div className="min-h-screen bg-white">
         <header className="border-b border-[#E5E7EB] bg-white">
           <div className="max-w-4xl mx-auto px-6 py-5">
-            <a href="/" className="text-xl font-normal text-[#0F172A] hover:text-[#4F7DF3]">
+            <Link href="/" className="text-xl font-normal text-[#0F172A] hover:text-[#4F7DF3]">
               MI Health Inspection
-            </a>
+            </Link>
           </div>
         </header>
 
@@ -158,9 +159,9 @@ export default function UploadPage() {
             </form>
 
             <div className="mt-6 pt-6 border-t border-[#E5E7EB] text-center">
-              <a href="/" className="text-sm text-[#4F7DF3] hover:underline">
+              <Link href="/" className="text-sm text-[#4F7DF3] hover:underline">
                 Return to Home
-              </a>
+              </Link>
             </div>
           </div>
         </main>
@@ -243,5 +244,18 @@ export default function UploadPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function UploadPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-[#4F7DF3] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-[#475569]">Loading...</p>
+      </div>
+    </div>}>
+      <UploadPageContent />
+    </Suspense>
   )
 }

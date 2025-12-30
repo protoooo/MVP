@@ -1,11 +1,13 @@
+import Link from 'next/link'
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-[#E5E7EB] bg-white">
         <div className="max-w-4xl mx-auto px-6 py-5">
-          <a href="/" className="text-xl font-normal text-[#0F172A] hover:text-[#4F7DF3]">
+          <Link href="/" className="text-xl font-normal text-[#0F172A] hover:text-[#4F7DF3]">
             MI Health Inspection
-          </a>
+          </Link>
         </div>
       </header>
 
