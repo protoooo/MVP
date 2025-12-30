@@ -5,6 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import crypto from 'crypto'
+import { extractExifMetadata, validateGpsLocation } from '@/backend/utils/exifMetadata'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -186,6 +187,30 @@ export async function POST(req) {
         fs.writeFileSync(tempPath, buffer)
         tempPaths.push(tempPath)
 
+        // Extract EXIF metadata
+        const exifData = await extractExifMetadata(tempPath)
+        const serverTimestamp = new Date().toISOString()
+        
+        // Validate GPS location if available
+        let gpsValidation = null
+        let metadataWarning = null
+        
+        if (exifData.latitude && exifData.longitude && report.property_latitude && report.property_longitude) {
+          gpsValidation = validateGpsLocation(
+            exifData.latitude,
+            exifData.longitude,
+            parseFloat(report.property_latitude),
+            parseFloat(report.property_longitude),
+            0.5 // 0.5 mile threshold
+          )
+          
+          if (!gpsValidation.valid) {
+            metadataWarning = gpsValidation.warning
+          }
+        } else if (!exifData.hasExif || !exifData.latitude) {
+          metadataWarning = 'Photo does not contain GPS location data. Location will need manual verification.'
+        }
+
         // Upload to storage
         const storagePath = `tenant-photos/${reportId}/${photoId}${ext}`
         const { error: uploadError } = await supabase.storage
@@ -200,7 +225,7 @@ export async function POST(req) {
           continue
         }
 
-        // Save photo record
+        // Save photo record with EXIF metadata
         const { data: photoData, error: photoError } = await supabase
           .from('tenant_photos')
           .insert({
@@ -211,6 +236,17 @@ export async function POST(req) {
             mime_type: file.type,
             room_area: roomArea,
             content_hash: contentHash,
+            // EXIF metadata fields
+            exif_date_time: exifData.dateTime,
+            exif_latitude: exifData.latitude,
+            exif_longitude: exifData.longitude,
+            exif_make: exifData.make,
+            exif_model: exifData.model,
+            server_upload_timestamp: serverTimestamp,
+            has_exif_metadata: exifData.hasExif,
+            gps_validated: gpsValidation?.valid || false,
+            gps_distance_miles: gpsValidation?.distance || null,
+            metadata_warning: metadataWarning,
             analyzed: false
           })
           .select()
@@ -221,7 +257,10 @@ export async function POST(req) {
             id: photoId,
             filename: file.name,
             room_area: roomArea,
-            size: file.size
+            size: file.size,
+            hasExif: exifData.hasExif,
+            gpsValidated: gpsValidation?.valid || false,
+            warning: metadataWarning
           })
         }
 
