@@ -1,111 +1,92 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getCurrentUser, getUserProfile, signOut } from '@/lib/supabaseAuth'
 
 function UploadPageContent() {
   const searchParams = useSearchParams()
-  const urlPasscode = searchParams.get('passcode')
+  const router = useRouter()
   
-  const [passcode, setPasscode] = useState(urlPasscode || '')
-  const [session, setSession] = useState(null)
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [files, setFiles] = useState([])
   const [uploading, setUploading] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [restaurantName, setRestaurantName] = useState('')
+  const [showChecklist, setShowChecklist] = useState(false)
+  const [checklistItems, setChecklistItems] = useState([
+    { name: 'Three-compartment sink', checked: false },
+    { name: 'Handwashing station', checked: false },
+    { name: 'Prep line', checked: false },
+    { name: 'Make line', checked: false },
+    { name: 'Cold holding', checked: false },
+    { name: 'Hot holding', checked: false },
+    { name: 'Walk-in cooler', checked: false },
+    { name: 'Back of house', checked: false },
+    { name: 'Front of house', checked: false },
+    { name: 'Dish area', checked: false }
+  ])
 
-  const verifyPasscode = async (code) => {
-    setLoading(true)
-    setError(null)
-    
-    try {
-      const response = await fetch(`/api/session/verify?passcode=${code}`)
-      const data = await response.json()
+  // Load user and profile on mount
+  useEffect(() => {
+    async function loadUserData() {
+      setLoading(true)
+      const { user: currentUser } = await getCurrentUser()
       
-      if (!response.ok) {
-        setError(data.error || 'Invalid passcode')
-        setSession(null)
-      } else {
-        setSession(data.session)
-        
-        // If already completed, redirect to report page
-        if (data.session.upload_completed && data.session.status === 'completed') {
-          window.location.href = `/report?passcode=${code}`
-        }
+      if (!currentUser) {
+        // Redirect to login if not authenticated
+        router.push('/auth/login')
+        return
       }
-    } catch (err) {
-      setError('Failed to verify passcode')
-      setSession(null)
-    } finally {
+      
+      setUser(currentUser)
+      
+      // Load user profile with subscription data
+      const { profile: userProfile } = await getUserProfile(currentUser.id)
+      setProfile(userProfile)
+      
+      // Check if subscription is active
+      if (!userProfile || !userProfile.subscription_status || userProfile.subscription_status !== 'active') {
+        setError('No active subscription. Please subscribe to a plan.')
+      }
+      
       setLoading(false)
     }
-  }
+    
+    loadUserData()
+  }, [router])
 
+  // Check for success message
   useEffect(() => {
-    if (urlPasscode) {
-      verifyPasscode(urlPasscode)
+    const subscriptionStatus = searchParams.get('subscription')
+    if (subscriptionStatus === 'success') {
+      setSuccess('Subscription activated! You can now upload images.')
     }
-  }, [urlPasscode])
+  }, [searchParams])
 
-  const handlePasscodeSubmit = (e) => {
-    e.preventDefault()
-    if (passcode.length === 5) {
-      verifyPasscode(passcode)
-    }
+  const handleLogout = async () => {
+    await signOut()
+    router.push('/')
   }
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files)
     
-    // Validate image count limit
-    if (session?.type === 'image' && selectedFiles.length > 1000) {
-      setError(`Maximum 1,000 images allowed per analysis session. You selected ${selectedFiles.length} images.`)
-      setFiles([])
-      e.target.value = '' // Reset file input
-      return
-    }
-    
-    // Validate video duration (client-side rough check based on file size)
-    if (session?.type === 'video' && selectedFiles.length > 0) {
-      const videoFile = selectedFiles[0]
-      // Create a video element to check duration
-      const video = document.createElement('video')
-      video.preload = 'metadata'
+    // Check quota
+    if (profile) {
+      const remaining = profile.monthly_image_limit - (profile.images_used_this_period || 0)
       
-      video.onloadedmetadata = function() {
-        window.URL.revokeObjectURL(video.src)
-        const durationMinutes = Math.round(video.duration / 60)
-        
-        if (video.duration > 3600) { // 60 minutes = 3600 seconds
-          setError(`Maximum 60 minutes of video allowed per analysis session. Your video is ${durationMinutes} minutes long.`)
-          setFiles([])
-          e.target.value = '' // Reset file input
-        } else {
-          setError(null)
-          setFiles(selectedFiles)
-        }
+      if (selectedFiles.length > remaining) {
+        setError(`You have ${remaining} image${remaining !== 1 ? 's' : ''} remaining in your quota. You selected ${selectedFiles.length} images.`)
+        setFiles([])
+        e.target.value = ''
+        return
       }
-      
-      video.onerror = function() {
-        window.URL.revokeObjectURL(video.src)
-        console.error('Failed to load video metadata')
-        // Allow upload anyway - server will validate
-        setError(null)
-        setFiles(selectedFiles)
-      }
-      
-      // Set timeout in case metadata never loads
-      setTimeout(() => {
-        if (files.length === 0) {
-          setError(null)
-          setFiles(selectedFiles)
-        }
-      }, 3000)
-      
-      video.src = URL.createObjectURL(videoFile)
-      return
     }
     
     setError(null)
@@ -114,12 +95,18 @@ function UploadPageContent() {
 
   const handleUploadAndAnalyze = async () => {
     if (files.length === 0) {
-      setError('Please select files to upload')
+      setError('Please select images to upload')
       return
     }
 
-    if (session.upload_completed) {
-      setError('This passcode has already been used to submit files for analysis')
+    if (!profile || profile.subscription_status !== 'active') {
+      setError('No active subscription')
+      return
+    }
+
+    const remaining = profile.monthly_image_limit - (profile.images_used_this_period || 0)
+    if (files.length > remaining) {
+      setError(`Insufficient quota. You have ${remaining} image${remaining !== 1 ? 's' : ''} remaining.`)
       return
     }
 
@@ -127,28 +114,16 @@ function UploadPageContent() {
     setError(null)
 
     try {
-      // Upload files
+      // Upload and analyze images
       const formData = new FormData()
-      formData.append('passcode', passcode)
+      formData.append('restaurantName', restaurantName || 'Restaurant')
       
-      // Note: Backend expects specific field names
-      // - Image API expects keys starting with 'image' (e.g., 'image-0', 'image-1')
-      // - Video API expects 'video' key
-      if (session.type === 'image') {
-        // For images, append each as 'image-N'
-        files.forEach((file, index) => {
-          formData.append(`image-${index}`, file)
-        })
-      } else {
-        // For video, append as 'video'
-        formData.append('video', files[0])
-      }
+      // Append each file
+      files.forEach((file, index) => {
+        formData.append(`image-${index}`, file)
+      })
 
-      const uploadEndpoint = session.type === 'image' 
-        ? '/api/image/analyze' 
-        : '/api/video/analyze'
-
-      const uploadResponse = await fetch(uploadEndpoint, {
+      const uploadResponse = await fetch('/api/image/analyze-subscription', {
         method: 'POST',
         body: formData,
       })
@@ -161,11 +136,20 @@ function UploadPageContent() {
       setUploading(false)
       setAnalyzing(true)
 
-      // Analysis result
       const analysisResult = await uploadResponse.json()
 
-      // Redirect to report page
-      window.location.href = `/report?passcode=${passcode}`
+      // Show success and offer to download report
+      setSuccess('Analysis complete! Your report is ready.')
+      setAnalyzing(false)
+      
+      // Reload profile to get updated usage
+      const { profile: updatedProfile } = await getUserProfile(user.id)
+      setProfile(updatedProfile)
+
+      // Optionally auto-download PDF
+      if (analysisResult.pdf_url) {
+        window.open(analysisResult.pdf_url, '_blank')
+      }
 
     } catch (err) {
       setError(err.message)
@@ -174,149 +158,187 @@ function UploadPageContent() {
     }
   }
 
-  // Show passcode entry form if no valid session
-  if (!session) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-white">
-        <header className="border-b border-[#E5E7EB] bg-white">
-          <div className="max-w-4xl mx-auto px-6 py-5">
-            <Link href="/" className="text-xl font-normal text-[#0F172A] hover:text-[#4F7DF3]">
-              MI Health Inspection
-            </Link>
-          </div>
-        </header>
-
-        <main className="max-w-md mx-auto px-6 py-20">
-          <div className="bg-[#F7F8FA] rounded-xl p-8 border border-[#E5E7EB]">
-            <h2 className="text-2xl font-medium text-[#0F172A] mb-2">Enter Your Passcode</h2>
-            <p className="text-sm text-[#475569] mb-6">
-              Enter the 5-digit passcode you received after payment
-            </p>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
-
-            <form onSubmit={handlePasscodeSubmit} className="space-y-4">
-              <input
-                type="text"
-                maxLength={5}
-                pattern="\d{5}"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value.replace(/\D/g, ''))}
-                placeholder="12345"
-                className="w-full px-4 py-3 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F7DF3] bg-white text-center text-2xl tracking-widest"
-                required
-              />
-              <button
-                type="submit"
-                disabled={loading || passcode.length !== 5}
-                className="w-full px-6 py-3 bg-[#4F7DF3] text-white rounded-xl hover:bg-[#3D6BE0] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                {loading ? 'Verifying...' : 'Continue'}
-              </button>
-            </form>
-
-            <div className="mt-6 pt-6 border-t border-[#E5E7EB] text-center">
-              <Link href="/" className="text-sm text-[#4F7DF3] hover:underline">
-                Return to Home
-              </Link>
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#1a4480] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     )
   }
 
-  const acceptedFormats = session.type === 'image'
-    ? '.jpg,.jpeg,.png,.webp,.heic'
-    : '.mp4,.mov,.webm,.m4v,.avi'
-
-  const formatHint = session.type === 'image'
-    ? 'Supported: JPG, JPEG, PNG, WEBP, HEIC'
-    : 'Supported: MP4, MOV, WEBM, M4V, AVI'
+  const remainingImages = profile ? profile.monthly_image_limit - (profile.images_used_this_period || 0) : 0
+  const usagePercentage = profile ? Math.round(((profile.images_used_this_period || 0) / profile.monthly_image_limit) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-[#E5E7EB] bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-5">
+    <div className="min-h-screen bg-[#F0F0F0] font-sans text-gray-900">
+      {/* Official Banner */}
+      <div className="bg-[#1b1b1b] px-4 py-1">
+        <div className="max-w-5xl mx-auto flex items-center gap-2">
+          <span className="text-white text-[10px] uppercase tracking-wider font-semibold">
+            ProtocolLM — Food Service Compliance
+          </span>
+        </div>
+      </div>
+
+      {/* Header */}
+      <header className="bg-white border-b-4 border-[#1a4480]">
+        <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-normal text-[#0F172A]">MI Health Inspection</h1>
-            <div className="text-sm text-[#475569]">
-              Passcode: <span className="font-mono font-medium text-[#0F172A]">{passcode}</span>
+            <div className="flex flex-col">
+              <Link href="/" className="text-3xl font-bold text-[#1a4480] tracking-tight hover:text-[#112e5a]">
+                ProtocolLM
+              </Link>
+              <p className="text-base text-gray-600 mt-1">Upload Images for Analysis</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600">
+                {user?.email}
+              </div>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm border-2 border-gray-400 text-gray-700 font-bold rounded-md hover:bg-gray-100 transition-colors"
+              >
+                Log Out
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-10">
-        <div className="bg-[#F7F8FA] rounded-xl p-8 border border-[#E5E7EB]">
-          <h2 className="text-2xl font-medium text-[#0F172A] mb-2">
-            {session.type === 'image' ? 'Upload Photos' : 'Upload Video'}
-          </h2>
-          <p className="text-sm text-[#475569] mb-2">{formatHint}</p>
-          <p className="text-sm font-medium text-[#4F7DF3] mb-6">
-            {session.type === 'image' 
-              ? '📸 You can upload up to 1,000 images' 
-              : '🎥 Video must be 60 minutes or less'}
+      <main className="max-w-5xl mx-auto px-6 py-10">
+        {/* Subscription Status */}
+        {profile && (
+          <div className="bg-white p-6 border border-gray-300 shadow-sm rounded-sm mb-8">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1a4480] uppercase tracking-wide">Your Plan</h3>
+                <p className="text-sm text-gray-600 capitalize">{profile.current_plan || 'No active plan'}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-[#1a4480]">{remainingImages}</div>
+                <div className="text-xs text-gray-500">images remaining</div>
+              </div>
+            </div>
+            
+            {/* Usage bar */}
+            <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+              <div 
+                className="bg-[#1a4480] h-3 rounded-full transition-all duration-300"
+                style={{ width: `${usagePercentage}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-600">
+              {profile.images_used_this_period || 0} of {profile.monthly_image_limit} images used this period
+            </p>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-700 rounded-sm">
+            <p className="text-sm text-green-800">{success}</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-700 rounded-sm">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Optional Checklist */}
+        <div className="bg-white p-8 border border-gray-300 shadow-sm rounded-sm mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-[#1a4480] uppercase tracking-wide">Inspection Areas</h3>
+              <p className="text-sm text-gray-600">Optional reminders for common areas (not required)</p>
+            </div>
+            <button
+              onClick={() => setShowChecklist(!showChecklist)}
+              className="text-sm text-[#1a4480] font-bold hover:underline"
+            >
+              {showChecklist ? 'Hide' : 'Show'} Checklist
+            </button>
+          </div>
+          
+          {showChecklist && (
+            <div className="grid md:grid-cols-2 gap-3 mt-4">
+              {checklistItems.map((item, index) => (
+                <label key={index} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    onChange={(e) => {
+                      const newItems = [...checklistItems]
+                      newItems[index].checked = e.target.checked
+                      setChecklistItems(newItems)
+                    }}
+                    className="w-4 h-4 text-[#1a4480]"
+                  />
+                  <span>{item.name}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Upload Section */}
+        <div className="bg-white p-8 border border-gray-300 shadow-sm rounded-sm">
+          <h2 className="text-2xl font-bold text-[#1a4480] mb-2">Upload Images</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Select photos of your food service areas for compliance analysis
           </p>
 
-          {session.upload_completed && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-              <p className="text-sm text-blue-800">
-                Files have already been submitted for this passcode. 
-                <a href={`/report?passcode=${passcode}`} className="underline ml-1">View report</a>
-              </p>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-2 uppercase tracking-wide">
+                Business Name (Optional)
+              </label>
+              <input
+                type="text"
+                value={restaurantName}
+                onChange={(e) => setRestaurantName(e.target.value)}
+                placeholder="e.g., Main Street Diner"
+                className="w-full px-4 py-3 border-2 border-gray-400 rounded-none focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-[#1a4480] bg-white text-gray-900"
+              />
             </div>
-          )}
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-sm text-red-800">{error}</p>
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-2 uppercase tracking-wide">
+                Select Images
+              </label>
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.heic"
+                multiple
+                onChange={handleFileChange}
+                className="w-full px-4 py-3 border-2 border-gray-400 rounded-none focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-[#1a4480] bg-white"
+              />
+              {files.length > 0 && (
+                <p className="text-sm text-gray-600 mt-2">
+                  {files.length} file{files.length !== 1 ? 's' : ''} selected
+                </p>
+              )}
             </div>
-          )}
 
-          {!session.upload_completed && (
-            <>
-              <div className="mb-6">
-                <label className="block mb-2 text-sm font-medium text-[#0F172A]">
-                  {session.type === 'image' ? 'Select Photos' : 'Select Video'}
-                </label>
-                <input
-                  type="file"
-                  accept={acceptedFormats}
-                  multiple={session.type === 'image'}
-                  onChange={handleFileChange}
-                  className="w-full px-4 py-3 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F7DF3] bg-white"
-                />
-                {files.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm text-[#475569]">
-                      {files.length} file{files.length !== 1 ? 's' : ''} selected
-                    </p>
-                    {session.type === 'image' && (() => {
-                      const remaining = Math.max(0, 1000 - files.length)
-                      return (
-                        <p className="text-xs text-[#4F7DF3] mt-1">
-                          {remaining} image{remaining !== 1 ? 's' : ''} remaining (max 1,000)
-                        </p>
-                      )
-                    })()}
-                  </div>
-                )}
+            <button
+              onClick={handleUploadAndAnalyze}
+              disabled={uploading || analyzing || files.length === 0 || remainingImages === 0}
+              className="w-full px-8 py-4 bg-[#1a4480] text-white font-bold rounded-md hover:bg-[#112e5a] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
+            >
+              {uploading ? 'Uploading...' : analyzing ? 'Analyzing...' : 'Upload and Analyze'}
+            </button>
+
+            {remainingImages === 0 && (
+              <div className="p-4 bg-yellow-50 border-l-4 border-yellow-700 rounded-sm">
+                <p className="text-sm text-yellow-800 font-medium">
+                  You've reached your monthly image limit. Please upgrade your plan or wait for your next billing cycle.
+                </p>
               </div>
-
-              <button
-                onClick={handleUploadAndAnalyze}
-                disabled={uploading || analyzing || files.length === 0}
-                className="w-full px-8 py-3 bg-[#4F7DF3] text-white rounded-xl hover:bg-[#3D6BE0] disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                {uploading ? 'Uploading...' : analyzing ? 'Analyzing...' : 'Upload and Analyze'}
-              </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </main>
     </div>
@@ -327,11 +349,12 @@ export default function UploadPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-[#4F7DF3] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-[#475569]">Loading...</p>
+        <div className="w-16 h-16 border-4 border-[#1a4480] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
       </div>
     </div>}>
       <UploadPageContent />
     </Suspense>
   )
 }
+
