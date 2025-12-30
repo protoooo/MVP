@@ -85,3 +85,7 @@ temp/
 .stripe/
 .backup/
 .env.local
+
+# Tenant Report Files
+uploads/
+reports/

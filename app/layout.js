@@ -3,8 +3,8 @@ import CookieConsent from '@/components/CookieConsent'
 import Analytics from '@/components/Analytics'
 
 export const metadata = {
-  title: 'Michigan Food Safety Compliance API - Webhook & API Integration',
-  description: 'Pure API/Webhook integration for automatic photo compliance checks. Powered by Cohere Vision. No UI. No accounts.',
+  title: 'Michigan Tenant Condition Report Generator',
+  description: 'Generate professional rental condition reports for Michigan tenants - $20 for up to 200 photos',
   manifest: '/manifest.json',
   icons: {
     icon: [
