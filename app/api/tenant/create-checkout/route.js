@@ -3,7 +3,17 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { generateSecretLink, generateAccessCode } from '@/backend/utils/secretLinks'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+// Initialize Stripe with error handling to prevent key exposure
+let stripe = null
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  }
+} catch (error) {
+  // Never expose the actual error which might contain the secret key
+  console.error('[stripe-init] Failed to initialize Stripe (key hidden for security)')
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -141,9 +151,16 @@ export async function POST(req) {
     })
 
   } catch (error) {
+    // Log the full error server-side for debugging
     console.error('[tenant-checkout] Error:', error)
+    
+    // Return sanitized error message to client (never expose secrets/keys)
+    const clientError = error.type === 'StripeInvalidRequestError' 
+      ? 'Payment service configuration error. Please contact support.'
+      : 'Failed to create checkout session. Please try again later.'
+    
     return NextResponse.json({ 
-      error: error.message || 'Failed to create checkout session' 
+      error: clientError
     }, { status: 500 })
   }
 }

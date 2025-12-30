@@ -10,7 +10,17 @@ import { MAX_DEVICE_QUANTITY } from '@/lib/deviceConstants'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+// Initialize Stripe with error handling to prevent key exposure
+let stripe = null
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  }
+} catch (error) {
+  // Never expose the actual error which might contain the secret key
+  console.error('[stripe-init] Failed to initialize Stripe (key hidden for security)')
+}
+
 const DEVICE_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_UNLIMITED_MONTHLY
 const SUCCESS_URL = process.env.NEXT_PUBLIC_BASE_URL
 

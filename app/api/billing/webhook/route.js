@@ -5,7 +5,17 @@ import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 import { ensureSeatInventory } from '@/lib/deviceSeats'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+// Initialize Stripe with error handling to prevent key exposure
+let stripe = null
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  }
+} catch (error) {
+  // Never expose the actual error which might contain the secret key
+  console.error('[stripe-init] Failed to initialize Stripe (key hidden for security)')
+}
+
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
