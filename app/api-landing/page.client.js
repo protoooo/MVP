@@ -8,7 +8,7 @@ const PRICING_TIERS = [
     price: 0, 
     included: 100, 
     tier: 'free', 
-    env: null,
+    stripeLink: null,
     description: 'Perfect for testing and evaluation',
     isFree: true,
     features: ['100 images per month', 'Full API access', 'All compliance features', 'Community support']
@@ -18,7 +18,8 @@ const PRICING_TIERS = [
     price: 99, 
     included: 3000, 
     tier: 'growth', 
-    env: 'NEXT_PUBLIC_STRIPE_LINK_GROWTH',
+    stripeLink: process.env.NEXT_PUBLIC_STRIPE_LINK_GROWTH,
+    envName: 'NEXT_PUBLIC_STRIPE_LINK_GROWTH',
     description: 'Ideal for single locations or small teams',
     features: ['3,000 images/month', 'Unlimited webhooks', 'Michigan Food Code refs', 'Email support']
   },
@@ -27,7 +28,8 @@ const PRICING_TIERS = [
     price: 499, 
     included: 20000, 
     tier: 'chain', 
-    env: 'NEXT_PUBLIC_STRIPE_LINK_CHAIN',
+    stripeLink: process.env.NEXT_PUBLIC_STRIPE_LINK_CHAIN,
+    envName: 'NEXT_PUBLIC_STRIPE_LINK_CHAIN',
     description: 'Built for multi-location operations',
     popular: true,
     features: ['20,000 images/month', 'Unlimited webhooks', 'Priority support', 'Custom integrations']
@@ -37,7 +39,8 @@ const PRICING_TIERS = [
     price: 1999, 
     included: 'Unlimited', 
     tier: 'enterprise_sub', 
-    env: 'NEXT_PUBLIC_STRIPE_LINK_ENTERPRISE_SUB',
+    stripeLink: process.env.NEXT_PUBLIC_STRIPE_LINK_ENTERPRISE_SUB,
+    envName: 'NEXT_PUBLIC_STRIPE_LINK_ENTERPRISE_SUB',
     description: 'Custom support and volume usage',
     features: ['Unlimited images', 'Dedicated support', 'SLA guarantees', 'Custom development']
   },
@@ -48,6 +51,7 @@ export default function ApiLanding() {
   const [copiedCode, setCopiedCode] = useState(false)
   const [generatingKey, setGeneratingKey] = useState(false)
   const [freeKeyEmail, setFreeKeyEmail] = useState('')
+  const [error, setError] = useState(null)
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text)
@@ -62,12 +66,16 @@ export default function ApiLanding() {
   const handleSubscribe = (tier) => {
     if (tier.isFree) {
       setSelectedExample({ type: 'free-signup' })
+      setError(null)
     } else {
-      const stripeLink = tier.env ? process.env[tier.env] : null
-      if (stripeLink) {
-        window.location.href = stripeLink
+      if (tier.stripeLink) {
+        window.location.href = tier.stripeLink
       } else {
-        alert(`Please configure ${tier.env} in your environment variables.\n\nIn Stripe:\n1. Create a subscription product for "${tier.name}" at $${tier.price}/month\n2. Add metadata: tier="${tier.tier}", included="${tier.included}"\n3. Create a Payment Link\n4. Add the link to your .env file as ${tier.env}`)
+        setError({
+          title: 'Stripe Configuration Required',
+          message: `Please configure ${tier.envName} in your environment variables.\n\nIn Stripe:\n1. Create a subscription product for "${tier.name}" at $${tier.price}/month\n2. Add metadata: tier="${tier.tier}", included="${tier.included}"\n3. Create a Payment Link\n4. Add the link to your .env file as ${tier.envName}`
+        })
+        setSelectedExample({ type: 'config-error', tier })
       }
     }
   }
@@ -75,6 +83,7 @@ export default function ApiLanding() {
   const handleFreeTierSignup = async (e) => {
     e.preventDefault()
     setGeneratingKey(true)
+    setError(null)
 
     try {
       const response = await fetch('/api/generate-api-key', {
@@ -93,10 +102,16 @@ export default function ApiLanding() {
       if (data.success) {
         window.location.href = data.dashboardUrl
       } else {
-        alert('Failed to generate API key: ' + (data.error || 'Unknown error'))
+        setError({
+          title: 'API Key Generation Failed',
+          message: data.error || 'Unknown error occurred. Please try again.'
+        })
       }
     } catch (error) {
-      alert('Error: ' + error.message)
+      setError({
+        title: 'Network Error',
+        message: error.message || 'Failed to connect to the server. Please check your connection and try again.'
+      })
     } finally {
       setGeneratingKey(false)
     }
@@ -132,7 +147,8 @@ export default function ApiLanding() {
 
 const data = await response.json()
 console.log('Score:', data.score)
-console.log('Violations:', data.violations)`
+console.log('Violations:', data.violations)
+console.log('Michigan Codes:', data.michigan_code_refs)`
 
   const pythonExample = `import requests
 
@@ -146,7 +162,8 @@ response = requests.post(
 
 data = response.json()
 print(f"Score: {data['score']}")
-print(f"Violations: {data['violations']}")`
+print(f"Violations: {data['violations']}")
+print(f"Michigan Codes: {data['michigan_code_refs']}")`
 
   const webhookExample = `// Webhook receiver for in-house systems
 app.post('/webhook/photos', async (req, res) => {
@@ -376,6 +393,12 @@ app.post('/webhook/photos', async (req, res) => {
                   Enter your email to receive your free API key instantly. You'll get 100 free images 
                   per month to test and evaluate our service.
                 </p>
+                {error && (
+                  <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                    <h4 className="text-red-800 font-semibold mb-1">{error.title}</h4>
+                    <p className="text-red-700 text-sm whitespace-pre-line">{error.message}</p>
+                  </div>
+                )}
                 <form onSubmit={handleFreeTierSignup}>
                   <div className="mb-6">
                     <label className="block mb-2 font-semibold text-gray-900">Email Address</label>
@@ -396,6 +419,11 @@ app.post('/webhook/photos', async (req, res) => {
                     {generatingKey ? 'Generating...' : 'Get Free API Key'}
                   </button>
                 </form>
+              </div>
+            ) : selectedExample.type === 'config-error' ? (
+              <div className="p-6 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                <h4 className="text-yellow-800 font-semibold mb-3">{error.title}</h4>
+                <p className="text-yellow-700 whitespace-pre-line">{error.message}</p>
               </div>
             ) : (
               <div className="bg-gray-900 rounded-lg p-6 relative">
