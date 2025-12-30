@@ -49,29 +49,38 @@ export async function POST(request) {
 
     console.log('Turnstile verification successful')
 
-    // Initialize clients only when route is called
+    // Initialize clients
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
-    // Determine amount and price ID based on type
-    const amount = type === 'image' ? 5000 : 20000 // $50 or $200
-    const productName = type === 'image' 
-      ? 'Image Compliance Analysis' 
-      : 'Video Compliance Analysis (30 min)'
-
-    // Use Stripe Price IDs if available, otherwise create inline price
+    // Get Stripe Price ID
     const priceId = type === 'image' 
       ? process.env.STRIPE_PRICE_ID_IMAGE 
       : process.env.STRIPE_PRICE_ID_VIDEO
 
+    // CRITICAL: Validate Price ID is configured
+    if (!priceId) {
+      console.error(`CRITICAL: Missing Stripe Price ID for ${type} analysis`)
+      console.error('Required env vars: STRIPE_PRICE_ID_IMAGE, STRIPE_PRICE_ID_VIDEO')
+      return NextResponse.json(
+        { error: 'Payment system configuration error. Please contact support.' },
+        { status: 500 }
+      )
+    }
+
+    const productName = type === 'image' 
+      ? 'Image Compliance Analysis' 
+      : 'Video Compliance Analysis (30 min)'
+
     // Generate unique 5-digit passcode
     let passcode
     let isUnique = false
+    let attempts = 0
     
-    while (!isUnique) {
+    while (!isUnique && attempts < 10) {
       passcode = generatePasscode()
       const { data: existing } = await supabase
         .from('analysis_sessions')
@@ -82,6 +91,15 @@ export async function POST(request) {
       if (!existing) {
         isUnique = true
       }
+      attempts++
+    }
+
+    if (!isUnique) {
+      console.error('Failed to generate unique passcode after 10 attempts')
+      return NextResponse.json(
+        { error: 'System temporarily unavailable. Please try again.' },
+        { status: 503 }
+      )
     }
 
     // Create analysis session with passcode
@@ -108,38 +126,17 @@ export async function POST(request) {
       )
     }
 
-    // Create Stripe checkout session
-    let lineItems
+    console.log(`Created session ${session.id} with passcode ${passcode}`)
 
-    if (priceId) {
-      // Use existing Stripe Price ID
-      lineItems = [
+    // Create Stripe checkout session
+    const checkoutSession = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
         {
           price: priceId,
           quantity: 1,
         }
-      ]
-    } else {
-      // Create inline price (fallback if Price IDs not configured)
-      console.warn(`No Stripe Price ID configured for ${type} - using inline price`)
-      lineItems = [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: productName,
-              description: `MI Health Inspection - ${productName}`,
-            },
-            unit_amount: amount,
-          },
-          quantity: 1,
-        }
-      ]
-    }
-
-    const checkoutSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems,
+      ],
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/upload?passcode=${passcode}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
@@ -149,6 +146,8 @@ export async function POST(request) {
         passcode: passcode,
       },
     })
+
+    console.log(`Created Stripe checkout session: ${checkoutSession.id}`)
 
     return NextResponse.json({
       sessionId: checkoutSession.id,
