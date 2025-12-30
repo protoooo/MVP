@@ -3,6 +3,7 @@ import { uploadFile } from '../../../../lib/storage.js'
 import { analyzeMultipleImages } from '../../../../lib/cohereVision.js'
 import { createViolationSummary, deduplicateViolations } from '../../../../lib/violationAnalyzer.js'
 import { generateInspectionReport } from '../../../../lib/pdfGenerator.js'
+import { sendReportToMultiple } from '../../../../lib/emailService.js'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabaseClient() {
@@ -81,6 +82,8 @@ export async function POST(request) {
     }
 
     const restaurantName = formData.get('restaurantName') || 'Restaurant'
+    const gmEmail = formData.get('gmEmail')
+    const ownerEmail = formData.get('ownerEmail')
 
     console.log(`Processing ${imageFiles.length} images for user ${user.id}`)
 
@@ -141,6 +144,23 @@ export async function POST(request) {
 
     console.log(`Updated usage for user ${user.id}: ${newUsage} / ${profile.monthly_image_limit}`)
 
+    // Send email if recipients provided
+    let emailResult = null
+    if (gmEmail || ownerEmail) {
+      const recipients = []
+      if (gmEmail) recipients.push(gmEmail)
+      if (ownerEmail) recipients.push(ownerEmail)
+      
+      emailResult = await sendReportToMultiple({
+        recipients,
+        pdfUrl: pdfResult.pdfUrl,
+        restaurantName,
+        analysisDate: new Date().toISOString()
+      })
+      
+      console.log(`Email sent to ${emailResult.sent} recipient(s)`)
+    }
+
     // Return results
     return NextResponse.json({
       success: true,
@@ -148,6 +168,7 @@ export async function POST(request) {
       violations: allViolations,
       summary,
       pdf_url: pdfResult.pdfUrl,
+      email_sent: emailResult?.sent || 0,
       usage: {
         used: newUsage,
         limit: profile.monthly_image_limit,

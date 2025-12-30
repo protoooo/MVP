@@ -18,6 +18,8 @@ function UploadPageContent() {
   const [success, setSuccess] = useState(null)
   const [loading, setLoading] = useState(true)
   const [restaurantName, setRestaurantName] = useState('')
+  const [gmEmail, setGmEmail] = useState('')
+  const [ownerEmail, setOwnerEmail] = useState('')
   const [showChecklist, setShowChecklist] = useState(false)
   const [checklistItems, setChecklistItems] = useState([
     { name: 'Three-compartment sink', checked: false },
@@ -118,6 +120,10 @@ function UploadPageContent() {
       const formData = new FormData()
       formData.append('restaurantName', restaurantName || 'Restaurant')
       
+      // Add email addresses if provided
+      if (gmEmail) formData.append('gmEmail', gmEmail)
+      if (ownerEmail) formData.append('ownerEmail', ownerEmail)
+      
       // Append each file
       files.forEach((file, index) => {
         formData.append(`image-${index}`, file)
@@ -138,8 +144,12 @@ function UploadPageContent() {
 
       const analysisResult = await uploadResponse.json()
 
-      // Show success and offer to download report
-      setSuccess('Analysis complete! Your report is ready.')
+      // Show success message
+      let successMsg = 'Analysis complete! Your report is ready.'
+      if (analysisResult.email_sent > 0) {
+        successMsg += ` Report sent to ${analysisResult.email_sent} email address${analysisResult.email_sent !== 1 ? 'es' : ''}.`
+      }
+      setSuccess(successMsg)
       setAnalyzing(false)
       
       // Reload profile to get updated usage
@@ -305,7 +315,44 @@ function UploadPageContent() {
               />
             </div>
 
-            <div>
+            <div className="border-t border-gray-200 pt-6">
+              <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wide">
+                Email Report (Optional)
+              </h4>
+              <p className="text-xs text-gray-600 mb-4">
+                Send the PDF report via email to your GM or Owner
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    GM Email
+                  </label>
+                  <input
+                    type="email"
+                    value={gmEmail}
+                    onChange={(e) => setGmEmail(e.target.value)}
+                    placeholder="gm@restaurant.com"
+                    className="w-full px-4 py-3 border-2 border-gray-400 rounded-none focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-[#1a4480] bg-white text-gray-900"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Owner Email
+                  </label>
+                  <input
+                    type="email"
+                    value={ownerEmail}
+                    onChange={(e) => setOwnerEmail(e.target.value)}
+                    placeholder="owner@restaurant.com"
+                    className="w-full px-4 py-3 border-2 border-gray-400 rounded-none focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-[#1a4480] bg-white text-gray-900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-200 pt-6">
               <label className="block text-sm font-bold text-gray-800 mb-2 uppercase tracking-wide">
                 Select Images
               </label>
