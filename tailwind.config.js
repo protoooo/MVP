@@ -8,44 +8,59 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Premium Light Theme Colors
+        // Superbase-Inspired Light Theme Colors
         primary: {
-          DEFAULT: '#1e40af', // Deep blue - trustworthy, official
-          50: '#eff6ff',
-          100: '#dbeafe',
-          600: '#1e40af',
-          700: '#1e3a8a',
+          DEFAULT: '#4A90E2', // Soft primary blue
+          dark: '#357ABD',    // Darker for hover
+          light: '#6BA3E8',   // Lighter for backgrounds
+          50: '#EBF4FC',
+          100: '#D7E9F9',
+          600: '#4A90E2',
+          700: '#357ABD',
+          800: '#2A6399',
         },
         secondary: {
-          DEFAULT: '#059669', // Emerald - success, verification
-          50: '#ecfdf5',
-          100: '#d1fae5',
+          DEFAULT: '#059669', // Success green
+          50: '#ECFDF5',
+          100: '#D1FAE5',
           600: '#059669',
           700: '#047857',
         },
         accent: {
-          DEFAULT: '#d97706', // Amber - warnings, attention
-          50: '#fffbeb',
-          100: '#fef3c7',
-          600: '#d97706',
-          700: '#b45309',
+          DEFAULT: '#F59E0B', // Warm amber
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          600: '#F59E0B',
+          700: '#D97706',
         },
+        // Background colors
+        'bg-primary': '#FFFFFF',
+        'bg-secondary': '#FAFAF0',
+        'bg-tertiary': '#F8F9FA',
+        // Border colors
+        'border-default': '#E0E0E0',
+        'border-light': '#F0F0F0',
+        'border-dark': '#D0D0D0',
+        // Text colors
+        'text-primary': '#1A1A1A',
+        'text-secondary': '#666666',
+        'text-tertiary': '#999999',
+        // Legacy support
         slate: {
-          DEFAULT: '#0f172a', // Primary text
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          600: '#64748b', // Secondary text
-          900: '#0f172a',
+          DEFAULT: '#1A1A1A',
+          50: '#F8F9FA',
+          100: '#F1F3F4',
+          200: '#E0E0E0',
+          600: '#666666',
+          900: '#1A1A1A',
         },
       },
       fontFamily: {
         sans: [
+          'Inter',
           '-apple-system',
           'BlinkMacSystemFont',
-          'SF Pro Display',
           'Segoe UI',
-          'Inter',
           'Roboto',
           'Helvetica Neue',
           'Arial',
@@ -53,24 +68,39 @@ export default {
         ],
       },
       fontSize: {
-        // Mobile: 16px base, Desktop: 18px base
-        base: ['16px', { lineHeight: '1.6' }],
-        lg: ['18px', { lineHeight: '1.6' }],
+        base: ['16px', { lineHeight: '1.6', letterSpacing: '-0.01em' }],
+        lg: ['17px', { lineHeight: '1.6', letterSpacing: '-0.01em' }],
+      },
+      spacing: {
+        xs: '0.25rem',
+        sm: '0.5rem',
+        md: '1rem',
+        lg: '1.5rem',
+        xl: '2rem',
+        '2xl': '3rem',
       },
       borderRadius: {
-        lg: '12px',
-        xl: '16px',
-        '2xl': '20px',
+        sm: '8px',
+        md: '12px',
+        lg: '16px',
+        xl: '24px',
+        pill: '999px',
       },
       boxShadow: {
-        'lift': '0 4px 12px rgba(30, 64, 175, 0.15)',
-        'lift-lg': '0 8px 24px rgba(30, 64, 175, 0.2)',
+        sm: '0 1px 3px rgba(0, 0, 0, 0.06)',
+        md: '0 4px 8px rgba(0, 0, 0, 0.08)',
+        lg: '0 8px 16px rgba(0, 0, 0, 0.1)',
+        pill: '0 2px 8px rgba(74, 144, 226, 0.15)',
+        'pill-hover': '0 4px 12px rgba(74, 144, 226, 0.25)',
+        soft: '0 1px 3px rgba(0, 0, 0, 0.06)',
+        medium: '0 4px 8px rgba(0, 0, 0, 0.08)',
+        strong: '0 8px 16px rgba(0, 0, 0, 0.1)',
       },
       screens: {
-        'sm': '640px',
-        'md': '768px',
-        'lg': '1024px',
-        'xl': '1280px',
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
       },
     },
   },

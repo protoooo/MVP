@@ -38,50 +38,50 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F0F0] font-sans text-gray-900">
+    <div className="min-h-screen bg-bg-secondary font-sans text-text-primary">
       {/* Official Gov Banner */}
-      <div className="bg-[#1b1b1b] px-4 py-1">
-        <div className="max-w-5xl mx-auto flex items-center gap-2">
-          <span className="text-white text-[10px] uppercase tracking-wider font-semibold">
+      <div className="bg-text-primary px-4 py-1.5">
+        <div className="max-w-6xl mx-auto flex items-center gap-2">
+          <span className="text-white text-xs uppercase tracking-wider font-semibold">
             ProtocolLM — Food Service Compliance
           </span>
         </div>
       </div>
 
       {/* Main Header */}
-      <header className="bg-white border-b-4 border-[#1a4480]">
-        <div className="max-w-5xl mx-auto px-6 py-6">
+      <header className="bg-bg-primary border-b border-border-default shadow-soft">
+        <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex flex-col">
-            <Link href="/" className="text-3xl font-bold text-[#1a4480] tracking-tight hover:text-[#112e5a]">
+            <Link href="/" className="text-3xl font-bold text-primary tracking-tight hover:text-primary-dark transition-colors">
               ProtocolLM
             </Link>
-            <p className="text-base text-gray-600 mt-1">Image Compliance Analysis</p>
+            <p className="text-base text-text-secondary mt-1">Image Compliance Analysis</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-6 py-12">
-        <div className="bg-white p-8 border border-gray-300 shadow-sm rounded-sm">
-          <h2 className="text-2xl font-bold text-[#1a4480] mb-2">Log In</h2>
-          <p className="text-sm text-gray-600 mb-6">
+      <main className="max-w-md mx-auto px-6 py-16">
+        <div className="card animate-fadeInUp">
+          <h2 className="text-2xl font-bold text-primary mb-2">Log In</h2>
+          <p className="text-sm text-text-secondary mb-8">
             Access your compliance analysis account
           </p>
 
           {message && (
-            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-[#1a4480] rounded-sm">
-              <p className="text-sm text-blue-800">{message}</p>
+            <div className="mb-6 alert-info animate-slideDown">
+              <p className="text-sm">{message}</p>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-700 rounded-sm">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="mb-6 alert-danger animate-shake">
+              <p className="text-sm">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-bold text-gray-800 mb-2 uppercase tracking-wide">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 Email Address
               </label>
               <input
@@ -89,13 +89,12 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 border-2 border-gray-400 rounded-none focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-[#1a4480] bg-white text-gray-900"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-800 mb-2 uppercase tracking-wide">
+              <label className="block text-sm font-semibold text-text-primary mb-2">
                 Password
               </label>
               <input
@@ -103,7 +102,6 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full px-4 py-3 border-2 border-gray-400 rounded-none focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-[#1a4480] bg-white text-gray-900"
                 required
               />
             </div>
@@ -111,16 +109,16 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-3 bg-[#1a4480] text-white font-bold rounded-md hover:bg-[#112e5a] disabled:opacity-70 disabled:cursor-not-allowed shadow-sm transition-colors"
+              className="w-full btn-primary py-3.5"
             >
               {loading ? 'Logging In...' : 'Log In'}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="mt-8 pt-6 border-t border-border-default text-center">
+            <p className="text-sm text-text-secondary">
               Don't have an account?{' '}
-              <Link href="/auth/signup" className="text-[#1a4480] font-bold hover:underline">
+              <Link href="/auth/signup" className="text-primary font-semibold hover:text-primary-dark transition-colors">
                 Sign Up
               </Link>
             </p>
@@ -134,10 +132,10 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#F0F0F0] flex items-center justify-center">
+      <div className="min-h-screen bg-bg-secondary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#1a4480] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="loading-spinner mx-auto mb-4"></div>
+          <p className="text-text-secondary">Loading...</p>
         </div>
       </div>
     }>
