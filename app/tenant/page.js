@@ -73,12 +73,27 @@ export default function TenantLandingPage() {
         <div className="max-w-3xl">
           <h2 className="text-4xl font-bold text-gray-900 leading-tight">
             Document Rental Unit Issues<br />
-            <span className="text-blue-600">Get a Professional Report</span>
+            <span className="text-blue-600">Get a Forensic Evidence Package</span>
           </h2>
           <p className="text-xl text-gray-600 mt-6 leading-relaxed">
-            Upload photos of your rental unit to generate a neutral, professional PDF report 
-            documenting habitability violations, landlord obligations, and your tenant rights under Michigan law.
+            Upload photos of your rental unit to generate a professional forensic evidence package 
+            documenting habitability violations, complete with verified timestamps, GPS validation, 
+            landlord demand letter, and your tenant rights under Michigan law.
           </p>
+          
+          {/* Detroit Statistics Alert */}
+          <div className="mt-6 p-5 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+            <h3 className="font-bold text-gray-900 mb-2 flex items-center">
+              <span className="text-red-600 mr-2">⚠️</span>
+              Critical: Michigan Landlord Non-Compliance Crisis
+            </h3>
+            <p className="text-sm text-gray-800 leading-relaxed">
+              <strong>Studies show nearly 90% of evicting landlords in Detroit are not compliant with city codes</strong>, 
+              and only <strong>10% of Detroit rentals</strong> meet full compliance standards. This means most tenants 
+              are living in conditions that violate Michigan housing law. This report helps you document violations 
+              and assert your legal rights.
+            </p>
+          </div>
           
           <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
             <h3 className="font-semibold text-gray-900 mb-3">What We Analyze (Visible Conditions Only):</h3>
@@ -278,9 +293,19 @@ export default function TenantLandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-200 mt-16">
         <div className="max-w-6xl mx-auto px-6 py-8">
-          <p className="text-sm text-gray-600 text-center">
-            © 2024 Michigan Tenant Condition Report. All rights reserved.
-          </p>
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-sm text-gray-600">
+              © 2024 Michigan Tenant Condition Report. All rights reserved.
+            </p>
+            <div className="flex space-x-6">
+              <a href="/privacy" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                Privacy Policy
+              </a>
+              <a href="/terms" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                Terms of Service
+              </a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

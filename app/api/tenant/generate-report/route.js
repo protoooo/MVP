@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { analyzeTenantImage } from '@/backend/utils/tenantAnalysis'
 import { generateTenantReport } from '@/backend/utils/tenantReportGenerator'
+import { addWatermarkToImage, generateManualVerificationNote } from '@/backend/utils/exifMetadata'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
@@ -123,13 +124,32 @@ export async function POST(req) {
         // Save to temp file
         const ext = path.extname(photo.file_path) || '.jpg'
         const tempPath = path.join(os.tmpdir(), `${photo.id}${ext}`)
+        const watermarkedPath = path.join(os.tmpdir(), `${photo.id}-watermarked${ext}`)
         const arrayBuffer = await fileData.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
         fs.writeFileSync(tempPath, buffer)
         tempPaths.push(tempPath)
+        
+        // Add watermark with metadata
+        await addWatermarkToImage(tempPath, watermarkedPath, {
+          dateTime: photo.exif_date_time,
+          latitude: photo.exif_latitude,
+          longitude: photo.exif_longitude,
+          serverTimestamp: photo.server_upload_timestamp
+        })
+        tempPaths.push(watermarkedPath)
 
         // Analyze image
         const analysis = await analyzeTenantImage(tempPath, photo.room_area)
+        
+        // Add metadata warning if applicable
+        let metadataNote = null
+        if (!photo.has_exif_metadata || !photo.exif_latitude) {
+          metadataNote = generateManualVerificationNote(
+            report.property_address || 'the property',
+            photo.exif_date_time || new Date(photo.server_upload_timestamp).toLocaleDateString()
+          )
+        }
         
         // Update photo with analysis results
         await supabase
@@ -147,8 +167,21 @@ export async function POST(req) {
 
         analysisResults.push({
           media_id: photo.id,
-          photo_path: photo.file_path,
+          photo_path: watermarkedPath, // Use watermarked version
           room_area: photo.room_area,
+          exif_data: {
+            dateTime: photo.exif_date_time,
+            latitude: photo.exif_latitude,
+            longitude: photo.exif_longitude,
+            make: photo.exif_make,
+            model: photo.exif_model,
+            serverTimestamp: photo.server_upload_timestamp,
+            hasExif: photo.has_exif_metadata,
+            gpsValidated: photo.gps_validated,
+            gpsDistanceMiles: photo.gps_distance_miles
+          },
+          metadata_note: metadataNote,
+          metadata_warning: photo.metadata_warning,
           ...analysis
         })
 
@@ -184,7 +217,8 @@ export async function POST(req) {
       reportDate: new Date().toLocaleDateString(),
       tenantIdentifier: report.access_code,
       propertyAddress: report.property_address || 'Not provided',
-      totalPhotos: photos.length
+      totalPhotos: photos.length,
+      expiresAt: report.expires_at
     }
 
     const { jsonReport, pdfBuffer } = await generateTenantReport(
