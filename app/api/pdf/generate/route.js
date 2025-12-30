@@ -1,24 +1,73 @@
 import { NextResponse } from 'next/server'
+import { generateInspectionReport } from '../../../../lib/pdfGenerator.js'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
 
 export async function POST(request) {
   try {
-    // This is a placeholder - full implementation will handle:
-    // 1. Receive analysis results
-    // 2. Generate professional PDF with PDFKit
-    // 3. Include MI Health Inspection branding
-    // 4. Format violations with severity levels
-    // 5. Add Michigan food safety regulation references
-    // 6. Return PDF download URL
+    // Parse request body
+    const body = await request.json()
     
+    const {
+      restaurantName = 'Restaurant',
+      analysisType = 'image',
+      violations = [],
+      timeline = [],
+      metadata = {},
+      passcode = null
+    } = body
+
+    // Validate input
+    if (!violations || (!Array.isArray(violations) && !Array.isArray(timeline))) {
+      return NextResponse.json(
+        { error: 'Invalid violations or timeline data' },
+        { status: 400 }
+      )
+    }
+
+    console.log(`Generating PDF report for ${restaurantName}`)
+
+    // Generate PDF report
+    const pdfResult = await generateInspectionReport({
+      restaurantName,
+      analysisType,
+      violations,
+      timeline,
+      metadata
+    })
+
+    console.log(`PDF generated: ${pdfResult.pdfUrl}`)
+
+    // Update session in database if passcode provided
+    if (passcode) {
+      await supabase
+        .from('analysis_sessions')
+        .update({
+          pdf_url: pdfResult.pdfUrl,
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('passcode', passcode)
+    }
+
+    // Return PDF URL
     return NextResponse.json({
-      message: 'PDF generation endpoint - implementation pending',
-      status: 'pending'
+      success: true,
+      pdf_url: pdfResult.pdfUrl,
+      pdf_path: pdfResult.pdfPath
     })
 
   } catch (error) {
     console.error('PDF generation error:', error)
     return NextResponse.json(
-      { error: 'Failed to generate PDF' },
+      { 
+        error: 'Failed to generate PDF',
+        details: error.message 
+      },
       { status: 500 }
     )
   }
