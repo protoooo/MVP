@@ -1,4 +1,8 @@
 import PDFDocument from 'pdfkit'
+import { addWatermarkToImage, generateManualVerificationNote } from './exifMetadata'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 
 // Constants
 const EXCERPT_LENGTH_JSON = 200
@@ -106,20 +110,30 @@ export async function generateTenantReport(sessionId, results, metadata = {}) {
     doc.on('error', (err) => reject(err))
 
     // === COVER PAGE ===
-    doc.fontSize(28).font('Helvetica-Bold').text('Michigan Tenant', { align: 'center' })
-    doc.fontSize(28).font('Helvetica-Bold').text('Condition Report', { align: 'center' })
+    doc.fontSize(32).font('Helvetica-Bold').text('FORENSIC EVIDENCE PACKAGE', { align: 'center' })
+    doc.moveDown(0.3)
+    doc.fontSize(24).font('Helvetica-Bold').text('Michigan Tenant', { align: 'center' })
+    doc.fontSize(24).font('Helvetica-Bold').text('Habitability Report', { align: 'center' })
     doc.moveDown(0.5)
-    doc.fontSize(12).font('Helvetica').text('Habitability Inspection & Documentation', { align: 'center' })
+    doc.fontSize(12).font('Helvetica').text('Legal Documentation of Rental Unit Conditions', { align: 'center' })
     doc.moveDown(2)
     
     // Report metadata
     doc.fontSize(11).font('Helvetica')
     doc.text(`Report Date: ${metadata.reportDate || new Date().toLocaleDateString()}`)
-    doc.text(`Property: ${metadata.propertyAddress || 'Not provided'}`)
+    doc.text(`Property Address: ${metadata.propertyAddress || 'Not provided'}`)
     doc.text(`Report ID: ${metadata.tenantIdentifier || 'Anonymous'}`)
     doc.text(`Total Photos Analyzed: ${summary.total_photos}`)
     doc.text(`Generated: ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}`)
-    doc.moveDown(2)
+    doc.text(`Expires: ${metadata.expiresAt ? new Date(metadata.expiresAt).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' }) : '48 hours from generation'}`)
+    doc.moveDown(1.5)
+    
+    // Add burn notice
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#dc3545')
+    doc.text('⚠ PRIVACY NOTICE: This report will be permanently deleted 48 hours after generation.', { align: 'center' })
+    doc.text('Download and save your PDF immediately.', { align: 'center' })
+    doc.fillColor('#000000').font('Helvetica')
+    doc.moveDown(1)
     
     // Horizontal line
     doc.strokeColor('#333333').lineWidth(1)
@@ -139,39 +153,207 @@ export async function generateTenantReport(sessionId, results, metadata = {}) {
       { align: 'justify' }
     )
     doc.fillColor('#000000')
+    doc.moveDown(1)
+    
+    // === VERIFICATION OF AUTHENTICITY ===
+    doc.fontSize(12).font('Helvetica-Bold').text('VERIFICATION OF AUTHENTICITY', { align: 'center' })
+    doc.moveDown(0.5)
+    doc.fontSize(9).font('Helvetica')
+    doc.text(
+      'I, the undersigned tenant, verify and affirm under penalty of perjury that:',
+      { align: 'justify' }
+    )
+    doc.moveDown(0.3)
+    doc.text(
+      `1. The photographs contained in this report were captured at the property located at ${metadata.propertyAddress || '[Property Address]'}.`,
+      { align: 'justify' }
+    )
+    doc.moveDown(0.2)
+    doc.text(
+      `2. Each photograph was taken on or about the dates shown in the timestamp watermarks, or if timestamps are not available, ` +
+      `during the period from ${new Date(Date.now() - 30*24*60*60*1000).toLocaleDateString()} to ${new Date().toLocaleDateString()}.`,
+      { align: 'justify' }
+    )
+    doc.moveDown(0.2)
+    doc.text(
+      '3. The photographs are accurate representations of the actual conditions present at the property at the time they were taken.',
+      { align: 'justify' }
+    )
+    doc.moveDown(0.2)
+    doc.text(
+      '4. For photographs containing GPS coordinates, I verify that the coordinates reflect the actual location where the photo was taken.',
+      { align: 'justify' }
+    )
+    doc.moveDown(0.2)
+    doc.text(
+      '5. For photographs without GPS metadata, I manually verify that the photo was taken at the property address listed above.',
+      { align: 'justify' }
+    )
+    doc.moveDown(0.2)
+    doc.text(
+      '6. None of the photographs have been materially altered or manipulated in any way that would misrepresent the conditions shown.',
+      { align: 'justify' }
+    )
+    doc.moveDown(1)
+    doc.fontSize(8).fillColor('#555555')
+    doc.text(
+      'Note: Under Michigan Rules of Evidence (MRE 901), photographs may be authenticated by any witness familiar with the scene depicted. ' +
+      'This verification serves to establish the photographs as admissible evidence of the property conditions.',
+      { align: 'justify' }
+    )
+    doc.fillColor('#000000')
+    doc.moveDown(1.5)
+    
+    doc.fontSize(9).font('Helvetica')
+    doc.text('Tenant Signature: _________________________________    Date: ________________')
+    doc.moveDown(0.5)
+    doc.text('Printed Name: _________________________________')
     doc.moveDown(2)
 
     // === EXECUTIVE SUMMARY ===
     doc.addPage()
-    doc.fontSize(16).font('Helvetica-Bold').text('Executive Summary')
+    doc.fontSize(18).font('Helvetica-Bold').text('Page 1: Executive Summary & Tier Triage')
     doc.moveDown()
+    
+    // Detroit context statistics
+    doc.fontSize(10).font('Helvetica').fillColor('#555555')
+    doc.text(
+      'CONTEXT: Studies show nearly 90% of evicting landlords in Detroit are not compliant with city codes, ' +
+      'and only 10% of Detroit rentals meet full compliance standards. This report helps tenants document ' +
+      'violations and assert their legal rights.',
+      { align: 'justify' }
+    )
+    doc.fillColor('#000000')
+    doc.moveDown(1)
     
     doc.fontSize(11).font('Helvetica')
-    doc.text(`This report documents the analysis of ${summary.total_photos} photograph(s) of a rental unit in Michigan.`)
+    doc.text(`This forensic evidence package documents the analysis of ${summary.total_photos} photograph(s) ` +
+             `of a rental unit located at ${metadata.propertyAddress || 'the specified property'}.`)
     doc.moveDown()
     
-    // Summary stats
-    doc.fontSize(12).font('Helvetica-Bold').text('Findings Summary')
+    // Tier Triage - Severity Classification
+    doc.fontSize(12).font('Helvetica-Bold').text('Tier Triage - Issue Classification')
     doc.fontSize(10).font('Helvetica')
     doc.text(`• Total Potential Issues Identified: ${summary.violations_found}`)
     if (summary.clear_violations > 0) {
-      doc.fillColor('#dc3545').text(`  - Clear Violations: ${summary.clear_violations}`)
+      doc.fillColor('#dc3545').text(`  - TIER 1 (Clear Violations): ${summary.clear_violations} - Immediate Action Required`)
     }
     if (summary.likely_issues > 0) {
-      doc.fillColor('#fd7e14').text(`  - Likely Issues: ${summary.likely_issues}`)
+      doc.fillColor('#fd7e14').text(`  - TIER 2 (Likely Issues): ${summary.likely_issues} - Professional Assessment Recommended`)
     }
     if (summary.needs_assessment > 0) {
-      doc.fillColor('#ffc107').text(`  - Requires Professional Assessment: ${summary.needs_assessment}`)
+      doc.fillColor('#ffc107').text(`  - TIER 3 (Requires Assessment): ${summary.needs_assessment} - Further Investigation Needed`)
     }
     doc.fillColor('#000000')
     doc.moveDown()
     
     doc.text(`• Severity Distribution:`)
-    if (summary.high_severity > 0) doc.text(`  - High: ${summary.high_severity}`)
-    if (summary.medium_severity > 0) doc.text(`  - Medium: ${summary.medium_severity}`)
-    if (summary.low_severity > 0) doc.text(`  - Low: ${summary.low_severity}`)
-    doc.text(`• Photos with No Issues: ${summary.no_issues}`)
+    if (summary.high_severity > 0) doc.fillColor('#dc3545').text(`  - HIGH PRIORITY: ${summary.high_severity} issues`)
+    if (summary.medium_severity > 0) doc.fillColor('#fd7e14').text(`  - MEDIUM PRIORITY: ${summary.medium_severity} issues`)
+    if (summary.low_severity > 0) doc.fillColor('#28a745').text(`  - LOW PRIORITY: ${summary.low_severity} issues`)
+    doc.fillColor('#000000')
+    doc.text(`• Photos with No Issues Detected: ${summary.no_issues}`)
     doc.moveDown()
+    
+    // Statute Citations Summary
+    if (allCitations.length > 0) {
+      doc.fontSize(12).font('Helvetica-Bold').text('Michigan Statute Citations Referenced')
+      doc.fontSize(9).font('Helvetica')
+      const uniqueCitations = [...new Set(allCitations.map(c => c.source))]
+      uniqueCitations.slice(0, 5).forEach(citation => {
+        doc.text(`• ${citation}`)
+      })
+      doc.moveDown()
+    }
+    
+    // === PAGE 2: FORMAL DEMAND LETTER ===
+    doc.addPage()
+    doc.fontSize(18).font('Helvetica-Bold').text('Page 2: Formal Demand Letter')
+    doc.moveDown(1.5)
+    
+    doc.fontSize(11).font('Helvetica')
+    doc.text(`Date: ${new Date().toLocaleDateString('en-US', { dateStyle: 'long' })}`)
+    doc.moveDown()
+    doc.text('To: [Landlord Name]')
+    doc.text('[Landlord Address]')
+    doc.moveDown()
+    doc.text('RE: Notice of Habitability Violations and Demand for Repairs')
+    doc.text(`Property Address: ${metadata.propertyAddress || '[Property Address]'}`)
+    doc.moveDown(1.5)
+    
+    doc.text('Dear Landlord,', { continued: false })
+    doc.moveDown()
+    
+    doc.text(
+      `This letter serves as formal notice that the rental property located at ${metadata.propertyAddress || 'the above address'} ` +
+      `has significant habitability violations that require immediate attention and correction. As documented in the attached ` +
+      `photographic evidence package dated ${new Date().toLocaleDateString()}, the following issues have been identified:`,
+      { align: 'justify' }
+    )
+    doc.moveDown()
+    
+    // List key violations
+    if (summary.high_severity > 0) {
+      doc.fontSize(11).font('Helvetica-Bold').text(`HIGH PRIORITY ISSUES (${summary.high_severity}):`)
+      doc.fontSize(10).font('Helvetica')
+      violations.filter(v => v.severity === 'high').slice(0, 5).forEach(v => {
+        doc.text(`• ${v.violation_type || 'Habitability violation'}: ${v.violation || 'See attached photos'}`)
+      })
+      doc.moveDown()
+    }
+    
+    if (summary.medium_severity > 0) {
+      doc.fontSize(11).font('Helvetica-Bold').text(`MEDIUM PRIORITY ISSUES (${summary.medium_severity}):`)
+      doc.fontSize(10).font('Helvetica')
+      violations.filter(v => v.severity === 'medium').slice(0, 5).forEach(v => {
+        doc.text(`• ${v.violation_type || 'Habitability violation'}`)
+      })
+      doc.moveDown()
+    }
+    
+    doc.fontSize(10).font('Helvetica').text(
+      'Under Michigan law, landlords are required to maintain rental properties in habitable condition and make necessary ' +
+      'repairs within a reasonable timeframe. I hereby demand that all identified issues be corrected within the following timeframes:',
+      { align: 'justify' }
+    )
+    doc.moveDown()
+    
+    doc.text('• Emergency issues (no heat, no water, gas leaks): Within 24 hours')
+    doc.text('• Urgent repairs (broken locks, major leaks, structural hazards): Within 72 hours')
+    doc.text('• Standard repairs (other habitability violations): Within 30 days')
+    doc.moveDown()
+    
+    doc.text(
+      'Please be advised that failure to make the required repairs may result in: (1) rent withholding or escrow, ' +
+      '(2) repair and deduct remedies, (3) lease termination, (4) reporting to local housing code enforcement, ' +
+      'and/or (5) legal action for damages and attorney fees.',
+      { align: 'justify' }
+    )
+    doc.moveDown()
+    
+    doc.text(
+      'I request that you contact me within 7 days to schedule repairs. Please send all correspondence regarding ' +
+      'this matter to the email address on file.',
+      { align: 'justify' }
+    )
+    doc.moveDown(1.5)
+    
+    doc.fontSize(10).font('Helvetica-Bold')
+    doc.text('SEND VIA CERTIFIED MAIL, RETURN RECEIPT REQUESTED')
+    doc.fontSize(9).font('Helvetica').fillColor('#555555')
+    doc.text('Proof of mailing and receipt is critical for legal documentation.')
+    doc.fillColor('#000000')
+    doc.moveDown(2)
+    
+    doc.fontSize(10).font('Helvetica')
+    doc.text('Sincerely,')
+    doc.moveDown(2)
+    doc.text('_________________________________')
+    doc.text('[Tenant Name]')
+    doc.text('[Tenant Signature]')
+    doc.text('[Date]')
+    doc.moveDown()
+
 
     // === VIOLATIONS BY ROOM/AREA ===
     if (violations.length > 0) {

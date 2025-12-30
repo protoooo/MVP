@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS tenant_reports (
   -- Report metadata
   total_photos INTEGER NOT NULL DEFAULT 0,
   property_address TEXT,
+  property_latitude DECIMAL(10, 8), -- GPS latitude for validation
+  property_longitude DECIMAL(11, 8), -- GPS longitude for validation
   tenant_identifier TEXT, -- Optional, can be anonymous
   
   -- Report status
@@ -22,14 +24,15 @@ CREATE TABLE IF NOT EXISTS tenant_reports (
   json_report JSONB,
   pdf_path TEXT, -- Path to PDF in storage
   pdf_url TEXT, -- Public URL to download PDF
-  access_code TEXT UNIQUE, -- Unique code for accessing report
+  access_code TEXT UNIQUE, -- Unique code for accessing report (obfuscated)
+  secret_link TEXT UNIQUE, -- Obfuscated URL path (e.g., ax72-99p3-z218)
   
   -- Timestamps
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   payment_completed_at TIMESTAMPTZ,
   report_generated_at TIMESTAMPTZ,
   last_accessed_at TIMESTAMPTZ,
-  expires_at TIMESTAMPTZ, -- Reports expire after 90 days
+  expires_at TIMESTAMPTZ, -- Reports expire after 48 hours (changed from 90 days)
   
   -- Rate limiting & abuse prevention
   ip_address TEXT,
@@ -55,6 +58,20 @@ CREATE TABLE IF NOT EXISTS tenant_photos (
   file_size INTEGER,
   mime_type TEXT,
   room_area TEXT, -- 'kitchen', 'bathroom', 'bedroom', 'living_room', 'general', etc.
+  
+  -- EXIF metadata (for forensic evidence)
+  exif_date_time TIMESTAMPTZ, -- Original photo timestamp from EXIF
+  exif_latitude DECIMAL(10, 8), -- GPS latitude from EXIF
+  exif_longitude DECIMAL(11, 8), -- GPS longitude from EXIF
+  exif_make TEXT, -- Camera make
+  exif_model TEXT, -- Camera model
+  server_upload_timestamp TIMESTAMPTZ NOT NULL DEFAULT now(), -- Trusted server timestamp
+  
+  -- Metadata validation
+  has_exif_metadata BOOLEAN DEFAULT false,
+  gps_validated BOOLEAN DEFAULT false, -- True if GPS matches property location
+  gps_distance_miles DECIMAL(6, 2), -- Distance from property in miles
+  metadata_warning TEXT, -- Warning message if metadata is missing or suspicious
   
   -- Analysis results
   analyzed BOOLEAN DEFAULT false,
@@ -129,9 +146,9 @@ CREATE INDEX IF NOT EXISTS idx_non_visible_issues_report_id ON tenant_non_visibl
 CREATE OR REPLACE FUNCTION update_tenant_reports_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Auto-set expires_at to 90 days from report generation
+  -- Auto-set expires_at to 48 hours from report generation (burn after reading policy)
   IF NEW.report_generated_at IS NOT NULL AND NEW.expires_at IS NULL THEN
-    NEW.expires_at = NEW.report_generated_at + INTERVAL '90 days';
+    NEW.expires_at = NEW.report_generated_at + INTERVAL '48 hours';
   END IF;
   RETURN NEW;
 END;
@@ -280,3 +297,56 @@ BEGIN
   );
 END;
 $$ language 'plpgsql';
+
+-- ============================================================================
+-- MICHIGAN TENANT LAW DOCUMENT SEARCH FUNCTIONS
+-- ============================================================================
+
+-- Table for storing Michigan tenant law documents (embeddings for vector search)
+-- This table should be populated with Michigan tenant rights documents, statutes, etc.
+CREATE TABLE IF NOT EXISTS tenant_law_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  embedding vector(1024), -- Cohere embed-v4.0 uses 1024 dimensions
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tenant_law_documents_embedding ON tenant_law_documents 
+  USING ivfflat (embedding vector_cosine_ops);
+
+-- Function to search Michigan tenant law documents using vector similarity
+-- This is used by tenantAnalysis.js to find relevant statutes and citations
+CREATE OR REPLACE FUNCTION match_documents(
+  query_embedding vector(1024),
+  match_threshold DOUBLE PRECISION DEFAULT 0.25,
+  match_count INTEGER DEFAULT 10,
+  filter_county TEXT DEFAULT 'michigan_tenant'
+)
+RETURNS TABLE (
+  id UUID,
+  content TEXT,
+  metadata JSONB,
+  similarity DOUBLE PRECISION
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    tenant_law_documents.id,
+    tenant_law_documents.content,
+    tenant_law_documents.metadata,
+    1 - (tenant_law_documents.embedding <=> query_embedding) AS similarity
+  FROM tenant_law_documents
+  WHERE 
+    (tenant_law_documents.metadata->>'county' = filter_county 
+     OR tenant_law_documents.metadata->>'type' = 'statewide'
+     OR filter_county = 'michigan_tenant')
+    AND 1 - (tenant_law_documents.embedding <=> query_embedding) >= match_threshold
+  ORDER BY tenant_law_documents.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$ language 'plpgsql';
+
+-- Grant permissions for document search
+GRANT SELECT ON tenant_law_documents TO service_role;
+GRANT EXECUTE ON FUNCTION match_documents TO service_role;

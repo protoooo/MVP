@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
-import { v4 as uuidv4 } from 'uuid'
+import { generateSecretLink, generateAccessCode } from '@/backend/utils/secretLinks'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -56,8 +56,9 @@ export async function POST(req) {
       }, { status: 429 })
     }
 
-    // Generate unique access code for the report
-    const accessCode = uuidv4().slice(0, 8).toUpperCase()
+    // Generate unique access code and secret link for the report
+    const accessCode = generateAccessCode() // e.g., ABC12345
+    const secretLink = generateSecretLink() // e.g., ax72-99p3-z218-k4m5
 
     // Create initial tenant report record
     const { data: reportData, error: reportError } = await supabase
@@ -69,6 +70,7 @@ export async function POST(req) {
         status: 'pending',
         payment_status: 'pending',
         access_code: accessCode,
+        secret_link: secretLink,
         ip_address: ip,
         user_agent: req.headers.get('user-agent') || null
       })
@@ -107,7 +109,7 @@ export async function POST(req) {
         photo_count: photoCount,
         access_code: accessCode
       },
-      success_url: `${baseUrl}/tenant/upload?session_id={CHECKOUT_SESSION_ID}&access_code=${accessCode}`,
+      success_url: `${baseUrl}/tenant/upload?session_id={CHECKOUT_SESSION_ID}&code=${accessCode}`,
       cancel_url: `${baseUrl}/tenant?canceled=true`,
       expires_at: Math.floor(Date.now() / 1000) + 1800, // 30 minutes
     })
@@ -132,7 +134,8 @@ export async function POST(req) {
       sessionId: session.id,
       url: session.url,
       reportId,
-      accessCode
+      accessCode,
+      secretLink
     })
 
   } catch (error) {

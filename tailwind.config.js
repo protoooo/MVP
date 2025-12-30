@@ -8,24 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: 'var(--paper)',
-        surface: 'var(--surface)',
-        clay: 'var(--clay)',
-        accent: 'var(--accent)',
-        ink: 'var(--ink)',
-        'ink-80': 'var(--ink-80)',
-        'ink-60': 'var(--ink-60)',
-        border: 'var(--border)',
-        focus: 'var(--focus)',
+        cream: '#FFFDF7',
+        'matte-blue': '#6C8EBF',
+        'dark-gray': '#333333',
+        'medium-gray': '#666666',
+        'light-gray': '#E0E0E0',
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif'],
-        outfit: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       borderRadius: {
-        xl: '16px',
-        '2xl': '20px',
-        '3xl': '24px',
+        xl: '12px',
+        '2xl': '16px',
+        '3xl': '20px',
       },
     },
   },
