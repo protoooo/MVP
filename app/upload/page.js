@@ -88,6 +88,22 @@ function UploadPageContent() {
         }
       }
       
+      video.onerror = function() {
+        window.URL.revokeObjectURL(video.src)
+        console.error('Failed to load video metadata')
+        // Allow upload anyway - server will validate
+        setError(null)
+        setFiles(selectedFiles)
+      }
+      
+      // Set timeout in case metadata never loads
+      setTimeout(() => {
+        if (files.length === 0) {
+          setError(null)
+          setFiles(selectedFiles)
+        }
+      }, 3000)
+      
       video.src = URL.createObjectURL(videoFile)
       return
     }
@@ -280,11 +296,14 @@ function UploadPageContent() {
                     <p className="text-sm text-[#475569]">
                       {files.length} file{files.length !== 1 ? 's' : ''} selected
                     </p>
-                    {session.type === 'image' && (
-                      <p className="text-xs text-[#4F7DF3] mt-1">
-                        {Math.max(0, 1000 - files.length)} image{Math.max(0, 1000 - files.length) !== 1 ? 's' : ''} remaining (max 1,000)
-                      </p>
-                    )}
+                    {session.type === 'image' && (() => {
+                      const remaining = Math.max(0, 1000 - files.length)
+                      return (
+                        <p className="text-xs text-[#4F7DF3] mt-1">
+                          {remaining} image{remaining !== 1 ? 's' : ''} remaining (max 1,000)
+                        </p>
+                      )
+                    })()}
                   </div>
                 )}
               </div>
