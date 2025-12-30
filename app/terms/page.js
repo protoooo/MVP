@@ -23,8 +23,8 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc pl-6 mt-2 space-y-2">
               <li>Free compliance Q&A grounded in Michigan food safety regulations</li>
-              <li>Paid image analysis ($50 one-time)</li>
-              <li>Paid video analysis ($200 one-time, 30-minute processing window)</li>
+              <li>Paid image analysis ($100 one-time, up to 1,000 images)</li>
+              <li>Paid video analysis ($300 one-time, up to 60 minutes)</li>
             </ul>
           </section>
 
@@ -55,8 +55,8 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-medium text-[#0F172A] mb-3">4. Payment Terms</h2>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Image analysis: $50 one-time payment</li>
-              <li>Video analysis: $200 one-time payment (30-minute processing window)</li>
+              <li>Image analysis: $100 one-time payment (up to 1,000 images)</li>
+              <li>Video analysis: $300 one-time payment (up to 60 minutes)</li>
               <li>Free compliance Q&A: No payment required</li>
               <li>All payments processed securely through Stripe</li>
               <li>No refunds once analysis has been processed</li>

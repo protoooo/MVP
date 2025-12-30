@@ -58,6 +58,41 @@ function UploadPageContent() {
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files)
+    
+    // Validate image count limit
+    if (session?.type === 'image' && selectedFiles.length > 1000) {
+      setError(`Maximum 1,000 images allowed per analysis session. You selected ${selectedFiles.length} images.`)
+      setFiles([])
+      e.target.value = '' // Reset file input
+      return
+    }
+    
+    // Validate video duration (client-side rough check based on file size)
+    if (session?.type === 'video' && selectedFiles.length > 0) {
+      const videoFile = selectedFiles[0]
+      // Create a video element to check duration
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      
+      video.onloadedmetadata = function() {
+        window.URL.revokeObjectURL(video.src)
+        const durationMinutes = Math.round(video.duration / 60)
+        
+        if (video.duration > 3600) { // 60 minutes = 3600 seconds
+          setError(`Maximum 60 minutes of video allowed per analysis session. Your video is ${durationMinutes} minutes long.`)
+          setFiles([])
+          e.target.value = '' // Reset file input
+        } else {
+          setError(null)
+          setFiles(selectedFiles)
+        }
+      }
+      
+      video.src = URL.createObjectURL(videoFile)
+      return
+    }
+    
+    setError(null)
     setFiles(selectedFiles)
   }
 
@@ -79,9 +114,16 @@ function UploadPageContent() {
       // Upload files
       const formData = new FormData()
       formData.append('passcode', passcode)
-      files.forEach(file => {
-        formData.append('files', file)
-      })
+      
+      if (session.type === 'image') {
+        // For images, append each as 'image-N'
+        files.forEach((file, index) => {
+          formData.append(`image-${index}`, file)
+        })
+      } else {
+        // For video, append as 'video'
+        formData.append('video', files[0])
+      }
 
       const uploadEndpoint = session.type === 'image' 
         ? '/api/image/analyze' 
@@ -195,7 +237,12 @@ function UploadPageContent() {
           <h2 className="text-2xl font-medium text-[#0F172A] mb-2">
             {session.type === 'image' ? 'Upload Photos' : 'Upload Video'}
           </h2>
-          <p className="text-sm text-[#475569] mb-6">{formatHint}</p>
+          <p className="text-sm text-[#475569] mb-2">{formatHint}</p>
+          <p className="text-sm font-medium text-[#4F7DF3] mb-6">
+            {session.type === 'image' 
+              ? '📸 You can upload up to 1,000 images' 
+              : '🎥 Video must be 60 minutes or less'}
+          </p>
 
           {session.upload_completed && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
@@ -226,9 +273,16 @@ function UploadPageContent() {
                   className="w-full px-4 py-3 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F7DF3] bg-white"
                 />
                 {files.length > 0 && (
-                  <p className="mt-2 text-sm text-[#475569]">
-                    {files.length} file{files.length !== 1 ? 's' : ''} selected
-                  </p>
+                  <div className="mt-2">
+                    <p className="text-sm text-[#475569]">
+                      {files.length} file{files.length !== 1 ? 's' : ''} selected
+                    </p>
+                    {session.type === 'image' && (
+                      <p className="text-xs text-[#4F7DF3] mt-1">
+                        {1000 - files.length} image{1000 - files.length !== 1 ? 's' : ''} remaining (max 1,000)
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 

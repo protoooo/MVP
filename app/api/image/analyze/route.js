@@ -102,6 +102,14 @@ export async function POST(request) {
       )
     }
 
+    // CRITICAL: Enforce maximum image limit (1000 images per session)
+    if (imageFiles.length > 1000) {
+      return NextResponse.json(
+        { error: 'Maximum 1,000 images allowed per analysis session' },
+        { status: 400 }
+      )
+    }
+
     console.log(`Processing ${imageFiles.length} images for analysis`)
 
     // Upload images to Supabase Storage

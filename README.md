@@ -9,8 +9,8 @@ A compliance analysis tool for Michigan food service establishments to prepare f
 MI Health Inspection helps Michigan restaurants, cafes, food trucks, and other food service establishments prepare for health inspections by:
 
 1. **Free Compliance Q&A** - Ask questions grounded in Michigan food safety regulations (no hallucination)
-2. **Image Analysis ($50)** - Upload or capture photos of kitchen, prep areas, storage for violation analysis
-3. **Video Analysis ($200)** - Record or upload walkthrough videos for comprehensive timeline-based analysis
+2. **Image Analysis ($100)** - Upload or capture photos of kitchen, prep areas, storage for violation analysis (up to 1,000 images)
+3. **Video Analysis ($300)** - Record or upload walkthrough videos for comprehensive timeline-based analysis (up to 60 minutes)
 
 All analysis is grounded in Michigan state-level food safety and health inspection documents.
 
@@ -49,9 +49,9 @@ All analysis is grounded in Michigan state-level food safety and health inspecti
   - Cohere AYA 32B for answer generation
 - No hallucination - only answers from documents
 
-### 2. Image Analysis ($50)
+### 2. Image Analysis ($100)
 
-- Upload or capture photos via mobile/desktop
+- Upload or capture photos via mobile/desktop (up to 1,000 images)
 - Analyzes images against Michigan food safety codes
 - Identifies violations with:
   - Clear violation descriptions
@@ -60,9 +60,9 @@ All analysis is grounded in Michigan state-level food safety and health inspecti
 - Generates downloadable PDF report
 - Supported formats: JPG, JPEG, PNG, WEBP, HEIC
 
-### 3. Video Analysis ($200)
+### 3. Video Analysis ($300)
 
-- Upload or record video (30-minute processing window)
+- Upload or record video (up to 60 minutes)
 - Intelligent frame extraction
 - Timeline-based violation reporting
 - Comprehensive PDF report with timestamps
@@ -146,8 +146,8 @@ This will:
 ### 5. Configure Stripe
 
 1. Create products in Stripe Dashboard:
-   - **Image Analysis**: $50 one-time payment
-   - **Video Analysis**: $200 one-time payment
+   - **Image Analysis**: $100 one-time payment (up to 1,000 images)
+   - **Video Analysis**: $300 one-time payment (up to 60 minutes)
 2. Set up webhook endpoint: `https://your-domain.com/api/payment/webhook`
 3. Add webhook events: `checkout.session.completed`
 

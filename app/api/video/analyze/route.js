@@ -125,6 +125,16 @@ export async function POST(request) {
     const metadata = await getVideoMetadata(tempVideoPath)
     console.log(`Video metadata:`, metadata)
 
+    // CRITICAL: Enforce maximum video duration (60 minutes = 3600 seconds)
+    const maxDurationSeconds = 60 * 60 // 60 minutes
+    if (metadata.duration > maxDurationSeconds) {
+      const durationMinutes = Math.round(metadata.duration / 60)
+      return NextResponse.json(
+        { error: `Maximum 60 minutes of video allowed per analysis session. Your video is ${durationMinutes} minutes long.` },
+        { status: 400 }
+      )
+    }
+
     // Extract frames from video
     console.log(`Extracting frames at ${framesPerSecond} fps`)
     const { frames, frameCount, tempDir } = await extractFrames(tempVideoPath, framesPerSecond)
