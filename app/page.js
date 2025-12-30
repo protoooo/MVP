@@ -188,7 +188,7 @@ export default function MIHealthInspectionPage() {
           {/* Free Q&A Section */}
           <section className="bg-[#F7F8FA] rounded-xl p-8 border border-[#E5E7EB]">
             <h2 className="text-lg font-medium text-[#0F172A] mb-2">Ask a Compliance Question (Free)</h2>
-            <p className="text-sm text-[#475569] mb-6">Get answers grounded in Michigan food safety regulations. No hallucination.</p>
+            <p className="text-sm text-[#475569] mb-6">Get answers grounded in Michigan food safety regulations.</p>
             
             <form onSubmit={handleQASubmit} className="space-y-4">
               <textarea
