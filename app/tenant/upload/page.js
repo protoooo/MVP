@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
 const ROOM_AREAS = [
@@ -15,7 +15,7 @@ const ROOM_AREAS = [
   { value: 'general', label: 'General/Other' }
 ]
 
-export default function TenantUploadPage() {
+function TenantUploadContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
@@ -412,5 +412,20 @@ export default function TenantUploadPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function TenantUploadPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <TenantUploadContent />
+    </Suspense>
   )
 }
