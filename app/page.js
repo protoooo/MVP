@@ -248,9 +248,9 @@ export default function MIHealthInspectionPage() {
                 <div className="bg-gray-100 p-4 border border-gray-200 mb-6 rounded-sm">
                   <div className="flex justify-between items-baseline">
                     <span className="font-bold text-gray-900">Fee</span>
-                    <span className="text-xl font-bold text-[#1a4480]">$50.00</span>
+                    <span className="text-xl font-bold text-[#1a4480]">$100.00</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">One-time payment</p>
+                  <p className="text-xs text-gray-500 mt-1">Up to 1,000 images</p>
                 </div>
                 
                 <ul className="list-disc pl-5 space-y-2 mb-8 text-sm text-gray-700">
@@ -297,9 +297,9 @@ export default function MIHealthInspectionPage() {
                 <div className="bg-gray-100 p-4 border border-gray-200 mb-6 rounded-sm">
                   <div className="flex justify-between items-baseline">
                     <span className="font-bold text-gray-900">Fee</span>
-                    <span className="text-xl font-bold text-[#1a4480]">$200.00</span>
+                    <span className="text-xl font-bold text-[#1a4480]">$300.00</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">30-minute analysis window</p>
+                  <p className="text-xs text-gray-500 mt-1">Up to 60 minutes</p>
                 </div>
                 
                 <ul className="list-disc pl-5 space-y-2 mb-8 text-sm text-gray-700">
