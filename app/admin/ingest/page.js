@@ -8,7 +8,7 @@ import Link from 'next/link'
 export default function AdminIngestPage() {
   const [password, setPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [collection, setCollection] = useState('michigan')
+  const collection = 'michigan' // Fixed to Michigan only
   const [wipe, setWipe] = useState(false)
   const [dryRun, setDryRun] = useState(false)
   const [running, setRunning] = useState(false)
@@ -194,21 +194,17 @@ export default function AdminIngestPage() {
             <div className="bg-[#F7F8FA] rounded-xl p-6 border border-[#E5E7EB] sticky top-6">
               <h2 className="text-lg font-medium text-[#0F172A] mb-4">Control Panel</h2>
 
-              {/* Collection Selection */}
+              {/* Collection - Fixed to Michigan */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[#0F172A] mb-2">
                   Collection
                 </label>
-                <select
-                  value={collection}
-                  onChange={(e) => setCollection(e.target.value)}
-                  disabled={running}
-                  className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F7DF3] bg-white disabled:opacity-50"
-                >
-                  <option value="michigan">Michigan (State)</option>
-                  <option value="washtenaw">Washtenaw (County)</option>
-                  <option value="all">All Collections</option>
-                </select>
+                <div className="w-full px-4 py-2 bg-[#F7F8FA] border border-[#E5E7EB] rounded-lg text-[#0F172A]">
+                  Michigan (State-level)
+                </div>
+                <p className="text-xs text-[#64748B] mt-1">
+                  Ingests all PDFs from public/documents/michigan/
+                </p>
               </div>
 
               {/* Options */}
