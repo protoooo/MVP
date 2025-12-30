@@ -42,7 +42,9 @@ export async function POST(req) {
         const paymentType = session.metadata?.type
 
         // Handle different payment types
-        if (paymentType === 'one_off_report') {
+        if (paymentType === 'tenant_report') {
+          await handleTenantReport(session)
+        } else if (paymentType === 'one_off_report') {
           await handleOneOffReport(session)
         } else if (paymentType === 'api_credits') {
           await handleApiCredits(session)
@@ -97,6 +99,40 @@ async function handleSubscriptionUpdate({ subscription, userId, customerId }) {
     )
 
   await ensureSeatInventory({ purchaserUserId: userId, quantity })
+}
+
+// Handle tenant report payment ($20)
+async function handleTenantReport(session) {
+  const reportId = session.metadata?.report_id
+  const accessCode = session.metadata?.access_code
+  const customerEmail = session.customer_details?.email || session.customer_email
+  
+  if (!reportId) {
+    logger.warn('Tenant report missing report_id', { sessionId: session.id })
+    return
+  }
+
+  logger.info('Processing tenant report payment', { reportId, sessionId: session.id })
+  
+  // Update report status to paid
+  const { error } = await supabase
+    .from('tenant_reports')
+    .update({
+      payment_status: 'paid',
+      stripe_payment_intent: session.payment_intent,
+      payment_completed_at: new Date().toISOString(),
+    })
+    .eq('id', reportId)
+    .eq('stripe_session_id', session.id)
+  
+  if (error) {
+    logger.error('Failed to update tenant report payment status', { 
+      reportId, 
+      error: error.message 
+    })
+  } else {
+    logger.info('Tenant report payment completed', { reportId, accessCode })
+  }
 }
 
 // Handle one-off $50 report payment
