@@ -1,14 +1,12 @@
 [phases.setup]
-nixPkgs = ['nodejs_20', 'python3', 'ffmpeg', 'tesseract', 'poppler_utils', 'python311Packages.pip']
+nixPkgs = ['nodejs_20', 'python3', 'python311Packages.pymupdf', 'python311Packages.pytesseract', 'python311Packages.pillow', 'ffmpeg', 'tesseract', 'poppler_utils']
 
 [phases.install]
 cmds = [
   'echo "🧹 Cleaning build artifacts..."',
   'rm -rf node_modules .next',
   'echo "📦 Installing Node dependencies..."',
-  'npm install --legacy-peer-deps --no-audit --prefer-offline',
-  'echo "🐍 Installing Python OCR dependencies..."',
-  'pip3 install --user PyMuPDF pytesseract Pillow'
+  'npm install --legacy-peer-deps --no-audit --prefer-offline'
 ]
 
 [phases.build]
