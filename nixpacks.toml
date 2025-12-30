@@ -15,7 +15,7 @@ nixPkgs = [
 [phases.install]
 cmds = [
   # 1. Install Python dependencies first so postinstall scripts can use them
-  'python3 -m pip install --no-cache-dir PyMuPDF==1.23.8 pytesseract==0.3.10 Pillow==10.1.0',
+  'pip3 install --no-cache-dir PyMuPDF==1.23.8 pytesseract==0.3.10 Pillow==10.1.0',
   # 2. Install Node dependencies (this will trigger your package.json postinstall)
   'npm install --legacy-peer-deps --no-audit --prefer-offline'
 ]
