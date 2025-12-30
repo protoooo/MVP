@@ -297,3 +297,56 @@ BEGIN
   );
 END;
 $$ language 'plpgsql';
+
+-- ============================================================================
+-- MICHIGAN TENANT LAW DOCUMENT SEARCH FUNCTIONS
+-- ============================================================================
+
+-- Table for storing Michigan tenant law documents (embeddings for vector search)
+-- This table should be populated with Michigan tenant rights documents, statutes, etc.
+CREATE TABLE IF NOT EXISTS tenant_law_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  embedding vector(1024), -- Cohere embed-v4.0 uses 1024 dimensions
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tenant_law_documents_embedding ON tenant_law_documents 
+  USING ivfflat (embedding vector_cosine_ops);
+
+-- Function to search Michigan tenant law documents using vector similarity
+-- This is used by tenantAnalysis.js to find relevant statutes and citations
+CREATE OR REPLACE FUNCTION match_documents(
+  query_embedding vector(1024),
+  match_threshold DOUBLE PRECISION DEFAULT 0.25,
+  match_count INTEGER DEFAULT 10,
+  filter_county TEXT DEFAULT 'michigan_tenant'
+)
+RETURNS TABLE (
+  id UUID,
+  content TEXT,
+  metadata JSONB,
+  similarity DOUBLE PRECISION
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    tenant_law_documents.id,
+    tenant_law_documents.content,
+    tenant_law_documents.metadata,
+    1 - (tenant_law_documents.embedding <=> query_embedding) AS similarity
+  FROM tenant_law_documents
+  WHERE 
+    (tenant_law_documents.metadata->>'county' = filter_county 
+     OR tenant_law_documents.metadata->>'type' = 'statewide'
+     OR filter_county = 'michigan_tenant')
+    AND 1 - (tenant_law_documents.embedding <=> query_embedding) >= match_threshold
+  ORDER BY tenant_law_documents.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$ language 'plpgsql';
+
+-- Grant permissions for document search
+GRANT SELECT ON tenant_law_documents TO service_role;
+GRANT EXECUTE ON FUNCTION match_documents TO service_role;
