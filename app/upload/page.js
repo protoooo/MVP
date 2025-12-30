@@ -115,6 +115,9 @@ function UploadPageContent() {
       const formData = new FormData()
       formData.append('passcode', passcode)
       
+      // Note: Backend expects specific field names
+      // - Image API expects keys starting with 'image' (e.g., 'image-0', 'image-1')
+      // - Video API expects 'video' key
       if (session.type === 'image') {
         // For images, append each as 'image-N'
         files.forEach((file, index) => {
@@ -279,7 +282,7 @@ function UploadPageContent() {
                     </p>
                     {session.type === 'image' && (
                       <p className="text-xs text-[#4F7DF3] mt-1">
-                        {1000 - files.length} image{1000 - files.length !== 1 ? 's' : ''} remaining (max 1,000)
+                        {Math.max(0, 1000 - files.length)} image{Math.max(0, 1000 - files.length) !== 1 ? 's' : ''} remaining (max 1,000)
                       </p>
                     )}
                   </div>

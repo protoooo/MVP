@@ -1,6 +1,6 @@
 # MI Health Inspection - Pricing & Cost Analysis
 
-## Updated Pricing (Effective: December 30, 2024)
+## Updated Pricing (Effective: December 30, 2025)
 
 ### Image Analysis
 - **Price**: $100.00 (one-time payment)
