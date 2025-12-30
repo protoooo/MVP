@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { generatePasscode } from '@/lib/passcode'
 
 export async function POST(request) {
   try {
@@ -19,18 +14,44 @@ export async function POST(request) {
       )
     }
 
+    // Initialize clients only when route is called
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+
     // Determine amount based on type
     const amount = type === 'image' ? 5000 : 20000 // $50 or $200
     const productName = type === 'image' 
       ? 'Image Compliance Analysis' 
       : 'Video Compliance Analysis (30 min)'
 
-    // Create analysis session
+    // Generate unique 5-digit passcode
+    let passcode
+    let isUnique = false
+    
+    while (!isUnique) {
+      passcode = generatePasscode()
+      const { data: existing } = await supabase
+        .from('analysis_sessions')
+        .select('id')
+        .eq('passcode', passcode)
+        .single()
+      
+      if (!existing) {
+        isUnique = true
+      }
+    }
+
+    // Create analysis session with passcode
     const { data: session, error: sessionError } = await supabase
       .from('analysis_sessions')
       .insert({
         type,
+        passcode,
         status: 'pending',
+        upload_completed: false,
         input_metadata: { payment_pending: true },
       })
       .select()
@@ -61,11 +82,12 @@ export async function POST(request) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?session_id={CHECKOUT_SESSION_ID}&analysis_id=${session.id}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/upload?passcode=${passcode}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
       metadata: {
         analysis_session_id: session.id,
         analysis_type: type,
+        passcode: passcode,
       },
     })
 
@@ -73,6 +95,7 @@ export async function POST(request) {
       sessionId: checkoutSession.id,
       url: checkoutSession.url,
       analysisId: session.id,
+      passcode: passcode,
     })
 
   } catch (error) {

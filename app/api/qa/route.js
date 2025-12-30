@@ -2,15 +2,6 @@ import { NextResponse } from 'next/server'
 import { CohereClient } from 'cohere-ai'
 import { createClient } from '@supabase/supabase-js'
 
-const cohere = new CohereClient({
-  token: process.env.COHERE_API_KEY,
-})
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
-
 export async function POST(request) {
   try {
     const { question } = await request.json()
@@ -21,6 +12,16 @@ export async function POST(request) {
         { status: 400 }
       )
     }
+
+    // Initialize clients only when route is called
+    const cohere = new CohereClient({
+      token: process.env.COHERE_API_KEY,
+    })
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
 
     // Create embedding for the question using Cohere Embed 4.0
     const embedResponse = await cohere.embed({

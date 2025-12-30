@@ -9,8 +9,12 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS analysis_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  passcode TEXT UNIQUE NOT NULL, -- 5-digit passcode for access
   type TEXT NOT NULL CHECK (type IN ('qa', 'image', 'video')),
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+  
+  -- Usage tracking
+  upload_completed BOOLEAN DEFAULT false, -- True once files are uploaded for analysis
   
   -- Timestamps
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -20,9 +24,13 @@ CREATE TABLE IF NOT EXISTS analysis_sessions (
   input_metadata JSONB DEFAULT '{}',
   
   -- Output summary (JSON)
-  output_summary JSONB DEFAULT '{}'
+  output_summary JSONB DEFAULT '{}',
+  
+  -- PDF report URL
+  pdf_url TEXT
 );
 
+CREATE INDEX IF NOT EXISTS idx_analysis_sessions_passcode ON analysis_sessions(passcode);
 CREATE INDEX IF NOT EXISTS idx_analysis_sessions_type ON analysis_sessions(type);
 CREATE INDEX IF NOT EXISTS idx_analysis_sessions_status ON analysis_sessions(status);
 CREATE INDEX IF NOT EXISTS idx_analysis_sessions_created_at ON analysis_sessions(created_at);
