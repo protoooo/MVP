@@ -59,29 +59,26 @@ export async function POST(request) {
           startTime: Date.now()
         }
 
-        // Discover documents
+        // Discover Michigan documents
         const documentsRoot = path.join(process.cwd(), 'public', 'documents')
-        const collections = []
-
-        const checkCollection = (name, dir) => {
-          if (!fs.existsSync(dir)) return null
-          const files = fs.readdirSync(dir).filter(f => f.toLowerCase().endsWith('.pdf'))
-          return files.length > 0 ? { name, dir, files } : null
+        const michiganDir = path.join(documentsRoot, 'michigan')
+        
+        // Check if michigan folder exists, otherwise try root
+        let collections = []
+        
+        if (fs.existsSync(michiganDir)) {
+          const files = fs.readdirSync(michiganDir).filter(f => f.toLowerCase().endsWith('.pdf'))
+          if (files.length > 0) {
+            collections.push({ name: 'michigan', dir: michiganDir, files })
+          }
         }
-
-        if (collection === 'michigan' || collection === 'all') {
-          const michigan = checkCollection('michigan', path.join(documentsRoot, 'michigan'))
-          if (michigan) collections.push(michigan)
-        }
-
-        if (collection === 'washtenaw' || collection === 'all') {
-          const washtenaw = checkCollection('washtenaw', path.join(documentsRoot, 'washtenaw'))
-          if (washtenaw) collections.push(washtenaw)
-        }
-
-        if (collections.length === 0) {
-          const root = checkCollection('michigan', documentsRoot)
-          if (root) collections.push(root)
+        
+        // Fallback to root if michigan folder not found
+        if (collections.length === 0 && fs.existsSync(documentsRoot)) {
+          const files = fs.readdirSync(documentsRoot).filter(f => f.toLowerCase().endsWith('.pdf'))
+          if (files.length > 0) {
+            collections.push({ name: 'michigan', dir: documentsRoot, files })
+          }
         }
 
         if (collections.length === 0) {
@@ -96,24 +93,18 @@ export async function POST(request) {
           log(`  - ${c.name}: ${c.files.length} files`, 'info')
         })
 
-        // Wipe collections if requested
+        // Wipe Michigan collection if requested
         if (wipe && !dryRun) {
-          const collectionsToWipe = collection === 'all' 
-            ? collections.map(c => c.name)
-            : [collection]
+          log('Wiping Michigan collection...', 'warning')
+          const { error } = await supabase
+            .from('documents')
+            .delete()
+            .eq('metadata->>collection', 'michigan')
 
-          for (const name of collectionsToWipe) {
-            log(`Wiping collection: ${name}`, 'warning')
-            const { error } = await supabase
-              .from('documents')
-              .delete()
-              .eq('metadata->>collection', name)
-
-            if (error) {
-              log(`❌ Wipe failed: ${error.message}`, 'error')
-            } else {
-              log(`✅ Wiped collection: ${name}`, 'success')
-            }
+          if (error) {
+            log(`❌ Wipe failed: ${error.message}`, 'error')
+          } else {
+            log('✅ Wiped Michigan collection', 'success')
           }
         }
 
