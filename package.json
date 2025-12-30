@@ -12,6 +12,7 @@
     "build": "next build && node scripts/copy-fonts-to-build.js",
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "next lint",
+    "verify-ocr": "node scripts/verify-ocr.js",
     "ingest": "node scripts/ingest-documents.js",
     "test-search": "node scripts/test-search.js",
     "send-reminders": "node scripts/send-trial-reminders.js",
@@ -19,7 +20,7 @@
     "cleanup-webhooks": "node scripts/cleanup-webhook-events.js",
     "send-inspection-reminders": "node scripts/send-inspection-reminders.js",
     "send-regulation-updates": "node scripts/send-regulation-updates.js",
-    "postinstall": "python scripts/generate_icons.py && node scripts/copy-pdfkit-fonts.js"
+    "postinstall": "python3 scripts/generate_icons.py && node scripts/copy-pdfkit-fonts.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
