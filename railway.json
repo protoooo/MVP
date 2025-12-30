@@ -11,7 +11,7 @@
     "numReplicas": 1,
     "sleepApplication": false,
     "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 100
+    "healthcheckTimeout": 10
   },
   "experimental": {
     "disableVulnerabilityScanning": true
