@@ -77,6 +77,14 @@ const nextConfig = {
   // This tells Next.js to include these files when deploying the processSession API route
   outputFileTracingIncludes: {
     '/api/upload/processSession': ['./app/api/upload/processSession/data/**/*.afm'],
+    '/api/pdf/generate': ['./node_modules/pdfkit/js/data/**/*.afm'],
+  },
+  
+  // Increase body size limit for video uploads (500MB)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '500mb',
+    },
   },
 }
 

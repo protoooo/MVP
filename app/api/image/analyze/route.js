@@ -5,10 +5,12 @@ import { createViolationSummary, deduplicateViolations } from '../../../../lib/v
 import { generateInspectionReport } from '../../../../lib/pdfGenerator.js'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
+}
 
 export async function POST(request) {
   try {
@@ -83,6 +85,7 @@ export async function POST(request) {
 
     // Update session in database if passcode provided
     if (passcode) {
+      const supabase = getSupabaseClient()
       await supabase
         .from('analysis_sessions')
         .update({
