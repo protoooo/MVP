@@ -1,41 +1,277 @@
 {
   "washtenaw": {
+    "name": "Washtenaw County",
+    "state": "Michigan",
+    "scraper_type": "sword_solutions",
     "url": "https://swordsolutions.com/inspections/",
-    "pagination_selector": "a.next",
-    "row_selector": ".inspection-row",
-    "fields": {
-      "business_name": ".business-name",
-      "address": ".address",
-      "inspection_date": ".date",
-      "violations": ".violations",
-      "severity": ".severity",
-      "report_link": "a.pdf-link"
-    }
+    "county_value": "MI - Washtenaw",
+    "enabled": true,
+    "settings": {
+      "delay": 3,
+      "max_pages": 20,
+      "timeout": 30,
+      "retry_attempts": 3
+    },
+    "pagination": {
+      "type": "link",
+      "selector": "a.next, a[rel='next'], .pagination .next"
+    },
+    "selectors": {
+      "row_selector": ".inspection-row, table tbody tr, div.result-item",
+      "fields": {
+        "business_name": ".business-name, .name, .establishment, td.name, td:nth-child(1), h3, h4",
+        "address": ".address, .location, td.address, td:nth-child(2)",
+        "inspection_date": ".date, .inspection-date, td.date, td:nth-child(3)",
+        "violations": ".violations, .findings, td.violations",
+        "severity": ".severity, .priority, .risk, td.severity",
+        "report_link": "a.report, a.pdf, a[href*='.pdf'], a[href*='report']",
+        "license_number": ".license, td.license",
+        "type": ".type, .category"
+      }
+    },
+    "form_fields": {
+      "county": "county",
+      "restaurant_name": "restaurant_name",
+      "address": "address",
+      "city": "city",
+      "license_num": "license_num",
+      "from_date": "from_date",
+      "to_date": "to_date",
+      "show_partial": "show_partial",
+      "page": "page",
+      "limit": "limit"
+    },
+    "api_endpoints": [
+      "/api/inspections/search",
+      "/api/search",
+      "/inspections/api/search",
+      "/inspections/search"
+    ]
   },
   "wayne": {
-    "url": "https://www.waynecounty.com/inspection-reports",
-    "pagination_selector": "a.next",
-    "row_selector": ".inspection-row",
-    "fields": {
-      "business_name": ".business-name",
-      "address": ".address",
-      "inspection_date": ".date",
-      "violations": ".violations",
-      "severity": ".severity",
-      "report_link": "a.pdf-link"
-    }
+    "name": "Wayne County",
+    "state": "Michigan",
+    "scraper_type": "sword_solutions",
+    "url": "https://swordsolutions.com/inspections/",
+    "county_value": "MI - Wayne",
+    "enabled": true,
+    "settings": {
+      "delay": 3,
+      "max_pages": 30,
+      "timeout": 30,
+      "retry_attempts": 3
+    },
+    "pagination": {
+      "type": "link",
+      "selector": "a.next, a[rel='next'], .pagination .next"
+    },
+    "selectors": {
+      "row_selector": ".inspection-row, table tbody tr, div.result-item",
+      "fields": {
+        "business_name": ".business-name, .name, .establishment, td.name, td:nth-child(1), h3, h4",
+        "address": ".address, .location, td.address, td:nth-child(2)",
+        "inspection_date": ".date, .inspection-date, td.date, td:nth-child(3)",
+        "violations": ".violations, .findings, td.violations",
+        "severity": ".severity, .priority, .risk, td.severity",
+        "report_link": "a.report, a.pdf, a[href*='.pdf'], a[href*='report']",
+        "license_number": ".license, td.license",
+        "type": ".type, .category"
+      }
+    },
+    "form_fields": {
+      "county": "county",
+      "restaurant_name": "restaurant_name",
+      "address": "address",
+      "city": "city",
+      "license_num": "license_num",
+      "from_date": "from_date",
+      "to_date": "to_date",
+      "show_partial": "show_partial",
+      "page": "page",
+      "limit": "limit"
+    },
+    "api_endpoints": [
+      "/api/inspections/search",
+      "/api/search",
+      "/inspections/api/search",
+      "/inspections/search"
+    ]
   },
   "oakland": {
-    "url": "https://www.oakgov.com/inspection-reports",
-    "pagination_selector": "a.next",
-    "row_selector": ".inspection-row",
-    "fields": {
-      "business_name": ".business-name",
-      "address": ".address",
-      "inspection_date": ".date",
-      "violations": ".violations",
-      "severity": ".severity",
-      "report_link": "a.pdf-link"
+    "name": "Oakland County",
+    "state": "Michigan",
+    "scraper_type": "sword_solutions",
+    "url": "https://swordsolutions.com/inspections/",
+    "county_value": "MI - Oakland",
+    "enabled": true,
+    "settings": {
+      "delay": 3,
+      "max_pages": 25,
+      "timeout": 30,
+      "retry_attempts": 3
+    },
+    "pagination": {
+      "type": "link",
+      "selector": "a.next, a[rel='next'], .pagination .next"
+    },
+    "selectors": {
+      "row_selector": ".inspection-row, table tbody tr, div.result-item",
+      "fields": {
+        "business_name": ".business-name, .name, .establishment, td.name, td:nth-child(1), h3, h4",
+        "address": ".address, .location, td.address, td:nth-child(2)",
+        "inspection_date": ".date, .inspection-date, td.date, td:nth-child(3)",
+        "violations": ".violations, .findings, td.violations",
+        "severity": ".severity, .priority, .risk, td.severity",
+        "report_link": "a.report, a.pdf, a[href*='.pdf'], a[href*='report']",
+        "license_number": ".license, td.license",
+        "type": ".type, .category"
+      }
+    },
+    "form_fields": {
+      "county": "county",
+      "restaurant_name": "restaurant_name",
+      "address": "address",
+      "city": "city",
+      "license_num": "license_num",
+      "from_date": "from_date",
+      "to_date": "to_date",
+      "show_partial": "show_partial",
+      "page": "page",
+      "limit": "limit"
+    },
+    "api_endpoints": [
+      "/api/inspections/search",
+      "/api/search",
+      "/inspections/api/search",
+      "/inspections/search"
+    ]
+  },
+  "macomb": {
+    "name": "Macomb County",
+    "state": "Michigan",
+    "scraper_type": "sword_solutions",
+    "url": "https://swordsolutions.com/inspections/",
+    "county_value": "MI - Macomb",
+    "enabled": false,
+    "settings": {
+      "delay": 3,
+      "max_pages": 20,
+      "timeout": 30,
+      "retry_attempts": 3
+    },
+    "pagination": {
+      "type": "link",
+      "selector": "a.next, a[rel='next'], .pagination .next"
+    },
+    "selectors": {
+      "row_selector": ".inspection-row, table tbody tr, div.result-item",
+      "fields": {
+        "business_name": ".business-name, .name, .establishment, td.name, td:nth-child(1), h3, h4",
+        "address": ".address, .location, td.address, td:nth-child(2)",
+        "inspection_date": ".date, .inspection-date, td.date, td:nth-child(3)",
+        "violations": ".violations, .findings, td.violations",
+        "severity": ".severity, .priority, .risk, td.severity",
+        "report_link": "a.report, a.pdf, a[href*='.pdf'], a[href*='report']",
+        "license_number": ".license, td.license",
+        "type": ".type, .category"
+      }
+    },
+    "form_fields": {
+      "county": "county",
+      "restaurant_name": "restaurant_name",
+      "address": "address",
+      "city": "city",
+      "license_num": "license_num",
+      "from_date": "from_date",
+      "to_date": "to_date",
+      "show_partial": "show_partial",
+      "page": "page",
+      "limit": "limit"
+    },
+    "api_endpoints": [
+      "/api/inspections/search",
+      "/api/search",
+      "/inspections/api/search",
+      "/inspections/search"
+    ]
+  },
+  "kent": {
+    "name": "Kent County",
+    "state": "Michigan",
+    "scraper_type": "sword_solutions",
+    "url": "https://swordsolutions.com/inspections/",
+    "county_value": "MI - Kent",
+    "enabled": false,
+    "settings": {
+      "delay": 3,
+      "max_pages": 20,
+      "timeout": 30,
+      "retry_attempts": 3
+    },
+    "pagination": {
+      "type": "link",
+      "selector": "a.next, a[rel='next'], .pagination .next"
+    },
+    "selectors": {
+      "row_selector": ".inspection-row, table tbody tr, div.result-item",
+      "fields": {
+        "business_name": ".business-name, .name, .establishment, td.name, td:nth-child(1), h3, h4",
+        "address": ".address, .location, td.address, td:nth-child(2)",
+        "inspection_date": ".date, .inspection-date, td.date, td:nth-child(3)",
+        "violations": ".violations, .findings, td.violations",
+        "severity": ".severity, .priority, .risk, td.severity",
+        "report_link": "a.report, a.pdf, a[href*='.pdf'], a[href*='report']",
+        "license_number": ".license, td.license",
+        "type": ".type, .category"
+      }
+    },
+    "form_fields": {
+      "county": "county",
+      "restaurant_name": "restaurant_name",
+      "address": "address",
+      "city": "city",
+      "license_num": "license_num",
+      "from_date": "from_date",
+      "to_date": "to_date",
+      "show_partial": "show_partial",
+      "page": "page",
+      "limit": "limit"
+    },
+    "api_endpoints": [
+      "/api/inspections/search",
+      "/api/search",
+      "/inspections/api/search",
+      "/inspections/search"
+    ]
+  },
+  "_config_notes": {
+    "description": "Configuration for multi-county inspection scrapers",
+    "scraper_types": [
+      "sword_solutions - JavaScript/AJAX-based inspection portals",
+      "base - Traditional HTML table scrapers",
+      "custom - County-specific implementations"
+    ],
+    "usage": {
+      "enabled": "Set to true to include county in scraping runs",
+      "scraper_type": "Determines which scraper class to use",
+      "county_value": "Exact text value from county dropdown",
+      "settings.delay": "Seconds between requests (respect rate limits)",
+      "settings.max_pages": "Maximum pages to scrape per run",
+      "selectors": "CSS selectors - multiple comma-separated fallbacks supported",
+      "api_endpoints": "Potential AJAX endpoints to try (in order)"
+    },
+    "adding_new_counties": {
+      "step_1": "Copy an existing county block",
+      "step_2": "Update name, county_value, and url",
+      "step_3": "Set enabled to true",
+      "step_4": "Test with: python scrapers/sword_solutions.py",
+      "step_5": "Adjust selectors if needed based on test results"
+    },
+    "troubleshooting": {
+      "no_results": "Check county_value matches dropdown exactly",
+      "wrong_data": "Update selectors based on actual HTML structure",
+      "rate_limited": "Increase settings.delay value",
+      "timeout": "Increase settings.timeout value"
     }
   }
 }
