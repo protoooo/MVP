@@ -1,0 +1,4 @@
+county,business_name,address,inspection_date,violations,severity,report_link
+washtenaw,Joe's Diner,123 Main Street,2024-01-15,Temperature control issue in refrigerator,medium,https://example.com/reports/joes-diner-2024-01-15.pdf
+wayne,Pizza Palace,456 Oak Avenue,2024-01-20,Food handler certification expired,high,https://example.com/reports/pizza-palace-2024-01-20.pdf
+oakland,Sushi Express,789 Elm Boulevard,2024-02-01,None,low,https://example.com/reports/sushi-express-2024-02-01.pdf

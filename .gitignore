@@ -99,7 +99,9 @@ ENV/
 dist/
 build/
 
-# Inspection scraper outputs
-inspection_scraper/outputs/*.json
-inspection_scraper/outputs/*.csv
+# Inspection scraper outputs (keep samples, exclude actual scrapes)
+inspection_scraper/outputs/inspections.json
+inspection_scraper/outputs/inspections.csv
 inspection_scraper/outputs/pdfs/
+!inspection_scraper/outputs/sample_*.json
+!inspection_scraper/outputs/sample_*.csv
