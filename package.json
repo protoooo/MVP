@@ -13,8 +13,7 @@
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "next lint",
     "ingest": "node scripts/ingest-documents.js",
-    "sync-inspections": "node scripts/sync-inspections.js",
-    "postinstall": "python3 scripts/generate_icons.py"
+    "sync-inspections": "node scripts/sync-inspections.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
