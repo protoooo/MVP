@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import SearchBar from '@/components/dashboard/SearchBar'
 import FilterBar from '@/components/dashboard/FilterBar'
 import EstablishmentCard from '@/components/dashboard/EstablishmentCard'
@@ -28,12 +28,7 @@ export default function InspectionDashboard() {
   const [answer, setAnswer] = useState('')
   const [qaLoading, setQaLoading] = useState(false)
 
-  useEffect(() => {
-    fetchEstablishments()
-    fetchAnalytics()
-  }, [searchTerm, filters, pagination.page])
-
-  const fetchEstablishments = async () => {
+  const fetchEstablishments = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -63,9 +58,9 @@ export default function InspectionDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchTerm, filters, pagination.page])
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const response = await fetch('/api/establishments/analytics?county=washtenaw')
       const data = await response.json()
@@ -76,7 +71,12 @@ export default function InspectionDashboard() {
     } catch (error) {
       console.error('Failed to fetch analytics:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchEstablishments()
+    fetchAnalytics()
+  }, [fetchEstablishments, fetchAnalytics])
 
   const handleSearch = (term) => {
     setSearchTerm(term)
