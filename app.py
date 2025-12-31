@@ -9,6 +9,8 @@ import threading
 from scraper import main as run_scraper
 
 app = Flask(__name__)
+# Set secret key for session security (use environment variable in production)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 
 def load_data():

@@ -18,6 +18,7 @@ def scrape_county(county_id):
     Returns:
         List of restaurant data dictionaries
     """
+    # Note: Using HTTP because the legacy Sword Solutions ASP website doesn't support HTTPS
     base_url = "http://www.swordsolutions.com/inspections/pgeSearchResults.asp"
     params = {
         'County': county_id,
