@@ -99,9 +99,8 @@ ENV/
 dist/
 build/
 
-# Inspection scraper outputs (keep samples, exclude actual scrapes)
-inspection_scraper/outputs/inspections.json
-inspection_scraper/outputs/inspections.csv
+# Inspection scraper outputs
+# Sample data is committed for testing, actual scrapes are excluded
+inspection_scraper/outputs/inspections_*.json
+inspection_scraper/outputs/inspections_*.csv
 inspection_scraper/outputs/pdfs/
-!inspection_scraper/outputs/sample_*.json
-!inspection_scraper/outputs/sample_*.csv
