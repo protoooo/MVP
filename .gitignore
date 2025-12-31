@@ -85,3 +85,21 @@ temp/
 .stripe/
 .backup/
 .env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Inspection scraper outputs
+inspection_scraper/outputs/*.json
+inspection_scraper/outputs/*.csv
+inspection_scraper/outputs/pdfs/
