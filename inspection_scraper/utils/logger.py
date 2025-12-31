@@ -5,7 +5,6 @@ Sets up consistent logging across all scraper modules.
 
 import logging
 import sys
-from typing import Optional
 
 
 def setup_logger(name: str = 'inspection_scraper', level: int = logging.INFO) -> logging.Logger:

@@ -160,7 +160,7 @@ class BaseScraper:
             self.logger.warning(f"Error finding next page: {str(e)}")
             return None
     
-    def scrape_page(self, url: str) -> List[Dict[str, str]]:
+    def scrape_page(self, url: str) -> tuple:
         """
         Scrape a single page and extract all inspection records.
         
@@ -168,18 +168,18 @@ class BaseScraper:
             url: URL of the page to scrape
             
         Returns:
-            List of dictionaries containing inspection data
+            Tuple of (records list, soup object) for further processing
         """
         soup = self.fetch_page(url)
         if not soup:
-            return []
+            return [], None
         
         records = []
         row_selector = self.config.get('row_selector', '')
         
         if not row_selector:
             self.logger.error(f"No row selector configured for {self.county_name}")
-            return []
+            return [], soup
         
         rows = soup.select(row_selector)
         self.logger.info(f"Found {len(rows)} inspection rows on page")
@@ -193,7 +193,7 @@ class BaseScraper:
                 self.logger.error(f"Error parsing row: {str(e)}")
                 continue
         
-        return records
+        return records, soup
     
     def scrape(self, download_pdfs: bool = False) -> List[Dict[str, str]]:
         """
@@ -219,8 +219,8 @@ class BaseScraper:
             page_count += 1
             self.logger.info(f"Scraping page {page_count}: {url}")
             
-            # Scrape current page
-            records = self.scrape_page(url)
+            # Scrape current page and get soup for pagination
+            records, soup = self.scrape_page(url)
             all_records.extend(records)
             
             # Download PDFs if requested
@@ -234,8 +234,7 @@ class BaseScraper:
                             record.get('inspection_date', 'unknown')
                         )
             
-            # Get next page URL
-            soup = self.fetch_page(url)
+            # Get next page URL using the soup from scrape_page
             if soup:
                 next_url = self.get_next_page_url(soup, url)
                 if next_url and next_url != url:

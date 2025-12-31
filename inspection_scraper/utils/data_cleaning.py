@@ -5,7 +5,6 @@ Handles standardization of business names, addresses, dates, and other fields.
 
 import re
 from datetime import datetime
-from typing import Optional
 
 
 class DataCleaner:
