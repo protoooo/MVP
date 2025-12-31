@@ -104,3 +104,6 @@ build/
 inspection_scraper/outputs/inspections_*.json
 inspection_scraper/outputs/inspections_*.csv
 inspection_scraper/outputs/pdfs/
+
+# Flask app scraped data
+inspections.json
