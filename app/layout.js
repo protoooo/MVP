@@ -1,8 +1,8 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'ProtocolLM - Food Service Compliance Analysis',
-  description: 'Subscription-based image compliance analysis for food service establishments',
+  title: 'Inspection Dashboard - Washtenaw County Food Safety',
+  description: 'Track and monitor food safety compliance across Washtenaw County establishments',
 }
 
 export default function RootLayout({ children }) {
