@@ -1,10 +1,5 @@
-# Python OCR dependencies for MI Health Inspection
-PyMuPDF>=1.23.0
-pytesseract>=0.3.10
-Pillow>=10.0.0
-
-# Inspection Scraper dependencies
-requests>=2.31.0
-beautifulsoup4>=4.12.0
-pandas>=2.0.0
-lxml>=4.9.0
+flask==3.0.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+gunicorn==21.2.0
+schedule==1.2.0
