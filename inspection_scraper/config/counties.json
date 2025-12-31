@@ -1,4 +1,7 @@
 {
+  "_comment": "Configuration for Michigan county inspection scrapers",
+  "_note": "All counties use Sword Solutions portal at swordsolutions.com/inspections/",
+  
   "washtenaw": {
     "name": "Washtenaw County",
     "state": "Michigan",
@@ -6,12 +9,14 @@
     "url": "https://swordsolutions.com/inspections/",
     "county_value": "MI - Washtenaw",
     "enabled": true,
+    
     "settings": {
       "delay": 3,
       "max_pages": 20,
       "timeout": 30,
       "retry_attempts": 3
     },
+    
     "form_fields": {
       "county": "MI - Washtenaw",
       "restaurant_name": "",
@@ -20,18 +25,21 @@
       "license_num": "",
       "from_date": "",
       "to_date": "",
-      "show_partial": "0"
+      "show_partial": "0",
+      "search": "1"
     },
+    
     "selectors": {
-      "result_container": ".inspection-results tbody tr, .result-row, div[id*='result']",
-      "business_name": "td:first-child, .business-name, .name, h3, h4",
-      "address": "td:nth-child(2), .address, .location",
-      "date": "td:nth-child(3), .date, .inspection-date",
-      "violations": ".violations, td.violations",
-      "severity": ".severity, td.severity, .priority",
+      "business_name": "td:nth-child(1), td.name, .business-name, .name",
+      "address": "td:nth-child(2), td.address, .address, .location",
+      "date": "td:nth-child(3), td.date, .date, .inspection-date",
+      "violations": "td:nth-child(4), td.violations, .violations",
+      "severity": "td:nth-child(5), td.severity, .severity, .priority",
+      "type": "td.type, .type, .category",
       "report_link": "a[href*='.pdf'], a.report, a.document"
     }
   },
+  
   "wayne": {
     "name": "Wayne County",
     "state": "Michigan",
@@ -39,12 +47,14 @@
     "url": "https://swordsolutions.com/inspections/",
     "county_value": "MI - Wayne",
     "enabled": false,
+    
     "settings": {
       "delay": 3,
       "max_pages": 30,
       "timeout": 30,
       "retry_attempts": 3
     },
+    
     "form_fields": {
       "county": "MI - Wayne",
       "restaurant_name": "",
@@ -53,9 +63,21 @@
       "license_num": "",
       "from_date": "",
       "to_date": "",
-      "show_partial": "0"
+      "show_partial": "0",
+      "search": "1"
+    },
+    
+    "selectors": {
+      "business_name": "td:nth-child(1), td.name, .business-name",
+      "address": "td:nth-child(2), td.address, .address",
+      "date": "td:nth-child(3), td.date, .date",
+      "violations": "td:nth-child(4), td.violations, .violations",
+      "severity": "td:nth-child(5), td.severity, .severity",
+      "type": "td.type, .type",
+      "report_link": "a[href*='.pdf'], a.report"
     }
   },
+  
   "oakland": {
     "name": "Oakland County",
     "state": "Michigan",
@@ -63,12 +85,14 @@
     "url": "https://swordsolutions.com/inspections/",
     "county_value": "MI - Oakland",
     "enabled": false,
+    
     "settings": {
       "delay": 3,
       "max_pages": 25,
       "timeout": 30,
       "retry_attempts": 3
     },
+    
     "form_fields": {
       "county": "MI - Oakland",
       "restaurant_name": "",
@@ -77,7 +101,18 @@
       "license_num": "",
       "from_date": "",
       "to_date": "",
-      "show_partial": "0"
+      "show_partial": "0",
+      "search": "1"
+    },
+    
+    "selectors": {
+      "business_name": "td:nth-child(1), td.name, .business-name",
+      "address": "td:nth-child(2), td.address, .address",
+      "date": "td:nth-child(3), td.date, .date",
+      "violations": "td:nth-child(4), td.violations, .violations",
+      "severity": "td:nth-child(5), td.severity, .severity",
+      "type": "td.type, .type",
+      "report_link": "a[href*='.pdf'], a.report"
     }
   }
 }
