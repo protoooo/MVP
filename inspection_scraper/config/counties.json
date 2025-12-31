@@ -1,6 +1,6 @@
 {
   "washtenaw": {
-    "url": "https://www.washtenaw.org/inspection-reports",
+    "url": "https://swordsolutions.com/inspections/",
     "pagination_selector": "a.next",
     "row_selector": ".inspection-row",
     "fields": {
