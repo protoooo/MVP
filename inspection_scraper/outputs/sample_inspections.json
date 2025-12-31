@@ -1,0 +1,29 @@
+[
+  {
+    "county": "washtenaw",
+    "business_name": "Joe's Diner",
+    "address": "123 Main Street",
+    "inspection_date": "2024-01-15",
+    "violations": "Temperature control issue in refrigerator",
+    "severity": "medium",
+    "report_link": "https://example.com/reports/joes-diner-2024-01-15.pdf"
+  },
+  {
+    "county": "wayne",
+    "business_name": "Pizza Palace",
+    "address": "456 Oak Avenue",
+    "inspection_date": "2024-01-20",
+    "violations": "Food handler certification expired",
+    "severity": "high",
+    "report_link": "https://example.com/reports/pizza-palace-2024-01-20.pdf"
+  },
+  {
+    "county": "oakland",
+    "business_name": "Sushi Express",
+    "address": "789 Elm Boulevard",
+    "inspection_date": "2024-02-01",
+    "violations": "None",
+    "severity": "low",
+    "report_link": "https://example.com/reports/sushi-express-2024-02-01.pdf"
+  }
+]

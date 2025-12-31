@@ -1,0 +1,41 @@
+{
+  "washtenaw": {
+    "url": "https://www.washtenaw.org/inspection-reports",
+    "pagination_selector": "a.next",
+    "row_selector": ".inspection-row",
+    "fields": {
+      "business_name": ".business-name",
+      "address": ".address",
+      "inspection_date": ".date",
+      "violations": ".violations",
+      "severity": ".severity",
+      "report_link": "a.pdf-link"
+    }
+  },
+  "wayne": {
+    "url": "https://www.waynecounty.com/inspection-reports",
+    "pagination_selector": "a.next",
+    "row_selector": ".inspection-row",
+    "fields": {
+      "business_name": ".business-name",
+      "address": ".address",
+      "inspection_date": ".date",
+      "violations": ".violations",
+      "severity": ".severity",
+      "report_link": "a.pdf-link"
+    }
+  },
+  "oakland": {
+    "url": "https://www.oakgov.com/inspection-reports",
+    "pagination_selector": "a.next",
+    "row_selector": ".inspection-row",
+    "fields": {
+      "business_name": ".business-name",
+      "address": ".address",
+      "inspection_date": ".date",
+      "violations": ".violations",
+      "severity": ".severity",
+      "report_link": "a.pdf-link"
+    }
+  }
+}
