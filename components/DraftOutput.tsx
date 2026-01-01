@@ -30,7 +30,8 @@ export default function DraftOutput({ title, content, outputType, onEdit }: Draf
         const lines = editedContent.split('\n');
         const subjectLine = lines.find(l => l.toLowerCase().startsWith('subject:'));
         const subject = subjectLine ? encodeURIComponent(subjectLine.replace(/^subject:\s*/i, '')) : encodeURIComponent(title);
-        const bodyStart = lines.findIndex(l => l.toLowerCase().startsWith('subject:')) + 1;
+        const bodyStartIndex = lines.findIndex(l => l.toLowerCase().startsWith('subject:'));
+        const bodyStart = bodyStartIndex >= 0 ? bodyStartIndex + 1 : 0;
         const body = encodeURIComponent(lines.slice(bodyStart).join('\n'));
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
         break;

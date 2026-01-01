@@ -163,7 +163,7 @@ export default function TrialBanner() {
                 <p className="text-sm font-medium text-text-primary mb-1">
                   💰 At $25/month, you're saving{' '}
                   <span className="font-bold text-green-700">
-                    ${Math.round((trialStatus.totalHoursSaved * 15) / (30 - trialStatus.daysRemaining) * 30)}
+                    ${Math.round((trialStatus.totalHoursSaved * 15) / Math.max(1, 30 - trialStatus.daysRemaining) * 30)}
                   </span>
                   /month in time
                 </p>

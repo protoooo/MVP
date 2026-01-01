@@ -126,7 +126,8 @@ export function calculateMonthlyValue(
   daysSinceTrialStart: number,
   hourlyRate: number = 15
 ): number {
-  if (daysSinceTrialStart === 0) return 0;
+  // Validate inputs
+  if (daysSinceTrialStart <= 0 || hoursSavedSoFar < 0) return 0;
   
   const dailyAverage = hoursSavedSoFar / daysSinceTrialStart;
   const monthlyHours = dailyAverage * 30;

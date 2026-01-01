@@ -216,24 +216,34 @@ export default function TeamPage() {
           {/* Pricing Info */}
           <div className="mt-4 pt-4 border-t border-border">
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-text-secondary">Base plan</span>
-                <span className="font-medium text-text-primary">$25/month</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-text-secondary">
-                  Team members ({Math.max(0, members.length - 1)} × $10)
-                </span>
-                <span className="font-medium text-text-primary">
-                  ${Math.max(0, members.length - 1) * 10}/month
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-base font-semibold pt-2 border-t border-border">
-                <span className="text-text-primary">Total</span>
-                <span className="text-text-primary">
-                  ${25 + Math.max(0, members.length - 1) * 10}/month
-                </span>
-              </div>
+              {(() => {
+                const additionalMembers = Math.max(0, members.length - 1);
+                const memberCost = additionalMembers * 10;
+                const totalCost = 25 + memberCost;
+                
+                return (
+                  <>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-text-secondary">Base plan</span>
+                      <span className="font-medium text-text-primary">$25/month</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-text-secondary">
+                        Team members ({additionalMembers} × $10)
+                      </span>
+                      <span className="font-medium text-text-primary">
+                        ${memberCost}/month
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-base font-semibold pt-2 border-t border-border">
+                      <span className="text-text-primary">Total</span>
+                      <span className="text-text-primary">
+                        ${totalCost}/month
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
