@@ -91,44 +91,58 @@ export default function FinancialPage() {
           </div>
         )}
 
-        {/* Capabilities */}
+        {/* Quick Start Examples */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Summarize Financial Activity</div>
-                <div className="text-xs text-text-secondary">Clear summaries for accountants</div>
-              </div>
+          <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
+          <div className="space-y-3">
+            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📊 Monthly P&L Generator</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Uploads receipts/invoices → Categorized P&L statement as PDF
+              </p>
+              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Identify Patterns</div>
-                <div className="text-xs text-text-secondary">Spot trends in expenses and revenues</div>
-              </div>
+            
+            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📋 Vendor Contract Analyzer</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload vendor agreements → Comparison table with renewal dates, price increases, cancellation terms
+              </p>
+              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Flag Anomalies</div>
-                <div className="text-xs text-text-secondary">Unusual trends to review</div>
-              </div>
+            
+            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">💵 Cash Flow Forecaster</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Based on historical data → 90-day cash flow projection with scenarios
+              </p>
+              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Conservative Forecasts</div>
-                <div className="text-xs text-text-secondary">When requested, labeled as estimates</div>
-              </div>
+            
+            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📑 Tax Prep Helper</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Year-end → Organized expense categories ready for accountant
+              </p>
+              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Actionable Opportunities</div>
-                <div className="text-xs text-text-secondary">Cost savings and revenue growth areas</div>
-              </div>
+            
+            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📈 Budget vs Actual Reporter</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload budget → Monthly variance report with explanations
+              </p>
+              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
+                Try this example →
+              </button>
             </div>
           </div>
         </div>

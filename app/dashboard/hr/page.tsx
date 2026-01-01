@@ -91,51 +91,58 @@ export default function HRPage() {
           </div>
         )}
 
-        {/* Capabilities */}
+        {/* Quick Start Examples */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Draft Schedules</p>
-                <p className="text-xs text-text-secondary">Employee schedules based on availability</p>
-              </div>
+          <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
+          <div className="space-y-3">
+            <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📅 Interview Scheduler</p>
+              <p className="text-xs text-text-secondary mb-3">
+                "Schedule interviews for 3 candidates next week, avoid conflicts with [upload calendar]" → Sends calendar invites with interview guides
+              </p>
+              <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Screen Resumes</p>
-                <p className="text-xs text-text-secondary">Check for inconsistencies and AI content</p>
-              </div>
+            
+            <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📄 Resume Screener</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload 10 resumes → Ranks by fit, flags AI-generated content, highlights red flags
+              </p>
+              <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Create Onboarding Materials</p>
-                <p className="text-xs text-text-secondary">Emails, checklists, training materials</p>
-              </div>
+            
+            <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">👋 Onboarding Packet Creator</p>
+              <p className="text-xs text-text-secondary mb-3">
+                "New hire starts Monday as line cook" → Generates first-day checklist, training schedule, paperwork list
+              </p>
+              <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Policy Q&A</p>
-                <p className="text-xs text-text-secondary">How do we handle X? Based on uploads</p>
-              </div>
+            
+            <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📝 Employee Handbook Updater</p>
+              <p className="text-xs text-text-secondary mb-3">
+                "We're changing our vacation policy to..." → Drafts updated section with track changes
+              </p>
+              <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Rewrite & Organize</p>
-                <p className="text-xs text-text-secondary">Summarize internal processes</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Document-Based Only</p>
-                <p className="text-xs text-text-secondary">No guessing, just your policies</p>
-              </div>
+            
+            <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">⭐ Performance Review Drafter</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Input employee metrics → Generates structured review template with talking points
+              </p>
+              <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
+                Try this example →
+              </button>
             </div>
           </div>
         </div>

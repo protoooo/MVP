@@ -91,63 +91,61 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* Quick Actions */}
+        {/* Quick Start Examples */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">Try asking me to:</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              "Generate a reorder list for low stock items",
-              "Analyze inventory trends for the past month",
-              "Find suppliers for [product name]",
-              "Predict demand for [product] next month",
-              "Create an inventory report",
-              "Alert me about items below reorder point"
-            ].map((example, index) => (
-              <button
-                key={index}
-                className="text-left p-3 rounded-lg border border-border hover:border-green-300 hover:bg-sage-50 transition text-sm text-text-secondary"
-              >
-                "{example}"
+          <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
+          <div className="space-y-3">
+            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📋 Smart Reorder List</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Analyzes sales velocity from uploaded data → Weekly reorder list with quantities and suppliers
+              </p>
+              <button className="text-xs text-sage-600 hover:text-sage-700 font-medium">
+                Try this example →
               </button>
-            ))}
+            </div>
+            
+            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">💰 Supplier Price Comparer</p>
+              <p className="text-xs text-text-secondary mb-3">
+                "Find better pricing for [item]" → Researches alternatives, drafts negotiation email
+              </p>
+              <button className="text-xs text-sage-600 hover:text-sage-700 font-medium">
+                Try this example →
+              </button>
+            </div>
+            
+            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">🗑️ Waste Reduction Analyzer</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Tracks spoilage patterns → Suggests order quantity adjustments
+              </p>
+              <button className="text-xs text-sage-600 hover:text-sage-700 font-medium">
+                Try this example →
+              </button>
+            </div>
+            
+            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📊 Seasonal Demand Forecaster</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Historical sales data → Predicts next month's needs with confidence intervals
+              </p>
+              <button className="text-xs text-sage-600 hover:text-sage-700 font-medium">
+                Try this example →
+              </button>
+            </div>
+            
+            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">🔔 Low Stock Alerts</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Daily scan → Email/text when items hit reorder point
+              </p>
+              <button className="text-xs text-sage-600 hover:text-sage-700 font-medium">
+                Try this example →
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Capabilities */}
-        <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Identify Shortages & Overstock</div>
-                <div className="text-xs text-text-secondary">Flag stock issues from uploads</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Suggest Reorder Quantities</div>
-                <div className="text-xs text-text-secondary">Based on historical usage</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Flag Discrepancies</div>
-                <div className="text-xs text-text-secondary">Find inconsistencies in counts</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Analyze Usage Trends</div>
-                <div className="text-xs text-text-secondary">Patterns from uploaded data</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
-              <div>
                 <div className="font-medium text-text-primary text-sm">Conservative Forecasts</div>
                 <div className="text-xs text-text-secondary">When requested, labeled as estimates</div>
               </div>

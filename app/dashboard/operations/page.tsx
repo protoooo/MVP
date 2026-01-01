@@ -141,44 +141,58 @@ You help business owners understand what deserves attention today based on what 
           </div>
         )}
 
-        {/* Capabilities */}
+        {/* Quick Start Examples */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">What I can do for you</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Turn Vague Goals into Tasks</p>
-                <p className="text-xs text-text-secondary">Make unclear objectives actionable</p>
-              </div>
+          <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
+          <div className="space-y-3">
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📅 Weekly Schedule Generator</p>
+              <p className="text-xs text-text-secondary mb-3">
+                "We have 5 employees, these are their available hours [upload CSV], we're open Mon-Sat 9am-6pm" → Generates optimized schedule as downloadable PDF/Excel
+              </p>
+              <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Highlight Tradeoffs</p>
-                <p className="text-xs text-text-secondary">What first, what can wait</p>
-              </div>
+            
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">✅ Task Sequencing</p>
+              <p className="text-xs text-text-secondary mb-3">
+                "I need to: restock inventory, respond to 3 customer complaints, review vendor contract, train new hire" → Prioritizes with time estimates and dependencies
+              </p>
+              <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Draft Daily Task Lists</p>
-                <p className="text-xs text-text-secondary">Practical, prioritized to-dos</p>
-              </div>
+            
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">👥 Delegation Recommender</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Analyzes tasks and suggests which ones can be delegated to which team members based on uploaded org chart/roles
+              </p>
+              <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Highlight Urgent Items</p>
-                <p className="text-xs text-text-secondary">What needs attention now</p>
-              </div>
+            
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">☀️ Daily Briefing</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Scans all uploaded documents for urgent items (expired licenses, low inventory alerts, pending deadlines) → Morning report
+              </p>
+              <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Suggest Task Delegation</p>
-                <p className="text-xs text-text-secondary">What could be delegated to team</p>
-              </div>
+            
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📋 Meeting Prep</p>
+              <p className="text-xs text-text-secondary mb-3">
+                "Prepare for today's staff meeting" → Generates agenda with action items from past week
+              </p>
+              <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                Try this example →
+              </button>
             </div>
           </div>
         </div>

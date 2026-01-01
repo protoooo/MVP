@@ -91,44 +91,58 @@ export default function DocumentsPage() {
           </div>
         )}
 
-        {/* Capabilities */}
+        {/* Quick Start Examples */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Summarize Key Terms</p>
-                <p className="text-xs text-text-secondary">Dates, obligations, responsibilities</p>
-              </div>
+          <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
+          <div className="space-y-3">
+            <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">🏢 Lease Negotiation Prep</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload commercial lease → Key terms summary, market comparison, negotiation talking points
+              </p>
+              <button className="text-xs text-clay-600 hover:text-clay-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Compare Documents</p>
-                <p className="text-xs text-text-secondary">Find discrepancies when asked</p>
-              </div>
+            
+            <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📊 Vendor Contract Comparer</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload 3 vendor proposals → Side-by-side comparison table
+              </p>
+              <button className="text-xs text-clay-600 hover:text-clay-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Explain in Plain English</p>
-                <p className="text-xs text-text-secondary">Translate complex legal language</p>
-              </div>
+            
+            <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">🛡️ Insurance Policy Decoder</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload policy → Plain English summary of coverage, gaps, recommendations
+              </p>
+              <button className="text-xs text-clay-600 hover:text-clay-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Extract Renewal Dates</p>
-                <p className="text-xs text-text-secondary">Important deadlines and clauses</p>
-              </div>
+            
+            <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📅 Licensing Deadline Tracker</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Scans uploaded permits/licenses → Calendar of renewal deadlines
+              </p>
+              <button className="text-xs text-clay-600 hover:text-clay-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Identify Issues</p>
-                <p className="text-xs text-text-secondary">Flag concerns or unclear clauses</p>
-              </div>
+            
+            <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">⚠️ Legal Risk Flagging</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload any contract → Highlights concerning clauses with explanations
+              </p>
+              <button className="text-xs text-clay-600 hover:text-clay-700 font-medium">
+                Try this example →
+              </button>
             </div>
           </div>
         </div>
