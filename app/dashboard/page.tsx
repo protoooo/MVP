@@ -48,15 +48,15 @@ export default function DashboardPage() {
 
   const agents = [
     {
-      name: "Operations Intelligence",
-      description: "Turns your documents into daily actions and priorities",
+      name: "Operations Hub",
+      description: "Turn documents into priorities and action items",
       icon: <Brain className="w-5 h-5" />,
       color: "indigo",
       href: "/dashboard/operations",
     },
     {
       name: "Customer Support",
-      description: "Policy-based customer responses",
+      description: "Consistent responses based on your policies",
       icon: <MessageSquare className="w-5 h-5" />,
       color: "sky",
       href: "/dashboard/customer-support",
@@ -69,22 +69,22 @@ export default function DashboardPage() {
       href: "/dashboard/hr",
     },
     {
-      name: "Inventory Manager",
-      description: "Document-driven inventory insights",
+      name: "Inventory Insights",
+      description: "Track patterns and reduce waste",
       icon: <Package className="w-5 h-5" />,
       color: "sage",
       href: "/dashboard/inventory",
     },
     {
-      name: "Financial Analyst",
-      description: "Financial clarity from your reports",
+      name: "Financial Reports",
+      description: "Understand your numbers clearly",
       icon: <TrendingUp className="w-5 h-5" />,
       color: "honey",
       href: "/dashboard/financial",
     },
     {
-      name: "Document Reviewer",
-      description: "Turn documents into insights",
+      name: "Document Review",
+      description: "Extract insights from contracts and docs",
       icon: <FileText className="w-5 h-5" />,
       color: "clay",
       href: "/dashboard/documents",
@@ -147,7 +147,7 @@ export default function DashboardPage() {
         {/* Active Nudges */}
         {nudges.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-text-primary">Agent Suggestions</h2>
+            <h2 className="text-base font-semibold text-text-primary">Suggestions</h2>
             {nudges.map((nudge, index) => (
               <motion.div
                 key={nudge.id}
@@ -179,7 +179,7 @@ export default function DashboardPage() {
 
         {/* Agents Grid */}
         <div>
-          <h2 className="text-base font-semibold text-text-primary mb-4">Your Agents</h2>
+          <h2 className="text-base font-semibold text-text-primary mb-4">Your Business Tools</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent, index) => (
               <motion.div
@@ -221,7 +221,7 @@ export default function DashboardPage() {
 
           <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-text-secondary">Agent Interactions</h3>
+              <h3 className="text-sm font-medium text-text-secondary">Tool Usage</h3>
               <Activity className="w-5 h-5 text-text-tertiary" />
             </div>
             <p className="text-2xl font-semibold text-text-primary">Unlimited</p>

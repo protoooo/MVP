@@ -84,9 +84,9 @@ You help business owners understand what matters most based on what they've shar
             <Brain className="w-8 h-8 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">Operations Intelligence</h1>
+            <h1 className="text-2xl font-semibold text-text-primary">Operations Hub</h1>
             <p className="text-text-secondary mt-1">
-              Turns your documents into daily actions and priorities
+              Daily priorities and action items from your documents
             </p>
           </div>
         </div>
@@ -191,7 +191,7 @@ You help business owners understand what matters most based on what they've shar
         <Chatbot
           onSendMessage={handleOperationsMessage}
           placeholder="Ask me for a priority brief, business health check, or what documents you should upload..."
-          welcomeMessage="Hi! I'm your Operations Intelligence agent. I analyze all your uploaded documents to tell you what matters most. I can create daily priority briefs, detect issues across documents, suggest tasks, and help you understand your business health. What would you like to know?"
+          welcomeMessage="Hi! I'm your Operations Hub. I analyze all your uploaded documents to tell you what matters most. I can create daily priority briefs, detect issues across documents, suggest tasks, and help you understand your business health. What would you like to know?"
           agentColor="indigo"
           agentType="operations"
           enableAutonomous={true}
