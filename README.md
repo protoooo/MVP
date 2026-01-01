@@ -1,169 +1,188 @@
-# Michigan Food Safety Dashboard
+# AgentHub - Multi-Agent Business Automation
 
-A full-stack Python Flask application that scrapes restaurant inspection data from legacy ASP websites and displays it via a modern web dashboard. Designed for deployment on Railway.
+A modern web-based automation platform for small businesses powered by Cohere AI. Features multiple intelligent agents to handle customer support, HR, inventory management, financial analysis, and document review tasks.
 
 ## 🎯 Features
 
-- **Web Scraping**: Scrapes restaurant inspection data from Sword Solutions legacy ASP website
-- **Data Storage**: Stores scraped data in JSON format
-- **REST API**: Provides JSON endpoint for programmatic access
-- **Web Dashboard**: Modern, searchable interface built with Bootstrap 5
-- **Background Tasks**: Manual scraping trigger without server restart
-- **Production Ready**: Configured for Railway deployment with Gunicorn
+### AI Agents
+
+1. **Customer Support Agent**
+   - Intelligent chatbot for handling customer inquiries
+   - Sentiment analysis and ticket categorization
+   - Powered by Cohere's Generate API
+
+2. **HR Agent**
+   - Resume screening and candidate matching using semantic search
+   - Interview scheduling assistance
+   - Leverages Cohere Embed and Rerank APIs
+
+3. **Inventory Agent**
+   - Predictive analytics for stock replenishment
+   - Real-time alerts for low stock situations
+   - Smart recommendations using AI
+
+4. **Financial Agent**
+   - Automated expense categorization
+   - Budget analysis and financial insights
+   - Report generation and summarization
+
+5. **Document Review Agent**
+   - Contract and document summarization
+   - Key clause extraction and risk analysis
+   - Intelligent information extraction
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 14+ with React 19, TypeScript
+- **Styling**: TailwindCSS with custom design system
+- **AI Integration**: Cohere API (Generate, Chat, Embed, Rerank, Classify)
+- **Icons**: Lucide React
+- **Deployment**: Railway-ready
 
 ## 📦 Project Structure
 
 ```
 .
-├── app.py                  # Flask application with routes
-├── scraper.py              # Restaurant inspection scraper
-├── requirements.txt        # Python dependencies
-├── Procfile               # Railway/Heroku deployment config
-├── templates/
-│   └── index.html         # Dashboard template
-└── inspections.json       # Scraped data (gitignored)
+├── app/
+│   ├── api/              # API routes
+│   │   ├── chat/        # Customer support chat endpoint
+│   │   ├── hr/          # HR agent endpoint
+│   │   ├── inventory/   # Inventory management endpoint
+│   │   ├── financial/   # Financial analysis endpoint
+│   │   └── document/    # Document review endpoint
+│   ├── globals.css      # Global styles and animations
+│   ├── layout.tsx       # Root layout
+│   └── page.tsx         # Main dashboard page
+├── components/
+│   ├── AgentCard.tsx    # Reusable agent card component
+│   ├── Chatbot.tsx      # Chat interface component
+│   └── ThemeToggle.tsx  # Dark/light mode toggle
+├── lib/
+│   └── cohere.ts        # Cohere API utilities
+└── public/              # Static assets
 ```
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- Node.js 18+ and npm
+- Cohere API key
+
 ### Local Development
 
-1. **Install dependencies**:
+1. **Clone and install**:
    ```bash
-   pip install -r requirements.txt
+   git clone <repository-url>
+   cd MVP
+   npm install
    ```
 
-2. **Run the scraper** (optional - to populate data):
-   ```bash
-   python scraper.py
+2. **Set up environment variables**:
+   Create a `.env.local` file:
+   ```
+   COHERE_API_KEY=your_cohere_api_key_here
    ```
 
-3. **Start the Flask app**:
+3. **Run the development server**:
    ```bash
-   python app.py
+   npm run dev
    ```
 
-4. **Visit the dashboard**:
-   - Dashboard: http://localhost:5000
-   - API: http://localhost:5000/api/data
-   - Trigger scrape: http://localhost:5000/scrape
+4. **Open your browser**:
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-### Production Deployment (Railway)
+### Production Build
 
-1. **Push to Railway**:
-   ```bash
-   git push
-   ```
+```bash
+npm run build
+npm start
+```
 
-2. **Railway will automatically**:
-   - Install dependencies from `requirements.txt`
-   - Start the app using the `Procfile` command
-   - Deploy with Gunicorn
+## 🎨 UI/UX Design
 
-## 🗂️ Target Counties
+The interface is inspired by Cohere and Notion's design philosophy:
 
-The scraper targets these Southeast Michigan counties:
+- **Clean and minimalist**: Focus on functionality without clutter
+- **Professional yet playful**: Balanced use of colors and animations
+- **Dark mode support**: Automatic theme detection with manual toggle
+- **Responsive design**: Works seamlessly on all devices
+- **Smooth animations**: Subtle transitions for better UX
+- **Accessible**: Built with accessibility in mind
 
-- **Washtenaw** (ID: 28)
-- **Oakland** (ID: 63)
-- **Wayne** (ID: 82)
-- **Macomb** (ID: 50)
+### Color Palette
+
+- Primary: Blue shades for main actions and branding
+- Secondary: Purple accents for emphasis
+- Agent-specific colors: Each agent has its unique color scheme
+
+## 🔗 API Integration
+
+The app integrates with the following Cohere APIs:
+
+- **Generate**: Text generation for responses and summaries
+- **Chat**: Conversational AI for agent interactions
+- **Embed**: Semantic search and embeddings (v3.0)
+- **Rerank**: Document reranking for better search results (v3.0)
+- **Classify**: Text classification for categorization
+
+## 🚢 Railway Deployment
+
+This project is optimized for Railway deployment:
+
+1. **Connect your repository** to Railway
+2. **Set environment variables**:
+   - `COHERE_API_KEY`: Your Cohere API key
+3. **Deploy**: Railway will automatically build and deploy
+
+Railway will:
+- Detect Next.js automatically
+- Run `npm install` and `npm run build`
+- Start the production server
 
 ## 📡 API Endpoints
 
-### `GET /`
-Displays the web dashboard with searchable restaurant table.
+### Customer Support
+- `POST /api/chat` - Send messages to the support chatbot
 
-### `GET /api/data`
-Returns raw JSON data of all scraped restaurants.
+### HR
+- `POST /api/hr` - Resume search and candidate analysis
 
-**Response example**:
-```json
-[
-  {
-    "name": "Pizza Palace",
-    "address": "123 Main St",
-    "city": "Ann Arbor",
-    "report_url": "http://www.swordsolutions.com/inspections/...",
-    "county_id": 28
-  }
-]
-```
+### Inventory
+- `POST /api/inventory` - Inventory management and predictions
+- `GET /api/inventory` - Get all inventory data
 
-### `GET /scrape`
-Triggers background scraping task.
+### Financial
+- `POST /api/financial` - Expense categorization and analysis
+- `GET /api/financial` - Get all transactions
 
-**Response**:
-```json
-{
-  "status": "started",
-  "message": "Scraping started in background. Check logs for progress."
-}
-```
+### Document Review
+- `POST /api/document` - Document summarization and analysis
 
-## 🛠️ Technologies
+## 🎯 Example Use Cases
 
-- **Backend**: Flask 3.0.0
-- **Scraping**: BeautifulSoup4 4.12.2, Requests 2.31.0
-- **Frontend**: Bootstrap 5, Vanilla JavaScript
-- **Server**: Gunicorn 21.2.0
-- **Scheduling**: Schedule 1.2.0 (for future automation)
+1. **Customer Support**: Handle customer inquiries automatically, categorize support tickets
+2. **HR**: Screen resumes for job openings, find best candidates using semantic search
+3. **Inventory**: Get alerts for low stock, receive AI-powered restocking recommendations
+4. **Finance**: Categorize expenses, generate budget reports with insights
+5. **Documents**: Summarize contracts, extract key clauses, identify risks
 
-## 📝 Usage Notes
+## 🔐 Environment Variables
 
-### Scraper Behavior
-- Handles connection errors gracefully
-- Sleeps 2 seconds between counties to be polite to the server
-- Saves all data to `inspections.json`
-- Logs progress to console
+Required:
+- `COHERE_API_KEY`: Your Cohere API key
 
-### Dashboard Features
-- **Live Search**: Filter restaurants by name or city in real-time
-- **Responsive Design**: Works on desktop and mobile
-- **Direct Links**: Click "View Report" to see full inspection details
-- **Summary Card**: Shows total restaurant count
-
-## 🔐 Production Configuration
-
-The `Procfile` uses Gunicorn with the following settings:
-```
-web: gunicorn app:app
-```
-
-For custom Gunicorn settings, modify the `Procfile`:
-```
-web: gunicorn app:app --workers 4 --timeout 120
-```
-
-## 🐛 Troubleshooting
-
-### No data showing?
-Run the scraper manually:
-```bash
-python scraper.py
-```
-
-### Scraper connection errors?
-The Sword Solutions website may be down or blocking requests. The scraper will log errors but continue processing other counties.
-
-### Port already in use?
-Change the port in `app.py`:
-```python
-app.run(debug=True, host='0.0.0.0', port=8000)
-```
+Optional:
+- `NEXT_PUBLIC_BASE_URL`: Your application URL (for production)
 
 ## 📄 License
 
-This project is provided as-is for educational and public health purposes.
+MIT License - Feel free to use this project for your business needs.
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-**Note**: This application scrapes public health inspection data for transparency and public awareness purposes.
+**Built with ❤️ using Cohere AI and Next.js**
