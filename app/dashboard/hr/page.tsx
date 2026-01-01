@@ -133,15 +133,15 @@ export default function HRPage() {
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Interview Scheduling</div>
-                <div className="text-xs text-gray-600">Coordinate interview times</div>
+                <div className="font-medium text-text-primary text-sm">Interview Scheduling</div>
+                <div className="text-xs text-text-secondary">Coordinate interview times</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Chat Interface */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-border overflow-hidden">
           <div className="h-[600px]">
             <Chatbot
               onSendMessage={handleHRMessage}

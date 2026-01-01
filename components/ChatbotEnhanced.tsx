@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Sparkles, Zap, Wand2 } from "lucide-react";
+import { Send, Loader2, Zap, Wand2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskOutputDisplay, { TaskProgressIndicator } from "./TaskOutputDisplay";
 
@@ -227,22 +227,21 @@ export default function ChatbotEnhanced({
   };
 
   const colorStyles = {
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
-    purple: "bg-purple-50 text-purple-700 border-purple-200",
-    green: "bg-green-50 text-green-700 border-green-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    red: "bg-red-50 text-red-700 border-red-200",
+    sky: "bg-sky-50 text-sky-700 border-sky-200",
+    lavender: "bg-lavender-50 text-lavender-700 border-lavender-200",
+    sage: "bg-sage-50 text-sage-700 border-sage-200",
+    honey: "bg-honey-50 text-honey-700 border-honey-200",
+    clay: "bg-clay-50 text-clay-700 border-clay-200",
   };
 
-  const colorStyle = colorStyles[agentColor as keyof typeof colorStyles] || colorStyles.blue;
+  const colorStyle = colorStyles[agentColor as keyof typeof colorStyles] || colorStyles.sky;
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg border border-gray-200">
+    <div className="flex flex-col h-full bg-surface rounded-lg border border-border">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background-secondary">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-gray-600" />
-          <span className="font-medium text-gray-900">Agent Chat</span>
+          <span className="font-medium text-text-primary">Agent Chat</span>
         </div>
         
         {enableAutonomous && (
@@ -251,7 +250,7 @@ export default function ChatbotEnhanced({
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition ${
               autonomousMode
                 ? `${colorStyle} border`
-                : "bg-gray-100 text-gray-600 border border-gray-200"
+                : "bg-background-tertiary text-text-secondary border border-border"
             }`}
           >
             <Wand2 className="w-3.5 h-3.5" />
@@ -274,8 +273,8 @@ export default function ChatbotEnhanced({
               <div
                 className={`max-w-[80%] rounded-lg px-4 py-3 ${
                   message.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-text-primary text-white"
+                    : "bg-background-tertiary text-text-primary"
                 }`}
               >
                 <div className="flex items-start gap-2">
