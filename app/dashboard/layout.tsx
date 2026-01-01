@@ -19,6 +19,9 @@ import {
   UsersRound
 } from "lucide-react";
 import Link from "next/link";
+import TrialBanner from "@/components/TrialBanner";
+import PaymentFailedBanner from "@/components/PaymentFailedBanner";
+import DocumentInsightsBanner from "@/components/DocumentInsightsBanner";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -173,6 +176,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <div className="pl-64">
         <main className="min-h-screen">
+          <div className="p-8">
+            {/* Banners */}
+            <PaymentFailedBanner />
+            <TrialBanner />
+            <DocumentInsightsBanner />
+          </div>
           {children}
         </main>
       </div>

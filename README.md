@@ -1,15 +1,60 @@
-# Business Workspace
+# Business Workspace - Production-Ready AI Business Assistant
 
-A practical, agent-based business workspace that automates and solves real business problems, so owners don't have to do tasks they dislike or that are tedious.
+A production-ready, agent-based business workspace that automates daily tasks for small business owners. Upload your documents and let 6 specialized AI agents handle finances, HR, customer support, inventory, contracts, and daily operations.
 
-**Not a generic AI chat app.** This is a daily business assistant with agents that **actually do work** - draft emails, analyze finances, check resumes, manage inventory, and more.
+**Not a generic AI chat app.** This is a daily business assistant with agents that **actually do work** - draft emails, analyze finances, screen resumes, manage inventory, and more.
 
-## What Makes This Different
+## 🚀 What Makes This Production-Ready
 
-- **Real Actions, Not Just Suggestions**: Agents draft outputs you can review and use - emails, schedules, reports. No copy-paste required.
-- **Knows Your Business**: Upload your files manually (PDFs, spreadsheets, docs, images) - agents learn your specific operations
-- **Shared Business Knowledge Hub**: All uploads go into a shared hub accessible by your team
-- **One Simple Price**: $50/month. Up to 5 team members. No usage limits.
+### Document Processing Pipeline
+- ✅ Automatic text extraction from PDFs, DOCX, CSV, TXT
+- ✅ Document chunking and embedding generation with Cohere
+- ✅ Semantic search across all uploaded documents
+- ✅ Agents automatically reference relevant documents in responses
+- ✅ Processing status indicators in UI
+
+### Agent Intelligence
+- ✅ Context-aware responses using uploaded documents
+- ✅ Citation of specific documents in answers
+- ✅ Missing document detection and suggestions
+- ✅ Document insights banner with smart suggestions
+
+### User Experience
+- ✅ Toast notification system for real-time feedback
+- ✅ Loading states with skeleton screens
+- ✅ Empty states with clear CTAs
+- ✅ Trial banner with ROI calculations
+- ✅ Payment failed banner with recovery options
+- ✅ Value tracking (track time/money saved)
+
+### Error Handling & Security
+- ✅ Global error boundaries
+- ✅ Middleware for auth protection
+- ✅ Rate limiting foundation (ready for Redis)
+- ✅ Graceful error messages (no technical jargon)
+- ✅ Input validation and sanitization
+
+### Output Generation
+- ✅ OutputActionBar (copy, email, download, share)
+- ✅ "Mark as Used" tracking for value demonstration
+- ✅ Automatic value event tracking
+- ✅ Export outputs as files
+
+## 💎 Core Features
+
+### Real Actions, Not Just Suggestions
+Agents draft outputs you can review and use - emails, schedules, reports. No copy-paste required.
+
+### Knows Your Business
+Upload files manually (PDFs, spreadsheets, docs) - agents learn your specific operations and reference them in responses.
+
+### Shared Business Knowledge Hub
+All uploads go into a shared hub accessible by your team. Embeddings enable semantic search.
+
+### Pricing
+- **Base**: $25/month for workspace owner
+- **Team**: $10/month per additional member (up to 5 total)
+- **Trial**: 14 days free with full feature access
 
 ## CORE CONSTRAINTS
 
