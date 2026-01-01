@@ -60,13 +60,33 @@ export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDis
   };
 
   const handleCopy = async (output: TaskOutput, index: number) => {
-    const content = typeof output.content === 'string' 
-      ? output.content 
-      : JSON.stringify(output.content, null, 2);
-    
-    await navigator.clipboard.writeText(content);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+    try {
+      const content = typeof output.content === 'string' 
+        ? output.content 
+        : JSON.stringify(output.content, null, 2);
+      
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      // Fallback: create a text area and copy from it
+      const textArea = document.createElement('textarea');
+      const content = typeof output.content === 'string' 
+        ? output.content 
+        : JSON.stringify(output.content, null, 2);
+      textArea.value = content;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
+      } catch (fallbackError) {
+        console.error('Fallback copy also failed:', fallbackError);
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   const handleShareEmail = (output: TaskOutput) => {
@@ -157,16 +177,22 @@ export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDis
                       onClick={() => setShareMenuIndex(shareMenuIndex === index ? null : index)}
                       className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition"
                       title="Share"
+                      aria-expanded={shareMenuIndex === index}
+                      aria-haspopup="true"
                     >
                       <Share2 className="w-4 h-4" />
                       Share
                     </button>
 
                     {shareMenuIndex === index && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                      <div 
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
+                        role="menu"
+                      >
                         <button
                           onClick={() => handleShareEmail(output)}
                           className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                          role="menuitem"
                         >
                           <Mail className="w-4 h-4" />
                           Share via Email

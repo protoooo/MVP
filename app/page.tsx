@@ -39,7 +39,8 @@ export default function Home() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
+        backgroundAttachment: 'fixed',
+        backgroundColor: '#ffffff' // Fallback if image doesn't load
       }}
     >
       {/* Hero Section */}
