@@ -49,10 +49,13 @@ export default function CheckoutPage() {
         <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-8 space-y-6">
           {/* Plan Details */}
           <div className="text-center pb-6 border-b border-gray-200">
-            <div className="text-4xl font-bold text-gray-900 mb-2">$50</div>
-            <div className="text-gray-600">per month</div>
+            <div className="text-4xl font-bold text-gray-900 mb-2">$25</div>
+            <div className="text-gray-600">per month (base plan)</div>
+            <div className="mt-2 text-sm text-gray-600">
+              + $10/month per additional team member
+            </div>
             <div className="mt-2 inline-block px-4 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-              Unlimited Plan
+              Base Plan
             </div>
           </div>
 
@@ -60,11 +63,7 @@ export default function CheckoutPage() {
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">Unlimited agent interactions</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">All 5 specialized agents</span>
+              <span className="text-gray-700">All 6 specialized agents</span>
             </div>
             <div className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
@@ -72,11 +71,15 @@ export default function CheckoutPage() {
             </div>
             <div className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">Automated reports</span>
+              <span className="text-gray-700">Up to 5 team members total</span>
             </div>
             <div className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-700">Email & invoice generation</span>
+              <span className="text-gray-700">Automated reports & file generation</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <span className="text-gray-700">Shared team workspace</span>
             </div>
             <div className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />

@@ -19,8 +19,6 @@ import {
   UsersRound
 } from "lucide-react";
 import Link from "next/link";
-import TrialBanner from "@/components/TrialBanner";
-import PaymentFailedBanner from "@/components/PaymentFailedBanner";
 import DocumentInsightsBanner from "@/components/DocumentInsightsBanner";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -158,7 +156,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-success"></div>
-                  <p className="text-xs text-text-tertiary">Plan Active</p>
+                  <p className="text-xs text-text-tertiary">$25/mo base</p>
                 </div>
               </div>
               <button
@@ -177,10 +175,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="pl-64">
         <main className="min-h-screen">
           <div className="p-8">
-            {/* Banners */}
-            <PaymentFailedBanner />
-            <TrialBanner />
-            <DocumentInsightsBanner />
+            {/* Document Insights Banner - Less prominent */}
+            <div className="mb-4">
+              <DocumentInsightsBanner />
+            </div>
           </div>
           {children}
         </main>

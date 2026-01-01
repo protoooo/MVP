@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, AlertCircle, Brain } from "lucide-react";
+import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, AlertCircle, Brain, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import TrialBanner from "@/components/TrialBanner";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [nudges, setNudges] = useState<any[]>([]);
   const [hasDocuments, setHasDocuments] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const supabase = createClient();
 
   useEffect(() => {
@@ -45,6 +45,23 @@ export default function DashboardPage() {
       .order("created_at", { ascending: false });
 
     setNudges(nudgesData || []);
+
+    // Load team members
+    const { data: workspaceData } = await supabase
+      .from("workspaces")
+      .select("id")
+      .eq("owner_id", user.id)
+      .single();
+
+    if (workspaceData) {
+      const { data: members } = await supabase
+        .from("workspace_members")
+        .select("*")
+        .eq("workspace_id", workspaceData.id)
+        .limit(5);
+      
+      setTeamMembers(members || []);
+    }
   };
 
   const agents = [
@@ -54,7 +71,11 @@ export default function DashboardPage() {
       icon: <Brain className="w-5 h-5" />,
       color: "indigo",
       href: "/dashboard/operations",
-      capabilities: ["Draft daily task lists", "Highlight urgent items", "Suggest task delegation"]
+      examples: [
+        "Schedule next week for 5 people",
+        "Prioritize today's tasks with time estimates",
+        "Create daily briefing from my documents"
+      ]
     },
     {
       name: "Customer Service",
@@ -62,39 +83,59 @@ export default function DashboardPage() {
       icon: <MessageSquare className="w-5 h-5" />,
       color: "sky",
       href: "/dashboard/customer-support",
-      capabilities: ["Draft email responses", "Handle refunds", "Generate FAQs"]
+      examples: [
+        "Draft apology email for late order",
+        "Generate FAQ from customer messages",
+        "Respond to 2-star review professionally"
+      ]
     },
     {
-      name: "HR",
+      name: "Staff & Hiring",
       description: "Work with onboarding docs, schedules, and employee materials.",
       icon: <Users className="w-5 h-5" />,
       color: "lavender",
       href: "/dashboard/hr",
-      capabilities: ["Draft schedules", "Screen resumes", "Create onboarding emails"]
+      examples: [
+        "Screen 10 resumes and rank by fit",
+        "Create onboarding packet for new hire",
+        "Draft performance review template"
+      ]
     },
     {
-      name: "Inventory",
+      name: "Stock & Orders",
       description: "Track stock levels and identify what to order.",
       icon: <Package className="w-5 h-5" />,
       color: "sage",
       href: "/dashboard/inventory",
-      capabilities: ["Suggest reorder quantities", "Flag discrepancies", "Analyze usage trends"]
+      examples: [
+        "Generate smart reorder list with quantities",
+        "Analyze waste patterns and suggest adjustments",
+        "Forecast next month's demand"
+      ]
     },
     {
-      name: "Finances",
+      name: "Money & Expenses",
       description: "Summarize expenses, revenues, and financial activity.",
       icon: <TrendingUp className="w-5 h-5" />,
       color: "honey",
       href: "/dashboard/financial",
-      capabilities: ["Generate summaries", "Flag unusual trends", "Prepare forecasts"]
+      examples: [
+        "Generate monthly P&L statement",
+        "Compare vendor contracts and pricing",
+        "Create 90-day cash flow forecast"
+      ]
     },
     {
-      name: "Contracts, Agreements & Policies",
+      name: "Contracts & Papers",
       description: "Understand contracts, policies, and formal documents.",
       icon: <FileText className="w-5 h-5" />,
       color: "clay",
       href: "/dashboard/documents",
-      capabilities: ["Extract renewal dates", "Summarize key terms", "Compare documents"]
+      examples: [
+        "Summarize lease terms and negotiation points",
+        "Compare 3 vendor proposals side-by-side",
+        "Flag concerning clauses in contract"
+      ]
     },
   ];
 
@@ -110,9 +151,6 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Trial Banner */}
-        <TrialBanner />
-
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-text-primary">
@@ -122,6 +160,66 @@ export default function DashboardPage() {
             Your daily business assistant for {profile?.industry || "your business"}
           </p>
         </div>
+
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/dashboard/uploads"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Document
+          </Link>
+          <Link
+            href="/dashboard/team"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-background-secondary text-text-primary rounded-full text-sm font-medium hover:bg-background-tertiary transition border border-border shadow-soft"
+          >
+            <UserPlus className="w-4 h-4" />
+            Invite Team
+          </Link>
+        </div>
+
+        {/* Team Members Section */}
+        {teamMembers.length > 0 && (
+          <div className="bg-background-secondary border border-border rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-text-primary">Your Team</h3>
+              <Link
+                href="/dashboard/team"
+                className="text-sm text-text-secondary hover:text-text-primary transition"
+              >
+                Manage →
+              </Link>
+            </div>
+            <div className="flex gap-3">
+              {teamMembers.slice(0, 5).map((member) => (
+                <div
+                  key={member.id}
+                  className="flex flex-col items-center gap-2"
+                  title={member.email}
+                >
+                  <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
+                    <span className="text-sm font-semibold text-text-primary">
+                      {member.email?.[0]?.toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-xs text-text-secondary max-w-[60px] truncate">
+                    {member.display_name || member.email.split('@')[0]}
+                  </span>
+                </div>
+              ))}
+              {teamMembers.length > 5 && (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
+                    <span className="text-sm font-semibold text-text-primary">
+                      +{teamMembers.length - 5}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Getting Started */}
         {!hasDocuments && (
@@ -213,13 +311,13 @@ export default function DashboardPage() {
                   </h3>
                   <p className="text-sm text-text-secondary mb-4 leading-relaxed">{agent.description}</p>
                   
-                  {/* Actionable capabilities */}
+                  {/* Quick examples */}
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide">Can do for you:</p>
-                    {agent.capabilities.slice(0, 3).map((capability, idx) => (
+                    <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide">Try asking:</p>
+                    {agent.examples.slice(0, 2).map((example, idx) => (
                       <div key={idx} className="flex items-start gap-2">
                         <div className={`w-1 h-1 rounded-full mt-1.5 ${agent.color === 'indigo' ? 'bg-indigo-500' : agent.color === 'sky' ? 'bg-sky-500' : agent.color === 'lavender' ? 'bg-lavender-500' : agent.color === 'sage' ? 'bg-sage-500' : agent.color === 'honey' ? 'bg-honey-500' : 'bg-clay-500'}`} />
-                        <p className="text-xs text-text-secondary">{capability}</p>
+                        <p className="text-xs text-text-secondary leading-tight">"{example}"</p>
                       </div>
                     ))}
                   </div>

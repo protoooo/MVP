@@ -47,9 +47,11 @@ export default function ChatbotEnhanced({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [autonomousMode, setAutonomousMode] = useState(true);
   const [executingTask, setExecutingTask] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Autonomous mode is always on - no toggle needed
+  const autonomousMode = true;
 
   useEffect(() => {
     if (welcomeMessage && messages.length === 0) {
@@ -242,21 +244,8 @@ export default function ChatbotEnhanced({
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background-secondary">
         <div className="flex items-center gap-2">
           <span className="font-medium text-text-primary">Agent Chat</span>
+          <span className="text-xs text-text-tertiary">• Always autonomous</span>
         </div>
-        
-        {enableAutonomous && (
-          <button
-            onClick={() => setAutonomousMode(!autonomousMode)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              autonomousMode
-                ? `${colorStyle} border`
-                : "bg-background-tertiary text-text-secondary border border-border"
-            }`}
-          >
-            <Wand2 className="w-3.5 h-3.5" />
-            {autonomousMode ? "Autonomous ON" : "Autonomous OFF"}
-          </button>
-        )}
       </div>
 
       {/* Messages */}
@@ -353,11 +342,9 @@ export default function ChatbotEnhanced({
           </button>
         </div>
         
-        {autonomousMode && (
-          <p className="text-xs text-gray-500 mt-2">
-            Autonomous mode: I can execute tasks, generate files, and perform actions
-          </p>
-        )}
+        <p className="text-xs text-gray-500 mt-2">
+          Autonomous mode: I can execute tasks, generate files, and perform actions automatically
+        </p>
       </div>
     </div>
   );
