@@ -11,7 +11,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -28,23 +27,8 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      // Check if admin
-      if (isAdminLogin) {
-        // Check if user has admin role
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("is_admin")
-          .eq("id", data.user?.id)
-          .single();
-
-        if (!profile?.is_admin) {
-          await supabase.auth.signOut();
-          throw new Error("Unauthorized: Admin access required");
-        }
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
+      // Simple redirect to dashboard
+      router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sign in");
@@ -65,29 +49,15 @@ export default function LoginPage() {
             <h1 className="text-2xl font-semibold text-text-primary">naiborhood</h1>
           </div>
           <h2 className="text-xl font-medium text-text-primary mb-2">
-            {isAdminLogin ? "Admin Sign In" : "Welcome back"}
+            Welcome back
           </h2>
           <p className="text-sm text-text-secondary">
-            {isAdminLogin 
-              ? "Access the admin dashboard" 
-              : "Business automation for small teams"
-            }
+            Business automation for small teams
           </p>
         </div>
 
         {/* Login Card */}
         <div className="bg-surface rounded-2xl shadow-soft-lg border border-border p-8">
-          {/* Toggle Admin Login */}
-          <div className="flex items-center justify-center gap-2 mb-6 pb-6 border-b border-border-light">
-            <button
-              type="button"
-              onClick={() => setIsAdminLogin(!isAdminLogin)}
-              className="text-xs text-text-tertiary hover:text-sage-600 transition"
-            >
-              {isAdminLogin ? "← Regular Login" : "Admin Login →"}
-            </button>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Email Field */}
             <div>
@@ -153,18 +123,16 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            {/* Sign Up Link - hide for admin login */}
-            {!isAdminLogin && (
-              <div className="text-center text-sm pt-4">
-                <span className="text-text-secondary">Don't have an account? </span>
-                <Link 
-                  href="/signup" 
-                  className="font-medium text-sage-600 hover:text-sage-700 transition"
-                >
-                  Sign up
-                </Link>
-              </div>
-            )}
+            {/* Sign Up Link */}
+            <div className="text-center text-sm pt-4">
+              <span className="text-text-secondary">Don't have an account? </span>
+              <Link 
+                href="/signup" 
+                className="font-medium text-sage-600 hover:text-sage-700 transition"
+              >
+                Sign up
+              </Link>
+            </div>
           </form>
         </div>
 
