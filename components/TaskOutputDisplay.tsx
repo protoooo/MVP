@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileText, Table, FileSpreadsheet, File, Check, Clock, AlertCircle } from "lucide-react";
+import { Download, FileText, Table, FileSpreadsheet, File, Check, Clock, AlertCircle, Copy, Share2, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TaskOutput {
@@ -20,6 +20,8 @@ interface TaskOutputDisplayProps {
 
 export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDisplayProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [shareMenuIndex, setShareMenuIndex] = useState<number | null>(null);
 
   const getFileIcon = (fileType?: string) => {
     switch (fileType) {
@@ -55,6 +57,27 @@ export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDis
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleCopy = async (output: TaskOutput, index: number) => {
+    const content = typeof output.content === 'string' 
+      ? output.content 
+      : JSON.stringify(output.content, null, 2);
+    
+    await navigator.clipboard.writeText(content);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleShareEmail = (output: TaskOutput) => {
+    const content = typeof output.content === 'string' 
+      ? output.content 
+      : JSON.stringify(output.content, null, 2);
+    
+    const subject = encodeURIComponent(output.title);
+    const body = encodeURIComponent(content);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    setShareMenuIndex(null);
   };
 
   if (outputs.length === 0) {
@@ -101,6 +124,24 @@ export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDis
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCopy(output, index)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition"
+                    title="Copy to clipboard"
+                  >
+                    {copiedIndex === index ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+
                   {output.type === 'file' && (
                     <button
                       onClick={() => handleDownload(output, index)}
@@ -111,6 +152,29 @@ export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDis
                     </button>
                   )}
                   
+                  <div className="relative">
+                    <button
+                      onClick={() => setShareMenuIndex(shareMenuIndex === index ? null : index)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition"
+                      title="Share"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </button>
+
+                    {shareMenuIndex === index && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                        <button
+                          onClick={() => handleShareEmail(output)}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                        >
+                          <Mail className="w-4 h-4" />
+                          Share via Email
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {output.type === 'data' && (
                     <button
                       onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}

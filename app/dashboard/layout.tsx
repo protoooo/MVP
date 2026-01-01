@@ -153,7 +153,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <p className="text-sm font-medium text-text-primary truncate">
                   {user?.email}
                 </p>
-                <p className="text-xs text-text-tertiary">Unlimited Plan</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-success"></div>
+                  <p className="text-xs text-text-tertiary">Plan Active</p>
+                </div>
               </div>
               <button
                 onClick={handleLogout}

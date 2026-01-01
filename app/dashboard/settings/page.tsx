@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Settings as SettingsIcon, Building2, CreditCard, Bell, Shield, Save } from "lucide-react";
+import { Settings as SettingsIcon, Building2, CreditCard, Bell, Shield, Save, Users, FileText } from "lucide-react";
+import Link from "next/link";
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -169,7 +170,7 @@ export default function SettingsPage() {
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-text-primary">Unlimited Plan</p>
+              <p className="font-medium text-text-primary">Plan</p>
               <p className="text-sm text-text-secondary mt-1">$50/month - All agents, unlimited usage</p>
             </div>
             <span className="px-3 py-1 bg-success-light text-success-dark rounded-full text-sm font-medium">
@@ -190,6 +191,52 @@ export default function SettingsPage() {
             >
               Manage Billing
             </button>
+          </div>
+        </div>
+
+        {/* Team Members */}
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Users className="w-5 h-5 text-text-secondary" />
+            <h2 className="text-lg font-semibold text-text-primary">Team Members</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-text-secondary mb-4">
+                Add as many team members as you need. Collaborate and share access to all agents and documents.
+              </p>
+              <button
+                className="px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition"
+                onClick={() => {
+                  // TODO: Implement team member invitation
+                  alert("Team member invitation coming soon");
+                }}
+              >
+                Invite Team Member
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Documents */}
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <FileText className="w-5 h-5 text-text-secondary" />
+            <h2 className="text-lg font-semibold text-text-primary">Documents</h2>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-text-primary">Documents Uploaded</p>
+              <p className="text-sm text-text-secondary mt-1">Manage your business documents and files</p>
+            </div>
+            <Link
+              href="/dashboard/uploads"
+              className="px-5 py-2 bg-background-secondary text-text-primary rounded-full text-sm font-medium hover:bg-background-tertiary transition border border-border"
+            >
+              View Documents
+            </Link>
           </div>
         </div>
 
