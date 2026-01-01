@@ -2,11 +2,19 @@
 // This module handles document chunking, embedding generation, and semantic search
 
 import { CohereClient } from "cohere-ai";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY || "",
 });
+
+// Helper to create Supabase client
+function getSupabaseClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export interface DocumentChunk {
   chunk_index: number;
@@ -100,7 +108,17 @@ export async function generateEmbeddings(
       embeddingTypes: ["float"],
     });
 
-    return response.embeddings.float || null;
+    // Handle the response properly - embeddings can be returned directly
+    if (Array.isArray(response.embeddings)) {
+      return response.embeddings as number[][];
+    }
+    
+    // Or check if it has a float property
+    if (response.embeddings && typeof response.embeddings === 'object' && 'float' in response.embeddings) {
+      return (response.embeddings as any).float || null;
+    }
+
+    return null;
   } catch (error) {
     console.error("Error generating embeddings:", error);
     return null;
@@ -120,7 +138,7 @@ export async function processDocument(
   documentText: string,
   metadata?: any
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   try {
     // 1. Chunk the document
@@ -185,7 +203,7 @@ export async function searchDocuments(
   limit: number = 10,
   documentTypes?: string[]
 ): Promise<EmbeddingSearchResult[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   try {
     // 1. Generate embedding for the query
@@ -305,7 +323,7 @@ export async function getRelevantContext(
 export async function deleteDocumentEmbeddings(
   documentId: string
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { error } = await supabase
     .from("document_embeddings")

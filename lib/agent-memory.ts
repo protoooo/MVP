@@ -1,7 +1,15 @@
 // Agent Memory and Document Storage Utilities
 // This module provides functions for managing agent memory, document embeddings, and run logs
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+// Helper to create Supabase client
+function getSupabaseClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export interface AgentMemory {
   id?: string;
@@ -85,7 +93,7 @@ export async function storeAgentMemory(
   category?: string,
   importance: number = 5
 ): Promise<AgentMemory | null> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
     .from("agent_memory")
@@ -117,7 +125,7 @@ export async function getAgentMemory(
   agentType: string,
   memoryKey: string
 ): Promise<AgentMemory | null> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
     .from("agent_memory")
@@ -151,7 +159,7 @@ export async function getAgentMemories(
   agentType: string,
   category?: string
 ): Promise<AgentMemory[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   let query = supabase
     .from("agent_memory")
@@ -182,7 +190,7 @@ export async function deleteAgentMemory(
   agentType: string,
   memoryKey: string
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { error } = await supabase
     .from("agent_memory")
@@ -207,7 +215,7 @@ export async function deleteAgentMemory(
  * Log an agent execution
  */
 export async function logAgentRun(runLog: AgentRunLog): Promise<string | null> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
     .from("agent_run_logs")
@@ -231,7 +239,7 @@ export async function getRecentAgentRuns(
   agentType?: string,
   limit: number = 50
 ): Promise<AgentRunLog[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   let query = supabase
     .from("agent_run_logs")
@@ -261,7 +269,7 @@ export async function getAgentMetrics(
   userId: string,
   agentType: string
 ): Promise<any> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
     .from("agent_activity_summary")
@@ -288,7 +296,7 @@ export async function getAgentMetrics(
 export async function storeDocumentInsight(
   insight: DocumentInsight
 ): Promise<string | null> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
     .from("document_insights")
@@ -312,7 +320,7 @@ export async function getDocumentInsights(
   documentId: string,
   status?: string
 ): Promise<DocumentInsight[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   let query = supabase
     .from("document_insights")
@@ -342,7 +350,7 @@ export async function getActiveInsights(
   userId: string,
   insightType?: string
 ): Promise<DocumentInsight[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   let query = supabase
     .from("document_insights")
@@ -373,7 +381,7 @@ export async function updateInsightStatus(
   insightId: string,
   status: string
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const updateData: any = { status };
   if (status === "resolved") {
@@ -403,7 +411,7 @@ export async function updateInsightStatus(
 export async function storeCrossDocumentFinding(
   finding: CrossDocumentFinding
 ): Promise<string | null> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
     .from("cross_document_findings")
@@ -427,7 +435,7 @@ export async function getCrossDocumentFindings(
   findingType?: string,
   status?: string
 ): Promise<CrossDocumentFinding[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   let query = supabase
     .from("cross_document_findings")
@@ -460,7 +468,7 @@ export async function getCrossDocumentFindings(
 export async function markFindingReviewed(
   findingId: string
 ): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { error } = await supabase
     .from("cross_document_findings")
@@ -485,7 +493,7 @@ export async function markFindingReviewed(
 export async function getDocumentUtilization(
   userId: string
 ): Promise<any[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
     .from("document_utilization")
@@ -508,7 +516,7 @@ export async function identifyMissingDocuments(
   userId: string,
   agentType: string
 ): Promise<string[]> {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   // Get all documents user has uploaded
   const { data: userDocs } = await supabase
