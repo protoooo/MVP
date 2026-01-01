@@ -63,11 +63,15 @@ export default function OnboardingPage() {
           onboarding_step: 3,
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile update error:", profileError);
+        throw new Error(`Failed to save profile: ${profileError.message}`);
+      }
 
       // Redirect to Stripe checkout
       router.push("/checkout");
     } catch (err: unknown) {
+      console.error("Onboarding error:", err);
       setError(err instanceof Error ? err.message : "Failed to complete onboarding");
     } finally {
       setLoading(false);
