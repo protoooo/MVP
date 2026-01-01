@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AutonomousAgent } from "@/lib/autonomous-agent";
+import { createClient } from "@/lib/supabase/server";
+import { getRelevantContext } from "@/lib/document-processing";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +14,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user ID for document context
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Get relevant document context
+    let documentContext = "";
+    let documentsUsed: Array<{ id: string; name: string }> = [];
+    
+    if (agentType) {
+      const contextResult = await getRelevantContext(
+        user.id,
+        message,
+        agentType,
+        5
+      );
+      documentContext = contextResult.context;
+      documentsUsed = contextResult.documentsUsed;
+    }
+
+    // Enhance system prompt with document context
+    let enhancedPrompt = systemPrompt || "You are a helpful assistant.";
+    
+    if (documentContext) {
+      enhancedPrompt = `${systemPrompt}
+
+IMPORTANT: Use the following uploaded documents as your knowledge base:
+
+${documentContext}
+
+When answering, cite specific documents when relevant (e.g., "Based on your Employee Handbook...").`;
+    } else if (agentType) {
+      enhancedPrompt = `${systemPrompt}
+
+NOTE: No relevant documents were found for this query. If specific documents would help (like invoices, policies, reports), let the user know what they should upload.`;
+    }
+
     // Use autonomous mode if requested
     if (useAutonomous && agentType) {
       const agent = new AutonomousAgent(agentType);
@@ -21,7 +66,7 @@ export async function POST(request: NextRequest) {
       
       const response = await agent.processMessage(
         message,
-        systemPrompt || "You are a helpful assistant.",
+        enhancedPrompt,
         (update) => {
           progressUpdates.push(update);
         }
@@ -31,13 +76,12 @@ export async function POST(request: NextRequest) {
         response,
         progressUpdates,
         autonomous: true,
+        documentsUsed,
       });
     }
 
     // Fallback to regular chat
     const { cohere } = await import("@/lib/cohere");
-    
-    const preamble = systemPrompt || "You are a helpful assistant.";
 
     const formattedHistory = chatHistory?.map((h: { role: string; message: string }) => ({
       role: h.role as "USER" | "CHATBOT",
@@ -48,10 +92,13 @@ export async function POST(request: NextRequest) {
       model: "command-r-plus",
       message,
       chatHistory: formattedHistory,
-      preamble,
+      preamble: enhancedPrompt,
     });
 
-    return NextResponse.json({ response: cohereResponse.text });
+    return NextResponse.json({ 
+      response: cohereResponse.text,
+      documentsUsed,
+    });
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(
