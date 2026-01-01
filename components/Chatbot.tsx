@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
   role: "user" | "assistant";
@@ -12,9 +13,15 @@ interface ChatbotProps {
   onSendMessage: (message: string, history: Message[]) => Promise<string>;
   placeholder?: string;
   welcomeMessage?: string;
+  agentColor?: string;
 }
 
-export default function Chatbot({ onSendMessage, placeholder, welcomeMessage }: ChatbotProps) {
+export default function Chatbot({ 
+  onSendMessage, 
+  placeholder, 
+  welcomeMessage,
+  agentColor = "blue"
+}: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -59,55 +66,99 @@ export default function Chatbot({ onSendMessage, placeholder, welcomeMessage }: 
     }
   };
 
+  const colorMap: Record<string, string> = {
+    blue: "bg-blue",
+    purple: "bg-purple",
+    green: "bg-green",
+    amber: "bg-amber",
+    red: "bg-red",
+  };
+
+  const assistantBgColor = colorMap[agentColor] || colorMap.blue;
+
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-lg border border-border">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-slide-up`}
-          >
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                message.role === "user"
-                  ? "bg-primary-500 text-white"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              }`}
+      <div className="flex-1 overflow-y-auto p-24 space-y-16">
+        <AnimatePresence initial={false}>
+          {messages.map((message, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{
+                duration: 0.4,
+                ease: [0.23, 1, 0.32, 1],
+              }}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-            </div>
-          </div>
-        ))}
+              <div
+                className={`max-w-[80%] rounded-lg px-16 py-12 ${
+                  message.role === "user"
+                    ? "bg-background-tertiary text-text-primary"
+                    : `bg-background-secondary text-text-primary border border-border`
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        
         {isLoading && (
-          <div className="flex justify-start animate-fade-in">
-            <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3">
-              <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start"
+          >
+            <div className="bg-background-secondary border border-border rounded-lg px-16 py-12">
+              <div className="flex items-center gap-8">
+                <div className="flex space-x-4">
+                  <motion.div
+                    className="w-8 h-8 rounded-full bg-text-tertiary"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                  />
+                  <motion.div
+                    className="w-8 h-8 rounded-full bg-text-tertiary"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                  />
+                  <motion.div
+                    className="w-8 h-8 rounded-full bg-text-tertiary"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center gap-2">
+      <div className="border-t border-border p-16">
+        <div className="flex items-center gap-12">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={placeholder || "Type a message..."}
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className="flex-1 px-16 py-12 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue focus:border-transparent bg-white text-text-primary placeholder:text-text-tertiary text-sm transition-smooth"
             disabled={isLoading}
           />
-          <button
+          <motion.button
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
-            className="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-12 bg-blue text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors-smooth"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <Send className="w-5 h-5" />
-          </button>
+            <Send className="w-16 h-16" />
+          </motion.button>
         </div>
       </div>
     </div>

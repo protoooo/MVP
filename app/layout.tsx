@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AgentHub - AI-Powered Business Automation",
-  description: "Multi-agent automation platform for small businesses powered by Cohere AI",
+  title: "naiborhood - Business Automation Platform",
+  description: "Multi-agent automation platform for small businesses",
 };
 
 export default function RootLayout({

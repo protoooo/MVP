@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chat } from "@/lib/cohere";
+import { cohere } from "@/lib/cohere";
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, chatHistory } = await request.json();
+    const { message, chatHistory, systemPrompt } = await request.json();
 
     if (!message) {
       return NextResponse.json(
@@ -12,9 +12,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await chat(message, chatHistory);
+    // Prepare preamble with system prompt if provided
+    const preamble = systemPrompt || "You are a helpful assistant.";
 
-    return NextResponse.json({ response });
+    // Convert chat history to Cohere format
+    const formattedHistory = chatHistory?.map((h: { role: string; message: string }) => ({
+      role: h.role as "USER" | "CHATBOT",
+      message: h.message,
+    })) || [];
+
+    const response = await cohere.chat({
+      model: "command-r-plus",
+      message,
+      chatHistory: formattedHistory,
+      preamble,
+    });
+
+    return NextResponse.json({ response: response.text });
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(
