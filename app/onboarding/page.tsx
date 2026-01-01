@@ -40,6 +40,18 @@ export default function OnboardingPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/login");
+      return;
+    }
+
+    // Check if profile already exists and is complete
+    const { data: existingProfile } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (existingProfile?.setup_completed) {
+      router.push("/dashboard");
     }
   };
 
@@ -48,27 +60,66 @@ export default function OnboardingPage() {
     setError("");
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        throw new Error(`Authentication error: ${authError.message}`);
+      }
 
-      // Create/update user profile
-      const { error: profileError } = await supabase
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+
+      console.log("Creating profile for user:", user.id);
+
+      // First, try to check if profile exists
+      const { data: existingProfile, error: checkError } = await supabase
         .from("user_profiles")
-        .upsert({
-          id: user.id,
-          business_name: businessName,
-          industry,
-          business_size: businessSize,
-          setup_completed: true,
-          onboarding_step: 3,
-        });
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      let profileError;
+
+      if (existingProfile) {
+        // Update existing profile
+        const { error: updateError } = await supabase
+          .from("user_profiles")
+          .update({
+            business_name: businessName,
+            industry,
+            business_size: businessSize,
+            setup_completed: true,
+            onboarding_step: 3,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+        
+        profileError = updateError;
+      } else {
+        // Insert new profile
+        const { error: insertError } = await supabase
+          .from("user_profiles")
+          .insert({
+            id: user.id,
+            business_name: businessName,
+            industry,
+            business_size: businessSize,
+            setup_completed: true,
+            onboarding_step: 3,
+          });
+        
+        profileError = insertError;
+      }
 
       if (profileError) {
-        console.error("Profile update error:", profileError);
+        console.error("Profile operation error:", profileError);
         throw new Error(`Failed to save profile: ${profileError.message}`);
       }
 
-      // Redirect to Stripe checkout
+      console.log("Profile saved successfully");
+
+      // Redirect to checkout
       router.push("/checkout");
     } catch (err: unknown) {
       console.error("Onboarding error:", err);
