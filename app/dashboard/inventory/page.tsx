@@ -41,7 +41,7 @@ export default function InventoryPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are an inventory management specialist for small businesses. You analyze stock levels, predict demand patterns, identify optimization opportunities, and help find new suppliers. You provide clear, actionable recommendations with supporting data. You alert users to critical thresholds and supply chain risks. You can generate reorder lists, analyze inventory trends, research suppliers, and produce downloadable reports.",
+        systemPrompt: "You are an Inventory Manager for small businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations or real-time data access.\n\nYour core functions:\n1. Inventory Summary Extraction: Pull stock levels from uploaded reports\n2. Usage Pattern Detection: Identify trends across time-based documents\n3. Waste & Risk Flags: Detect expiring items, over-ordering clues from documents\n4. Reorder Guidance: Suggestions based on historical uploads\n5. Inventory Checklist Creation: Create weekly/monthly review lists from documents\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'Based on your October inventory report...')\n- If you lack relevant documents, say: 'To provide inventory insights, please upload: [specific documents needed]'\n- Never guess or make up inventory data\n- Generate concrete outputs: stock summaries, reorder lists, waste alerts, review checklists\n- Identify patterns only from uploaded historical data\n\nYou reduce guesswork in ordering and waste.",
         agentType: "inventory",
         useAutonomous: true,
       }),
@@ -62,7 +62,7 @@ export default function InventoryPage() {
           <div>
             <h1 className="text-2xl font-semibold text-text-primary">Inventory Manager</h1>
             <p className="text-text-secondary mt-1">
-              Track stock, predict demand, and manage suppliers
+              Document-driven inventory insights
             </p>
           </div>
         </div>
@@ -115,48 +115,48 @@ export default function InventoryPage() {
 
         {/* Capabilities */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">I can help with:</h3>
+          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Stock Tracking</div>
-                <div className="text-xs text-text-secondary">Monitor inventory levels in real-time</div>
+                <div className="font-medium text-text-primary text-sm">Inventory Summary Extraction</div>
+                <div className="text-xs text-text-secondary">Pulls stock levels from uploaded reports</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Demand Forecasting</div>
-                <div className="text-xs text-text-secondary">Predict future inventory needs</div>
+                <div className="font-medium text-text-primary text-sm">Usage Pattern Detection</div>
+                <div className="text-xs text-text-secondary">Identifies trends across time-based documents</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Reorder Automation</div>
-                <div className="text-xs text-text-secondary">Generate smart reorder lists</div>
+                <div className="font-medium text-text-primary text-sm">Waste & Risk Flags</div>
+                <div className="text-xs text-text-secondary">Expiring items, over-ordering clues</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Supplier Research</div>
-                <div className="text-xs text-text-secondary">Find and compare vendors</div>
+                <div className="font-medium text-text-primary text-sm">Reorder Guidance</div>
+                <div className="text-xs text-text-secondary">Suggestions based on historical uploads</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Trend Analysis</div>
-                <div className="text-xs text-text-secondary">Identify patterns and anomalies</div>
+                <div className="font-medium text-text-primary text-sm">Inventory Checklist Creation</div>
+                <div className="text-xs text-text-secondary">Creates weekly/monthly review lists</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Report Generation</div>
-                <div className="text-xs text-text-secondary">Create downloadable inventory reports</div>
+                <div className="font-medium text-text-primary text-sm">Document-Based Only</div>
+                <div className="text-xs text-text-secondary">No live data, just your uploaded reports</div>
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function InventoryPage() {
             <Chatbot
               onSendMessage={handleInventoryMessage}
               placeholder="Ask about inventory..."
-              welcomeMessage="Hi! I'm your Inventory Manager. I can track your stock, predict demand, generate reorder lists, research suppliers, and create reports. Ask me to do something or upload your inventory data to get started!"
+              welcomeMessage="Hi! I'm your Inventory Manager. I analyze your uploaded inventory reports to extract stock levels, detect usage patterns, flag waste risks, and provide reorder guidance. All insights are based strictly on your uploaded documents. What can I help you with?"
               agentColor="green"
               agentType="inventory"
               enableAutonomous={true}

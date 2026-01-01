@@ -41,7 +41,7 @@ export default function DocumentsPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are a document review specialist for small businesses. You analyze contracts, agreements, and legal documents with precision. You summarize key points clearly, extract important clauses, identify potential risks and compliance issues, compare document versions, and flag critical terms that require attention. You provide objective assessments while highlighting areas that may need legal review. You help business owners understand complex documents in plain language.",
+        systemPrompt: "You are a Document Reviewer for small businesses. IMPORTANT: You ONLY analyze uploaded documents. You have NO external data sources or live integrations.\n\nYour core functions:\n1. Risk Identification: Flag legal, financial, compliance issues in uploaded documents\n2. Key Obligation Extraction: Pull out deadlines, rules, responsibilities\n3. Summary & Action Breakdown: Turn documents into 2-minute reads with action items\n4. Contradiction Detection: Find conflicts across multiple uploaded documents\n5. Readiness Scoring: Assess 'How prepared are you based on current docs?'\n\nWhen responding:\n- ALWAYS state which documents you analyzed (e.g., 'In your Vendor Contract dated...')\n- If you lack relevant documents, say: 'To provide a complete review, please upload: [specific documents needed]'\n- Never make assumptions about missing information\n- Generate concrete outputs: risk reports, obligation lists, summaries, contradiction alerts, readiness scores\n- Explain complex terms in plain English for small business owners\n\nYou turn documents into insight, not storage.",
         agentType: "document-reviewer",
         useAutonomous: true,
       }),
@@ -62,7 +62,7 @@ export default function DocumentsPage() {
           <div>
             <h1 className="text-2xl font-semibold text-text-primary">Document Reviewer</h1>
             <p className="text-text-secondary mt-1">
-              Summarize contracts, extract clauses, and assess risks
+              Turn documents into insights and actions
             </p>
           </div>
         </div>
@@ -93,48 +93,48 @@ export default function DocumentsPage() {
 
         {/* Capabilities */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">I can help with:</h3>
+          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Summarize documents</p>
-                <p className="text-xs text-text-secondary">Create clear, concise summaries of contracts</p>
+                <p className="font-medium text-text-primary text-sm">Risk Identification</p>
+                <p className="text-xs text-text-secondary">Legal, financial, compliance issues</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Extract key clauses</p>
-                <p className="text-xs text-text-secondary">Identify important terms and conditions</p>
+                <p className="font-medium text-text-primary text-sm">Key Obligation Extraction</p>
+                <p className="text-xs text-text-secondary">Deadlines, rules, responsibilities</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Assess risks</p>
-                <p className="text-xs text-text-secondary">Identify potential issues and red flags</p>
+                <p className="font-medium text-text-primary text-sm">Summary & Action Breakdown</p>
+                <p className="text-xs text-text-secondary">"Read this in 2 minutes"</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Compare versions</p>
-                <p className="text-xs text-text-secondary">Analyze changes between document versions</p>
+                <p className="font-medium text-text-primary text-sm">Contradiction Detection</p>
+                <p className="text-xs text-text-secondary">Across multiple documents</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Flag critical terms</p>
-                <p className="text-xs text-text-secondary">Highlight important dates and obligations</p>
+                <p className="font-medium text-text-primary text-sm">Readiness Scoring</p>
+                <p className="text-xs text-text-secondary">"How prepared are you based on current docs?"</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Plain language explanations</p>
-                <p className="text-xs text-text-secondary">Translate legalese into clear English</p>
+                <p className="font-medium text-text-primary text-sm">Plain Language Explanations</p>
+                <p className="text-xs text-text-secondary">Translate complex terms for business owners</p>
               </div>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function DocumentsPage() {
         <Chatbot
           onSendMessage={handleDocumentMessage}
           placeholder="Ask me to review a contract, summarize an agreement, or explain a clause..."
-          welcomeMessage="Hi! I'm your Document Reviewer. I can help you understand contracts, extract key clauses, identify risks, and explain complex legal terms in plain language. What document would you like me to review?"
+          welcomeMessage="Hi! I'm your Document Reviewer. I turn documents into insights by identifying risks, extracting obligations, creating summaries with action items, detecting contradictions, and scoring your readiness - all based strictly on your uploaded documents. What would you like me to review?"
           agentColor="clay"
           agentType="document-reviewer"
           enableAutonomous={true}

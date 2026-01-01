@@ -41,7 +41,7 @@ export default function CustomerSupportPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are a customer support specialist for small businesses. You help handle customer inquiries with empathy and professionalism, analyze sentiment, route complex issues appropriately, and maintain conversation context across interactions. You provide clear, helpful responses and can draft customer communications. You ensure all responses align with company policies and maintain a positive customer experience. When customer support documents, FAQs, or policies are available, you use them to provide accurate, consistent answers.",
+        systemPrompt: "You are a Customer Support agent for small businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations or real-time data access.\n\nYour core functions:\n1. Policy-Based Response Drafting: Use uploaded policies ONLY to draft customer responses\n2. FAQ Generator: Create customer-facing FAQs from uploaded documents\n3. Tone-Safe Reply Suggestions: Professional, calm, on-brand responses\n4. Risky Language Detection: Flag responses that conflict with uploaded policies\n5. Customer Issue Categorization: Tag complaints based on patterns in documents\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'Based on your Customer Service Policy document...')\n- If you lack relevant documents, say: 'To provide accurate support guidance, please upload: [specific documents needed]'\n- Never guess or hallucinate policy information\n- Generate concrete outputs: draft responses, FAQ lists, issue categorizations\n- Maintain empathy and professionalism while staying true to uploaded policies\n\nYou ensure consistent customer answers without guessing.",
         agentType: "customer-support",
         useAutonomous: true,
       }),
@@ -62,7 +62,7 @@ export default function CustomerSupportPage() {
           <div>
             <h1 className="text-2xl font-semibold text-text-primary">Customer Support</h1>
             <p className="text-text-secondary mt-1">
-              Handle inquiries, analyze sentiment, and route tickets
+              Consistent customer answers based on your policies
             </p>
           </div>
         </div>
@@ -93,48 +93,48 @@ export default function CustomerSupportPage() {
 
         {/* Capabilities */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">I can help with:</h3>
+          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Handle customer inquiries</p>
-                <p className="text-xs text-text-secondary">Respond to questions with context and empathy</p>
+                <p className="font-medium text-text-primary text-sm">Policy-Based Response Drafting</p>
+                <p className="text-xs text-text-secondary">Uses uploaded policies only</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Analyze sentiment</p>
-                <p className="text-xs text-text-secondary">Detect customer satisfaction and concerns</p>
+                <p className="font-medium text-text-primary text-sm">FAQ Generator</p>
+                <p className="text-xs text-text-secondary">Creates FAQs from your documents</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Route tickets</p>
-                <p className="text-xs text-text-secondary">Prioritize and assign support requests</p>
+                <p className="font-medium text-text-primary text-sm">Tone-Safe Reply Suggestions</p>
+                <p className="text-xs text-text-secondary">Professional, calm, on-brand</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Draft communications</p>
-                <p className="text-xs text-text-secondary">Create professional customer responses</p>
+                <p className="font-medium text-text-primary text-sm">Risky Language Detection</p>
+                <p className="text-xs text-text-secondary">Flags conflicts with policies</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Maintain context</p>
-                <p className="text-xs text-text-secondary">Remember conversation history for continuity</p>
+                <p className="font-medium text-text-primary text-sm">Customer Issue Categorization</p>
+                <p className="text-xs text-text-secondary">Tags based on document patterns</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Policy compliance</p>
-                <p className="text-xs text-text-secondary">Ensure responses align with company standards</p>
+                <p className="font-medium text-text-primary text-sm">Consistency Checks</p>
+                <p className="text-xs text-text-secondary">Ensures responses align with policies</p>
               </div>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function CustomerSupportPage() {
         <Chatbot
           onSendMessage={handleSupportMessage}
           placeholder="Ask me to handle a customer inquiry, analyze sentiment, or draft a response..."
-          welcomeMessage="Hi! I'm your Customer Support agent. I can help you handle customer inquiries, analyze sentiment, route tickets, and draft professional responses. What can I help you with?"
+          welcomeMessage="Hi! I'm your Customer Support agent. I provide consistent, policy-based customer responses using your uploaded documents. I can draft responses, generate FAQs, detect risky language, and categorize issues - all based strictly on your policies. What can I help you with?"
           agentColor="sky"
           agentType="customer-support"
           enableAutonomous={true}

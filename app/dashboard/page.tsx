@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, Activity, AlertCircle } from "lucide-react";
+import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, Activity, AlertCircle, Brain } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -48,36 +48,43 @@ export default function DashboardPage() {
 
   const agents = [
     {
-      name: "Customer Support",
-      description: "Handle inquiries and support tickets",
+      name: "Today's Priorities",
+      description: "See what needs attention today",
+      icon: <Brain className="w-5 h-5" />,
+      color: "indigo",
+      href: "/dashboard/operations",
+    },
+    {
+      name: "Customer Service",
+      description: "Handle customer questions and complaints",
       icon: <MessageSquare className="w-5 h-5" />,
       color: "sky",
       href: "/dashboard/customer-support",
     },
     {
-      name: "HR Assistant",
-      description: "Screen resumes and manage candidates",
+      name: "Staff & Hiring",
+      description: "Manage your team and new hires",
       icon: <Users className="w-5 h-5" />,
       color: "lavender",
       href: "/dashboard/hr",
     },
     {
-      name: "Inventory Manager",
-      description: "Track stock and predict demand",
+      name: "Stock & Orders",
+      description: "Track what you have and what to order",
       icon: <Package className="w-5 h-5" />,
       color: "sage",
       href: "/dashboard/inventory",
     },
     {
-      name: "Financial Analyst",
-      description: "Analyze expenses and budgets",
+      name: "Money & Expenses",
+      description: "See where your money goes",
       icon: <TrendingUp className="w-5 h-5" />,
       color: "honey",
       href: "/dashboard/financial",
     },
     {
-      name: "Document Reviewer",
-      description: "Review contracts and documents",
+      name: "Contracts & Papers",
+      description: "Understand important documents",
       icon: <FileText className="w-5 h-5" />,
       color: "clay",
       href: "/dashboard/documents",
@@ -85,6 +92,7 @@ export default function DashboardPage() {
   ];
 
   const colorMap: Record<string, string> = {
+    indigo: "bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200 hover:border-indigo-300",
     sky: "bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 hover:border-sky-300",
     lavender: "bg-lavender-100 text-lavender-700 border-lavender-200 hover:bg-lavender-200 hover:border-lavender-300",
     sage: "bg-sage-100 text-sage-700 border-sage-200 hover:bg-sage-200 hover:border-sage-300",
@@ -101,7 +109,7 @@ export default function DashboardPage() {
             Welcome back{profile?.business_name ? `, ${profile.business_name}` : ""}
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Your business automation platform for {profile?.industry || "your business"}
+            Your daily business helper for {profile?.industry || "your business"}
           </p>
         </div>
 
@@ -118,18 +126,18 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="text-base font-semibold text-text-primary mb-2">
-                  Get started with your business data
+                  Get started by uploading your files
                 </h3>
                 <p className="text-sm text-text-secondary mb-4 leading-relaxed">
-                  Upload your business documents to help our agents understand your operations.
-                  This includes reports, manuals, procedures, and any data you'd like to analyze.
+                  Upload your business files - like schedules, invoices, employee handbooks, or recipes.
+                  The more you upload, the more helpful this gets.
                 </p>
                 <Link
                   href="/dashboard/uploads"
                   className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
                 >
                   <Upload className="w-4 h-4" />
-                  Upload Documents
+                  Upload Files
                 </Link>
               </div>
             </div>
@@ -139,7 +147,7 @@ export default function DashboardPage() {
         {/* Active Nudges */}
         {nudges.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-text-primary">Agent Suggestions</h2>
+            <h2 className="text-base font-semibold text-text-primary">Suggestions</h2>
             {nudges.map((nudge, index) => (
               <motion.div
                 key={nudge.id}
@@ -171,7 +179,7 @@ export default function DashboardPage() {
 
         {/* Agents Grid */}
         <div>
-          <h2 className="text-base font-semibold text-text-primary mb-4">Your Agents</h2>
+          <h2 className="text-base font-semibold text-text-primary mb-4">What do you need help with?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent, index) => (
               <motion.div
@@ -213,7 +221,7 @@ export default function DashboardPage() {
 
           <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-text-secondary">Agent Interactions</h3>
+              <h3 className="text-sm font-medium text-text-secondary">Tool Usage</h3>
               <Activity className="w-5 h-5 text-text-tertiary" />
             </div>
             <p className="text-2xl font-semibold text-text-primary">Unlimited</p>

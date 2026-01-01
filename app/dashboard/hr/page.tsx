@@ -41,7 +41,7 @@ export default function HRPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are an HR assistant specializing in recruitment for small businesses. You analyze resumes systematically, check them for legitimacy and AI usage, match candidates to role requirements, and coordinate scheduling efficiently. You can write professional emails, build email templates, and draft interview communications. You provide objective assessments while highlighting candidate strengths. You maintain compliance with hiring best practices. When business policies and procedures are uploaded, you ensure all recommendations align with company standards.",
+        systemPrompt: "You are an HR Assistant for small businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations or real-time data access.\n\nYour core functions:\n1. Policy Q&A: Answer HR questions strictly from uploaded HR documents\n2. Onboarding Checklist Generator: Build checklists from internal policies\n3. Training Summary Creation: Turn long docs into short training guides\n4. Consistency Checks: Flag contradictions between policies\n5. Scenario Guidance: Based on your handbook, provide guidance on situations\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'According to your Employee Handbook...')\n- If you lack relevant documents, say: 'To provide accurate HR guidance, please upload: [specific documents needed]'\n- Never guess or make up policy information\n- Generate concrete outputs: checklists, training summaries, policy comparisons\n- Ensure all recommendations align with uploaded company standards\n\nYou help with people management without legal mistakes.",
         agentType: "hr",
         useAutonomous: true,
       }),
@@ -62,7 +62,7 @@ export default function HRPage() {
           <div>
             <h1 className="text-2xl font-semibold text-text-primary">HR Assistant</h1>
             <p className="text-text-secondary mt-1">
-              Screen resumes, match candidates, and manage hiring
+              People management based on your policies
             </p>
           </div>
         </div>
@@ -93,48 +93,48 @@ export default function HRPage() {
 
         {/* Capabilities */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">I can help with:</h3>
+          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Resume Screening</p>
-                <p className="text-xs text-text-secondary">Analyze and verify resumes</p>
+                <p className="font-medium text-text-primary text-sm">Policy Q&A</p>
+                <p className="text-xs text-text-secondary">Answers strictly from uploaded HR documents</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">AI Detection</p>
-                <p className="text-xs text-text-secondary">Check resumes for AI-generated content</p>
+                <p className="font-medium text-text-primary text-sm">Onboarding Checklist Generator</p>
+                <p className="text-xs text-text-secondary">Built from internal policies</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Candidate Matching</p>
-                <p className="text-xs text-text-secondary">Match candidates to job requirements</p>
+                <p className="font-medium text-text-primary text-sm">Training Summary Creation</p>
+                <p className="text-xs text-text-secondary">Turns long docs into short training guides</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Email Writing</p>
-                <p className="text-xs text-text-secondary">Draft professional HR emails</p>
+                <p className="font-medium text-text-primary text-sm">Consistency Checks</p>
+                <p className="text-xs text-text-secondary">Flags contradictions between policies</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Template Building</p>
-                <p className="text-xs text-text-secondary">Create reusable email templates</p>
+                <p className="font-medium text-text-primary text-sm">Scenario Guidance</p>
+                <p className="text-xs text-text-secondary">Based on your handbook</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Interview Scheduling</div>
-                <div className="text-xs text-text-secondary">Coordinate interview times</div>
+                <p className="font-medium text-text-primary text-sm">Document-Based Only</p>
+                <p className="text-xs text-text-secondary">No guessing, just your policies</p>
               </div>
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function HRPage() {
             <Chatbot
               onSendMessage={handleHRMessage}
               placeholder="Ask about HR and recruiting..."
-              welcomeMessage="Hello! I'm your HR assistant. I can help screen resumes, check them for legitimacy and AI usage, match candidates to roles, write professional emails, build templates, and schedule interviews. Upload resumes or company documents to get started, or ask me any HR-related questions."
+              welcomeMessage="Hello! I'm your HR assistant. I help with people management using your uploaded policies and handbooks. I can answer policy questions, generate onboarding checklists, create training summaries, check for policy contradictions, and provide scenario guidance - all based strictly on your documents. What can I help you with?"
               agentColor="purple"
               agentType="hr"
               enableAutonomous={true}

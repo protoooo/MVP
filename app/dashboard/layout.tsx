@@ -14,7 +14,9 @@ import {
   Settings, 
   LogOut,
   FileUp,
-  ChevronRight
+  ChevronRight,
+  Brain,
+  UsersRound
 } from "lucide-react";
 import Link from "next/link";
 
@@ -56,17 +58,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Customer Support", href: "/dashboard/customer-support", icon: MessageSquare, color: "sky" },
-    { name: "HR Assistant", href: "/dashboard/hr", icon: Users, color: "lavender" },
-    { name: "Inventory Manager", href: "/dashboard/inventory", icon: Package, color: "sage" },
-    { name: "Financial Analyst", href: "/dashboard/financial", icon: TrendingUp, color: "honey" },
-    { name: "Document Reviewer", href: "/dashboard/documents", icon: FileText, color: "clay" },
+    { name: "Home", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Today's Priorities", href: "/dashboard/operations", icon: Brain, color: "indigo" },
+    { name: "Customer Service", href: "/dashboard/customer-support", icon: MessageSquare, color: "sky" },
+    { name: "Staff & Hiring", href: "/dashboard/hr", icon: Users, color: "lavender" },
+    { name: "Stock & Orders", href: "/dashboard/inventory", icon: Package, color: "sage" },
+    { name: "Money & Expenses", href: "/dashboard/financial", icon: TrendingUp, color: "honey" },
+    { name: "Contracts & Papers", href: "/dashboard/documents", icon: FileText, color: "clay" },
   ];
 
   const secondaryNavigation = [
-    { name: "Upload Documents", href: "/dashboard/uploads", icon: FileUp },
-    { name: "Reports", href: "/dashboard/reports", icon: Upload },
+    { name: "Your Team", href: "/dashboard/team", icon: UsersRound },
+    { name: "Upload Files", href: "/dashboard/uploads", icon: FileUp },
+    { name: "Past Work", href: "/dashboard/reports", icon: Upload },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -78,7 +82,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {/* Logo */}
           <div className="flex items-center gap-3 px-5 py-5 border-b border-border-light">
             <div>
-              <h1 className="text-base font-semibold text-text-primary">Business Automation</h1>
+              <h1 className="text-base font-semibold text-text-primary">Your Business</h1>
               {profile && (
                 <p className="text-xs text-text-tertiary truncate max-w-[200px]">
                   {profile.business_name}
