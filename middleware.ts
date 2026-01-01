@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
 
   // Simple rate limiting (in-memory, for demonstration)
   // In production, use Redis or a dedicated service
-  const ip = request.ip ?? "unknown";
+  const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown";
   const pathname = request.nextUrl.pathname;
 
   // API routes rate limiting
