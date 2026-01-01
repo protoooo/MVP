@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, Building2, Users, Check } from "lucide-react";
+import { Building2, Users, Check } from "lucide-react";
 
 const industries = [
   { value: "bakery", label: "Bakery", description: "Track daily sales, inventory, and waste" },
@@ -78,10 +78,6 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-2xl w-full">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Sparkles className="w-10 h-10 text-blue-600" />
-            <h1 className="text-3xl font-semibold text-gray-900">naiborhood</h1>
-          </div>
           <h2 className="text-xl font-medium text-gray-700">Let's set up your business</h2>
           <p className="mt-2 text-sm text-gray-600">
             This will help us customize your experience
@@ -132,7 +128,7 @@ export default function OnboardingPage() {
               <button
                 onClick={() => businessName && setStep(2)}
                 disabled={!businessName}
-                className="w-full py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full py-2.5 px-5 rounded-full text-sm font-medium text-white bg-text-primary hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Continue
               </button>
@@ -166,14 +162,14 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-text-primary bg-background-secondary hover:bg-background-tertiary transition-all border border-border"
                 >
                   Back
                 </button>
                 <button
                   onClick={() => industry && setStep(3)}
                   disabled={!industry}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-white bg-text-primary hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   Continue
                 </button>
@@ -213,14 +209,14 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-text-primary bg-background-secondary hover:bg-background-tertiary transition-all border border-border"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleComplete}
                   disabled={!businessSize || loading}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-white bg-text-primary hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {loading ? "Completing..." : "Complete Setup"}
                 </button>

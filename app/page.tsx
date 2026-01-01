@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, MessageSquare, Users, Package, ArrowRight } from "lucide-react";
+import { MessageSquare, Users, Package, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -35,13 +35,6 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 pt-20 pb-16">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-12">
-          <div className="w-16 h-16 rounded-2xl bg-sage-100 flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-sage-600" />
-          </div>
-          <h1 className="text-4xl font-semibold text-text-primary">naiborhood</h1>
-        </div>
 
         {/* Headline */}
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -58,17 +51,17 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
           <button
             onClick={() => router.push("/signup")}
-            className="group px-8 py-4 bg-sage-600 text-white rounded-2xl text-lg font-medium 
-              hover:bg-sage-700 transition shadow-soft-md hover:shadow-soft-lg
+            className="group px-6 py-2.5 bg-text-primary text-white rounded-full text-sm font-medium 
+              hover:bg-text-secondary transition shadow-soft hover:shadow-soft-md
               flex items-center justify-center gap-2"
           >
             Get Started - $50/month
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
           </button>
           <button
             onClick={() => router.push("/login")}
-            className="px-8 py-4 bg-surface text-text-primary rounded-2xl text-lg font-medium 
-              hover:bg-background-hover transition border border-border shadow-soft"
+            className="px-6 py-2.5 bg-background-secondary text-text-primary rounded-full text-sm font-medium 
+              hover:bg-background-tertiary transition border border-border shadow-soft"
           >
             Sign In
           </button>
@@ -180,12 +173,12 @@ export default function Home() {
             Ready to automate your business?
           </h3>
           <p className="text-lg text-text-secondary mb-8">
-            Join small businesses using naiborhood to save time and grow
+            Join small businesses using our platform to save time and grow
           </p>
           <button
             onClick={() => router.push("/signup")}
-            className="px-8 py-4 bg-sage-600 text-white rounded-2xl text-lg font-medium 
-              hover:bg-sage-700 transition shadow-soft-md hover:shadow-soft-lg"
+            className="px-6 py-2.5 bg-text-primary text-white rounded-full text-sm font-medium 
+              hover:bg-text-secondary transition shadow-soft hover:shadow-soft-md"
           >
             Get Started Today
           </button>
@@ -196,7 +189,7 @@ export default function Home() {
       <footer className="border-t border-border-light bg-background-secondary">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <p className="text-center text-sm text-text-tertiary">
-            © 2024 naiborhood. Built for small business automation.
+            © 2024 Business Automation Platform. Built for small and medium businesses.
           </p>
         </div>
       </footer>

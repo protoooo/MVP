@@ -56,12 +56,12 @@ export default function HRPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <div className="p-4 bg-purple-50 rounded-xl">
-            <Users className="w-8 h-8 text-purple-600" />
+          <div className="p-4 bg-lavender-50 rounded-xl border border-lavender-200">
+            <Users className="w-8 h-8 text-lavender-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900">HR Assistant</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-semibold text-text-primary">HR Assistant</h1>
+            <p className="text-text-secondary mt-1">
               Screen resumes, match candidates, and manage hiring
             </p>
           </div>
@@ -69,19 +69,19 @@ export default function HRPage() {
 
         {/* No Documents Alert */}
         {!hasDocuments && (
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+          <div className="bg-lavender-50 border border-lavender-200 rounded-xl p-6">
             <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-purple-600 mt-1" />
+              <AlertCircle className="w-6 h-6 text-lavender-600 mt-1" />
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-2">
+                <h3 className="font-semibold text-text-primary mb-2">
                   Ready to help with hiring
                 </h3>
-                <p className="text-sm text-gray-700 mb-4">
+                <p className="text-sm text-text-secondary mb-4">
                   Upload your company policies, procedures, and manuals so I can ensure all hiring recommendations align with your business standards. I'll also use this context to write better, more personalized communications.
                 </p>
                 <a
                   href="/dashboard/uploads"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-full text-sm font-medium hover:bg-purple-700 transition"
+                  className="inline-flex items-center gap-2 px-5 py-2 bg-lavender-600 text-white rounded-full text-sm font-medium hover:bg-lavender-700 transition"
                 >
                   <Upload className="w-4 h-4" />
                   Upload Company Documents
@@ -92,56 +92,56 @@ export default function HRPage() {
         )}
 
         {/* Capabilities */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">I can help with:</h3>
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h3 className="font-semibold text-text-primary mb-4">I can help with:</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Resume Screening</div>
-                <div className="text-xs text-gray-600">Analyze and verify resumes</div>
+                <p className="font-medium text-text-primary text-sm">Resume Screening</p>
+                <p className="text-xs text-text-secondary">Analyze and verify resumes</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
+              <div>
+                <p className="font-medium text-text-primary text-sm">AI Detection</p>
+                <p className="text-xs text-text-secondary">Check resumes for AI-generated content</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
+              <div>
+                <p className="font-medium text-text-primary text-sm">Candidate Matching</p>
+                <p className="text-xs text-text-secondary">Match candidates to job requirements</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
+              <div>
+                <p className="font-medium text-text-primary text-sm">Email Writing</p>
+                <p className="text-xs text-text-secondary">Draft professional HR emails</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
+              <div>
+                <p className="font-medium text-text-primary text-sm">Template Building</p>
+                <p className="text-xs text-text-secondary">Create reusable email templates</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">AI Detection</div>
-                <div className="text-xs text-gray-600">Check resumes for AI-generated content</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-gray-900 text-sm">Candidate Matching</div>
-                <div className="text-xs text-gray-600">Match candidates to job requirements</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-gray-900 text-sm">Email Writing</div>
-                <div className="text-xs text-gray-600">Draft professional HR emails</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-gray-900 text-sm">Template Building</div>
-                <div className="text-xs text-gray-600">Create reusable email templates</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-gray-900 text-sm">Interview Scheduling</div>
-                <div className="text-xs text-gray-600">Coordinate interview times</div>
+                <div className="font-medium text-text-primary text-sm">Interview Scheduling</div>
+                <div className="text-xs text-text-secondary">Coordinate interview times</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Chat Interface */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-border overflow-hidden">
           <div className="h-[600px]">
             <Chatbot
               onSendMessage={handleHRMessage}

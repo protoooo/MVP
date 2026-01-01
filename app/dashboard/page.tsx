@@ -110,11 +110,11 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-sage-50 border border-sage-200 rounded-2xl p-6"
+            className="bg-background-secondary border border-border rounded-2xl p-6"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-sage-100 flex items-center justify-center flex-shrink-0">
-                <Upload className="w-6 h-6 text-sage-600" />
+              <div className="w-12 h-12 rounded-xl bg-background-tertiary flex items-center justify-center flex-shrink-0">
+                <Upload className="w-6 h-6 text-text-primary" />
               </div>
               <div className="flex-1">
                 <h3 className="text-base font-semibold text-text-primary mb-2">
@@ -126,7 +126,7 @@ export default function DashboardPage() {
                 </p>
                 <Link
                   href="/dashboard/uploads"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-sage-600 text-white rounded-xl text-sm font-medium hover:bg-sage-700 transition shadow-soft"
+                  className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
                 >
                   <Upload className="w-4 h-4" />
                   Upload Documents

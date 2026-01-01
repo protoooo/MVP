@@ -56,12 +56,12 @@ export default function InventoryPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <div className="p-4 bg-green-50 rounded-xl">
-            <Package className="w-8 h-8 text-green-600" />
+          <div className="p-4 bg-sage-50 rounded-xl border border-sage-200">
+            <Package className="w-8 h-8 text-sage-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900">Inventory Manager</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-semibold text-text-primary">Inventory Manager</h1>
+            <p className="text-text-secondary mt-1">
               Track stock, predict demand, and manage suppliers
             </p>
           </div>
@@ -69,19 +69,19 @@ export default function InventoryPage() {
 
         {/* No Documents Alert */}
         {!hasDocuments && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+          <div className="bg-sage-50 border border-sage-200 rounded-xl p-6">
             <div className="flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-green-600 mt-1" />
+              <AlertCircle className="w-6 h-6 text-sage-600 mt-1" />
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-2">
+                <h3 className="font-semibold text-text-primary mb-2">
                   Ready to track your inventory
                 </h3>
-                <p className="text-sm text-gray-700 mb-4">
+                <p className="text-sm text-text-secondary mb-4">
                   Upload your inventory data (stock levels, SKUs, supplier info) to get predictive insights, automated reorder alerts, demand forecasting, and supplier recommendations.
                 </p>
                 <a
                   href="/dashboard/uploads"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full text-sm font-medium hover:bg-green-700 transition"
+                  className="inline-flex items-center gap-2 px-5 py-2 bg-sage-600 text-white rounded-full text-sm font-medium hover:bg-sage-700 transition"
                 >
                   <Upload className="w-4 h-4" />
                   Upload Inventory Data
@@ -92,8 +92,8 @@ export default function InventoryPage() {
         )}
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Try asking me to:</h3>
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h3 className="font-semibold text-text-primary mb-4">Try asking me to:</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
               "Generate a reorder list for low stock items",
@@ -105,7 +105,7 @@ export default function InventoryPage() {
             ].map((example, index) => (
               <button
                 key={index}
-                className="text-left p-3 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition text-sm text-gray-700"
+                className="text-left p-3 rounded-lg border border-border hover:border-green-300 hover:bg-sage-50 transition text-sm text-text-secondary"
               >
                 "{example}"
               </button>
@@ -114,56 +114,56 @@ export default function InventoryPage() {
         </div>
 
         {/* Capabilities */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">I can help with:</h3>
+        <div className="bg-surface rounded-xl border border-border p-6">
+          <h3 className="font-semibold text-text-primary mb-4">I can help with:</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Stock Tracking</div>
-                <div className="text-xs text-gray-600">Monitor inventory levels in real-time</div>
+                <div className="font-medium text-text-primary text-sm">Stock Tracking</div>
+                <div className="text-xs text-text-secondary">Monitor inventory levels in real-time</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Demand Forecasting</div>
-                <div className="text-xs text-gray-600">Predict future inventory needs</div>
+                <div className="font-medium text-text-primary text-sm">Demand Forecasting</div>
+                <div className="text-xs text-text-secondary">Predict future inventory needs</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Reorder Automation</div>
-                <div className="text-xs text-gray-600">Generate smart reorder lists</div>
+                <div className="font-medium text-text-primary text-sm">Reorder Automation</div>
+                <div className="text-xs text-text-secondary">Generate smart reorder lists</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Supplier Research</div>
-                <div className="text-xs text-gray-600">Find and compare vendors</div>
+                <div className="font-medium text-text-primary text-sm">Supplier Research</div>
+                <div className="text-xs text-text-secondary">Find and compare vendors</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Trend Analysis</div>
-                <div className="text-xs text-gray-600">Identify patterns and anomalies</div>
+                <div className="font-medium text-text-primary text-sm">Trend Analysis</div>
+                <div className="text-xs text-text-secondary">Identify patterns and anomalies</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
+              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-gray-900 text-sm">Report Generation</div>
-                <div className="text-xs text-gray-600">Create downloadable inventory reports</div>
+                <div className="font-medium text-text-primary text-sm">Report Generation</div>
+                <div className="text-xs text-text-secondary">Create downloadable inventory reports</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Chat Interface */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-border overflow-hidden">
           <div className="h-[600px]">
             <Chatbot
               onSendMessage={handleInventoryMessage}

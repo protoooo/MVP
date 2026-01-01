@@ -4,7 +4,6 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { 
-  Sparkles, 
   LayoutDashboard, 
   MessageSquare, 
   Users, 
@@ -78,13 +77,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-5 py-5 border-b border-border-light">
-            <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-sage-600" />
-            </div>
             <div>
-              <h1 className="text-base font-semibold text-text-primary">naiborhood</h1>
+              <h1 className="text-base font-semibold text-text-primary">Business Automation</h1>
               {profile && (
-                <p className="text-xs text-text-tertiary truncate max-w-[140px]">
+                <p className="text-xs text-text-tertiary truncate max-w-[200px]">
                   {profile.business_name}
                 </p>
               )}
@@ -103,14 +99,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     href={item.href}
                     className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                       isActive
-                        ? "bg-sage-100 text-sage-700 shadow-inner-soft"
+                        ? "bg-background-tertiary text-text-primary shadow-inner-soft"
                         : "text-text-secondary hover:bg-background-hover hover:text-text-primary"
                     }`}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     <span className="flex-1">{item.name}</span>
                     {isActive && (
-                      <ChevronRight className="w-4 h-4 text-sage-600" />
+                      <ChevronRight className="w-4 h-4 text-text-primary" />
                     )}
                   </Link>
                 );
@@ -144,8 +140,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {/* User Profile */}
           <div className="px-3 py-4 border-t border-border-light">
             <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-9 h-9 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-sage-700">
+              <div className="w-9 h-9 rounded-full bg-background-tertiary flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-semibold text-text-primary">
                   {user?.email?.[0].toUpperCase()}
                 </span>
               </div>
