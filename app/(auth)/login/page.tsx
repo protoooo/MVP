@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -20,14 +21,30 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      router.push("/dashboard");
+      // Check if admin
+      if (isAdminLogin) {
+        // Check if user has admin role
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("is_admin")
+          .eq("id", data.user?.id)
+          .single();
+
+        if (!profile?.is_admin) {
+          await supabase.auth.signOut();
+          throw new Error("Unauthorized: Admin access required");
+        }
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sign in");
@@ -37,75 +54,124 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Sparkles className="w-10 h-10 text-blue-600" />
-            <h1 className="text-3xl font-semibold text-gray-900">naiborhood</h1>
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-sage-100 flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-sage-600" />
+            </div>
+            <h1 className="text-2xl font-semibold text-text-primary">naiborhood</h1>
           </div>
-          <h2 className="text-xl font-medium text-gray-700">
-            Sign in to your account
+          <h2 className="text-xl font-medium text-text-primary mb-2">
+            {isAdminLogin ? "Admin Sign In" : "Welcome back"}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Business automation for small teams
+          <p className="text-sm text-text-secondary">
+            {isAdminLogin 
+              ? "Access the admin dashboard" 
+              : "Business automation for small teams"
+            }
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="mt-8 space-y-6">
-          <div className="space-y-4">
+        {/* Login Card */}
+        <div className="bg-surface rounded-2xl shadow-soft-lg border border-border p-8">
+          {/* Toggle Admin Login */}
+          <div className="flex items-center justify-center gap-2 mb-6 pb-6 border-b border-border-light">
+            <button
+              type="button"
+              onClick={() => setIsAdminLogin(!isAdminLogin)}
+              className="text-xs text-text-tertiary hover:text-sage-600 transition"
+            >
+              {isAdminLogin ? "← Regular Login" : "Admin Login →"}
+            </button>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
                 Email address
               </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="you@example.com"
-              />
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary 
+                    text-text-primary placeholder:text-text-placeholder
+                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
+                    transition duration-200"
+                  placeholder="you@example.com"
+                />
+              </div>
             </div>
 
+            {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary
+                    text-text-primary placeholder:text-text-placeholder
+                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
+                    transition duration-200"
+                  placeholder="Enter your password"
+                />
+              </div>
             </div>
-          </div>
 
-          {error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-xl bg-error-light border border-error/20 p-4">
+                <p className="text-sm text-error-dark">{error}</p>
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 px-4 rounded-xl text-sm font-medium text-white 
+                bg-sage-600 hover:bg-sage-700 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sage-500 
+                disabled:opacity-50 disabled:cursor-not-allowed 
+                transition duration-200 shadow-soft"
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
 
-          <div className="text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
-            <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500 transition">
-              Sign up
-            </Link>
-          </div>
-        </form>
+            {/* Sign Up Link - hide for admin login */}
+            {!isAdminLogin && (
+              <div className="text-center text-sm pt-4">
+                <span className="text-text-secondary">Don't have an account? </span>
+                <Link 
+                  href="/signup" 
+                  className="font-medium text-sage-600 hover:text-sage-700 transition"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-text-tertiary mt-8">
+          Built for small businesses in your neighborhood
+        </p>
       </div>
     </div>
   );
