@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   
+  // Turbopack configuration (empty config to silence Next.js 16 warning)
+  turbopack: {},
+  
   // Performance optimizations
   compress: true,
   
