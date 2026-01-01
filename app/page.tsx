@@ -51,17 +51,17 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
           <button
             onClick={() => router.push("/signup")}
-            className="group px-8 py-4 bg-sage-600 text-white rounded-2xl text-lg font-medium 
-              hover:bg-sage-700 transition shadow-soft-md hover:shadow-soft-lg
+            className="group px-6 py-2.5 bg-text-primary text-white rounded-full text-sm font-medium 
+              hover:bg-text-secondary transition shadow-soft hover:shadow-soft-md
               flex items-center justify-center gap-2"
           >
             Get Started - $50/month
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
           </button>
           <button
             onClick={() => router.push("/login")}
-            className="px-8 py-4 bg-surface text-text-primary rounded-2xl text-lg font-medium 
-              hover:bg-background-hover transition border border-border shadow-soft"
+            className="px-6 py-2.5 bg-background-secondary text-text-primary rounded-full text-sm font-medium 
+              hover:bg-background-tertiary transition border border-border shadow-soft"
           >
             Sign In
           </button>
@@ -177,8 +177,8 @@ export default function Home() {
           </p>
           <button
             onClick={() => router.push("/signup")}
-            className="px-8 py-4 bg-sage-600 text-white rounded-2xl text-lg font-medium 
-              hover:bg-sage-700 transition shadow-soft-md hover:shadow-soft-lg"
+            className="px-6 py-2.5 bg-text-primary text-white rounded-full text-sm font-medium 
+              hover:bg-text-secondary transition shadow-soft hover:shadow-soft-md"
           >
             Get Started Today
           </button>

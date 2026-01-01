@@ -12,31 +12,31 @@ const config: Config = {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       colors: {
-        // Soft matte color palette - warm and approachable
+        // Neutral grayscale palette - Notion/newspaper inspired
         background: {
-          DEFAULT: '#FDFCFB',
-          secondary: '#F9F8F6',
-          tertiary: '#F3F2EF',
-          hover: '#EEECEA',
+          DEFAULT: '#FFFFFF',
+          secondary: '#FAFAFA',
+          tertiary: '#F5F5F5',
+          hover: '#F0F0F0',
         },
         surface: {
           DEFAULT: '#FFFFFF',
-          elevated: '#FDFCFB',
-          muted: '#F5F4F1',
+          elevated: '#FAFAFA',
+          muted: '#F5F5F5',
         },
         text: {
-          primary: '#2B2A28',
-          secondary: '#6B6A67',
-          tertiary: '#9A9995',
-          placeholder: '#C4C3BE',
+          primary: '#111111',
+          secondary: '#6B6B6B',
+          tertiary: '#9B9B9B',
+          placeholder: '#BEBEBE',
         },
         border: {
-          DEFAULT: '#E8E7E3',
-          light: '#F0EFEC',
-          medium: '#D8D7D3',
-          dark: '#B8B7B3',
+          DEFAULT: '#E6E6E6',
+          light: '#F0F0F0',
+          medium: '#DCDCDC',
+          dark: '#C8C8C8',
         },
-        // Soft accent colors with matte finish
+        // Agent-specific accent colors (ONLY for agents)
         sage: {
           50: '#F6F8F6',
           100: '#E8EDE8',
@@ -97,26 +97,26 @@ const config: Config = {
           800: '#4F425F',
           900: '#42374F',
         },
-        // Status colors - matte versions
+        // Neutral status colors (grayscale-based)
         success: {
-          DEFAULT: '#6B946B',
-          light: '#D1DDD1',
-          dark: '#456145',
+          DEFAULT: '#2D3748',
+          light: '#E6E6E6',
+          dark: '#1A202C',
         },
         warning: {
-          DEFAULT: '#C89D6E',
-          light: '#EBD9C3',
-          dark: '#7E532E',
+          DEFAULT: '#6B6B6B',
+          light: '#F0F0F0',
+          dark: '#4A4A4A',
         },
         error: {
-          DEFAULT: '#B8726F',
-          light: '#E5D2D1',
-          dark: '#7A4946',
+          DEFAULT: '#DC2626',
+          light: '#FEE2E2',
+          dark: '#991B1B',
         },
         info: {
-          DEFAULT: '#7DADC8',
-          light: '#CCE0EA',
-          dark: '#385D78',
+          DEFAULT: '#6B6B6B',
+          light: '#F0F0F0',
+          dark: '#4A4A4A',
         },
       },
       spacing: {

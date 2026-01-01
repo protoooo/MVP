@@ -128,7 +128,7 @@ export default function OnboardingPage() {
               <button
                 onClick={() => businessName && setStep(2)}
                 disabled={!businessName}
-                className="w-full py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full py-2.5 px-5 rounded-full text-sm font-medium text-white bg-text-primary hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Continue
               </button>
@@ -162,14 +162,14 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-text-primary bg-background-secondary hover:bg-background-tertiary transition-all border border-border"
                 >
                   Back
                 </button>
                 <button
                   onClick={() => industry && setStep(3)}
                   disabled={!industry}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-white bg-text-primary hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   Continue
                 </button>
@@ -209,14 +209,14 @@ export default function OnboardingPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-text-primary bg-background-secondary hover:bg-background-tertiary transition-all border border-border"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleComplete}
                   disabled={!businessSize || loading}
-                  className="flex-1 py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex-1 py-2.5 px-5 rounded-full text-sm font-medium text-white bg-text-primary hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {loading ? "Completing..." : "Complete Setup"}
                 </button>

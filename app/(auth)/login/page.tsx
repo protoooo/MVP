@@ -108,9 +108,9 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl text-sm font-medium text-white 
-                bg-sage-600 hover:bg-sage-700 
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sage-500 
+              className="w-full py-2.5 px-5 rounded-full text-sm font-medium text-white 
+                bg-text-primary hover:bg-text-secondary 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary 
                 disabled:opacity-50 disabled:cursor-not-allowed 
                 transition duration-200 shadow-soft"
             >
@@ -122,7 +122,7 @@ export default function LoginPage() {
               <span className="text-text-secondary">Don't have an account? </span>
               <Link 
                 href="/signup" 
-                className="font-medium text-sage-600 hover:text-sage-700 transition"
+                className="font-medium text-text-primary hover:text-text-secondary transition underline"
               >
                 Sign up
               </Link>

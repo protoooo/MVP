@@ -94,16 +94,16 @@ export default function CheckoutPage() {
           <button
             onClick={handleCheckout}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-full text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-6 rounded-full text-sm font-medium text-white bg-text-primary hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {loading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <CreditCard className="w-5 h-5" />
+                <CreditCard className="w-4 h-4" />
                 Subscribe Now
               </>
             )}

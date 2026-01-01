@@ -144,9 +144,9 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl text-sm font-medium text-white 
-                bg-sage-600 hover:bg-sage-700 
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sage-500 
+              className="w-full py-2.5 px-5 rounded-full text-sm font-medium text-white 
+                bg-text-primary hover:bg-text-secondary 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary 
                 disabled:opacity-50 disabled:cursor-not-allowed 
                 transition duration-200 shadow-soft"
             >
@@ -158,7 +158,7 @@ export default function SignupPage() {
               <span className="text-text-secondary">Already have an account? </span>
               <Link 
                 href="/login" 
-                className="font-medium text-sage-600 hover:text-sage-700 transition"
+                className="font-medium text-text-primary hover:text-text-secondary transition underline"
               >
                 Sign in
               </Link>
@@ -169,20 +169,20 @@ export default function SignupPage() {
         {/* Features */}
         <div className="mt-8 space-y-3">
           <div className="flex items-center gap-3 text-sm text-text-secondary">
-            <div className="w-5 h-5 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
-              <Check className="w-3 h-3 text-sage-600" />
+            <div className="w-5 h-5 rounded-full bg-background-tertiary flex items-center justify-center flex-shrink-0">
+              <Check className="w-3 h-3 text-text-primary" />
             </div>
             <span>Unlimited agent interactions</span>
           </div>
           <div className="flex items-center gap-3 text-sm text-text-secondary">
-            <div className="w-5 h-5 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
-              <Check className="w-3 h-3 text-sage-600" />
+            <div className="w-5 h-5 rounded-full bg-background-tertiary flex items-center justify-center flex-shrink-0">
+              <Check className="w-3 h-3 text-text-primary" />
             </div>
             <span>All 5 specialized agents included</span>
           </div>
           <div className="flex items-center gap-3 text-sm text-text-secondary">
-            <div className="w-5 h-5 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
-              <Check className="w-3 h-3 text-sage-600" />
+            <div className="w-5 h-5 rounded-full bg-background-tertiary flex items-center justify-center flex-shrink-0">
+              <Check className="w-3 h-3 text-text-primary" />
             </div>
             <span>Cancel anytime, no hidden fees</span>
           </div>
