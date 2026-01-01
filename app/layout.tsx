@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Business Automation Platform",
-  description: "Multi-agent automation platform for small and medium businesses",
+  title: "Business Workspace",
+  description: "Agent-based business workspace that automates daily tasks",
 };
 
 export default function RootLayout({

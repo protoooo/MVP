@@ -1,90 +1,97 @@
-# Business Automation Platform - For Small and Medium Businesses
+# Business Workspace
 
-A lightweight, powerful platform built specifically for small businesses like bakeries, bars, breweries, and retail shops. Unlike overwhelming enterprise tools, this platform is designed to be simple, straightforward, and actually useful for teams of 3-50 people.
+A practical, agent-based business workspace that automates and solves real business problems, so owners don't have to do tasks they dislike or that are tedious.
 
-**Not just another chatbot.** Agents that actually do work - draft emails, analyze finances, check resumes, manage inventory, and more.
+**Not a generic AI chat app.** This is a daily business assistant with agents that **actually do work** - draft emails, analyze finances, check resumes, manage inventory, and more.
 
 ## What Makes This Different
 
-- **Real Actions, Not Suggestions**: Draft → Review → Send emails. Create invoices. Schedule interviews. Not copy-paste.
-- **Knows Your Business**: Upload your manuals, procedures, sales data - agents learn your specific operations
-- **One Simple Price**: $50/month unlimited. No usage limits. No surprises.
-- **Built for Small Teams**: Perfect for bakeries, bars, breweries, retail shops, restaurants
+- **Real Actions, Not Just Suggestions**: Agents draft outputs you can review and use - emails, schedules, reports. No copy-paste required.
+- **Knows Your Business**: Upload your files manually (PDFs, spreadsheets, docs, images) - agents learn your specific operations
+- **Shared Business Knowledge Hub**: All uploads go into a shared hub accessible by your team
+- **One Simple Price**: $50/month. Up to 5 team members. No usage limits.
 
-## Core Features
+## CORE CONSTRAINTS
 
-### 5 Specialized Business Agents
+- **No direct integrations of any kind**
+- Users upload all files manually (PDFs, spreadsheets, docs, images)
+- Agents only know what the user uploads or types
+- Shared Business Knowledge Hub where all uploads accumulate
+- All files are shared between team members
+- Never implies access to external systems, emails, POS, banks, or databases
 
-#### Financial Analyst
-- Analyze revenue, sales, margins, and COGS
-- Categorize expenses automatically
-- Track spending patterns and budget variances
-- Detect financial anomalies
-- Forecast cash flow
+## 6 Specialized Business Agents
 
-#### HR Assistant
-- Screen resumes for legitimacy and quality
-- Check resumes for AI-generated content
-- Match candidates to job requirements
-- Draft professional emails and templates
-- Schedule interviews
-- Ensure compliance with company policies
+### 1. Today's Priorities
+- Turn vague goals into concrete, actionable tasks
+- Highlight tradeoffs and sequencing (what first, what can wait)
+- Use only current context and uploaded files
+- Example actions: draft daily task lists, highlight urgent items, suggest task delegation
+- **Does NOT** give motivational advice or long-term planning
 
-#### Inventory Manager
-- Track stock levels in real-time
-- Predict demand patterns
-- Send low-stock alerts
-- Automate reorder recommendations
-- Analyze inventory turnover
+### 2. Customer Service
+- Resolve customer questions, complaints, or disputes using uploaded materials
+- Draft professional, calm, reusable email responses or messages
+- Suggest escalation steps when needed
+- Example actions: generate email drafts for refunds, complaints, or FAQs based on uploaded policies
+- **Does NOT** invent policies or promises
 
-#### Document Reviewer
-- Summarize contracts and agreements
-- Extract key clauses
-- Assess risks and compliance issues
-- Compare document versions
-- Flag important terms
+### 3. HR
+- Work with onboarding docs, training materials, schedules, and handbooks
+- Answer "How do we handle X?" using uploaded HR content
+- Rewrite, summarize, or organize internal processes
+- Example actions: draft schedules, onboarding emails, screen resumes for inconsistencies or AI usage, prepare training checklists
+- **Does NOT** give legal or compliance advice—only explains uploaded content
 
-#### Customer Support
-- Handle customer inquiries
-- Analyze sentiment
-- Route tickets appropriately
-- Maintain conversation context
-- Provide step-by-step guidance
+### 4. Inventory
+- Work with uploaded stock lists, order sheets, vendor invoices, or counts
+- Identify shortages, overstock, inconsistencies, or risks
+- Help reason about what to order or review
+- Example actions: suggest reorder quantities, flag discrepancies, analyze usage trends, provide conservative forecasts
+- **Does NOT** forecast unless explicitly requested and labeled as an estimate
 
-### Document Intelligence
-- Upload business documents (PDFs, Excel, Word)
-- Automatic text extraction and parsing
-- Semantic search across all documents
-- Context-aware agent responses
-- Secure storage with Supabase
+### 5. Finances
+- Work with uploaded expenses, invoices, revenue reports, and spreadsheets
+- Summarize financial activity clearly and concisely
+- Identify patterns, anomalies, or areas to review
+- Example actions: generate summaries for accountants or partners, flag unusual trends, prepare conservative forecasts, highlight actionable opportunities
+- **Does NOT** assume missing data or fabricate numbers
 
-### Business-Specific Setup
-- Industry templates (bakery, bar, brewery, retail)
-- Pre-configured KPIs per industry
-- Customizable metrics and dashboards
-- Easy onboarding flow
+### 6. Contracts, Agreements & Policies
+- Work with uploaded contracts, agreements, policies, and formal documents
+- Summarize key terms, dates, obligations, and responsibilities
+- Compare documents when asked
+- Explain documents in plain English
+- Example actions: extract renewal dates, obligations, clauses for follow-up, compare contracts for discrepancies
+- **Does NOT** give legal conclusions or advice
 
-### Automated Reports (Planned)
-- Daily sales summaries
-- Weekly staff performance
-- Monthly financial snapshots
-- Scheduled email delivery
+## Draft + Open App Pattern
 
-### Real Actions (Planned)
-- Draft emails → Review → Send
-- Create invoices → Approve → Send
-- Schedule interviews → Sync calendar
-- Generate reports → Email to team
+For any actionable output (emails, schedules, invoices, reports, documents):
 
-## Integration
-Business Automation Platform seamlessly integrates with a wide range of business tools and systems, including CRM, ERP, HRMS, and more. Our platform is designed to complement existing workflows and processes, ensuring a smooth transition to automated operations.
+1. The agent **drafts the output automatically** using uploaded files and context
+2. Agent displays the draft to the user for review
+3. Agent provides an **"Open in App / Copy to Clipboard" button** that:
+   - Opens the user's local application (email client, calendar, spreadsheet, or document editor)
+   - Copies the draft content into a new message, event, or document
+4. User reviews the draft and finalizes it manually by sending, posting, or saving
 
-## Benefits
-- **Increased efficiency**: Automate repetitive tasks and processes, freeing up valuable time and resources for more strategic activities.
-- **Cost savings**: Reduce operational costs by minimizing manual labor and optimizing resource allocation.
-- **Improved accuracy**: Enhance accuracy and consistency in various business functions, reducing errors and improving overall performance.
-- **Enhanced customer experience**: Provide faster, more personalized interactions with customers, leading to increased satisfaction and loyalty.
-- **Data-driven decision-making**: Gain valuable insights from advanced analytics, enabling informed and strategic business decisions.
+This pattern is applied **consistently across all actionable tasks**.
+
+## Team Sharing & Collaboration
+
+- Send up to 5 invite codes to share workspace access
+- All uploaded files go into shared Business Knowledge Hub
+- Team members can access all documents and agents
+- Collaborate on outputs and business decisions
+- **Pricing**: $25/month base plan + $10/month per team member invited
+
+## Pricing
+
+- **Base Plan**: $25/month for the workspace owner
+- **Team Members**: $10/month per additional member invited (up to 5 members total)
+- **Example**: Owner + 2 team members = $25 + $20 = $45/month
+- **Example**: Owner + 4 team members = $25 + $40 = $65/month
 
 ## Tech Stack
 

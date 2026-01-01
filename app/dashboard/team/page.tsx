@@ -190,7 +190,7 @@ export default function TeamPage() {
 
         {/* Team Size */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold text-text-primary">Team Size</h3>
               <p className="text-sm text-text-secondary mt-1">
@@ -210,6 +210,40 @@ export default function TeamPage() {
                   {idx < members.length ? <Check className="w-5 h-5" /> : <Users className="w-5 h-5" />}
                 </div>
               ))}
+            </div>
+          </div>
+          
+          {/* Pricing Info */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="space-y-2">
+              {(() => {
+                const additionalMembers = Math.max(0, members.length - 1);
+                const memberCost = additionalMembers * 10;
+                const totalCost = 25 + memberCost;
+                
+                return (
+                  <>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-text-secondary">Base plan</span>
+                      <span className="font-medium text-text-primary">$25/month</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-text-secondary">
+                        Team members ({additionalMembers} × $10)
+                      </span>
+                      <span className="font-medium text-text-primary">
+                        ${memberCost}/month
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-base font-semibold pt-2 border-t border-border">
+                      <span className="text-text-primary">Total</span>
+                      <span className="text-text-primary">
+                        ${totalCost}/month
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -361,7 +395,7 @@ export default function TeamPage() {
             </li>
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>Your subscription includes up to 5 team members at no extra cost</span>
+              <span>$25/month base plan + $10/month per team member invited</span>
             </li>
           </ul>
         </div>

@@ -41,7 +41,7 @@ export default function HRPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are an HR Assistant for small businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations or real-time data access.\n\nYour core functions:\n1. Policy Q&A: Answer HR questions strictly from uploaded HR documents\n2. Onboarding Checklist Generator: Build checklists from internal policies\n3. Training Summary Creation: Turn long docs into short training guides\n4. Consistency Checks: Flag contradictions between policies\n5. Scenario Guidance: Based on your handbook, provide guidance on situations\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'According to your Employee Handbook...')\n- If you lack relevant documents, say: 'To provide accurate HR guidance, please upload: [specific documents needed]'\n- Never guess or make up policy information\n- Generate concrete outputs: checklists, training summaries, policy comparisons\n- Ensure all recommendations align with uploaded company standards\n\nYou help with people management without legal mistakes.",
+        systemPrompt: "You are an HR agent for businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations or real-time data access.\n\nYour core functions:\n1. Draft Schedules: Create employee schedules based on availability and operating hours from uploaded docs\n2. Screen Resumes: Check resumes for inconsistencies or AI-generated content\n3. Create Onboarding Materials: Draft onboarding emails, checklists, and training materials\n4. Policy Q&A: Answer 'How do we handle X?' using uploaded HR content\n5. Rewrite & Organize: Summarize or reorganize internal processes from uploaded handbooks\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'Based on your Employee Handbook...')\n- If you lack relevant documents, say: 'To provide accurate HR guidance, please upload: [specific documents needed]'\n- Never give legal or compliance advice - only explain uploaded content\n- Generate concrete outputs: schedules, onboarding emails, training checklists, resume screening reports\n- All outputs should be ready to review and use (Draft + Open App pattern)\n\nYou help with people management without making things up.",
         agentType: "hr",
         useAutonomous: true,
       }),
@@ -60,9 +60,9 @@ export default function HRPage() {
             <Users className="w-8 h-8 text-lavender-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">HR Assistant</h1>
+            <h1 className="text-2xl font-semibold text-text-primary">HR</h1>
             <p className="text-text-secondary mt-1">
-              People management based on your policies
+              Work with onboarding docs, schedules, and employee materials
             </p>
           </div>
         </div>
@@ -74,10 +74,10 @@ export default function HRPage() {
               <AlertCircle className="w-6 h-6 text-lavender-600 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-text-primary mb-2">
-                  Ready to help with hiring
+                  Upload your HR documents
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  Upload your company policies, procedures, and manuals so I can ensure all hiring recommendations align with your business standards. I'll also use this context to write better, more personalized communications.
+                  Upload employee handbooks, training materials, schedules, and policies. I'll help you draft schedules, screen resumes, create onboarding emails, and answer "How do we handle X?" using your uploaded content.
                 </p>
                 <a
                   href="/dashboard/uploads"
@@ -98,36 +98,36 @@ export default function HRPage() {
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
+                <p className="font-medium text-text-primary text-sm">Draft Schedules</p>
+                <p className="text-xs text-text-secondary">Employee schedules based on availability</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
+              <div>
+                <p className="font-medium text-text-primary text-sm">Screen Resumes</p>
+                <p className="text-xs text-text-secondary">Check for inconsistencies and AI content</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
+              <div>
+                <p className="font-medium text-text-primary text-sm">Create Onboarding Materials</p>
+                <p className="text-xs text-text-secondary">Emails, checklists, training materials</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
+              <div>
                 <p className="font-medium text-text-primary text-sm">Policy Q&A</p>
-                <p className="text-xs text-text-secondary">Answers strictly from uploaded HR documents</p>
+                <p className="text-xs text-text-secondary">How do we handle X? Based on uploads</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Onboarding Checklist Generator</p>
-                <p className="text-xs text-text-secondary">Built from internal policies</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Training Summary Creation</p>
-                <p className="text-xs text-text-secondary">Turns long docs into short training guides</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Consistency Checks</p>
-                <p className="text-xs text-text-secondary">Flags contradictions between policies</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-lavender-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Scenario Guidance</p>
-                <p className="text-xs text-text-secondary">Based on your handbook</p>
+                <p className="font-medium text-text-primary text-sm">Rewrite & Organize</p>
+                <p className="text-xs text-text-secondary">Summarize internal processes</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
@@ -145,8 +145,8 @@ export default function HRPage() {
           <div className="h-[600px]">
             <Chatbot
               onSendMessage={handleHRMessage}
-              placeholder="Ask about HR and recruiting..."
-              welcomeMessage="Hello! I'm your HR assistant. I help with people management using your uploaded policies and handbooks. I can answer policy questions, generate onboarding checklists, create training summaries, check for policy contradictions, and provide scenario guidance - all based strictly on your documents. What can I help you with?"
+              placeholder="Ask me to draft a schedule, screen a resume, or create onboarding materials..."
+              welcomeMessage="Hi! I'm your HR agent. I help with onboarding, schedules, and employee materials using your uploaded documents. I can draft schedules, screen resumes for inconsistencies or AI usage, create onboarding emails and checklists, answer policy questions, and organize internal processes. What do you need help with?"
               agentColor="purple"
               agentType="hr"
               enableAutonomous={true}

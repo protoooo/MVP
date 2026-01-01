@@ -42,7 +42,7 @@ export default function OperationsIntelligencePage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: `You are the Operations Intelligence agent - the brain that reasons across all uploaded business documents.
+        systemPrompt: `You are the Today's Priorities agent - helping business owners focus on what matters most today.
 
 IMPORTANT CONSTRAINTS:
 - You ONLY know what has been uploaded to the system
@@ -51,21 +51,24 @@ IMPORTANT CONSTRAINTS:
 - Uploaded documents are your ONLY source of truth
 
 Your core functions:
-1. Daily Priority Brief: Analyze all documents to identify what deserves immediate attention
-2. Cross-Document Issue Detection: Find mismatches, risks, or contradictions across documents (e.g., SOP says X but financial report suggests Y)
-3. Auto Task Suggestions: Convert findings into actionable tasks
-4. Weekly Business Health Summary: Provide signals across operations, finance, HR, and compliance
-5. What's Missing Detector: Identify gaps in uploaded data and suggest specific documents to upload next
+1. Turn Vague Goals into Concrete Tasks: Convert unclear objectives into actionable, specific tasks
+2. Highlight Tradeoffs and Sequencing: Show what should be done first and what can wait
+3. Draft Daily Task Lists: Create practical, prioritized to-do lists
+4. Highlight Urgent Items: Flag what needs immediate attention based on uploaded data
+5. Suggest Task Delegation: Recommend which tasks could be delegated to team members
 
 When responding:
+- Use ONLY current context and uploaded files
 - ALWAYS state which documents you used in your analysis
 - CLEARLY explain when you lack sufficient data
 - Suggest SPECIFIC documents to upload for better insights
 - Never hallucinate or assume data you don't have
-- Generate concrete outputs: summaries, reports, task lists, checklists
+- Generate concrete outputs: daily task lists, delegation notes, priority briefs
+- DO NOT give motivational advice or long-term planning
 - Surface uncertainty when data is missing
+- All outputs should be ready to review and use (Draft + Open App pattern)
 
-You help business owners understand what matters most based on what they've shared.`,
+You help business owners understand what deserves attention today based on what they've shared.`,
         agentType: "operations",
         useAutonomous: true,
       }),
@@ -101,15 +104,15 @@ You help business owners understand what matters most based on what they've shar
                   Let's get you started
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  Upload your business files (schedules, invoices, employee info, recipes) and I'll help you stay on top of what matters.
+                  Upload your business files (schedules, invoices, employee info, to-do lists) and I'll help you turn vague goals into concrete tasks, highlight what's urgent, and suggest what can be delegated.
                 </p>
                 <div className="bg-white rounded-lg p-4 mb-4 border border-indigo-100">
                   <p className="text-sm font-medium text-text-primary mb-2">I work better when you upload:</p>
                   <ul className="space-y-1 text-sm text-text-secondary">
-                    <li>• Staff schedules and handbooks</li>
-                    <li>• Sales reports and receipts</li>
-                    <li>• Customer policies and FAQs</li>
-                    <li>• Inspection reports and checklists</li>
+                    <li>• Current to-do lists or project notes</li>
+                    <li>• Staff schedules and availability</li>
+                    <li>• Recent orders or customer requests</li>
+                    <li>• Inspection reports or checklists</li>
                   </ul>
                 </div>
                 <a
@@ -145,43 +148,36 @@ You help business owners understand what matters most based on what they've shar
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Daily To-Do List</p>
-                <p className="text-xs text-text-secondary">What needs attention today</p>
+                <p className="font-medium text-text-primary text-sm">Turn Vague Goals into Tasks</p>
+                <p className="text-xs text-text-secondary">Make unclear objectives actionable</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Spot Problems</p>
-                <p className="text-xs text-text-secondary">Find mismatches in your files</p>
+                <p className="font-medium text-text-primary text-sm">Highlight Tradeoffs</p>
+                <p className="text-xs text-text-secondary">What first, what can wait</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Create Task Lists</p>
-                <p className="text-xs text-text-secondary">Turn findings into action items</p>
+                <p className="font-medium text-text-primary text-sm">Draft Daily Task Lists</p>
+                <p className="text-xs text-text-secondary">Practical, prioritized to-dos</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Weekly Check-Up</p>
-                <p className="text-xs text-text-secondary">How things are going overall</p>
+                <p className="font-medium text-text-primary text-sm">Highlight Urgent Items</p>
+                <p className="text-xs text-text-secondary">What needs attention now</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">What's Missing</p>
-                <p className="text-xs text-text-secondary">Tells you what files would help</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Based on Your Files</p>
-                <p className="text-xs text-text-secondary">Only uses what you've uploaded</p>
+                <p className="font-medium text-text-primary text-sm">Suggest Task Delegation</p>
+                <p className="text-xs text-text-secondary">What could be delegated to team</p>
               </div>
             </div>
           </div>
@@ -190,8 +186,8 @@ You help business owners understand what matters most based on what they've shar
         {/* Chatbot */}
         <Chatbot
           onSendMessage={handleOperationsMessage}
-          placeholder="Ask me for today's priorities, a weekly check-up, or what files you should upload..."
-          welcomeMessage="Hi! I help you stay on top of things. I can show you today's priorities, spot problems in your files, create task lists, and give you weekly check-ups. What do you need help with?"
+          placeholder="Ask me to prioritize tasks, create a daily to-do list, or highlight what's urgent..."
+          welcomeMessage="Hi! I'm your Today's Priorities agent. I help you turn vague goals into concrete tasks, highlight tradeoffs and sequencing, draft daily task lists, and suggest what can be delegated. I use only your uploaded files and current context - no motivational advice or long-term planning. What do you need help with today?"
           agentColor="indigo"
           agentType="operations"
           enableAutonomous={true}

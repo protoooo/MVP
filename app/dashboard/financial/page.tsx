@@ -41,7 +41,7 @@ export default function FinancialPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are a Financial Analyst for small businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations with accounting software or real-time data access.\n\nYour core functions:\n1. Financial Summary Reports: Plain English explanations from uploaded financial documents\n2. Expense Category Analysis: From uploaded receipts/reports\n3. Trend Detection: Revenue up/down based on time-series documents\n4. Cost Risk Warnings: Flag abnormal changes in uploaded data\n5. Question-Driven Insights: Answer 'Why is X changing?' based on documents only\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'According to your Q3 P&L...')\n- If you lack relevant documents, say: 'To analyze finances, please upload: [specific documents needed]'\n- Never guess or make up financial data\n- Generate concrete outputs: financial summaries, expense breakdowns, trend reports, risk alerts\n- Explain financial concepts in plain English for small business owners\n\nYou provide financial clarity without accounting software.",
+        systemPrompt: "You are a Finances agent for businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations with accounting software or real-time data access.\n\nYour core functions:\n1. Summarize Financial Activity: Create clear, concise summaries for accountants or partners\n2. Identify Patterns: Spot trends in expenses and revenues from uploaded documents\n3. Flag Anomalies: Identify unusual trends or areas to review\n4. Prepare Conservative Forecasts: When requested, provide labeled estimates\n5. Highlight Actionable Opportunities: Point out areas for cost savings or revenue growth from data\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'Based on your Q3 expense report...')\n- If you lack relevant documents, say: 'To analyze finances, please upload: [specific documents needed]'\n- Never assume missing data or fabricate numbers\n- Generate concrete outputs: financial summaries, anomaly reports, conservative forecasts, opportunity highlights\n- Keep summaries clear and concise - ready to share with accountants/partners\n- All outputs should be ready to review and use (Draft + Open App pattern)\n\nYou provide financial clarity without making things up.",
         agentType: "financial",
         useAutonomous: true,
       }),
@@ -60,9 +60,9 @@ export default function FinancialPage() {
             <TrendingUp className="w-8 h-8 text-honey-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">Financial Analyst</h1>
+            <h1 className="text-2xl font-semibold text-text-primary">Finances</h1>
             <p className="text-text-secondary mt-1">
-              Financial clarity from your reports
+              Summarize expenses, revenues, and financial activity
             </p>
           </div>
         </div>
@@ -74,10 +74,10 @@ export default function FinancialPage() {
               <AlertCircle className="w-6 h-6 text-honey-600 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-text-primary mb-2">
-                  Ready to analyze your finances
+                  Upload your financial files
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  Upload your financial data (sales reports, expense sheets, revenue data) to get detailed insights about your business finances including revenue analysis, cost tracking, margin calculations, and budget forecasting.
+                  Upload expenses, invoices, revenue reports, and spreadsheets. I'll help you summarize financial activity, identify patterns and anomalies, and prepare conservative forecasts. All summaries are ready to share with your accountant or partners.
                 </p>
                 <a
                   href="/dashboard/uploads"
@@ -98,43 +98,36 @@ export default function FinancialPage() {
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Financial Summary Reports</div>
-                <div className="text-xs text-text-secondary">Plain English explanations</div>
+                <div className="font-medium text-text-primary text-sm">Summarize Financial Activity</div>
+                <div className="text-xs text-text-secondary">Clear summaries for accountants</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Expense Category Analysis</div>
-                <div className="text-xs text-text-secondary">From uploaded receipts/reports</div>
+                <div className="font-medium text-text-primary text-sm">Identify Patterns</div>
+                <div className="text-xs text-text-secondary">Spot trends in expenses and revenues</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Trend Detection</div>
-                <div className="text-xs text-text-secondary">Revenue up/down based on time-series docs</div>
+                <div className="font-medium text-text-primary text-sm">Flag Anomalies</div>
+                <div className="text-xs text-text-secondary">Unusual trends to review</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Cost Risk Warnings</div>
-                <div className="text-xs text-text-secondary">Flags abnormal changes</div>
+                <div className="font-medium text-text-primary text-sm">Conservative Forecasts</div>
+                <div className="text-xs text-text-secondary">When requested, labeled as estimates</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Question-Driven Insights</div>
-                <div className="text-xs text-text-secondary">"Why is food cost rising?" (doc-based only)</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Document-Based Only</div>
-                <div className="text-xs text-text-secondary">No accounting software needed</div>
+                <div className="font-medium text-text-primary text-sm">Actionable Opportunities</div>
+                <div className="text-xs text-text-secondary">Cost savings and revenue growth areas</div>
               </div>
             </div>
           </div>
@@ -145,8 +138,8 @@ export default function FinancialPage() {
           <div className="h-[600px]">
             <Chatbot
               onSendMessage={handleFinancialMessage}
-              placeholder="Ask about your finances..."
-              welcomeMessage="Hi! I'm your Financial Analyst. I provide financial clarity by analyzing your uploaded financial documents. I create summaries in plain English, categorize expenses, detect trends, flag cost risks, and answer your financial questions - all based strictly on your documents. What would you like to know?"
+              placeholder="Ask me to summarize finances, identify patterns, or prepare a forecast..."
+              welcomeMessage="Hi! I'm your Finances agent. I work with your uploaded expenses, invoices, and revenue reports to summarize financial activity, identify patterns and anomalies, and prepare conservative forecasts. All insights are based strictly on your uploaded documents. What can I help you with?"
               agentColor="amber"
               agentType="financial"
               enableAutonomous={true}

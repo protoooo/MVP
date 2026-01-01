@@ -41,7 +41,7 @@ export default function InventoryPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are an Inventory Manager for small businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations or real-time data access.\n\nYour core functions:\n1. Inventory Summary Extraction: Pull stock levels from uploaded reports\n2. Usage Pattern Detection: Identify trends across time-based documents\n3. Waste & Risk Flags: Detect expiring items, over-ordering clues from documents\n4. Reorder Guidance: Suggestions based on historical uploads\n5. Inventory Checklist Creation: Create weekly/monthly review lists from documents\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'Based on your October inventory report...')\n- If you lack relevant documents, say: 'To provide inventory insights, please upload: [specific documents needed]'\n- Never guess or make up inventory data\n- Generate concrete outputs: stock summaries, reorder lists, waste alerts, review checklists\n- Identify patterns only from uploaded historical data\n\nYou reduce guesswork in ordering and waste.",
+        systemPrompt: "You are an Inventory agent for businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations or real-time data access.\n\nYour core functions:\n1. Identify Shortages & Overstock: Analyze uploaded stock lists and flag issues\n2. Suggest Reorder Quantities: Based on historical usage in uploaded documents\n3. Flag Discrepancies: Find inconsistencies between different inventory counts\n4. Analyze Usage Trends: Identify patterns from uploaded order sheets and invoices\n5. Provide Conservative Forecasts: When explicitly requested, label as estimates\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'Based on your October stock count...')\n- If you lack relevant documents, say: 'To provide inventory insights, please upload: [specific documents needed]'\n- Never forecast unless explicitly requested and always label forecasts as estimates\n- Never assume missing data or fabricate inventory numbers\n- Generate concrete outputs: reorder lists, discrepancy reports, usage trend summaries\n- All outputs should be ready to review and use (Draft + Open App pattern)\n\nYou help reason about what to order and review without guessing.",
         agentType: "inventory",
         useAutonomous: true,
       }),
@@ -60,9 +60,9 @@ export default function InventoryPage() {
             <Package className="w-8 h-8 text-sage-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">Inventory Manager</h1>
+            <h1 className="text-2xl font-semibold text-text-primary">Inventory</h1>
             <p className="text-text-secondary mt-1">
-              Document-driven inventory insights
+              Track stock levels and identify what to order
             </p>
           </div>
         </div>
@@ -74,10 +74,10 @@ export default function InventoryPage() {
               <AlertCircle className="w-6 h-6 text-sage-600 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-text-primary mb-2">
-                  Ready to track your inventory
+                  Upload your inventory files
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  Upload your inventory data (stock levels, SKUs, supplier info) to get predictive insights, automated reorder alerts, demand forecasting, and supplier recommendations.
+                  Upload stock lists, order sheets, vendor invoices, or inventory counts. I'll help identify shortages, overstock, inconsistencies, and suggest what to order based on your uploaded data.
                 </p>
                 <a
                   href="/dashboard/uploads"
@@ -120,43 +120,36 @@ export default function InventoryPage() {
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Inventory Summary Extraction</div>
-                <div className="text-xs text-text-secondary">Pulls stock levels from uploaded reports</div>
+                <div className="font-medium text-text-primary text-sm">Identify Shortages & Overstock</div>
+                <div className="text-xs text-text-secondary">Flag stock issues from uploads</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Usage Pattern Detection</div>
-                <div className="text-xs text-text-secondary">Identifies trends across time-based documents</div>
+                <div className="font-medium text-text-primary text-sm">Suggest Reorder Quantities</div>
+                <div className="text-xs text-text-secondary">Based on historical usage</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Waste & Risk Flags</div>
-                <div className="text-xs text-text-secondary">Expiring items, over-ordering clues</div>
+                <div className="font-medium text-text-primary text-sm">Flag Discrepancies</div>
+                <div className="text-xs text-text-secondary">Find inconsistencies in counts</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Reorder Guidance</div>
-                <div className="text-xs text-text-secondary">Suggestions based on historical uploads</div>
+                <div className="font-medium text-text-primary text-sm">Analyze Usage Trends</div>
+                <div className="text-xs text-text-secondary">Patterns from uploaded data</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Inventory Checklist Creation</div>
-                <div className="text-xs text-text-secondary">Creates weekly/monthly review lists</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sage-500 rounded-full mt-2" />
-              <div>
-                <div className="font-medium text-text-primary text-sm">Document-Based Only</div>
-                <div className="text-xs text-text-secondary">No live data, just your uploaded reports</div>
+                <div className="font-medium text-text-primary text-sm">Conservative Forecasts</div>
+                <div className="text-xs text-text-secondary">When requested, labeled as estimates</div>
               </div>
             </div>
           </div>
@@ -167,8 +160,8 @@ export default function InventoryPage() {
           <div className="h-[600px]">
             <Chatbot
               onSendMessage={handleInventoryMessage}
-              placeholder="Ask about inventory..."
-              welcomeMessage="Hi! I'm your Inventory Manager. I analyze your uploaded inventory reports to extract stock levels, detect usage patterns, flag waste risks, and provide reorder guidance. All insights are based strictly on your uploaded documents. What can I help you with?"
+              placeholder="Ask me to identify shortages, suggest reorder quantities, or analyze trends..."
+              welcomeMessage="Hi! I'm your Inventory agent. I work with your uploaded stock lists, order sheets, vendor invoices, and counts to identify shortages, overstock, inconsistencies, and suggest what to order. All insights are based strictly on your uploaded documents. What can I help you with?"
               agentColor="green"
               agentType="inventory"
               enableAutonomous={true}
