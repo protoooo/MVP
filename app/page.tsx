@@ -129,6 +129,18 @@ export default function Home() {
 
   const currentAgent = agents.find(a => a.id === selectedAgent);
 
+  // Color style mappings for dynamic agent styling
+  const getAgentColorStyles = (color: string) => {
+    const colorMap: Record<string, string> = {
+      blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+      purple: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+      green: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+      yellow: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400",
+      red: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
+    };
+    return colorMap[color] || colorMap.blue;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
@@ -251,7 +263,7 @@ export default function Home() {
             {/* Agent Header */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <div className={`p-4 rounded-xl bg-${currentAgent?.color}-100 dark:bg-${currentAgent?.color}-900/30 text-${currentAgent?.color}-600 dark:text-${currentAgent?.color}-400`}>
+                <div className={`p-4 rounded-xl ${getAgentColorStyles(currentAgent?.color || "blue")}`}>
                   {currentAgent?.icon}
                 </div>
                 <div>
