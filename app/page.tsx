@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles } from "lucide-react";
+import { Sparkles, MessageSquare, Users, Package, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -17,7 +17,6 @@ export default function Home() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      // User is logged in, check if onboarding is complete
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("setup_completed")
@@ -29,69 +28,178 @@ export default function Home() {
       } else {
         router.push("/onboarding");
       }
-    } else {
-      // Not logged in, show landing page
-      return;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-4xl mx-auto px-4 text-center space-y-8">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <Sparkles className="w-16 h-16 text-blue-600" />
-          <h1 className="text-5xl font-semibold text-gray-900">naiborhood</h1>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <div className="max-w-6xl mx-auto px-4 pt-20 pb-16">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <div className="w-16 h-16 rounded-2xl bg-sage-100 flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-sage-600" />
+          </div>
+          <h1 className="text-4xl font-semibold text-text-primary">naiborhood</h1>
         </div>
 
-        <h2 className="text-3xl font-semibold text-gray-900">
-          Business Automation for Small Teams
-        </h2>
+        {/* Headline */}
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-4xl md:text-5xl font-semibold text-text-primary mb-6 leading-tight">
+            Business Automation for Small Teams
+          </h2>
+          <p className="text-xl text-text-secondary leading-relaxed">
+            A lightweight, powerful platform designed specifically for small businesses. 
+            Get AI-powered agents that actually do work, not just chat.
+          </p>
+        </div>
 
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          A lightweight, powerful platform designed specifically for small businesses. 
-          Get AI-powered agents that actually do work, not just chat.
-        </p>
-
-        <div className="flex gap-4 justify-center pt-8">
+        {/* CTA Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
           <button
             onClick={() => router.push("/signup")}
-            className="px-8 py-4 bg-blue-600 text-white rounded-full text-lg font-medium hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
+            className="group px-8 py-4 bg-sage-600 text-white rounded-2xl text-lg font-medium 
+              hover:bg-sage-700 transition shadow-soft-md hover:shadow-soft-lg
+              flex items-center justify-center gap-2"
           >
             Get Started - $50/month
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
           </button>
           <button
             onClick={() => router.push("/login")}
-            className="px-8 py-4 bg-white text-gray-700 rounded-full text-lg font-medium hover:bg-gray-50 transition-all border-2 border-gray-300"
+            className="px-8 py-4 bg-surface text-text-primary rounded-2xl text-lg font-medium 
+              hover:bg-background-hover transition border border-border shadow-soft"
           >
             Sign In
           </button>
         </div>
 
-        <div className="pt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-2">Real Actions</h3>
-            <p className="text-sm text-gray-600">
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          <div className="bg-surface rounded-2xl p-6 border border-border shadow-soft">
+            <div className="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center mb-4">
+              <MessageSquare className="w-6 h-6 text-sky-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Real Actions</h3>
+            <p className="text-sm text-text-secondary leading-relaxed">
               Draft emails, create invoices, schedule interviews - not just suggestions
             </p>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-2">Know Your Business</h3>
-            <p className="text-sm text-gray-600">
+
+          <div className="bg-surface rounded-2xl p-6 border border-border shadow-soft">
+            <div className="w-12 h-12 rounded-xl bg-lavender-100 flex items-center justify-center mb-4">
+              <Users className="w-6 h-6 text-lavender-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Know Your Business</h3>
+            <p className="text-sm text-text-secondary leading-relaxed">
               Upload your docs - agents learn your operations, policies, and data
             </p>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-2">Unlimited Usage</h3>
-            <p className="text-sm text-gray-600">
+
+          <div className="bg-surface rounded-2xl p-6 border border-border shadow-soft">
+            <div className="w-12 h-12 rounded-xl bg-sage-100 flex items-center justify-center mb-4">
+              <Package className="w-6 h-6 text-sage-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Unlimited Usage</h3>
+            <p className="text-sm text-text-secondary leading-relaxed">
               One simple price. No usage limits. Built for small businesses.
             </p>
           </div>
         </div>
 
-        <p className="text-sm text-gray-500 pt-8">
-          Perfect for bakeries, bars, breweries, retail shops, and small teams everywhere
-        </p>
+        {/* Social Proof */}
+        <div className="text-center">
+          <p className="text-sm text-text-tertiary">
+            Perfect for bakeries, bars, breweries, retail shops, and small teams everywhere
+          </p>
+        </div>
       </div>
+
+      {/* Features Section */}
+      <div className="bg-background-secondary border-t border-border-light py-20">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h3 className="text-3xl font-semibold text-text-primary mb-4">
+              Five Specialized Agents
+            </h3>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+              Each agent is trained for specific business tasks, working together to automate your operations
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Customer Support",
+                description: "Handle inquiries, route tickets, maintain context",
+                color: "sky",
+              },
+              {
+                name: "HR Assistant",
+                description: "Screen resumes, match candidates, draft emails",
+                color: "lavender",
+              },
+              {
+                name: "Inventory Manager",
+                description: "Track stock, predict demand, automate reorders",
+                color: "sage",
+              },
+              {
+                name: "Financial Analyst",
+                description: "Categorize expenses, forecast budgets, detect anomalies",
+                color: "honey",
+              },
+              {
+                name: "Document Reviewer",
+                description: "Summarize contracts, extract clauses, assess risks",
+                color: "clay",
+              },
+            ].map((agent, index) => (
+              <div 
+                key={index}
+                className={`p-6 rounded-2xl border bg-surface shadow-soft
+                  ${agent.color === 'sky' ? 'border-sky-200' :
+                    agent.color === 'lavender' ? 'border-lavender-200' :
+                    agent.color === 'sage' ? 'border-sage-200' :
+                    agent.color === 'honey' ? 'border-honey-200' :
+                    'border-clay-200'
+                  }`}
+              >
+                <h4 className="font-semibold text-text-primary mb-2">{agent.name}</h4>
+                <p className="text-sm text-text-secondary">{agent.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="py-20">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h3 className="text-3xl font-semibold text-text-primary mb-4">
+            Ready to automate your business?
+          </h3>
+          <p className="text-lg text-text-secondary mb-8">
+            Join small businesses using naiborhood to save time and grow
+          </p>
+          <button
+            onClick={() => router.push("/signup")}
+            className="px-8 py-4 bg-sage-600 text-white rounded-2xl text-lg font-medium 
+              hover:bg-sage-700 transition shadow-soft-md hover:shadow-soft-lg"
+          >
+            Get Started Today
+          </button>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-border-light bg-background-secondary">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <p className="text-center text-sm text-text-tertiary">
+            © 2024 naiborhood. Built for small business automation.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
