@@ -9,8 +9,10 @@ import Chatbot from "@/components/Chatbot";
 type AgentType = "customer-support" | "hr" | "inventory" | "financial" | "document" | null;
 
 interface Message {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
+  progressUpdates?: string[];
+  isAutonomous?: boolean;
 }
 
 export default function Home() {
@@ -24,11 +26,13 @@ export default function Home() {
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
         systemPrompt: "You are a customer support specialist. You prioritize understanding the user's issue completely before offering solutions. You maintain conversation context, ask clarifying questions, and provide step-by-step guidance. You escalate complex issues appropriately and always confirm resolution.",
+        agentType: "customer-support",
+        useAutonomous: true,
       }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleHRMessage = async (message: string, history: Message[]) => {
@@ -39,11 +43,13 @@ export default function Home() {
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
         systemPrompt: "You are an HR assistant specializing in recruitment. You analyze resumes systematically, match candidates to role requirements, and coordinate scheduling efficiently. You provide objective assessments while highlighting candidate strengths. You maintain compliance with hiring best practices.",
+        agentType: "hr",
+        useAutonomous: true,
       }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleInventoryMessage = async (message: string, history: Message[]) => {
@@ -54,11 +60,13 @@ export default function Home() {
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
         systemPrompt: "You are an inventory management specialist. You analyze stock levels, predict demand patterns, and identify optimization opportunities. You provide clear, actionable recommendations with supporting data. You alert users to critical thresholds and supply chain risks.",
+        agentType: "inventory",
+        useAutonomous: true,
       }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleFinancialMessage = async (message: string, history: Message[]) => {
@@ -69,11 +77,13 @@ export default function Home() {
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
         systemPrompt: "You are a financial analyst. You categorize expenses, identify spending patterns, and forecast budget trajectories. You explain financial concepts clearly and flag anomalies or risks. You provide data-backed recommendations for financial optimization.",
+        agentType: "financial",
+        useAutonomous: true,
       }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleDocumentMessage = async (message: string, history: Message[]) => {
@@ -84,11 +94,13 @@ export default function Home() {
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
         systemPrompt: "You are a document review specialist. You analyze contracts, identify key clauses, assess risks, and flag compliance issues. You prioritize findings by severity and business impact. You explain legal concepts in accessible language while maintaining precision.",
+        agentType: "document",
+        useAutonomous: true,
       }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const agents = [
@@ -318,6 +330,8 @@ export default function Home() {
                 placeholder={`Ask ${currentAgent?.title}...`}
                 welcomeMessage={currentAgent?.welcome}
                 agentColor={currentAgent?.color}
+                agentType={selectedAgent || undefined}
+                enableAutonomous={true}
               />
             </div>
           </motion.div>

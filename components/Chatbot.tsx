@@ -1,30 +1,37 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Sparkles, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
+  progressUpdates?: string[];
+  isAutonomous?: boolean;
 }
 
 interface ChatbotProps {
-  onSendMessage: (message: string, history: Message[]) => Promise<string>;
+  onSendMessage: (message: string, history: Message[]) => Promise<string | { response: string; progressUpdates?: string[]; autonomous?: boolean }>;
   placeholder?: string;
   welcomeMessage?: string;
   agentColor?: string;
+  agentType?: string;
+  enableAutonomous?: boolean;
 }
 
 export default function Chatbot({ 
   onSendMessage, 
   placeholder, 
   welcomeMessage,
-  agentColor = "blue"
+  agentColor = "blue",
+  agentType,
+  enableAutonomous = true,
 }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [autonomousMode, setAutonomousMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,7 +54,18 @@ export default function Chatbot({
 
     try {
       const response = await onSendMessage(userMessage, messages);
-      setMessages(prev => [...prev, { role: "assistant", content: response }]);
+      
+      // Handle both string and object responses
+      if (typeof response === 'string') {
+        setMessages(prev => [...prev, { role: "assistant", content: response }]);
+      } else if (response && typeof response === 'object') {
+        setMessages(prev => [...prev, { 
+          role: "assistant", 
+          content: response.response,
+          progressUpdates: response.progressUpdates,
+          isAutonomous: response.autonomous,
+        }]);
+      }
     } catch (error) {
       console.error("Chat error:", error);
       setMessages(prev => [
@@ -93,14 +111,43 @@ export default function Chatbot({
               }}
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <div
-                className={`max-w-[80%] rounded-lg px-16 py-12 ${
-                  message.role === "user"
-                    ? "bg-background-tertiary text-text-primary"
-                    : `bg-background-secondary text-text-primary border border-border`
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+              <div className={`max-w-[80%] ${message.role === "user" ? "" : "space-y-8"}`}>
+                <div
+                  className={`rounded-lg px-16 py-12 ${
+                    message.role === "user"
+                      ? "bg-background-tertiary text-text-primary"
+                      : `bg-background-secondary text-text-primary border border-border`
+                  }`}
+                >
+                  {/* Show autonomous mode indicator */}
+                  {message.isAutonomous && (
+                    <div className="flex items-center gap-8 mb-8 text-xs text-purple font-medium">
+                      <Zap className="w-12 h-12" />
+                      <span>Autonomous Mode</span>
+                    </div>
+                  )}
+                  
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                </div>
+
+                {/* Show progress updates if available */}
+                {message.progressUpdates && message.progressUpdates.length > 0 && (
+                  <div className="mt-8 space-y-4">
+                    <div className="text-xs text-text-tertiary font-medium">Task Progress:</div>
+                    {message.progressUpdates.map((update, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="flex items-center gap-8 text-xs text-text-secondary"
+                      >
+                        <div className="w-4 h-4 rounded-full bg-green-200 flex-shrink-0" />
+                        <span>{update}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -114,6 +161,12 @@ export default function Chatbot({
           >
             <div className="bg-background-secondary border border-border rounded-lg px-16 py-12">
               <div className="flex items-center gap-8">
+                {autonomousMode && (
+                  <div className="flex items-center gap-4 text-xs text-purple font-medium mr-8">
+                    <Zap className="w-12 h-12 animate-pulse" />
+                    <span>Thinking...</span>
+                  </div>
+                )}
                 <div className="flex space-x-4">
                   <motion.div
                     className="w-8 h-8 rounded-full bg-text-tertiary"
@@ -140,6 +193,28 @@ export default function Chatbot({
 
       {/* Input */}
       <div className="border-t border-border p-16">
+        {/* Autonomous mode toggle */}
+        {enableAutonomous && (
+          <div className="flex items-center gap-8 mb-12">
+            <button
+              onClick={() => setAutonomousMode(!autonomousMode)}
+              className={`flex items-center gap-8 px-12 py-6 rounded-md text-xs font-medium transition-colors-smooth ${
+                autonomousMode
+                  ? "bg-purple text-white"
+                  : "bg-background-secondary text-text-secondary hover:bg-background-tertiary"
+              }`}
+            >
+              <Zap className="w-12 h-12" />
+              <span>Autonomous Mode</span>
+            </button>
+            {autonomousMode && (
+              <span className="text-xs text-text-tertiary">
+                Agent can use tools and work independently
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-12">
           <input
             type="text"
