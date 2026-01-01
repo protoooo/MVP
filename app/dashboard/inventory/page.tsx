@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Chatbot from "@/components/ChatbotEnhanced";
-import { Package, Upload, AlertCircle } from "lucide-react";
+import { Package, Upload, AlertCircle, ClipboardList, DollarSign, Trash2, BarChart3, Bell } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -96,7 +96,10 @@ export default function InventoryPage() {
           <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
           <div className="space-y-3">
             <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📋 Smart Reorder List</p>
+              <div className="flex items-center gap-2 mb-2">
+                <ClipboardList className="w-4 h-4 text-sage-600" />
+                <p className="font-medium text-text-primary text-sm">Smart Reorder List</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Analyzes sales velocity from uploaded data → Weekly reorder list with quantities and suppliers
               </p>
@@ -106,17 +109,10 @@ export default function InventoryPage() {
             </div>
             
             <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">💰 Supplier Price Comparer</p>
-              <p className="text-xs text-text-secondary mb-3">
-                "Find better pricing for [item]" → Researches alternatives, drafts negotiation email
-              </p>
-              <button className="text-xs text-sage-600 hover:text-sage-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">🗑️ Waste Reduction Analyzer</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Trash2 className="w-4 h-4 text-sage-600" />
+                <p className="font-medium text-text-primary text-sm">Waste Reduction Analyzer</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Tracks spoilage patterns → Suggests order quantity adjustments
               </p>
@@ -126,7 +122,10 @@ export default function InventoryPage() {
             </div>
             
             <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📊 Seasonal Demand Forecaster</p>
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-sage-600" />
+                <p className="font-medium text-text-primary text-sm">Seasonal Demand Forecaster</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Historical sales data → Predicts next month's needs with confidence intervals
               </p>
@@ -136,7 +135,10 @@ export default function InventoryPage() {
             </div>
             
             <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">🔔 Low Stock Alerts</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Bell className="w-4 h-4 text-sage-600" />
+                <p className="font-medium text-text-primary text-sm">Low Stock Alerts</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Daily scan → Email/text when items hit reorder point
               </p>

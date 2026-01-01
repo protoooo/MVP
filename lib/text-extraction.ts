@@ -1,9 +1,14 @@
 /**
  * Document Text Extraction Utilities
- * Extracts text from various document formats (PDF, DOCX, CSV, etc.)
+ * Extracts text from various document formats (PDF, DOCX, CSV, Excel, JSON, etc.)
  */
 
 import mammoth from "mammoth";
+import ExcelJS from "exceljs";
+
+// Constants
+const MIN_DOC_TEXT_LENGTH = 100;
+const PDF_PREVIEW_LENGTH = 1000;
 
 export interface ExtractionResult {
   text: string;
@@ -12,6 +17,8 @@ export interface ExtractionResult {
   metadata?: {
     pages?: number;
     wordCount?: number;
+    sheets?: number;
+    rows?: number;
   };
 }
 
@@ -28,7 +35,7 @@ export async function extractTextFromPDF(
     // or a service like AWS Textract for better accuracy
     
     // Temporary: treat as binary and extract what we can
-    const text = fileBuffer.toString('utf-8', 0, Math.min(1000, fileBuffer.length));
+    const text = fileBuffer.toString('utf-8', 0, Math.min(PDF_PREVIEW_LENGTH, fileBuffer.length));
     
     return {
       text: "PDF text extraction is being processed. Please check back shortly.",
@@ -69,6 +76,140 @@ export async function extractTextFromDOCX(
       text: "",
       success: false,
       error: error instanceof Error ? error.message : "Failed to extract DOCX text",
+    };
+  }
+}
+
+/**
+ * Extract text from legacy DOC files
+ * Note: This is a basic handler - legacy .doc files are complex binary formats
+ */
+export async function extractTextFromDOC(
+  fileBuffer: Buffer
+): Promise<ExtractionResult> {
+  try {
+    // Try using mammoth which sometimes works with .doc files
+    const result = await mammoth.extractRawText({ buffer: fileBuffer });
+    
+    if (result.value && result.value.length > 0) {
+      return {
+        text: result.value,
+        success: true,
+        metadata: {
+          wordCount: result.value.split(/\s+/).length,
+        },
+      };
+    }
+    
+    // Fallback: extract what we can as UTF-8
+    const text = fileBuffer.toString('utf-8').replace(/[^\x20-\x7E\n\r]/g, ' ');
+    
+    return {
+      text: text.length > MIN_DOC_TEXT_LENGTH ? text : "Legacy .doc file uploaded. For best results, please convert to .docx format.",
+      success: true,
+      metadata: {
+        wordCount: text.split(/\s+/).length,
+      },
+    };
+  } catch (error) {
+    console.error("Error extracting text from DOC:", error);
+    return {
+      text: "",
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to extract DOC text",
+    };
+  }
+}
+
+/**
+ * Extract text from Excel files (.xlsx, .xls)
+ * Note: This primarily handles .xlsx format. Legacy .xls files may have limited support.
+ */
+export async function extractTextFromExcel(
+  fileBuffer: Buffer
+): Promise<ExtractionResult> {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    // Load from buffer - note: ExcelJS primarily supports .xlsx
+    // For .xls files, users should convert to .xlsx for best results
+    await workbook.xlsx.load(fileBuffer as unknown as ExcelJS.Buffer);
+
+    let allText: string[] = [];
+    let totalRows = 0;
+
+    workbook.eachSheet((worksheet, sheetId) => {
+      allText.push(`\n--- Sheet: ${worksheet.name} ---\n`);
+      
+      worksheet.eachRow((row, rowNumber) => {
+        const rowValues: string[] = [];
+        row.eachCell((cell) => {
+          const value = cell.value;
+          if (value !== null && value !== undefined) {
+            // Handle different cell types
+            if (typeof value === 'object' && 'text' in value) {
+              rowValues.push(String(value.text));
+            } else if (typeof value === 'object' && 'result' in value) {
+              rowValues.push(String(value.result));
+            } else {
+              rowValues.push(String(value));
+            }
+          }
+        });
+        
+        if (rowValues.length > 0) {
+          allText.push(`Row ${rowNumber}: ${rowValues.join(' | ')}`);
+          totalRows++;
+        }
+      });
+    });
+
+    const text = allText.join('\n');
+
+    return {
+      text,
+      success: true,
+      metadata: {
+        wordCount: text.split(/\s+/).length,
+        sheets: workbook.worksheets.length,
+        rows: totalRows,
+      },
+    };
+  } catch (error) {
+    console.error("Error extracting text from Excel:", error);
+    return {
+      text: "",
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to extract Excel text",
+    };
+  }
+}
+
+/**
+ * Extract text from JSON files
+ */
+export async function extractTextFromJSON(
+  fileBuffer: Buffer
+): Promise<ExtractionResult> {
+  try {
+    const jsonString = fileBuffer.toString("utf-8");
+    const jsonData = JSON.parse(jsonString);
+    
+    // Convert JSON to readable text format
+    const text = JSON.stringify(jsonData, null, 2);
+
+    return {
+      text,
+      success: true,
+      metadata: {
+        wordCount: text.split(/\s+/).length,
+      },
+    };
+  } catch (error) {
+    console.error("Error extracting text from JSON:", error);
+    return {
+      text: "",
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to parse JSON file",
     };
   }
 }
@@ -159,6 +300,10 @@ export async function extractTextFromFile(
     return extractTextFromDOCX(fileBuffer);
   }
 
+  if (mimeType === "application/msword" || extension === "doc") {
+    return extractTextFromDOC(fileBuffer);
+  }
+
   if (mimeType === "text/csv" || extension === "csv") {
     return extractTextFromCSV(fileBuffer);
   }
@@ -171,15 +316,30 @@ export async function extractTextFromFile(
     return extractTextFromTXT(fileBuffer);
   }
 
-  // For Excel files, we'll just extract as text (simplified)
+  // Excel files (.xlsx primarily supported, .xls has limited support)
   if (
     mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-    mimeType === "application/vnd.ms-excel" ||
-    extension === "xlsx" ||
-    extension === "xls"
+    extension === "xlsx"
   ) {
-    // For now, treat as text - could enhance with a library like xlsx
-    return extractTextFromTXT(fileBuffer);
+    return extractTextFromExcel(fileBuffer);
+  }
+
+  // Legacy .xls files - attempt to extract, but recommend conversion
+  if (mimeType === "application/vnd.ms-excel" || extension === "xls") {
+    try {
+      return await extractTextFromExcel(fileBuffer);
+    } catch (error) {
+      return {
+        text: "",
+        success: false,
+        error: "Legacy .xls file format detected. Please convert to .xlsx for best results.",
+      };
+    }
+  }
+
+  // JSON files
+  if (mimeType === "application/json" || extension === "json") {
+    return extractTextFromJSON(fileBuffer);
   }
 
   return {

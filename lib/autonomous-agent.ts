@@ -83,12 +83,12 @@ export class AutonomousAgent {
 
         // Check if agent wants to use tools
         if (response.toolCalls && response.toolCalls.length > 0) {
-          onProgress?.(`🔧 Using ${response.toolCalls.length} tool(s)...`);
+          onProgress?.(`Using ${response.toolCalls.length} tool(s)...`);
 
           // Execute tool calls
           const toolResults: ToolResult[] = [];
           for (const toolCall of response.toolCalls) {
-            onProgress?.(`⚙️ Executing: ${toolCall.name}`);
+            onProgress?.(`Executing: ${toolCall.name}`);
             
             const result = await executeTool(
               toolCall.name,
@@ -175,11 +175,11 @@ export class AutonomousAgent {
       updatedAt: new Date(),
     };
 
-    onProgress?.(`📋 Starting task: ${taskDescription}`);
+    onProgress?.(`Starting task: ${taskDescription}`);
 
     try {
       // Break down task into steps
-      onProgress?.("🔍 Analyzing task and creating plan...");
+      onProgress?.("Analyzing task and creating plan...");
       
       const planningPrompt = `Break down this task into clear, actionable steps: ${taskDescription}`;
       const planResponse = await this.processMessage(planningPrompt, systemPrompt, onProgress);
@@ -194,12 +194,12 @@ export class AutonomousAgent {
       task.result = result;
       task.status = "completed";
       task.updatedAt = new Date();
-      onProgress?.("✅ Task completed successfully!");
+      onProgress?.("Task completed successfully!");
     } catch (error) {
       task.status = "failed";
       task.error = error instanceof Error ? error.message : "Unknown error";
       task.updatedAt = new Date();
-      onProgress?.(`❌ Task failed: ${task.error}`);
+      onProgress?.(`Task failed: ${task.error}`);
     }
 
     return task;

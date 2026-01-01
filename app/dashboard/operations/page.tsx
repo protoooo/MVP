@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Chatbot from "@/components/ChatbotEnhanced";
-import { Brain, Upload, AlertCircle } from "lucide-react";
+import { Brain, Upload, AlertCircle, Calendar, CheckSquare, Users, Sun, ClipboardList } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -146,7 +146,10 @@ You help business owners understand what deserves attention today based on what 
           <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
           <div className="space-y-3">
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📅 Weekly Schedule Generator</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-4 h-4 text-indigo-600" />
+                <p className="font-medium text-text-primary text-sm">Weekly Schedule Generator</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 "We have 5 employees, these are their available hours [upload CSV], we're open Mon-Sat 9am-6pm" → Generates optimized schedule as downloadable PDF/Excel
               </p>
@@ -156,7 +159,10 @@ You help business owners understand what deserves attention today based on what 
             </div>
             
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">✅ Task Sequencing</p>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckSquare className="w-4 h-4 text-indigo-600" />
+                <p className="font-medium text-text-primary text-sm">Task Sequencing</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 "I need to: restock inventory, respond to 3 customer complaints, review vendor contract, train new hire" → Prioritizes with time estimates and dependencies
               </p>
@@ -166,7 +172,10 @@ You help business owners understand what deserves attention today based on what 
             </div>
             
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">👥 Delegation Recommender</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-indigo-600" />
+                <p className="font-medium text-text-primary text-sm">Delegation Recommender</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Analyzes tasks and suggests which ones can be delegated to which team members based on uploaded org chart/roles
               </p>
@@ -176,19 +185,12 @@ You help business owners understand what deserves attention today based on what 
             </div>
             
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">☀️ Daily Briefing</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Sun className="w-4 h-4 text-indigo-600" />
+                <p className="font-medium text-text-primary text-sm">Daily Briefing</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Scans all uploaded documents for urgent items (expired licenses, low inventory alerts, pending deadlines) → Morning report
-              </p>
-              <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📋 Meeting Prep</p>
-              <p className="text-xs text-text-secondary mb-3">
-                "Prepare for today's staff meeting" → Generates agenda with action items from past week
               </p>
               <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
                 Try this example →

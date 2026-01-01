@@ -191,7 +191,7 @@ export default function UploadsPage() {
                   type="file"
                   onChange={handleUpload}
                   disabled={uploading}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.json"
                   className="block w-full text-sm text-gray-500
                     file:mr-4 file:py-3 file:px-6
                     file:rounded-full file:border-0
@@ -202,7 +202,7 @@ export default function UploadsPage() {
                 />
               </div>
               <p className="mt-2 text-xs text-gray-500">
-                Supported formats: PDF, Word, Excel, CSV, Text (Max 10MB)
+                Supported formats: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), CSV, JSON, Text (Max 10MB)
               </p>
             </div>
 

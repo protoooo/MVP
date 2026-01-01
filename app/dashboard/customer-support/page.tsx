@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Chatbot from "@/components/ChatbotEnhanced";
-import { MessageSquare, Upload, AlertCircle } from "lucide-react";
+import { MessageSquare, Upload, AlertCircle, Mail, Star, HelpCircle, DollarSign, BarChart3 } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -60,9 +60,9 @@ export default function CustomerSupportPage() {
             <MessageSquare className="w-8 h-8 text-sky-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">Customer Service</h1>
+            <h1 className="text-2xl font-semibold text-text-primary">Customer Service & Online Presence</h1>
             <p className="text-text-secondary mt-1">
-              Resolve customer questions and complaints using your policies
+              Handle customer questions, reviews, and improve your online visibility
             </p>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function CustomerSupportPage() {
                   Upload your customer service policies
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  Upload customer service policies, FAQs, and support guidelines. I'll draft professional email responses, handle complaints, and suggest escalation steps based on your uploaded materials.
+                  Upload customer service policies, FAQs, Google My Business data, and support guidelines. I'll draft professional responses, handle complaints, generate FAQs, and analyze your online presence for SEO improvements.
                 </p>
                 <a
                   href="/dashboard/uploads"
@@ -96,9 +96,12 @@ export default function CustomerSupportPage() {
           <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
           <div className="space-y-3">
             <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📧 Complaint Resolution Drafter</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="w-4 h-4 text-sky-600" />
+                <p className="font-medium text-text-primary text-sm">Review Response Generator</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
-                Customer says "my order was late and wrong" → Drafts apology email with refund offer per policy, ready to send
+                New Google review (any star rating) → Drafts professional, empathetic public response
               </p>
               <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
                 Try this example →
@@ -106,9 +109,12 @@ export default function CustomerSupportPage() {
             </div>
             
             <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">⭐ Review Response Generator</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Mail className="w-4 h-4 text-sky-600" />
+                <p className="font-medium text-text-primary text-sm">Customer Email Templates</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
-                New 2-star Google review → Drafts professional, empathetic public response
+                Handle refunds, complaints, common questions → Professional email drafts per your policy
               </p>
               <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
                 Try this example →
@@ -116,7 +122,10 @@ export default function CustomerSupportPage() {
             </div>
             
             <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">❓ FAQ Builder</p>
+              <div className="flex items-center gap-2 mb-2">
+                <HelpCircle className="w-4 h-4 text-sky-600" />
+                <p className="font-medium text-text-primary text-sm">FAQ Builder</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Analyzes past customer messages → Generates comprehensive FAQ document
               </p>
@@ -126,19 +135,12 @@ export default function CustomerSupportPage() {
             </div>
             
             <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">💰 Refund Policy Enforcer</p>
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-sky-600" />
+                <p className="font-medium text-text-primary text-sm">SEO Health Check</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
-                Customer requests refund → Checks against uploaded policy, drafts appropriate response
-              </p>
-              <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📊 Customer Sentiment Tracker</p>
-              <p className="text-xs text-text-secondary mb-3">
-                Scans messages/reviews → Weekly sentiment report with trends
+                Analyze online presence (Google My Business, reviews) → Actionable SEO improvement suggestions
               </p>
               <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
                 Try this example →
@@ -151,7 +153,7 @@ export default function CustomerSupportPage() {
         <Chatbot
           onSendMessage={handleSupportMessage}
           placeholder="Ask me to draft a customer response, handle a complaint, or create FAQs..."
-          welcomeMessage="Hi! I'm your Customer Service agent. I help you resolve customer questions and complaints using your uploaded policies. I can draft professional email responses, handle refunds and disputes, generate FAQs, and suggest escalation steps - all based strictly on your policies. What customer issue can I help you with?"
+          welcomeMessage="Hi! I'm your Customer Service & Online Presence agent. I help you handle customer questions and complaints, draft professional responses to reviews and emails, generate FAQs, and analyze your online presence for SEO improvements. I work strictly with your uploaded policies and data. What can I help you with?"
           agentColor="sky"
           agentType="customer-support"
           enableAutonomous={true}
