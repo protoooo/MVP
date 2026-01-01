@@ -1,7 +1,7 @@
 {
-  "name": "mvp",
+  "name": "naiborhood",
   "version": "1.0.0",
-  "description": "Multi-Agent Automation App for Small Businesses powered by Cohere AI",
+  "description": "Multi-Agent Automation Platform for Small Businesses",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,19 +9,22 @@
     "lint": "next lint"
   },
   "keywords": [
-    "cohere",
-    "ai",
     "automation",
-    "multi-agent"
+    "multi-agent",
+    "business",
+    "platform"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.89.0",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "cohere-ai": "^7.20.0",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
     "next": "^16.1.1",
     "react": "^19.2.3",

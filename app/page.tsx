@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Users, Package, DollarSign, FileText, ArrowLeft, Sparkles } from "lucide-react";
+import { MessageSquare, Users, Package, TrendingUp, FileText, ArrowLeft, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import AgentCard from "@/components/AgentCard";
 import Chatbot from "@/components/Chatbot";
-import ThemeToggle from "@/components/ThemeToggle";
 
 type AgentType = "customer-support" | "hr" | "inventory" | "financial" | "document" | null;
 
 interface Message {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
+  progressUpdates?: string[];
+  isAutonomous?: boolean;
 }
 
 export default function Home() {
@@ -23,169 +25,201 @@ export default function Home() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
+        systemPrompt: "You are a customer support specialist. You prioritize understanding the user's issue completely before offering solutions. You maintain conversation context, ask clarifying questions, and provide step-by-step guidance. You escalate complex issues appropriately and always confirm resolution.",
+        agentType: "customer-support",
+        useAutonomous: true,
       }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleHRMessage = async (message: string, history: Message[]) => {
-    // For HR, we'll use the chat API with context
-    const contextMessage = `You are an HR assistant. Help with resume screening, candidate matching, and interview scheduling. User query: ${message}`;
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: contextMessage }),
+      body: JSON.stringify({ 
+        message,
+        chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
+        systemPrompt: "You are an HR assistant specializing in recruitment. You analyze resumes systematically, match candidates to role requirements, and coordinate scheduling efficiently. You provide objective assessments while highlighting candidate strengths. You maintain compliance with hiring best practices.",
+        agentType: "hr",
+        useAutonomous: true,
+      }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleInventoryMessage = async (message: string, history: Message[]) => {
-    const contextMessage = `You are an inventory management assistant. Help with stock levels, predictions, and alerts. User query: ${message}`;
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: contextMessage }),
+      body: JSON.stringify({ 
+        message,
+        chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
+        systemPrompt: "You are an inventory management specialist. You analyze stock levels, predict demand patterns, and identify optimization opportunities. You provide clear, actionable recommendations with supporting data. You alert users to critical thresholds and supply chain risks.",
+        agentType: "inventory",
+        useAutonomous: true,
+      }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleFinancialMessage = async (message: string, history: Message[]) => {
-    const contextMessage = `You are a financial assistant. Help with expense categorization, budgeting, and financial analysis. User query: ${message}`;
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: contextMessage }),
+      body: JSON.stringify({ 
+        message,
+        chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
+        systemPrompt: "You are a financial analyst. You categorize expenses, identify spending patterns, and forecast budget trajectories. You explain financial concepts clearly and flag anomalies or risks. You provide data-backed recommendations for financial optimization.",
+        agentType: "financial",
+        useAutonomous: true,
+      }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const handleDocumentMessage = async (message: string, history: Message[]) => {
-    const contextMessage = `You are a document review assistant. Help with summarization, key clause extraction, and risk analysis. User query: ${message}`;
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: contextMessage }),
+      body: JSON.stringify({ 
+        message,
+        chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
+        systemPrompt: "You are a document review specialist. You analyze contracts, identify key clauses, assess risks, and flag compliance issues. You prioritize findings by severity and business impact. You explain legal concepts in accessible language while maintaining precision.",
+        agentType: "document",
+        useAutonomous: true,
+      }),
     });
 
     const data = await response.json();
-    return data.response;
+    return data;
   };
 
   const agents = [
     {
       id: "customer-support" as AgentType,
-      icon: <MessageCircle className="w-6 h-6" />,
+      icon: <MessageSquare className="w-24 h-24" />,
       title: "Customer Support",
-      description: "Handle customer inquiries, sentiment analysis, and ticket routing",
+      description: "Empathetic, solution-focused assistant that maintains context and provides step-by-step guidance",
       color: "blue",
       handler: handleCustomerSupportMessage,
-      welcome: "Hi! I'm your Customer Support assistant. How can I help you today?",
+      welcome: "Hi! I'm your Customer Support specialist. How can I help you today?",
+      capabilities: ["Sentiment Analysis", "Ticket Routing", "Context Retention", "Escalation Detection"],
     },
     {
       id: "hr" as AgentType,
-      icon: <Users className="w-6 h-6" />,
+      icon: <Users className="w-24 h-24" />,
       title: "HR Assistant",
-      description: "Resume screening, candidate matching, and interview scheduling",
+      description: "Professional, organized assistant specializing in recruitment and candidate management",
       color: "purple",
       handler: handleHRMessage,
       welcome: "Hello! I'm your HR assistant. I can help with resume screening and candidate matching.",
+      capabilities: ["Resume Parsing", "Candidate Matching", "Interview Scheduling", "Pipeline Tracking"],
     },
     {
       id: "inventory" as AgentType,
-      icon: <Package className="w-6 h-6" />,
+      icon: <Package className="w-24 h-24" />,
       title: "Inventory Manager",
-      description: "Stock predictions, alerts, and inventory optimization",
+      description: "Analytical, proactive specialist for stock management and demand forecasting",
       color: "green",
       handler: handleInventoryMessage,
       welcome: "Hi! I manage your inventory. Ask me about stock levels or predictions.",
+      capabilities: ["Predictive Analysis", "Reorder Automation", "Demand Forecasting", "Anomaly Detection"],
     },
     {
       id: "financial" as AgentType,
-      icon: <DollarSign className="w-6 h-6" />,
+      icon: <TrendingUp className="w-24 h-24" />,
       title: "Financial Analyst",
-      description: "Expense categorization, budgeting, and financial insights",
-      color: "yellow",
+      description: "Precise, insightful analyst for expense categorization and budget forecasting",
+      color: "amber",
       handler: handleFinancialMessage,
       welcome: "Hello! I'm your financial analyst. Let me help with expenses and budgeting.",
+      capabilities: ["Expense Categorization", "Budget Analysis", "Cash Flow Forecasting", "Health Scoring"],
     },
     {
       id: "document" as AgentType,
-      icon: <FileText className="w-6 h-6" />,
+      icon: <FileText className="w-24 h-24" />,
       title: "Document Reviewer",
-      description: "Contract summarization, clause extraction, and risk analysis",
+      description: "Meticulous, thorough specialist for contract analysis and compliance checking",
       color: "red",
       handler: handleDocumentMessage,
       welcome: "Hi! I review documents for you. Share a document or ask me to analyze something.",
+      capabilities: ["Clause Extraction", "Risk Assessment", "Compliance Checking", "Change Tracking"],
     },
   ];
 
   const currentAgent = agents.find(a => a.id === selectedAgent);
 
-  // Color style mappings for dynamic agent styling
   const getAgentColorStyles = (color: string) => {
     const colorMap: Record<string, string> = {
-      blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
-      purple: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
-      green: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
-      yellow: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400",
-      red: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
+      blue: "bg-blue-50 text-blue-600",
+      purple: "bg-purple-50 text-purple-600",
+      green: "bg-green-50 text-green-600",
+      amber: "bg-amber-50 text-amber-600",
+      red: "bg-red-50 text-red-600",
     };
     return colorMap[color] || colorMap.blue;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <header className="border-b border-border bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-24 sm:px-32 lg:px-48 py-16">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-12">
               {selectedAgent && (
-                <button
+                <motion.button
                   onClick={() => setSelectedAgent(null)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="p-8 rounded-lg hover:bg-background-secondary transition-colors-smooth"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                </button>
+                  <ArrowLeft className="w-20 h-20 text-text-secondary" />
+                </motion.button>
               )}
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-8 h-8 text-primary-500" />
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  AgentHub
+              <div className="flex items-center gap-8">
+                <Sparkles className="w-32 h-32 text-blue" />
+                <h1 className="text-2xl font-semibold text-text-primary">
+                  naiborhood
                 </h1>
               </div>
             </div>
-            <ThemeToggle />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-24 sm:px-32 lg:px-48 py-48">
         {!selectedAgent ? (
-          <div className="space-y-8">
+          <div className="space-y-48">
             {/* Welcome Section */}
-            <div className="text-center space-y-4 py-8">
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
-                AI-Powered Business Automation
+            <motion.div 
+              className="text-center space-y-16 py-48"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <h2 className="text-3xl font-semibold text-text-primary">
+                Business Automation Platform
               </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              <p className="text-lg text-text-secondary max-w-3xl mx-auto leading-relaxed">
                 Streamline your business operations with our intelligent multi-agent platform.
                 Select an agent below to get started.
               </p>
-            </div>
+            </motion.div>
 
             {/* Agent Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {agents.map((agent) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-24">
+              {agents.map((agent, index) => (
                 <AgentCard
                   key={agent.id}
                   icon={agent.icon}
@@ -193,84 +227,96 @@ export default function Home() {
                   description={agent.description}
                   onClick={() => setSelectedAgent(agent.id)}
                   color={agent.color}
+                  capabilities={agent.capabilities}
+                  index={index}
                 />
               ))}
             </div>
 
             {/* Features Section */}
-            <div className="mt-16 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                Powered by Cohere AI
+            <motion.div 
+              className="mt-96 bg-white rounded-lg p-48 shadow-sm border border-border"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <h3 className="text-xl font-semibold text-text-primary mb-32">
+                Platform Features
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                    <MessageCircle className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-32">
+                <div className="flex items-start gap-16">
+                  <div className="p-12 bg-blue-50 rounded-lg">
+                    <MessageSquare className="w-20 h-20 text-blue" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                    <h4 className="font-semibold text-text-primary mb-8">
                       Advanced NLP
                     </h4>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    <p className="text-text-secondary text-sm leading-relaxed">
                       State-of-the-art natural language processing for accurate understanding
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                    <Package className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <div className="flex items-start gap-16">
+                  <div className="p-12 bg-purple-50 rounded-lg">
+                    <Package className="w-20 h-20 text-purple" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                    <h4 className="font-semibold text-text-primary mb-8">
                       Semantic Search
                     </h4>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    <p className="text-text-secondary text-sm leading-relaxed">
                       Powerful embeddings and reranking for precise information retrieval
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                    <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <div className="flex items-start gap-16">
+                  <div className="p-12 bg-green-50 rounded-lg">
+                    <FileText className="w-20 h-20 text-green" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                    <h4 className="font-semibold text-text-primary mb-8">
                       Document Analysis
                     </h4>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    <p className="text-text-secondary text-sm leading-relaxed">
                       Automated summarization and key information extraction
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                    <Sparkles className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <div className="flex items-start gap-16">
+                  <div className="p-12 bg-amber-50 rounded-lg">
+                    <Sparkles className="w-20 h-20 text-amber" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                    <h4 className="font-semibold text-text-primary mb-8">
                       Intelligent Classification
                     </h4>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    <p className="text-text-secondary text-sm leading-relaxed">
                       Automatic categorization and routing of tasks and data
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <motion.div 
+            className="space-y-24"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             {/* Agent Header */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className={`p-4 rounded-xl ${getAgentColorStyles(currentAgent?.color || "blue")}`}>
+            <div className="bg-white rounded-lg p-32 shadow-sm border border-border">
+              <div className="flex items-center gap-24">
+                <div className={`p-16 rounded-full ${getAgentColorStyles(currentAgent?.color || "blue")}`}>
                   {currentAgent?.icon}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-text-primary mb-8">
                     {currentAgent?.title}
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-300">
+                  <p className="text-text-secondary text-sm">
                     {currentAgent?.description}
                   </p>
                 </div>
@@ -283,17 +329,20 @@ export default function Home() {
                 onSendMessage={currentAgent?.handler || handleCustomerSupportMessage}
                 placeholder={`Ask ${currentAgent?.title}...`}
                 welcomeMessage={currentAgent?.welcome}
+                agentColor={currentAgent?.color}
+                agentType={selectedAgent || undefined}
+                enableAutonomous={true}
               />
             </div>
-          </div>
+          </motion.div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
-            © 2024 AgentHub. Powered by Cohere AI. Built for small business automation.
+      <footer className="border-t border-border bg-white/80 backdrop-blur-sm mt-96">
+        <div className="max-w-7xl mx-auto px-24 sm:px-32 lg:px-48 py-24">
+          <p className="text-center text-text-tertiary text-sm">
+            © 2024 naiborhood. Built for small business automation.
           </p>
         </div>
       </footer>
