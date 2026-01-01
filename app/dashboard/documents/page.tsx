@@ -136,19 +136,6 @@ export default function DocumentsPage() {
             
             <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-clay-600" />
-                <p className="font-medium text-text-primary text-sm">Licensing Deadline Tracker</p>
-              </div>
-              <p className="text-xs text-text-secondary mb-3">
-                Scans uploaded permits/licenses → Calendar of renewal deadlines
-              </p>
-              <button className="text-xs text-clay-600 hover:text-clay-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-4 h-4 text-clay-600" />
                 <p className="font-medium text-text-primary text-sm">Legal Risk Flagging</p>
               </div>

@@ -78,15 +78,15 @@ export default function DashboardPage() {
       ]
     },
     {
-      name: "Customer Service",
-      description: "Resolve customer questions and complaints using your policies.",
+      name: "Customer Service & Online Presence",
+      description: "Handle customer questions, reviews, and improve your online visibility.",
       icon: <MessageSquare className="w-5 h-5" />,
       color: "sky",
       href: "/dashboard/customer-support",
       examples: [
-        "Draft apology email for late order",
+        "Draft response to 2-star Google review",
         "Generate FAQ from customer messages",
-        "Respond to 2-star review professionally"
+        "Analyze my online presence and suggest SEO improvements"
       ]
     },
     {
@@ -121,8 +121,8 @@ export default function DashboardPage() {
       href: "/dashboard/financial",
       examples: [
         "Generate monthly P&L statement",
-        "Compare vendor contracts and pricing",
-        "Create 90-day cash flow forecast"
+        "Prepare tax documents for accountant",
+        "Compare vendor contracts and pricing"
       ]
     },
     {

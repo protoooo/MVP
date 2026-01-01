@@ -97,11 +97,11 @@ export default function HRPage() {
           <div className="space-y-3">
             <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-lavender-600" />
-                <p className="font-medium text-text-primary text-sm">Interview Scheduler</p>
+                <FileText className="w-4 h-4 text-lavender-600" />
+                <p className="font-medium text-text-primary text-sm">Resume Screener</p>
               </div>
               <p className="text-xs text-text-secondary mb-3">
-                "Schedule interviews for 3 candidates next week, avoid conflicts with [upload calendar]" → Sends calendar invites with interview guides
+                Upload 10 resumes → Ranks by fit, flags AI-generated content, highlights red flags
               </p>
               <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
                 Try this example →
@@ -110,11 +110,11 @@ export default function HRPage() {
             
             <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-lavender-600" />
-                <p className="font-medium text-text-primary text-sm">Resume Screener</p>
+                <Calendar className="w-4 h-4 text-lavender-600" />
+                <p className="font-medium text-text-primary text-sm">Interview Scheduler</p>
               </div>
               <p className="text-xs text-text-secondary mb-3">
-                Upload 10 resumes → Ranks by fit, flags AI-generated content, highlights red flags
+                "Schedule interviews for 3 candidates next week, avoid conflicts with [upload calendar]" → Sends calendar invites with interview guides
               </p>
               <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
                 Try this example →
@@ -141,19 +141,6 @@ export default function HRPage() {
               </div>
               <p className="text-xs text-text-secondary mb-3">
                 "We're changing our vacation policy to..." → Drafts updated section with track changes
-              </p>
-              <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-4 h-4 text-lavender-600" />
-                <p className="font-medium text-text-primary text-sm">Performance Review Drafter</p>
-              </div>
-              <p className="text-xs text-text-secondary mb-3">
-                Input employee metrics → Generates structured review template with talking points
               </p>
               <button className="text-xs text-lavender-600 hover:text-lavender-700 font-medium">
                 Try this example →

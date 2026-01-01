@@ -98,36 +98,10 @@ export default function FinancialPage() {
             <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="w-4 h-4 text-honey-600" />
-                <p className="font-medium text-text-primary text-sm">Monthly P&L Generator</p>
+                <p className="font-medium text-text-primary text-sm">Monthly P&L Generator & Cash Flow Forecaster</p>
               </div>
               <p className="text-xs text-text-secondary mb-3">
-                Uploads receipts/invoices → Categorized P&L statement as PDF
-              </p>
-              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-honey-600" />
-                <p className="font-medium text-text-primary text-sm">Vendor Contract Analyzer</p>
-              </div>
-              <p className="text-xs text-text-secondary mb-3">
-                Upload vendor agreements → Comparison table with renewal dates, price increases, cancellation terms
-              </p>
-              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-4 h-4 text-honey-600" />
-                <p className="font-medium text-text-primary text-sm">Cash Flow Forecaster</p>
-              </div>
-              <p className="text-xs text-text-secondary mb-3">
-                Based on historical data → 90-day cash flow projection with scenarios
+                Uploads receipts/invoices → Categorized P&L statement + 90-day cash flow projection
               </p>
               <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
                 Try this example →
@@ -149,11 +123,24 @@ export default function FinancialPage() {
             
             <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <LineChart className="w-4 h-4 text-honey-600" />
-                <p className="font-medium text-text-primary text-sm">Budget vs Actual Reporter</p>
+                <FileText className="w-4 h-4 text-honey-600" />
+                <p className="font-medium text-text-primary text-sm">Vendor Contract Analyzer</p>
               </div>
               <p className="text-xs text-text-secondary mb-3">
-                Upload budget → Monthly variance report with explanations
+                Upload vendor agreements → Comparison table with renewal dates, price increases, cancellation terms
+              </p>
+              <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
+                Try this example →
+              </button>
+            </div>
+            
+            <div className="bg-honey-50 border border-honey-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <LineChart className="w-4 h-4 text-honey-600" />
+                <p className="font-medium text-text-primary text-sm">Budget Variance Reporter</p>
+              </div>
+              <p className="text-xs text-text-secondary mb-3">
+                Upload budget → Monthly variance report with explanations and forecasting
               </p>
               <button className="text-xs text-honey-600 hover:text-honey-700 font-medium">
                 Try this example →

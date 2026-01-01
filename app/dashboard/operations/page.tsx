@@ -196,19 +196,6 @@ You help business owners understand what deserves attention today based on what 
                 Try this example →
               </button>
             </div>
-            
-            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <ClipboardList className="w-4 h-4 text-indigo-600" />
-                <p className="font-medium text-text-primary text-sm">Meeting Prep</p>
-              </div>
-              <p className="text-xs text-text-secondary mb-3">
-                "Prepare for today's staff meeting" → Generates agenda with action items from past week
-              </p>
-              <button className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                Try this example →
-              </button>
-            </div>
           </div>
         </div>
 

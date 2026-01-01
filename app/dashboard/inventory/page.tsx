@@ -110,19 +110,6 @@ export default function InventoryPage() {
             
             <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-4 h-4 text-sage-600" />
-                <p className="font-medium text-text-primary text-sm">Supplier Price Comparer</p>
-              </div>
-              <p className="text-xs text-text-secondary mb-3">
-                "Find better pricing for [item]" → Researches alternatives, drafts negotiation email
-              </p>
-              <button className="text-xs text-sage-600 hover:text-sage-700 font-medium">
-                Try this example →
-              </button>
-            </div>
-            
-            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
                 <Trash2 className="w-4 h-4 text-sage-600" />
                 <p className="font-medium text-text-primary text-sm">Waste Reduction Analyzer</p>
               </div>
