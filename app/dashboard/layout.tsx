@@ -14,7 +14,8 @@ import {
   Upload, 
   Settings, 
   LogOut,
-  FileUp
+  FileUp,
+  ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 
@@ -37,7 +38,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
     setUser(user);
 
-    // Get profile
     const { data: profileData } = await supabase
       .from("user_profiles")
       .select("*")
@@ -46,7 +46,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
     setProfile(profileData);
 
-    // Check if onboarding is completed
     if (profileData && !profileData.setup_completed) {
       router.push("/onboarding");
     }
@@ -59,11 +58,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Customer Support", href: "/dashboard/customer-support", icon: MessageSquare, color: "blue" },
-    { name: "HR Assistant", href: "/dashboard/hr", icon: Users, color: "purple" },
-    { name: "Inventory Manager", href: "/dashboard/inventory", icon: Package, color: "green" },
-    { name: "Financial Analyst", href: "/dashboard/financial", icon: TrendingUp, color: "amber" },
-    { name: "Document Reviewer", href: "/dashboard/documents", icon: FileText, color: "red" },
+    { name: "Customer Support", href: "/dashboard/customer-support", icon: MessageSquare, color: "sky" },
+    { name: "HR Assistant", href: "/dashboard/hr", icon: Users, color: "lavender" },
+    { name: "Inventory Manager", href: "/dashboard/inventory", icon: Package, color: "sage" },
+    { name: "Financial Analyst", href: "/dashboard/financial", icon: TrendingUp, color: "honey" },
+    { name: "Document Reviewer", href: "/dashboard/documents", icon: FileText, color: "clay" },
   ];
 
   const secondaryNavigation = [
@@ -73,23 +72,27 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200">
+      <div className="fixed inset-y-0 left-0 w-64 bg-surface border-r border-border">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center gap-3 px-6 py-6 border-b border-gray-200">
-            <Sparkles className="w-8 h-8 text-blue-600" />
+          <div className="flex items-center gap-3 px-5 py-5 border-b border-border-light">
+            <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-sage-600" />
+            </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">naiborhood</h1>
+              <h1 className="text-base font-semibold text-text-primary">naiborhood</h1>
               {profile && (
-                <p className="text-xs text-gray-500">{profile.business_name}</p>
+                <p className="text-xs text-text-tertiary truncate max-w-[140px]">
+                  {profile.business_name}
+                </p>
               )}
             </div>
           </div>
 
           {/* Main Navigation */}
-          <nav className="flex-1 px-4 py-6 overflow-y-auto">
+          <nav className="flex-1 px-3 py-4 overflow-y-auto">
             <div className="space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
@@ -98,20 +101,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${
+                    className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                       isActive
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-sage-100 text-sage-700 shadow-inner-soft"
+                        : "text-text-secondary hover:bg-background-hover hover:text-text-primary"
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    {item.name}
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="flex-1">{item.name}</span>
+                    {isActive && (
+                      <ChevronRight className="w-4 h-4 text-sage-600" />
+                    )}
                   </Link>
                 );
               })}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="mt-6 pt-6 border-t border-border-light">
               <div className="space-y-1">
                 {secondaryNavigation.map((item) => {
                   const Icon = item.icon;
@@ -120,13 +126,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                         isActive
-                          ? "bg-gray-100 text-gray-900"
-                          : "text-gray-600 hover:bg-gray-50"
+                          ? "bg-background-tertiary text-text-primary"
+                          : "text-text-tertiary hover:bg-background-hover hover:text-text-secondary"
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-5 h-5 flex-shrink-0" />
                       {item.name}
                     </Link>
                   );
@@ -136,27 +142,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </nav>
 
           {/* User Profile */}
-          <div className="px-4 py-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-semibold text-blue-700">
-                    {user?.email?.[0].toUpperCase()}
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {user?.email}
-                  </p>
-                  <p className="text-xs text-gray-500">Unlimited Plan</p>
-                </div>
+          <div className="px-3 py-4 border-t border-border-light">
+            <div className="flex items-center gap-3 px-3 py-2">
+              <div className="w-9 h-9 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-semibold text-sage-700">
+                  {user?.email?.[0].toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-text-primary truncate">
+                  {user?.email}
+                </p>
+                <p className="text-xs text-text-tertiary">Unlimited Plan</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 text-gray-400 hover:text-gray-600 transition"
+                className="p-2 text-text-tertiary hover:text-text-primary hover:bg-background-hover rounded-lg transition"
                 title="Logout"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           </div>
