@@ -146,12 +146,6 @@ export default function InventoryPage() {
             </div>
           </div>
         </div>
-                <div className="font-medium text-text-primary text-sm">Conservative Forecasts</div>
-                <div className="text-xs text-text-secondary">When requested, labeled as estimates</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Chat Interface */}
         <div className="bg-surface rounded-xl border border-border overflow-hidden">
