@@ -149,108 +149,111 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-semibold text-text-primary">
-            Welcome back{profile?.business_name ? `, ${profile.business_name}` : ""}
-          </h1>
-          <p className="mt-1 text-sm text-text-secondary">
-            Your daily business assistant for {profile?.industry || "your business"}
-          </p>
-        </div>
+    <div className="p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header and Getting Started - Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left: Welcome Section */}
+          <div>
+            <h1 className="text-2xl font-semibold text-text-primary">
+              Welcome back{profile?.business_name ? `, ${profile.business_name}` : ""}
+            </h1>
+            <p className="mt-1 text-sm text-text-secondary">
+              Your daily business assistant for {profile?.industry || "your business"}
+            </p>
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard/uploads"
-            className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
-          >
-            <Upload className="w-4 h-4" />
-            Upload Document
-          </Link>
-          <Link
-            href="/dashboard/team"
-            className="inline-flex items-center gap-2 px-5 py-2 bg-background-secondary text-text-primary rounded-full text-sm font-medium hover:bg-background-tertiary transition border border-border shadow-soft"
-          >
-            <UserPlus className="w-4 h-4" />
-            Invite Team
-          </Link>
-        </div>
-
-        {/* Team Members Section */}
-        {teamMembers.length > 0 && (
-          <div className="bg-background-secondary border border-border rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-text-primary">Your Team</h3>
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-3 mt-4">
+              <Link
+                href="/dashboard/uploads"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Document
+              </Link>
               <Link
                 href="/dashboard/team"
-                className="text-sm text-text-secondary hover:text-text-primary transition"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-background-secondary text-text-primary rounded-full text-sm font-medium hover:bg-background-tertiary transition border border-border shadow-soft"
               >
-                Manage →
+                <UserPlus className="w-4 h-4" />
+                Invite Team
               </Link>
             </div>
-            <div className="flex gap-3">
-              {teamMembers.slice(0, 5).map((member) => (
-                <div
-                  key={member.id}
-                  className="flex flex-col items-center gap-2"
-                  title={member.email}
-                >
-                  <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
-                    <span className="text-sm font-semibold text-text-primary">
-                      {member.email?.[0]?.toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-xs text-text-secondary max-w-[60px] truncate">
-                    {member.display_name || member.email.split('@')[0]}
-                  </span>
-                </div>
-              ))}
-              {teamMembers.length > 5 && (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
-                    <span className="text-sm font-semibold text-text-primary">
-                      +{teamMembers.length - 5}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
-        {/* Getting Started */}
-        {!hasDocuments && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-background-secondary border border-border rounded-2xl p-6"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-background-tertiary flex items-center justify-center flex-shrink-0">
-                <Upload className="w-6 h-6 text-text-primary" />
+            {/* Team Members Section */}
+            {teamMembers.length > 0 && (
+              <div className="bg-background-secondary border border-border rounded-2xl p-6 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-text-primary">Your Team</h3>
+                  <Link
+                    href="/dashboard/team"
+                    className="text-sm text-text-secondary hover:text-text-primary transition"
+                  >
+                    Manage →
+                  </Link>
+                </div>
+                <div className="flex gap-3">
+                  {teamMembers.slice(0, 5).map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex flex-col items-center gap-2"
+                      title={member.email}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
+                        <span className="text-sm font-semibold text-text-primary">
+                          {member.email?.[0]?.toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="text-xs text-text-secondary max-w-[60px] truncate">
+                        {member.display_name || member.email.split('@')[0]}
+                      </span>
+                    </div>
+                  ))}
+                  {teamMembers.length > 5 && (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
+                        <span className="text-sm font-semibold text-text-primary">
+                          +{teamMembers.length - 5}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-text-primary mb-2">
-                  Get started by uploading your files
-                </h3>
-                <p className="text-sm text-text-secondary mb-4 leading-relaxed">
-                  Upload your business files manually - PDFs, spreadsheets, docs, images.
-                  All files go into your shared Business Knowledge Hub. The more you upload, the more helpful your agents become.
-                </p>
-                <Link
-                  href="/dashboard/uploads"
-                  className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload Files
-                </Link>
+            )}
+          </div>
+
+          {/* Right: Getting Started */}
+          {!hasDocuments && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-background-secondary border border-border rounded-2xl p-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-background-tertiary flex items-center justify-center flex-shrink-0">
+                  <Upload className="w-6 h-6 text-text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-text-primary mb-2">
+                    Get started by uploading your files
+                  </h3>
+                  <p className="text-sm text-text-secondary mb-4 leading-relaxed">
+                    Upload your business files manually - PDFs, spreadsheets, docs, images.
+                    All files go into your shared Business Knowledge Hub. The more you upload, the more helpful your agents become.
+                  </p>
+                  <Link
+                    href="/dashboard/uploads"
+                    className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Files
+                  </Link>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </div>
 
         {/* Active Nudges */}
         {nudges.length > 0 && (
@@ -288,7 +291,7 @@ export default function DashboardPage() {
         {/* Agents Grid */}
         <div>
           <h2 className="text-base font-semibold text-text-primary mb-4">What do you need help with?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent, index) => (
               <motion.div
                 key={agent.name}
@@ -299,17 +302,17 @@ export default function DashboardPage() {
               >
                 <Link
                   href={agent.href}
-                  className={`block p-6 rounded-2xl border-2 transition-all shadow-soft hover:shadow-soft-lg ${
+                  className={`block p-5 rounded-2xl border-2 transition-all shadow-soft hover:shadow-soft-lg ${
                     colorMap[agent.color]
                   }`}
                 >
-                  <div className={`inline-flex p-3 rounded-xl mb-4 bg-white/80`}>
+                  <div className={`inline-flex p-2.5 rounded-xl mb-3 bg-white/80`}>
                     {agent.icon}
                   </div>
                   <h3 className="text-base font-semibold text-text-primary mb-2">
                     {agent.name}
                   </h3>
-                  <p className="text-sm text-text-secondary mb-4 leading-relaxed">{agent.description}</p>
+                  <p className="text-sm text-text-secondary mb-3 leading-relaxed">{agent.description}</p>
                   
                   {/* Quick examples */}
                   <div className="space-y-1.5">
