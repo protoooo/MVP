@@ -32,7 +32,17 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen bg-background"
+      style={{
+        backgroundImage: 'url(/images/landing-background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        backgroundColor: '#ffffff' // Fallback if image doesn't load
+      }}
+    >
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 pt-20 pb-16">
 

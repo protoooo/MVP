@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Clock, TrendingUp, Mail, FileText, Calendar, X, Sparkles } from "lucide-react";
+import { Clock, TrendingUp, Mail, FileText, Calendar, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
@@ -97,7 +97,6 @@ export default function TrialBanner() {
                 </h3>
                 {urgencyLevel === 'high' && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
-                    <Sparkles className="w-3 h-3" />
                     Action needed
                   </span>
                 )}

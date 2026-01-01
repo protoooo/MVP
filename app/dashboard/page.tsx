@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, Activity, AlertCircle, Brain } from "lucide-react";
+import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, AlertCircle, Brain } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import TrialBanner from "@/components/TrialBanner";
-import QuickStartTemplates from "@/components/QuickStartTemplates";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -155,9 +154,6 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {/* Quick Start Templates */}
-        {!hasDocuments && <QuickStartTemplates />}
-
         {/* Active Nudges */}
         {nudges.length > 0 && (
           <div className="space-y-3">
@@ -230,37 +226,6 @@ export default function DashboardPage() {
                 </Link>
               </motion.div>
             ))}
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-text-secondary">Documents Uploaded</h3>
-              <FileText className="w-5 h-5 text-text-tertiary" />
-            </div>
-            <p className="text-2xl font-semibold text-text-primary">
-              {hasDocuments ? "Active" : "0"}
-            </p>
-          </div>
-
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-text-secondary">Team Members</h3>
-              <Activity className="w-5 h-5 text-text-tertiary" />
-            </div>
-            <p className="text-2xl font-semibold text-text-primary">Up to 5</p>
-            <p className="text-xs text-text-tertiary mt-1">$10/month per additional member</p>
-          </div>
-
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-text-secondary">Plan Status</h3>
-              <div className="w-2 h-2 rounded-full bg-success"></div>
-            </div>
-            <p className="text-2xl font-semibold text-text-primary">Active</p>
-            <p className="text-xs text-text-tertiary mt-1">$25/month base</p>
           </div>
         </div>
       </div>
