@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Chatbot from "@/components/ChatbotEnhanced";
-import { FileText, Upload, AlertCircle } from "lucide-react";
+import { FileText, Upload, AlertCircle, Building, BarChart3, Shield, Calendar, AlertTriangle } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -96,7 +96,10 @@ export default function DocumentsPage() {
           <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
           <div className="space-y-3">
             <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">🏢 Lease Negotiation Prep</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Building className="w-4 h-4 text-clay-600" />
+                <p className="font-medium text-text-primary text-sm">Lease Negotiation Prep</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Upload commercial lease → Key terms summary, market comparison, negotiation talking points
               </p>
@@ -106,7 +109,10 @@ export default function DocumentsPage() {
             </div>
             
             <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📊 Vendor Contract Comparer</p>
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-clay-600" />
+                <p className="font-medium text-text-primary text-sm">Vendor Contract Comparer</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Upload 3 vendor proposals → Side-by-side comparison table
               </p>
@@ -116,7 +122,10 @@ export default function DocumentsPage() {
             </div>
             
             <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">🛡️ Insurance Policy Decoder</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-clay-600" />
+                <p className="font-medium text-text-primary text-sm">Insurance Policy Decoder</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Upload policy → Plain English summary of coverage, gaps, recommendations
               </p>
@@ -126,7 +135,10 @@ export default function DocumentsPage() {
             </div>
             
             <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📅 Licensing Deadline Tracker</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-4 h-4 text-clay-600" />
+                <p className="font-medium text-text-primary text-sm">Licensing Deadline Tracker</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Scans uploaded permits/licenses → Calendar of renewal deadlines
               </p>
@@ -136,7 +148,10 @@ export default function DocumentsPage() {
             </div>
             
             <div className="bg-clay-50 border border-clay-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">⚠️ Legal Risk Flagging</p>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4 text-clay-600" />
+                <p className="font-medium text-text-primary text-sm">Legal Risk Flagging</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Upload any contract → Highlights concerning clauses with explanations
               </p>

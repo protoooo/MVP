@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Clock, TrendingUp, Mail, FileText, Calendar, X } from "lucide-react";
+import { Clock, TrendingUp, Mail, FileText, Calendar, X, DollarSign } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
@@ -159,9 +159,12 @@ export default function TrialBanner() {
 
               {/* Value proposition */}
               <div className="bg-white/60 rounded-lg p-3 mb-3">
-                <p className="text-sm font-medium text-text-primary mb-1">
-                  💰 Continue for just $25/month
-                </p>
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className={`w-4 h-4 ${accentColor}`} />
+                  <p className="text-sm font-medium text-text-primary">
+                    Continue for just $25/month
+                  </p>
+                </div>
                 <p className="text-xs text-text-secondary">
                   Keep all your data and progress. Add team members for $10/month each.
                 </p>

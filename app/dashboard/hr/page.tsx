@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Chatbot from "@/components/ChatbotEnhanced";
-import { Users, Upload, AlertCircle } from "lucide-react";
+import { Users, Upload, AlertCircle, Calendar, FileText, HandshakeIcon, FileEdit, Star } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -96,7 +96,10 @@ export default function HRPage() {
           <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
           <div className="space-y-3">
             <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📅 Interview Scheduler</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-4 h-4 text-lavender-600" />
+                <p className="font-medium text-text-primary text-sm">Interview Scheduler</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 "Schedule interviews for 3 candidates next week, avoid conflicts with [upload calendar]" → Sends calendar invites with interview guides
               </p>
@@ -106,7 +109,10 @@ export default function HRPage() {
             </div>
             
             <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📄 Resume Screener</p>
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-4 h-4 text-lavender-600" />
+                <p className="font-medium text-text-primary text-sm">Resume Screener</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Upload 10 resumes → Ranks by fit, flags AI-generated content, highlights red flags
               </p>
@@ -116,7 +122,10 @@ export default function HRPage() {
             </div>
             
             <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">👋 Onboarding Packet Creator</p>
+              <div className="flex items-center gap-2 mb-2">
+                <HandshakeIcon className="w-4 h-4 text-lavender-600" />
+                <p className="font-medium text-text-primary text-sm">Onboarding Packet Creator</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 "New hire starts Monday as line cook" → Generates first-day checklist, training schedule, paperwork list
               </p>
@@ -126,7 +135,10 @@ export default function HRPage() {
             </div>
             
             <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">📝 Employee Handbook Updater</p>
+              <div className="flex items-center gap-2 mb-2">
+                <FileEdit className="w-4 h-4 text-lavender-600" />
+                <p className="font-medium text-text-primary text-sm">Employee Handbook Updater</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 "We're changing our vacation policy to..." → Drafts updated section with track changes
               </p>
@@ -136,7 +148,10 @@ export default function HRPage() {
             </div>
             
             <div className="bg-lavender-50 border border-lavender-200 rounded-lg p-4">
-              <p className="font-medium text-text-primary text-sm mb-2">⭐ Performance Review Drafter</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="w-4 h-4 text-lavender-600" />
+                <p className="font-medium text-text-primary text-sm">Performance Review Drafter</p>
+              </div>
               <p className="text-xs text-text-secondary mb-3">
                 Input employee metrics → Generates structured review template with talking points
               </p>
