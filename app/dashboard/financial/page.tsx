@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import Chatbot from "@/components/Chatbot";
+import Chatbot from "@/components/ChatbotEnhanced";
 import { TrendingUp, Upload, AlertCircle } from "lucide-react";
 
 interface Message {

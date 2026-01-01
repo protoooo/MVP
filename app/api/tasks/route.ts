@@ -94,15 +94,25 @@ export async function GET(request: NextRequest) {
     const taskId = searchParams.get("taskId");
     const agentType = searchParams.get("agentType");
 
+    if (taskId) {
+      const { data, error } = await supabase
+        .from("agent_tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("id", taskId)
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json({ task: data });
+    }
+
     let query = supabase
       .from("agent_tasks")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (taskId) {
-      query = query.eq("id", taskId).single();
-    } else if (agentType) {
+    if (agentType) {
       query = query.eq("agent_type", agentType).limit(10);
     } else {
       query = query.limit(20);
