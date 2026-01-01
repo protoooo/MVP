@@ -1,37 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Mail, Lock } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
   const supabase = createClient();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setMessage("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/update-password`,
       });
 
       if (error) throw error;
 
-      // Simple redirect to dashboard
-      router.push("/dashboard");
-      router.refresh();
+      setMessage("Check your email for the password reset link!");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to sign in");
+      setError(err instanceof Error ? err.message : "Failed to send reset email");
     } finally {
       setLoading(false);
     }
@@ -43,16 +39,16 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h2 className="text-xl font-medium text-text-primary mb-2">
-            Welcome back
+            Reset your password
           </h2>
           <p className="text-sm text-text-secondary">
-            Business automation for small teams
+            Enter your email address and we'll send you a reset link
           </p>
         </div>
 
-        {/* Login Card */}
+        {/* Reset Card */}
         <div className="bg-surface rounded-2xl shadow-soft-lg border border-border p-8">
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleResetPassword} className="space-y-5">
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
@@ -66,36 +62,21 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary 
+                  className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-border bg-background-secondary 
                     text-text-primary placeholder:text-text-placeholder
-                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
+                    focus:outline-none focus:ring-2 focus:ring-text-secondary focus:border-text-secondary
                     transition duration-200"
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary
-                    text-text-primary placeholder:text-text-placeholder
-                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
-                    transition duration-200"
-                  placeholder="Enter your password"
-                />
+            {/* Success Message */}
+            {message && (
+              <div className="rounded-xl bg-success-light border border-success/20 p-4">
+                <p className="text-sm text-success-dark">{message}</p>
               </div>
-            </div>
+            )}
 
             {/* Error Message */}
             {error && (
@@ -114,27 +95,17 @@ export default function LoginPage() {
                 disabled:opacity-50 disabled:cursor-not-allowed 
                 transition duration-200 shadow-soft"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Sending..." : "Send Reset Link"}
             </button>
 
-            {/* Forgot Password Link */}
-            <div className="text-center">
+            {/* Back to Login Link */}
+            <div className="text-center pt-4">
               <Link 
-                href="/reset-password" 
-                className="text-sm text-text-secondary hover:text-text-primary transition"
+                href="/login" 
+                className="inline-flex items-center gap-2 text-sm font-medium text-text-primary hover:text-text-secondary transition"
               >
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Sign Up Link */}
-            <div className="text-center text-sm pt-2">
-              <span className="text-text-secondary">Don't have an account? </span>
-              <Link 
-                href="/signup" 
-                className="font-medium text-text-primary hover:text-text-secondary transition underline"
-              >
-                Sign up
+                <ArrowLeft className="w-4 h-4" />
+                Back to login
               </Link>
             </div>
           </form>

@@ -1,6 +1,6 @@
-# Naiborhood - Business Automation for Small Businesses
+# Business Automation Platform - For Small and Medium Businesses
 
-A lightweight, powerful platform built specifically for small businesses like bakeries, bars, breweries, and retail shops. Unlike overwhelming enterprise tools, naiborhood is designed to be simple, straightforward, and actually useful for teams of 3-50 people.
+A lightweight, powerful platform built specifically for small businesses like bakeries, bars, breweries, and retail shops. Unlike overwhelming enterprise tools, this platform is designed to be simple, straightforward, and actually useful for teams of 3-50 people.
 
 **Not just another chatbot.** Agents that actually do work - draft emails, analyze finances, check resumes, manage inventory, and more.
 
@@ -77,7 +77,7 @@ A lightweight, powerful platform built specifically for small businesses like ba
 - Generate reports → Email to team
 
 ## Integration
-Naiborhood seamlessly integrates with a wide range of business tools and systems, including CRM, ERP, HRMS, and more. Our platform is designed to complement existing workflows and processes, ensuring a smooth transition to automated operations.
+Business Automation Platform seamlessly integrates with a wide range of business tools and systems, including CRM, ERP, HRMS, and more. Our platform is designed to complement existing workflows and processes, ensuring a smooth transition to automated operations.
 
 ## Benefits
 - **Increased efficiency**: Automate repetitive tasks and processes, freeing up valuable time and resources for more strategic activities.
