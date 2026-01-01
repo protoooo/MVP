@@ -6,6 +6,10 @@
 import mammoth from "mammoth";
 import ExcelJS from "exceljs";
 
+// Constants
+const MIN_DOC_TEXT_LENGTH = 100;
+const PDF_PREVIEW_LENGTH = 1000;
+
 export interface ExtractionResult {
   text: string;
   success: boolean;
@@ -31,7 +35,7 @@ export async function extractTextFromPDF(
     // or a service like AWS Textract for better accuracy
     
     // Temporary: treat as binary and extract what we can
-    const text = fileBuffer.toString('utf-8', 0, Math.min(1000, fileBuffer.length));
+    const text = fileBuffer.toString('utf-8', 0, Math.min(PDF_PREVIEW_LENGTH, fileBuffer.length));
     
     return {
       text: "PDF text extraction is being processed. Please check back shortly.",
@@ -101,7 +105,7 @@ export async function extractTextFromDOC(
     const text = fileBuffer.toString('utf-8').replace(/[^\x20-\x7E\n\r]/g, ' ');
     
     return {
-      text: text.length > 100 ? text : "Legacy .doc file uploaded. For best results, please convert to .docx format.",
+      text: text.length > MIN_DOC_TEXT_LENGTH ? text : "Legacy .doc file uploaded. For best results, please convert to .docx format.",
       success: true,
       metadata: {
         wordCount: text.split(/\s+/).length,
@@ -119,14 +123,16 @@ export async function extractTextFromDOC(
 
 /**
  * Extract text from Excel files (.xlsx, .xls)
+ * Note: This primarily handles .xlsx format. Legacy .xls files may have limited support.
  */
 export async function extractTextFromExcel(
   fileBuffer: Buffer
 ): Promise<ExtractionResult> {
   try {
     const workbook = new ExcelJS.Workbook();
-    // Load from buffer - ExcelJS accepts Buffer directly
-    await workbook.xlsx.load(fileBuffer as any);
+    // Load from buffer - note: ExcelJS primarily supports .xlsx
+    // For .xls files, users should convert to .xlsx for best results
+    await workbook.xlsx.load(fileBuffer as unknown as ExcelJS.Buffer);
 
     let allText: string[] = [];
     let totalRows = 0;
@@ -310,14 +316,25 @@ export async function extractTextFromFile(
     return extractTextFromTXT(fileBuffer);
   }
 
-  // Excel files
+  // Excel files (.xlsx primarily supported, .xls has limited support)
   if (
     mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-    mimeType === "application/vnd.ms-excel" ||
-    extension === "xlsx" ||
-    extension === "xls"
+    extension === "xlsx"
   ) {
     return extractTextFromExcel(fileBuffer);
+  }
+
+  // Legacy .xls files - attempt to extract, but recommend conversion
+  if (mimeType === "application/vnd.ms-excel" || extension === "xls") {
+    try {
+      return await extractTextFromExcel(fileBuffer);
+    } catch (error) {
+      return {
+        text: "",
+        success: false,
+        error: "Legacy .xls file format detected. Please convert to .xlsx for best results.",
+      };
+    }
   }
 
   // JSON files

@@ -122,7 +122,8 @@ export default function DashboardPage() {
       examples: [
         "Generate monthly P&L statement",
         "Prepare tax documents for accountant",
-        "Compare vendor contracts and pricing"
+        "Compare vendor contracts and pricing",
+        "Create 90-day cash flow forecast"
       ]
     },
     {
