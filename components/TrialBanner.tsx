@@ -160,14 +160,10 @@ export default function TrialBanner() {
               {/* Value proposition */}
               <div className="bg-white/60 rounded-lg p-3 mb-3">
                 <p className="text-sm font-medium text-text-primary mb-1">
-                  💰 At $25/month, you're saving{' '}
-                  <span className="font-bold text-green-700">
-                    ${Math.round((trialStatus.totalHoursSaved * 15) / Math.max(1, 30 - trialStatus.daysRemaining) * 30)}
-                  </span>
-                  /month in time
+                  💰 Continue for just $25/month
                 </p>
                 <p className="text-xs text-text-secondary">
-                  (Based on ${15}/hour × {trialStatus.totalHoursSaved.toFixed(1)} hours saved so far)
+                  Keep all your data and progress. Add team members for $10/month each.
                 </p>
               </div>
 

@@ -91,44 +91,58 @@ export default function CustomerSupportPage() {
           </div>
         )}
 
-        {/* Capabilities */}
+        {/* Quick Start Examples */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Draft Professional Responses</p>
-                <p className="text-xs text-text-secondary">Calm, professional email drafts</p>
-              </div>
+          <h3 className="font-semibold text-text-primary mb-4">Quick Start Examples</h3>
+          <div className="space-y-3">
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📧 Complaint Resolution Drafter</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Customer says "my order was late and wrong" → Drafts apology email with refund offer per policy, ready to send
+              </p>
+              <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Handle Complaints</p>
-                <p className="text-xs text-text-secondary">Refunds, disputes, escalations</p>
-              </div>
+            
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">⭐ Review Response Generator</p>
+              <p className="text-xs text-text-secondary mb-3">
+                New 2-star Google review → Drafts professional, empathetic public response
+              </p>
+              <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Generate FAQs</p>
-                <p className="text-xs text-text-secondary">Create customer-facing FAQs</p>
-              </div>
+            
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">❓ FAQ Builder</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Analyzes past customer messages → Generates comprehensive FAQ document
+              </p>
+              <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Suggest Escalation Steps</p>
-                <p className="text-xs text-text-secondary">When and how to escalate</p>
-              </div>
+            
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">💰 Refund Policy Enforcer</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Customer requests refund → Checks against uploaded policy, drafts appropriate response
+              </p>
+              <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
+                Try this example →
+              </button>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Ensure Consistency</p>
-                <p className="text-xs text-text-secondary">Aligns with your policies</p>
-              </div>
+            
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <p className="font-medium text-text-primary text-sm mb-2">📊 Customer Sentiment Tracker</p>
+              <p className="text-xs text-text-secondary mb-3">
+                Scans messages/reviews → Weekly sentiment report with trends
+              </p>
+              <button className="text-xs text-sky-600 hover:text-sky-700 font-medium">
+                Try this example →
+              </button>
             </div>
           </div>
         </div>

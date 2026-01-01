@@ -65,7 +65,7 @@ export default function Home() {
               hover:bg-text-secondary transition shadow-soft hover:shadow-soft-md
               flex items-center justify-center gap-2"
           >
-            Get Started - $50/month
+            Get Started - $25/month
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
           </button>
           <button
