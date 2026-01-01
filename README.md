@@ -1,41 +1,54 @@
-# AgentHub - Multi-Agent Business Automation
+# Naiborhood - Business Automation for Small Businesses
 
-A modern web-based automation platform for small businesses powered by Cohere AI. Features multiple intelligent agents to handle customer support, HR, inventory management, financial analysis, and document review tasks.
+Naiborhood is an innovative platform designed specifically for small businesses to streamline operations, enhance efficiency, and drive growth. Our platform integrates seamlessly with various business tools and systems, enabling small business owners to focus on what matters most – growing their business.
 
-## 🎯 Features
+## Features
 
-### AI Agents
+### Customer Support
+- **Handle customer inquiries**: Our chatbots and virtual assistants can manage customer queries effectively, providing instant responses and personalized interactions.
+- **Sentiment analysis**: Analyze customer feedback and sentiments in real-time to gauge satisfaction levels and identify areas for improvement.
+- **Ticket routing**: Automatically route customer support tickets to the appropriate departments or agents, ensuring timely and accurate resolution.
 
-1. **Customer Support Agent**
-   - Intelligent chatbot for handling customer inquiries
-   - Sentiment analysis and ticket categorization
-   - Powered by Cohere's Generate API
+### HR Assistant
+- **Resume screening**: Screen resumes and identify top candidates based on predefined criteria, saving time and effort in the recruitment process.
+- **Candidate matching**: Match candidates with job openings based on skills, experience, and other relevant factors, improving the quality of hires.
+- **Interview scheduling**: Automate the scheduling of interviews, reducing administrative overhead and ensuring a smooth candidate experience.
 
-2. **HR Agent**
-   - Resume screening and candidate matching using semantic search
-   - Interview scheduling assistance
-   - Leverages Cohere Embed and Rerank APIs
+### Inventory Manager
+- **Stock predictions**: Forecast stock levels and demand, enabling proactive inventory management and reducing stockouts or overstocking.
+- **Alerts**: Receive real-time alerts for low stock levels, high demand, or other critical inventory issues, allowing for immediate action.
+- **Inventory optimization**: Optimize inventory levels and storage to maximize efficiency and minimize costs.
 
-3. **Inventory Agent**
-   - Predictive analytics for stock replenishment
-   - Real-time alerts for low stock situations
-   - Smart recommendations using AI
+### Financial Analyst
+- **Expense categorization**: Automatically categorize expenses and allocate them to the appropriate departments or projects, enhancing financial accuracy and transparency.
+- **Budgeting**: Create and manage budgets, ensuring alignment with business goals and objectives.
+- **Financial insights**: Gain valuable insights into financial performance through advanced analytics and reporting, enabling data-driven decision-making.
 
-4. **Financial Agent**
-   - Automated expense categorization
-   - Budget analysis and financial insights
-   - Report generation and summarization
+### Document Reviewer
+- **Contract summarization**: Summarize contracts and legal documents, extracting key information and clauses for quick review and analysis.
+- **Clause extraction**: Identify and extract specific clauses or terms from documents, facilitating targeted analysis and compliance checks.
+- **Risk analysis**: Assess potential risks and liabilities within documents, providing a comprehensive overview of contractual obligations and potential issues.
 
-5. **Document Review Agent**
-   - Contract and document summarization
-   - Key clause extraction and risk analysis
-   - Intelligent information extraction
+### SEO/Marketing
+- **Keyword research**: Identify high-value keywords and phrases for your business, improving search engine rankings and visibility.
+- **Content optimization**: Optimize website content and marketing materials to enhance engagement and conversion rates.
+- **Social media management**: Automate social media posting and engagement, ensuring consistent brand presence and interaction with customers.
 
-## 🛠️ Tech Stack
+## Integration
+Naiborhood seamlessly integrates with a wide range of business tools and systems, including CRM, ERP, HRMS, and more. Our platform is designed to complement existing workflows and processes, ensuring a smooth transition to automated operations.
+
+## Benefits
+- **Increased efficiency**: Automate repetitive tasks and processes, freeing up valuable time and resources for more strategic activities.
+- **Cost savings**: Reduce operational costs by minimizing manual labor and optimizing resource allocation.
+- **Improved accuracy**: Enhance accuracy and consistency in various business functions, reducing errors and improving overall performance.
+- **Enhanced customer experience**: Provide faster, more personalized interactions with customers, leading to increased satisfaction and loyalty.
+- **Data-driven decision-making**: Gain valuable insights from advanced analytics, enabling informed and strategic business decisions.
+
+## Tech Stack
 
 - **Frontend**: Next.js 14+ with React 19, TypeScript
 - **Styling**: TailwindCSS with custom design system
-- **AI Integration**: Cohere API (Generate, Chat, Embed, Rerank, Classify)
+- **Backend Integration**: Cohere API (Generate, Chat, Embed, Rerank, Classify)
 - **Icons**: Lucide React
 - **Deployment**: Railway-ready
 
@@ -121,7 +134,7 @@ The interface is inspired by Cohere and Notion's design philosophy:
 The app integrates with the following Cohere APIs:
 
 - **Generate**: Text generation for responses and summaries
-- **Chat**: Conversational AI for agent interactions
+- **Chat**: Conversational interface for agent interactions
 - **Embed**: Semantic search and embeddings (v3.0)
 - **Rerank**: Document reranking for better search results (v3.0)
 - **Classify**: Text classification for categorization
@@ -163,7 +176,7 @@ Railway will:
 
 1. **Customer Support**: Handle customer inquiries automatically, categorize support tickets
 2. **HR**: Screen resumes for job openings, find best candidates using semantic search
-3. **Inventory**: Get alerts for low stock, receive AI-powered restocking recommendations
+3. **Inventory**: Get alerts for low stock, receive intelligent restocking recommendations
 4. **Finance**: Categorize expenses, generate budget reports with insights
 5. **Documents**: Summarize contracts, extract key clauses, identify risks
 
@@ -185,4 +198,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-**Built with ❤️ using Cohere AI and Next.js**
+**Built with ❤️ using Cohere and Next.js**
