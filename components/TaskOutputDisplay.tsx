@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileText, Table, FileSpreadsheet, File, Check, Clock, AlertCircle, Copy, Share2, Mail } from "lucide-react";
+import { Download, FileText, Table, FileSpreadsheet, File, Check, Clock, AlertCircle, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import OutputActionBar from "./OutputActionBar";
+import { showToast } from "./Toast";
+import { trackValueEvent, ValueEventType } from "@/lib/value-tracking";
 
 interface TaskOutput {
   type: 'file' | 'data' | 'action' | 'text';
@@ -11,17 +14,19 @@ interface TaskOutput {
   downloadUrl?: string;
   fileType?: 'pdf' | 'excel' | 'word' | 'csv' | 'json';
   actionType?: string;
+  agentType?: string;
+  timeSavedMinutes?: number;
 }
 
 interface TaskOutputDisplayProps {
   outputs: TaskOutput[];
   onDownload?: (output: TaskOutput) => void;
+  agentType?: string;
 }
 
-export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDisplayProps) {
+export default function TaskOutputDisplay({ outputs, onDownload, agentType }: TaskOutputDisplayProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [shareMenuIndex, setShareMenuIndex] = useState<number | null>(null);
+  const [markedAsUsed, setMarkedAsUsed] = useState<Set<number>>(new Set());
 
   const getFileIcon = (fileType?: string) => {
     switch (fileType) {
@@ -37,67 +42,47 @@ export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDis
     }
   };
 
-  const handleDownload = async (output: TaskOutput, index: number) => {
+  const handleMarkAsUsed = async (output: TaskOutput, index: number) => {
+    // Track value event
+    const eventType = getValueEventType(output);
+    if (eventType && agentType) {
+      await trackValueEvent(
+        eventType,
+        agentType,
+        `Used output: ${output.title}`,
+        output.timeSavedMinutes
+      );
+      
+      showToast(
+        `✨ Saved you ~${output.timeSavedMinutes || 15} minutes!`,
+        "value",
+        3000
+      );
+    }
+    
+    const newMarked = new Set(markedAsUsed);
+    newMarked.add(index);
+    setMarkedAsUsed(newMarked);
+  };
+
+  const getValueEventType = (output: TaskOutput): ValueEventType | null => {
+    const title = output.title.toLowerCase();
+    if (title.includes('email')) return 'email_drafted';
+    if (title.includes('schedule')) return 'schedule_created';
+    if (title.includes('report')) return 'report_generated';
+    if (title.includes('resume')) return 'resume_screened';
+    if (title.includes('contract')) return 'contract_summarized';
+    if (title.includes('inventory')) return 'inventory_analyzed';
+    if (title.includes('financial')) return 'financial_summary';
+    if (title.includes('task')) return 'task_list_created';
+    if (title.includes('reorder')) return 'reorder_list';
+    return null;
+  };
+
+  const handleCustomDownload = (output: TaskOutput) => {
     if (onDownload) {
       onDownload(output);
-      return;
     }
-
-    // Default download behavior - create and download file
-    const content = typeof output.content === 'string' 
-      ? output.content 
-      : JSON.stringify(output.content, null, 2);
-    
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${output.title.replace(/[^a-z0-9]/gi, '_')}.${output.fileType || 'txt'}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleCopy = async (output: TaskOutput, index: number) => {
-    try {
-      const content = typeof output.content === 'string' 
-        ? output.content 
-        : JSON.stringify(output.content, null, 2);
-      
-      await navigator.clipboard.writeText(content);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
-      // Fallback: create a text area and copy from it
-      const textArea = document.createElement('textarea');
-      const content = typeof output.content === 'string' 
-        ? output.content 
-        : JSON.stringify(output.content, null, 2);
-      textArea.value = content;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopiedIndex(index);
-        setTimeout(() => setCopiedIndex(null), 2000);
-      } catch (fallbackError) {
-        console.error('Fallback copy also failed:', fallbackError);
-      }
-      document.body.removeChild(textArea);
-    }
-  };
-
-  const handleShareEmail = (output: TaskOutput) => {
-    const content = typeof output.content === 'string' 
-      ? output.content 
-      : JSON.stringify(output.content, null, 2);
-    
-    const subject = encodeURIComponent(output.title);
-    const body = encodeURIComponent(content);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    setShareMenuIndex(null);
   };
 
   if (outputs.length === 0) {
@@ -106,137 +91,121 @@ export default function TaskOutputDisplay({ outputs, onDownload }: TaskOutputDis
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Task Outputs</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-900">Generated Outputs</h3>
+        <span className="text-xs text-gray-500">{outputs.length} {outputs.length === 1 ? 'item' : 'items'}</span>
+      </div>
       
       <div className="space-y-2">
-        {outputs.map((output, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-lg border border-gray-200 overflow-hidden"
-          >
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                    {getFileIcon(output.fileType)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 truncate">
-                      {output.title}
-                    </h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-500 capitalize">
-                        {output.type}
-                      </span>
-                      {output.fileType && (
-                        <>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-500 uppercase">
-                            {output.fileType}
-                          </span>
-                        </>
-                      )}
+        {outputs.map((output, index) => {
+          const isUsed = markedAsUsed.has(index);
+          const contentStr = typeof output.content === 'string' 
+            ? output.content 
+            : JSON.stringify(output.content, null, 2);
+
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={`bg-white rounded-lg border ${isUsed ? 'border-green-200 bg-green-50/50' : 'border-gray-200'} overflow-hidden`}
+            >
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className={`p-2 ${isUsed ? 'bg-green-100' : 'bg-blue-50'} rounded-lg ${isUsed ? 'text-green-600' : 'text-blue-600'}`}>
+                      {getFileIcon(output.fileType)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">
+                        {output.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-gray-500 capitalize">
+                          {output.type}
+                        </span>
+                        {output.fileType && (
+                          <>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-gray-500 uppercase">
+                              {output.fileType}
+                            </span>
+                          </>
+                        )}
+                        {output.timeSavedMinutes && (
+                          <>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-green-600 font-medium">
+                              Saves ~{output.timeSavedMinutes} min
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {isUsed && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                      <Check className="w-4 h-4" />
+                      Used
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleCopy(output, index)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition"
-                    title="Copy to clipboard"
-                  >
-                    {copiedIndex === index ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy
-                      </>
-                    )}
-                  </button>
+                {/* Output Action Bar */}
+                <OutputActionBar
+                  content={contentStr}
+                  title={output.title}
+                  fileType={output.fileType}
+                  onDownload={() => handleCustomDownload(output)}
+                  showEmail={output.type === 'file' || output.type === 'text'}
+                  showShare={true}
+                />
 
-                  {output.type === 'file' && (
-                    <button
-                      onClick={() => handleDownload(output, index)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download
-                    </button>
-                  )}
-                  
-                  <div className="relative">
-                    <button
-                      onClick={() => setShareMenuIndex(shareMenuIndex === index ? null : index)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition"
-                      title="Share"
-                      aria-expanded={shareMenuIndex === index}
-                      aria-haspopup="true"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      Share
-                    </button>
-
-                    {shareMenuIndex === index && (
-                      <div 
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
-                        role="menu"
-                      >
-                        <button
-                          onClick={() => handleShareEmail(output)}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                          role="menuitem"
-                        >
-                          <Mail className="w-4 h-4" />
-                          Share via Email
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {output.type === 'data' && (
+                {/* Preview for data outputs */}
+                {output.type === 'data' && (
+                  <div className="mt-3">
                     <button
                       onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
-                      className="px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition"
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
                     >
-                      {expandedIndex === index ? 'Hide' : 'View'}
+                      {expandedIndex === index ? 'Hide Preview' : 'Show Preview'}
                     </button>
-                  )}
-
-                  {output.type === 'action' && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
-                      <Check className="w-4 h-4" />
-                      Completed
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Expanded content for data outputs */}
-              <AnimatePresence>
-                {expandedIndex === index && output.type === 'data' && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="mt-4 pt-4 border-t border-gray-200"
-                  >
-                    <pre className="text-xs text-gray-600 bg-gray-50 p-4 rounded-lg overflow-auto max-h-96">
-                      {JSON.stringify(output.content, null, 2)}
-                    </pre>
-                  </motion.div>
+                    
+                    <AnimatePresence>
+                      {expandedIndex === index && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="mt-3"
+                        >
+                          <pre className="text-xs text-gray-600 bg-gray-50 p-4 rounded-lg overflow-auto max-h-96 border border-gray-200">
+                            {contentStr}
+                          </pre>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        ))}
+
+                {/* Mark as used button */}
+                {!isUsed && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={() => handleMarkAsUsed(output, index)}
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition active:scale-95"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Mark as Used (Track Value)
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
