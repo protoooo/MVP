@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, Activity, AlertCircle, Brain } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import TrialBanner from "@/components/TrialBanner";
+import QuickStartTemplates from "@/components/QuickStartTemplates";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -109,6 +111,9 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Trial Banner */}
+        <TrialBanner />
+
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-text-primary">
@@ -149,6 +154,9 @@ export default function DashboardPage() {
             </div>
           </motion.div>
         )}
+
+        {/* Quick Start Templates */}
+        {!hasDocuments && <QuickStartTemplates />}
 
         {/* Active Nudges */}
         {nudges.length > 0 && (
