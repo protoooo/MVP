@@ -84,7 +84,14 @@ This pattern is applied **consistently across all actionable tasks**.
 - All uploaded files go into shared Business Knowledge Hub
 - Team members can access all documents and agents
 - Collaborate on outputs and business decisions
-- One subscription includes up to 5 team members at no extra cost
+- **Pricing**: $25/month base plan + $10/month per team member invited
+
+## Pricing
+
+- **Base Plan**: $25/month for the workspace owner
+- **Team Members**: $10/month per additional member invited (up to 5 members total)
+- **Example**: Owner + 2 team members = $25 + $20 = $45/month
+- **Example**: Owner + 4 team members = $25 + $40 = $65/month
 
 ## Tech Stack
 

@@ -243,7 +243,7 @@ export default function DashboardPage() {
               <Activity className="w-5 h-5 text-text-tertiary" />
             </div>
             <p className="text-2xl font-semibold text-text-primary">Up to 5</p>
-            <p className="text-xs text-text-tertiary mt-1">Shared workspace access</p>
+            <p className="text-xs text-text-tertiary mt-1">$10/month per additional member</p>
           </div>
 
           <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
@@ -252,7 +252,7 @@ export default function DashboardPage() {
               <div className="w-2 h-2 rounded-full bg-success"></div>
             </div>
             <p className="text-2xl font-semibold text-text-primary">Active</p>
-            <p className="text-xs text-text-tertiary mt-1">$50/month</p>
+            <p className="text-xs text-text-tertiary mt-1">$25/month base</p>
           </div>
         </div>
       </div>
