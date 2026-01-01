@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, Mail, Lock, Check } from "lucide-react";
+import { Mail, Lock, Check } from "lucide-react";
 import Link from "next/link";
 
 export default function SignupPage() {
@@ -56,12 +56,6 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-sage-100 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-sage-600" />
-            </div>
-            <h1 className="text-2xl font-semibold text-text-primary">naiborhood</h1>
-          </div>
           <h2 className="text-xl font-medium text-text-primary mb-2">
             Create your account
           </h2>
@@ -196,7 +190,7 @@ export default function SignupPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-text-tertiary mt-8">
-          Built for small businesses in your neighborhood
+          Built for small and medium businesses
         </p>
       </div>
     </div>

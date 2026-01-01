@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "naiborhood - Business Automation Platform",
-  description: "Multi-agent automation platform for small businesses",
+  title: "Business Automation Platform",
+  description: "Multi-agent automation platform for small and medium businesses",
 };
 
 export default function RootLayout({

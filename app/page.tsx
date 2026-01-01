@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, MessageSquare, Users, Package, ArrowRight } from "lucide-react";
+import { MessageSquare, Users, Package, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -35,13 +35,6 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 pt-20 pb-16">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-12">
-          <div className="w-16 h-16 rounded-2xl bg-sage-100 flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-sage-600" />
-          </div>
-          <h1 className="text-4xl font-semibold text-text-primary">naiborhood</h1>
-        </div>
 
         {/* Headline */}
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -180,7 +173,7 @@ export default function Home() {
             Ready to automate your business?
           </h3>
           <p className="text-lg text-text-secondary mb-8">
-            Join small businesses using naiborhood to save time and grow
+            Join small businesses using our platform to save time and grow
           </p>
           <button
             onClick={() => router.push("/signup")}
@@ -196,7 +189,7 @@ export default function Home() {
       <footer className="border-t border-border-light bg-background-secondary">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <p className="text-center text-sm text-text-tertiary">
-            © 2024 naiborhood. Built for small business automation.
+            © 2024 Business Automation Platform. Built for small and medium businesses.
           </p>
         </div>
       </footer>

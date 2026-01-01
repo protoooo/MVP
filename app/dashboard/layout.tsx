@@ -4,7 +4,6 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { 
-  Sparkles, 
   LayoutDashboard, 
   MessageSquare, 
   Users, 
@@ -78,13 +77,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-5 py-5 border-b border-border-light">
-            <div className="w-10 h-10 rounded-xl bg-sage-100 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-sage-600" />
-            </div>
             <div>
-              <h1 className="text-base font-semibold text-text-primary">naiborhood</h1>
+              <h1 className="text-base font-semibold text-text-primary">Business Automation</h1>
               {profile && (
-                <p className="text-xs text-text-tertiary truncate max-w-[140px]">
+                <p className="text-xs text-text-tertiary truncate max-w-[200px]">
                   {profile.business_name}
                 </p>
               )}

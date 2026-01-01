@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, CreditCard, Check } from "lucide-react";
+import { CreditCard, Check } from "lucide-react";
 
 export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
@@ -41,10 +41,6 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Sparkles className="w-10 h-10 text-blue-600" />
-            <h1 className="text-3xl font-semibold text-gray-900">naiborhood</h1>
-          </div>
           <h2 className="text-xl font-medium text-gray-700">
             Subscribe to get started
           </h2>

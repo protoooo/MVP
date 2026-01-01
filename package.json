@@ -1,7 +1,7 @@
 {
-  "name": "naiborhood",
+  "name": "business-automation-platform",
   "version": "1.0.0",
-  "description": "Multi-Agent Automation Platform for Small Businesses",
+  "description": "Multi-Agent Automation Platform for Small and Medium Businesses",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
