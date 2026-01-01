@@ -49,9 +49,16 @@ export default function UploadsPage() {
     setError("");
     setSuccess("");
 
+    let documentId: string | null = null;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error("File size must be less than 10MB");
+      }
 
       // Upload file to Supabase Storage
       const fileExt = file.name.split(".").pop();
@@ -69,7 +76,7 @@ export default function UploadsPage() {
         .getPublicUrl(fileName);
 
       // Save document metadata
-      const { error: dbError } = await supabase
+      const { data: docData, error: dbError } = await supabase
         .from("business_documents")
         .insert({
           user_id: user.id,
@@ -79,12 +86,37 @@ export default function UploadsPage() {
           file_size: file.size,
           mime_type: file.type,
           processed: false,
-        });
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
+      documentId = docData?.id;
 
-      setSuccess("Document uploaded successfully!");
+      setSuccess("Document uploaded! Processing...");
       loadDocuments();
+
+      // Trigger document processing in background
+      if (documentId) {
+        fetch("/api/documents/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ documentId }),
+        })
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.success) {
+              setSuccess("Document uploaded and processed successfully!");
+              loadDocuments();
+            } else {
+              setError(result.error || "Document uploaded but processing failed");
+            }
+          })
+          .catch((err) => {
+            console.error("Processing error:", err);
+            setError("Document uploaded but processing failed");
+          });
+      }
       
       // Reset file input
       e.target.value = "";
@@ -221,12 +253,25 @@ export default function UploadsPage() {
                   transition={{ delay: index * 0.05 }}
                   className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between hover:border-gray-300 transition"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1">
                     <div className="p-3 bg-blue-50 rounded-lg">
                       <FileText className="w-6 h-6 text-blue-600" />
                     </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{doc.document_name}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-gray-900">{doc.document_name}</h3>
+                        {doc.processed ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded">
+                            <Check className="w-3 h-3" />
+                            Ready
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-700 text-xs font-medium rounded">
+                            <div className="w-3 h-3 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin" />
+                            Processing
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500">
                         {documentTypes.find(t => t.value === doc.document_type)?.label || doc.document_type}
                         {" • "}
