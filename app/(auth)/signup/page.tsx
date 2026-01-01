@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Mail, Lock, Check } from "lucide-react";
 import Link from "next/link";
 
 export default function SignupPage() {
@@ -52,90 +52,152 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Sparkles className="w-10 h-10 text-blue-600" />
-            <h1 className="text-3xl font-semibold text-gray-900">naiborhood</h1>
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-sage-100 flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-sage-600" />
+            </div>
+            <h1 className="text-2xl font-semibold text-text-primary">naiborhood</h1>
           </div>
-          <h2 className="text-xl font-medium text-gray-700">
+          <h2 className="text-xl font-medium text-text-primary mb-2">
             Create your account
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="text-sm text-text-secondary">
             Get started with $50/month unlimited access
           </p>
         </div>
 
-        <form onSubmit={handleSignup} className="mt-8 space-y-6">
-          <div className="space-y-4">
+        {/* Signup Card */}
+        <div className="bg-surface rounded-2xl shadow-soft-lg border border-border p-8">
+          <form onSubmit={handleSignup} className="space-y-5">
+            {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
                 Email address
               </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="you@example.com"
-              />
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary 
+                    text-text-primary placeholder:text-text-placeholder
+                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
+                    transition duration-200"
+                  placeholder="you@example.com"
+                />
+              </div>
             </div>
 
+            {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="At least 6 characters"
-              />
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary
+                    text-text-primary placeholder:text-text-placeholder
+                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
+                    transition duration-200"
+                  placeholder="At least 6 characters"
+                />
+              </div>
             </div>
 
+            {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-primary mb-2">
                 Confirm Password
               </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="Confirm your password"
-              />
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary
+                    text-text-primary placeholder:text-text-placeholder
+                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
+                    transition duration-200"
+                  placeholder="Confirm your password"
+                />
+              </div>
             </div>
-          </div>
 
-          {error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-              <p className="text-sm text-red-800">{error}</p>
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-xl bg-error-light border border-error/20 p-4">
+                <p className="text-sm text-error-dark">{error}</p>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 px-4 rounded-xl text-sm font-medium text-white 
+                bg-sage-600 hover:bg-sage-700 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sage-500 
+                disabled:opacity-50 disabled:cursor-not-allowed 
+                transition duration-200 shadow-soft"
+            >
+              {loading ? "Creating account..." : "Create account"}
+            </button>
+
+            {/* Sign In Link */}
+            <div className="text-center text-sm pt-4">
+              <span className="text-text-secondary">Already have an account? </span>
+              <Link 
+                href="/login" 
+                className="font-medium text-sage-600 hover:text-sage-700 transition"
+              >
+                Sign in
+              </Link>
             </div>
-          )}
+          </form>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-3 px-4 rounded-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading ? "Creating account..." : "Create account"}
-          </button>
-
-          <div className="text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500 transition">
-              Sign in
-            </Link>
+        {/* Features */}
+        <div className="mt-8 space-y-3">
+          <div className="flex items-center gap-3 text-sm text-text-secondary">
+            <div className="w-5 h-5 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
+              <Check className="w-3 h-3 text-sage-600" />
+            </div>
+            <span>Unlimited agent interactions</span>
           </div>
-        </form>
+          <div className="flex items-center gap-3 text-sm text-text-secondary">
+            <div className="w-5 h-5 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
+              <Check className="w-3 h-3 text-sage-600" />
+            </div>
+            <span>All 5 specialized agents included</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-text-secondary">
+            <div className="w-5 h-5 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
+              <Check className="w-3 h-3 text-sage-600" />
+            </div>
+            <span>Cancel anytime, no hidden fees</span>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-text-tertiary mt-8">
+          Built for small businesses in your neighborhood
+        </p>
       </div>
     </div>
   );
