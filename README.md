@@ -1,38 +1,80 @@
 # Naiborhood - Business Automation for Small Businesses
 
-Naiborhood is an innovative platform designed specifically for small businesses to streamline operations, enhance efficiency, and drive growth. Our platform integrates seamlessly with various business tools and systems, enabling small business owners to focus on what matters most – growing their business.
+A lightweight, powerful platform built specifically for small businesses like bakeries, bars, breweries, and retail shops. Unlike overwhelming enterprise tools, naiborhood is designed to be simple, straightforward, and actually useful for teams of 3-50 people.
 
-## Features
+**Not just another chatbot.** Agents that actually do work - draft emails, analyze finances, check resumes, manage inventory, and more.
 
-### Customer Support
-- **Handle customer inquiries**: Our chatbots and virtual assistants can manage customer queries effectively, providing instant responses and personalized interactions.
-- **Sentiment analysis**: Analyze customer feedback and sentiments in real-time to gauge satisfaction levels and identify areas for improvement.
-- **Ticket routing**: Automatically route customer support tickets to the appropriate departments or agents, ensuring timely and accurate resolution.
+## What Makes This Different
 
-### HR Assistant
-- **Resume screening**: Screen resumes and identify top candidates based on predefined criteria, saving time and effort in the recruitment process.
-- **Candidate matching**: Match candidates with job openings based on skills, experience, and other relevant factors, improving the quality of hires.
-- **Interview scheduling**: Automate the scheduling of interviews, reducing administrative overhead and ensuring a smooth candidate experience.
+- **Real Actions, Not Suggestions**: Draft → Review → Send emails. Create invoices. Schedule interviews. Not copy-paste.
+- **Knows Your Business**: Upload your manuals, procedures, sales data - agents learn your specific operations
+- **One Simple Price**: $50/month unlimited. No usage limits. No surprises.
+- **Built for Small Teams**: Perfect for bakeries, bars, breweries, retail shops, restaurants
 
-### Inventory Manager
-- **Stock predictions**: Forecast stock levels and demand, enabling proactive inventory management and reducing stockouts or overstocking.
-- **Alerts**: Receive real-time alerts for low stock levels, high demand, or other critical inventory issues, allowing for immediate action.
-- **Inventory optimization**: Optimize inventory levels and storage to maximize efficiency and minimize costs.
+## Core Features
 
-### Financial Analyst
-- **Expense categorization**: Automatically categorize expenses and allocate them to the appropriate departments or projects, enhancing financial accuracy and transparency.
-- **Budgeting**: Create and manage budgets, ensuring alignment with business goals and objectives.
-- **Financial insights**: Gain valuable insights into financial performance through advanced analytics and reporting, enabling data-driven decision-making.
+### 5 Specialized Business Agents
 
-### Document Reviewer
-- **Contract summarization**: Summarize contracts and legal documents, extracting key information and clauses for quick review and analysis.
-- **Clause extraction**: Identify and extract specific clauses or terms from documents, facilitating targeted analysis and compliance checks.
-- **Risk analysis**: Assess potential risks and liabilities within documents, providing a comprehensive overview of contractual obligations and potential issues.
+#### Financial Analyst
+- Analyze revenue, sales, margins, and COGS
+- Categorize expenses automatically
+- Track spending patterns and budget variances
+- Detect financial anomalies
+- Forecast cash flow
 
-### SEO/Marketing
-- **Keyword research**: Identify high-value keywords and phrases for your business, improving search engine rankings and visibility.
-- **Content optimization**: Optimize website content and marketing materials to enhance engagement and conversion rates.
-- **Social media management**: Automate social media posting and engagement, ensuring consistent brand presence and interaction with customers.
+#### HR Assistant
+- Screen resumes for legitimacy and quality
+- Check resumes for AI-generated content
+- Match candidates to job requirements
+- Draft professional emails and templates
+- Schedule interviews
+- Ensure compliance with company policies
+
+#### Inventory Manager
+- Track stock levels in real-time
+- Predict demand patterns
+- Send low-stock alerts
+- Automate reorder recommendations
+- Analyze inventory turnover
+
+#### Document Reviewer
+- Summarize contracts and agreements
+- Extract key clauses
+- Assess risks and compliance issues
+- Compare document versions
+- Flag important terms
+
+#### Customer Support
+- Handle customer inquiries
+- Analyze sentiment
+- Route tickets appropriately
+- Maintain conversation context
+- Provide step-by-step guidance
+
+### Document Intelligence
+- Upload business documents (PDFs, Excel, Word)
+- Automatic text extraction and parsing
+- Semantic search across all documents
+- Context-aware agent responses
+- Secure storage with Supabase
+
+### Business-Specific Setup
+- Industry templates (bakery, bar, brewery, retail)
+- Pre-configured KPIs per industry
+- Customizable metrics and dashboards
+- Easy onboarding flow
+
+### Automated Reports (Planned)
+- Daily sales summaries
+- Weekly staff performance
+- Monthly financial snapshots
+- Scheduled email delivery
+
+### Real Actions (Planned)
+- Draft emails → Review → Send
+- Create invoices → Approve → Send
+- Schedule interviews → Sync calendar
+- Generate reports → Email to team
 
 ## Integration
 Naiborhood seamlessly integrates with a wide range of business tools and systems, including CRM, ERP, HRMS, and more. Our platform is designed to complement existing workflows and processes, ensuring a smooth transition to automated operations.
@@ -46,11 +88,15 @@ Naiborhood seamlessly integrates with a wide range of business tools and systems
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14+ with React 19, TypeScript
-- **Styling**: TailwindCSS with custom design system
-- **Backend Integration**: Cohere API (Generate, Chat, Embed, Rerank, Classify)
+- **Frontend**: Next.js 16 with React 19, TypeScript
+- **Styling**: TailwindCSS with custom design system (Notion/Supabase-inspired)
+- **Database**: Supabase (PostgreSQL + pgvector)
+- **Authentication**: Supabase Auth
+- **Storage**: Supabase Storage
+- **AI**: Cohere (Command-R-Plus, Embed v3, Rerank v3, Aya Vision)
+- **Payments**: Stripe
+- **Animations**: Framer Motion
 - **Icons**: Lucide React
-- **Deployment**: Railway-ready
 
 ## 📦 Project Structure
 
@@ -80,9 +126,11 @@ Naiborhood seamlessly integrates with a wide range of business tools and systems
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Cohere API key
+- Supabase account (free tier works)
+- Cohere API account (free tier works)
+- Stripe account (for payments)
 
-### Local Development
+### Setup
 
 1. **Clone and install**:
    ```bash
@@ -91,19 +139,48 @@ Naiborhood seamlessly integrates with a wide range of business tools and systems
    npm install
    ```
 
-2. **Set up environment variables**:
-   Create a `.env.local` file:
-   ```
-   COHERE_API_KEY=your_cohere_api_key_here
+2. **Set up Supabase**:
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Go to Project Settings → API and copy your URL and keys
+   - Run the database migrations (see `SETUP_GUIDE.md`)
+   - Create a storage bucket named `business-documents`
+   - Enable pgvector extension
+
+3. **Get API Keys**:
+   - **Cohere**: Get API key from [dashboard.cohere.com](https://dashboard.cohere.com)
+   - **Stripe**: Get keys from [dashboard.stripe.com](https://dashboard.stripe.com)
+   - Create a $50/month subscription product in Stripe
+
+4. **Configure environment variables**:
+   Create a `.env.local` file (see `.env.example` for all required variables):
+   ```env
+   # Cohere
+   COHERE_API_KEY=your_key_here
+
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_key
+
+   # Stripe
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   STRIPE_PRICE_ID=price_...
+
+   # App
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
    ```
 
-3. **Run the development server**:
+5. **Run the development server**:
    ```bash
    npm run dev
    ```
 
-4. **Open your browser**:
+6. **Open your browser**:
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+For detailed setup instructions, see [`SETUP_GUIDE.md`](./SETUP_GUIDE.md)
 
 ### Production Build
 
