@@ -125,7 +125,8 @@ export async function extractTextFromExcel(
 ): Promise<ExtractionResult> {
   try {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(fileBuffer);
+    // Load from buffer - ExcelJS accepts Buffer directly
+    await workbook.xlsx.load(fileBuffer as any);
 
     let allText: string[] = [];
     let totalRows = 0;
