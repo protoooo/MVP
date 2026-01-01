@@ -41,7 +41,7 @@ export default function FinancialPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are a financial analyst for a small business. You help analyze revenue, sales, margins, COGS, expenses, and budgets. You categorize expenses, identify spending patterns, and forecast budget trajectories. You explain financial concepts clearly and flag anomalies or risks. You provide data-backed recommendations for financial optimization. When the user uploads financial data, you analyze it thoroughly and provide actionable insights.",
+        systemPrompt: "You are a Financial Analyst for small businesses. IMPORTANT: You ONLY use uploaded documents as your source of truth. You have NO live integrations with accounting software or real-time data access.\n\nYour core functions:\n1. Financial Summary Reports: Plain English explanations from uploaded financial documents\n2. Expense Category Analysis: From uploaded receipts/reports\n3. Trend Detection: Revenue up/down based on time-series documents\n4. Cost Risk Warnings: Flag abnormal changes in uploaded data\n5. Question-Driven Insights: Answer 'Why is X changing?' based on documents only\n\nWhen responding:\n- ALWAYS state which documents you used (e.g., 'According to your Q3 P&L...')\n- If you lack relevant documents, say: 'To analyze finances, please upload: [specific documents needed]'\n- Never guess or make up financial data\n- Generate concrete outputs: financial summaries, expense breakdowns, trend reports, risk alerts\n- Explain financial concepts in plain English for small business owners\n\nYou provide financial clarity without accounting software.",
         agentType: "financial",
         useAutonomous: true,
       }),
@@ -62,7 +62,7 @@ export default function FinancialPage() {
           <div>
             <h1 className="text-2xl font-semibold text-text-primary">Financial Analyst</h1>
             <p className="text-text-secondary mt-1">
-              Analyze revenue, expenses, margins, and financial health
+              Financial clarity from your reports
             </p>
           </div>
         </div>
@@ -93,48 +93,48 @@ export default function FinancialPage() {
 
         {/* Capabilities */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">I can help with:</h3>
+          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Revenue Analysis</div>
-                <div className="text-xs text-text-secondary">Track sales and income trends</div>
+                <div className="font-medium text-text-primary text-sm">Financial Summary Reports</div>
+                <div className="text-xs text-text-secondary">Plain English explanations</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Expense Categorization</div>
-                <div className="text-xs text-text-secondary">Automatically categorize costs</div>
+                <div className="font-medium text-text-primary text-sm">Expense Category Analysis</div>
+                <div className="text-xs text-text-secondary">From uploaded receipts/reports</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Margin Calculations</div>
-                <div className="text-xs text-text-secondary">Gross margin and profit analysis</div>
+                <div className="font-medium text-text-primary text-sm">Trend Detection</div>
+                <div className="text-xs text-text-secondary">Revenue up/down based on time-series docs</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">COGS Tracking</div>
-                <div className="text-xs text-text-secondary">Monitor cost of goods sold</div>
+                <div className="font-medium text-text-primary text-sm">Cost Risk Warnings</div>
+                <div className="text-xs text-text-secondary">Flags abnormal changes</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Budget Forecasting</div>
-                <div className="text-xs text-text-secondary">Predict future expenses</div>
+                <div className="font-medium text-text-primary text-sm">Question-Driven Insights</div>
+                <div className="text-xs text-text-secondary">"Why is food cost rising?" (doc-based only)</div>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-honey-500 rounded-full mt-2" />
               <div>
-                <div className="font-medium text-text-primary text-sm">Anomaly Detection</div>
-                <div className="text-xs text-text-secondary">Flag unusual transactions</div>
+                <div className="font-medium text-text-primary text-sm">Document-Based Only</div>
+                <div className="text-xs text-text-secondary">No accounting software needed</div>
               </div>
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function FinancialPage() {
             <Chatbot
               onSendMessage={handleFinancialMessage}
               placeholder="Ask about your finances..."
-              welcomeMessage="Hi! I'm your Financial Analyst. I can help you understand your revenue, expenses, margins, and overall financial health. Upload your financial data or ask me questions about managing your business finances."
+              welcomeMessage="Hi! I'm your Financial Analyst. I provide financial clarity by analyzing your uploaded financial documents. I create summaries in plain English, categorize expenses, detect trends, flag cost risks, and answer your financial questions - all based strictly on your documents. What would you like to know?"
               agentColor="amber"
               agentType="financial"
               enableAutonomous={true}

@@ -126,7 +126,7 @@ export default function UploadsPage() {
         <div>
           <h1 className="text-3xl font-semibold text-gray-900">Document Uploads</h1>
           <p className="mt-2 text-gray-600">
-            Upload business documents to help agents understand your operations
+            Everything the agents do is based on what you upload. Upload more → better answers → better actions.
           </p>
         </div>
 
@@ -251,19 +251,23 @@ export default function UploadsPage() {
 
         {/* Info Box */}
         <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-2">How it works</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">Documents are your source of truth</h3>
           <ul className="space-y-2 text-sm text-gray-700">
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>Documents are analyzed and made searchable for all agents</span>
+              <span>Agents get smarter as documents accumulate</span>
             </li>
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>Agents use this context to provide accurate, business-specific insights</span>
+              <span>Upload SOPs → better ops advice. Upload P&L → better financial insights.</span>
             </li>
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>Your data is securely stored and only accessible by your agents</span>
+              <span>Upload policies → better HR answers. Upload reports → better compliance detection.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <span>No live integrations - just your documents. Your data is secure and private.</span>
             </li>
           </ul>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, Activity, AlertCircle } from "lucide-react";
+import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, Activity, AlertCircle, Brain } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -48,36 +48,43 @@ export default function DashboardPage() {
 
   const agents = [
     {
+      name: "Operations Intelligence",
+      description: "Turns your documents into daily actions and priorities",
+      icon: <Brain className="w-5 h-5" />,
+      color: "indigo",
+      href: "/dashboard/operations",
+    },
+    {
       name: "Customer Support",
-      description: "Handle inquiries and support tickets",
+      description: "Policy-based customer responses",
       icon: <MessageSquare className="w-5 h-5" />,
       color: "sky",
       href: "/dashboard/customer-support",
     },
     {
       name: "HR Assistant",
-      description: "Screen resumes and manage candidates",
+      description: "People management from your policies",
       icon: <Users className="w-5 h-5" />,
       color: "lavender",
       href: "/dashboard/hr",
     },
     {
       name: "Inventory Manager",
-      description: "Track stock and predict demand",
+      description: "Document-driven inventory insights",
       icon: <Package className="w-5 h-5" />,
       color: "sage",
       href: "/dashboard/inventory",
     },
     {
       name: "Financial Analyst",
-      description: "Analyze expenses and budgets",
+      description: "Financial clarity from your reports",
       icon: <TrendingUp className="w-5 h-5" />,
       color: "honey",
       href: "/dashboard/financial",
     },
     {
       name: "Document Reviewer",
-      description: "Review contracts and documents",
+      description: "Turn documents into insights",
       icon: <FileText className="w-5 h-5" />,
       color: "clay",
       href: "/dashboard/documents",
@@ -85,6 +92,7 @@ export default function DashboardPage() {
   ];
 
   const colorMap: Record<string, string> = {
+    indigo: "bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200 hover:border-indigo-300",
     sky: "bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 hover:border-sky-300",
     lavender: "bg-lavender-100 text-lavender-700 border-lavender-200 hover:bg-lavender-200 hover:border-lavender-300",
     sage: "bg-sage-100 text-sage-700 border-sage-200 hover:bg-sage-200 hover:border-sage-300",

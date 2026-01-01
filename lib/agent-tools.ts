@@ -429,8 +429,61 @@ export const documentReviewerTools: Tool[] = [
   },
 ];
 
+// Operations Intelligence tools
+export const operationsIntelligenceTools: Tool[] = [
+  databaseQueryTool,
+  memoryStoreTool,
+  memoryRetrieveTool,
+  problemSolvingTool,
+  {
+    name: "generate_priority_brief",
+    description: "Generate a daily priority brief based on all uploaded documents",
+    parameters: {
+      focus_area: { type: "string", enum: ["all", "operations", "finance", "hr", "compliance"], required: false },
+    },
+    execute: async (params) => ({ brief: "", priorities: [], insights: [] }),
+  },
+  {
+    name: "detect_cross_document_issues",
+    description: "Find mismatches, contradictions, or risks across multiple documents",
+    parameters: {
+      document_types: { type: "array", required: false },
+    },
+    execute: async (params) => ({ issues: [], contradictions: [], risks: [] }),
+  },
+  {
+    name: "suggest_tasks",
+    description: "Generate actionable tasks based on findings from documents",
+    parameters: {
+      source: { type: "string", description: "Where the tasks are derived from", required: true },
+    },
+    execute: async (params) => ({ tasks: [] }),
+  },
+  {
+    name: "generate_health_summary",
+    description: "Create a weekly business health summary across all areas",
+    parameters: {},
+    execute: async (params) => ({ 
+      operations_health: "good", 
+      finance_health: "good", 
+      hr_health: "good", 
+      compliance_health: "good",
+      summary: ""
+    }),
+  },
+  {
+    name: "identify_missing_documents",
+    description: "Suggest specific documents to upload for better insights",
+    parameters: {
+      current_documents: { type: "array", required: true },
+    },
+    execute: async (params) => ({ missing: [], suggestions: [] }),
+  },
+];
+
 // Tool registry by agent type
 export const agentToolRegistry: Record<string, Tool[]> = {
+  "operations": operationsIntelligenceTools,
   "customer-support": customerSupportTools,
   "hr": hrAssistantTools,
   "inventory": inventoryManagerTools,
