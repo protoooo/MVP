@@ -84,9 +84,9 @@ You help business owners understand what matters most based on what they've shar
             <Brain className="w-8 h-8 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">Operations Hub</h1>
+            <h1 className="text-2xl font-semibold text-text-primary">Today's Priorities</h1>
             <p className="text-text-secondary mt-1">
-              Daily priorities and action items from your documents
+              See what needs your attention today
             </p>
           </div>
         </div>
@@ -98,18 +98,18 @@ You help business owners understand what matters most based on what they've shar
               <AlertCircle className="w-6 h-6 text-indigo-600 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-text-primary mb-2">
-                  Ready to become your business brain
+                  Let's get you started
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  I analyze all your uploaded documents to tell you what matters. Upload SOPs, financial reports, policies, inspection reports, and more. The more you upload, the smarter I become.
+                  Upload your business files (schedules, invoices, employee info, recipes) and I'll help you stay on top of what matters.
                 </p>
                 <div className="bg-white rounded-lg p-4 mb-4 border border-indigo-100">
-                  <p className="text-sm font-medium text-text-primary mb-2">Get better insights by uploading:</p>
+                  <p className="text-sm font-medium text-text-primary mb-2">I work better when you upload:</p>
                   <ul className="space-y-1 text-sm text-text-secondary">
-                    <li>• SOPs and procedures → better operational advice</li>
-                    <li>• P&L and financial statements → better financial insights</li>
-                    <li>• HR policies and handbooks → better people management</li>
-                    <li>• Inspection and compliance reports → better risk detection</li>
+                    <li>• Staff schedules and handbooks</li>
+                    <li>• Sales reports and receipts</li>
+                    <li>• Customer policies and FAQs</li>
+                    <li>• Inspection reports and checklists</li>
                   </ul>
                 </div>
                 <a
@@ -117,7 +117,7 @@ You help business owners understand what matters most based on what they've shar
                   className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-700 transition"
                 >
                   <Upload className="w-4 h-4" />
-                  Upload Your First Documents
+                  Upload Your Files
                 </a>
               </div>
             </div>
@@ -128,10 +128,10 @@ You help business owners understand what matters most based on what they've shar
               <Brain className="w-6 h-6 text-indigo-600 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-text-primary mb-2">
-                  Analyzing {documentCount} document{documentCount !== 1 ? 's' : ''}
+                  Working on {documentCount} file{documentCount !== 1 ? 's' : ''}
                 </h3>
                 <p className="text-sm text-text-secondary">
-                  I'm ready to help! Upload more documents to improve my understanding of your business.
+                  Upload more files to get even better help.
                 </p>
               </div>
             </div>
@@ -140,48 +140,48 @@ You help business owners understand what matters most based on what they've shar
 
         {/* Capabilities */}
         <div className="bg-surface rounded-xl border border-border p-6">
-          <h3 className="font-semibold text-text-primary mb-4">Powered by your uploaded documents</h3>
+          <h3 className="font-semibold text-text-primary mb-4">What I can do for you</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Daily Priority Brief</p>
-                <p className="text-xs text-text-secondary">What deserves attention based on your docs</p>
+                <p className="font-medium text-text-primary text-sm">Daily To-Do List</p>
+                <p className="text-xs text-text-secondary">What needs attention today</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Cross-Document Issue Detection</p>
-                <p className="text-xs text-text-secondary">Find mismatches and risks across files</p>
+                <p className="font-medium text-text-primary text-sm">Spot Problems</p>
+                <p className="text-xs text-text-secondary">Find mismatches in your files</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Auto Task Suggestions</p>
-                <p className="text-xs text-text-secondary">Convert findings into actionable tasks</p>
+                <p className="font-medium text-text-primary text-sm">Create Task Lists</p>
+                <p className="text-xs text-text-secondary">Turn findings into action items</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Weekly Business Health Summary</p>
-                <p className="text-xs text-text-secondary">Operations, finance, HR, compliance signals</p>
+                <p className="font-medium text-text-primary text-sm">Weekly Check-Up</p>
+                <p className="text-xs text-text-secondary">How things are going overall</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">What's Missing Detector</p>
-                <p className="text-xs text-text-secondary">Suggests what to upload for better insights</p>
+                <p className="font-medium text-text-primary text-sm">What's Missing</p>
+                <p className="text-xs text-text-secondary">Tells you what files would help</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Document-Based Analysis Only</p>
-                <p className="text-xs text-text-secondary">No live data, just your uploaded files</p>
+                <p className="font-medium text-text-primary text-sm">Based on Your Files</p>
+                <p className="text-xs text-text-secondary">Only uses what you've uploaded</p>
               </div>
             </div>
           </div>
@@ -190,8 +190,8 @@ You help business owners understand what matters most based on what they've shar
         {/* Chatbot */}
         <Chatbot
           onSendMessage={handleOperationsMessage}
-          placeholder="Ask me for a priority brief, business health check, or what documents you should upload..."
-          welcomeMessage="Hi! I'm your Operations Hub. I analyze all your uploaded documents to tell you what matters most. I can create daily priority briefs, detect issues across documents, suggest tasks, and help you understand your business health. What would you like to know?"
+          placeholder="Ask me for today's priorities, a weekly check-up, or what files you should upload..."
+          welcomeMessage="Hi! I help you stay on top of things. I can show you today's priorities, spot problems in your files, create task lists, and give you weekly check-ups. What do you need help with?"
           agentColor="indigo"
           agentType="operations"
           enableAutonomous={true}

@@ -6,13 +6,13 @@ import { Upload, FileText, X, Check, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 const documentTypes = [
-  { value: "manual", label: "Manual / Handbook" },
-  { value: "procedure", label: "Standard Procedure" },
-  { value: "policy", label: "Policy Document" },
-  { value: "report", label: "Business Report" },
-  { value: "sales_data", label: "Sales Data" },
-  { value: "inventory_data", label: "Inventory Data" },
-  { value: "financial_data", label: "Financial Data" },
+  { value: "manual", label: "Employee Handbook" },
+  { value: "procedure", label: "How-To Guide / Recipe" },
+  { value: "policy", label: "Rules & Policies" },
+  { value: "report", label: "Sales or Business Report" },
+  { value: "sales_data", label: "Sales Records" },
+  { value: "inventory_data", label: "Stock List / Inventory" },
+  { value: "financial_data", label: "Invoices / Expenses" },
   { value: "other", label: "Other" },
 ];
 
@@ -124,9 +124,9 @@ export default function UploadsPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-semibold text-gray-900">Document Uploads</h1>
+          <h1 className="text-3xl font-semibold text-gray-900">Your Files</h1>
           <p className="mt-2 text-gray-600">
-            Everything the agents do is based on what you upload. Upload more → better answers → better actions.
+            Upload anything - schedules, invoices, recipes, employee files. The more you upload, the more helpful this gets.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export default function UploadsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Document Type
+                What kind of file is this?
               </label>
               <select
                 value={selectedType}
@@ -200,15 +200,15 @@ export default function UploadsPage() {
         {/* Documents List */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Uploaded Documents ({documents.length})
+            Your Files ({documents.length})
           </h2>
           
           {documents.length === 0 ? (
             <div className="bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No documents uploaded yet</p>
+              <p className="text-gray-600">No files uploaded yet</p>
               <p className="text-sm text-gray-500 mt-1">
-                Upload your first document to get started
+                Upload your first file to get started
               </p>
             </div>
           ) : (
@@ -251,23 +251,23 @@ export default function UploadsPage() {
 
         {/* Info Box */}
         <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-2">Documents are your source of truth</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">How it helps you</h3>
           <ul className="space-y-2 text-sm text-gray-700">
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>Agents get smarter as documents accumulate</span>
+              <span>Upload your staff handbook → get help answering employee questions</span>
             </li>
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>Upload SOPs → better ops advice. Upload P&L → better financial insights.</span>
+              <span>Upload invoices and receipts → see where your money goes</span>
             </li>
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>Upload policies → better HR answers. Upload reports → better compliance detection.</span>
+              <span>Upload stock lists → know what to order and when</span>
             </li>
             <li className="flex items-start gap-2">
               <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>No live integrations - just your documents. Your data is secure and private.</span>
+              <span>Your files stay private and secure - only your team can see them</span>
             </li>
           </ul>
         </div>

@@ -48,43 +48,43 @@ export default function DashboardPage() {
 
   const agents = [
     {
-      name: "Operations Hub",
-      description: "Turn documents into priorities and action items",
+      name: "Today's Priorities",
+      description: "See what needs attention today",
       icon: <Brain className="w-5 h-5" />,
       color: "indigo",
       href: "/dashboard/operations",
     },
     {
-      name: "Customer Support",
-      description: "Consistent responses based on your policies",
+      name: "Customer Service",
+      description: "Handle customer questions and complaints",
       icon: <MessageSquare className="w-5 h-5" />,
       color: "sky",
       href: "/dashboard/customer-support",
     },
     {
-      name: "HR Assistant",
-      description: "People management from your policies",
+      name: "Staff & Hiring",
+      description: "Manage your team and new hires",
       icon: <Users className="w-5 h-5" />,
       color: "lavender",
       href: "/dashboard/hr",
     },
     {
-      name: "Inventory Insights",
-      description: "Track patterns and reduce waste",
+      name: "Stock & Orders",
+      description: "Track what you have and what to order",
       icon: <Package className="w-5 h-5" />,
       color: "sage",
       href: "/dashboard/inventory",
     },
     {
-      name: "Financial Reports",
-      description: "Understand your numbers clearly",
+      name: "Money & Expenses",
+      description: "See where your money goes",
       icon: <TrendingUp className="w-5 h-5" />,
       color: "honey",
       href: "/dashboard/financial",
     },
     {
-      name: "Document Review",
-      description: "Extract insights from contracts and docs",
+      name: "Contracts & Papers",
+      description: "Understand important documents",
       icon: <FileText className="w-5 h-5" />,
       color: "clay",
       href: "/dashboard/documents",
@@ -109,7 +109,7 @@ export default function DashboardPage() {
             Welcome back{profile?.business_name ? `, ${profile.business_name}` : ""}
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Your business automation platform for {profile?.industry || "your business"}
+            Your daily business helper for {profile?.industry || "your business"}
           </p>
         </div>
 
@@ -126,18 +126,18 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="text-base font-semibold text-text-primary mb-2">
-                  Get started with your business data
+                  Get started by uploading your files
                 </h3>
                 <p className="text-sm text-text-secondary mb-4 leading-relaxed">
-                  Upload your business documents to help our agents understand your operations.
-                  This includes reports, manuals, procedures, and any data you'd like to analyze.
+                  Upload your business files - like schedules, invoices, employee handbooks, or recipes.
+                  The more you upload, the more helpful this gets.
                 </p>
                 <Link
                   href="/dashboard/uploads"
                   className="inline-flex items-center gap-2 px-5 py-2 bg-text-primary text-white rounded-full text-sm font-medium hover:bg-text-secondary transition shadow-soft"
                 >
                   <Upload className="w-4 h-4" />
-                  Upload Documents
+                  Upload Files
                 </Link>
               </div>
             </div>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
 
         {/* Agents Grid */}
         <div>
-          <h2 className="text-base font-semibold text-text-primary mb-4">Your Business Tools</h2>
+          <h2 className="text-base font-semibold text-text-primary mb-4">What do you need help with?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agents.map((agent, index) => (
               <motion.div
