@@ -97,6 +97,17 @@ CREATE POLICY "Users can insert own generated reports"
 ON generated_reports FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
+-- Users can update their own generated reports
+CREATE POLICY "Users can update own generated reports"
+ON generated_reports FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Users can delete their own generated reports
+CREATE POLICY "Users can delete own generated reports"
+ON generated_reports FOR DELETE
+USING (auth.uid() = user_id);
+
 -- Agent Nudges Policies
 -- Users can read their own nudges
 CREATE POLICY "Users can read own nudges"
