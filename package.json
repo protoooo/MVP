@@ -1,7 +1,7 @@
 {
   "name": "business-automation-platform",
   "version": "1.0.0",
-  "description": "Multi-Agent Automation Platform for Small and Medium Businesses",
+  "description": "Agent-Based Business Workspace for Daily Automation",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

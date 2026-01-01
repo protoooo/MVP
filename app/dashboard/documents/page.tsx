@@ -41,7 +41,7 @@ export default function DocumentsPage() {
       body: JSON.stringify({
         message,
         chatHistory: history.map(h => ({ role: h.role === "user" ? "USER" : "CHATBOT", message: h.content })),
-        systemPrompt: "You are a Document Reviewer for small businesses. IMPORTANT: You ONLY analyze uploaded documents. You have NO external data sources or live integrations.\n\nYour core functions:\n1. Risk Identification: Flag legal, financial, compliance issues in uploaded documents\n2. Key Obligation Extraction: Pull out deadlines, rules, responsibilities\n3. Summary & Action Breakdown: Turn documents into 2-minute reads with action items\n4. Contradiction Detection: Find conflicts across multiple uploaded documents\n5. Readiness Scoring: Assess 'How prepared are you based on current docs?'\n\nWhen responding:\n- ALWAYS state which documents you analyzed (e.g., 'In your Vendor Contract dated...')\n- If you lack relevant documents, say: 'To provide a complete review, please upload: [specific documents needed]'\n- Never make assumptions about missing information\n- Generate concrete outputs: risk reports, obligation lists, summaries, contradiction alerts, readiness scores\n- Explain complex terms in plain English for small business owners\n\nYou turn documents into insight, not storage.",
+        systemPrompt: "You are a Contracts, Agreements & Policies agent for businesses. IMPORTANT: You ONLY work with uploaded documents. You have NO external data sources or live integrations.\n\nYour core functions:\n1. Summarize Key Terms: Extract dates, obligations, responsibilities from uploaded contracts\n2. Compare Documents: When asked, compare multiple contracts for discrepancies\n3. Explain in Plain English: Translate complex legal language into simple terms\n4. Extract Renewal Dates & Obligations: Pull out important deadlines and clauses for follow-up\n5. Identify Issues: Flag potential concerns or unclear clauses in uploaded documents\n\nWhen responding:\n- ALWAYS state which documents you analyzed (e.g., 'In your Vendor Contract dated...')\n- If you lack relevant documents, say: 'To provide a complete review, please upload: [specific documents needed]'\n- DO NOT give legal conclusions or advice - only explain what's in the uploaded documents\n- Generate concrete outputs: summaries, comparison reports, plain English explanations, renewal date lists\n- All outputs should be ready to review and use (Draft + Open App pattern)\n\nYou help understand documents without giving legal advice.",
         agentType: "document-reviewer",
         useAutonomous: true,
       }),
@@ -60,9 +60,9 @@ export default function DocumentsPage() {
             <FileText className="w-8 h-8 text-clay-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-text-primary">Document Reviewer</h1>
+            <h1 className="text-2xl font-semibold text-text-primary">Contracts, Agreements & Policies</h1>
             <p className="text-text-secondary mt-1">
-              Turn documents into insights and actions
+              Understand contracts, policies, and formal documents
             </p>
           </div>
         </div>
@@ -74,10 +74,10 @@ export default function DocumentsPage() {
               <AlertCircle className="w-6 h-6 text-clay-600 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-text-primary mb-2">
-                  Ready to review your documents
+                  Upload your contracts and policies
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  Upload your contracts, agreements, or legal documents and I'll help you understand them. I can summarize key points, extract important clauses, identify risks, and explain complex terms in plain language.
+                  Upload contracts, agreements, policies, and formal documents. I'll summarize key terms, dates, and obligations, compare documents when asked, explain them in plain English, and extract renewal dates and clauses for follow-up.
                 </p>
                 <a
                   href="/dashboard/uploads"
@@ -98,43 +98,36 @@ export default function DocumentsPage() {
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Risk Identification</p>
-                <p className="text-xs text-text-secondary">Legal, financial, compliance issues</p>
+                <p className="font-medium text-text-primary text-sm">Summarize Key Terms</p>
+                <p className="text-xs text-text-secondary">Dates, obligations, responsibilities</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Key Obligation Extraction</p>
-                <p className="text-xs text-text-secondary">Deadlines, rules, responsibilities</p>
+                <p className="font-medium text-text-primary text-sm">Compare Documents</p>
+                <p className="text-xs text-text-secondary">Find discrepancies when asked</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Summary & Action Breakdown</p>
-                <p className="text-xs text-text-secondary">"Read this in 2 minutes"</p>
+                <p className="font-medium text-text-primary text-sm">Explain in Plain English</p>
+                <p className="text-xs text-text-secondary">Translate complex legal language</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Contradiction Detection</p>
-                <p className="text-xs text-text-secondary">Across multiple documents</p>
+                <p className="font-medium text-text-primary text-sm">Extract Renewal Dates</p>
+                <p className="text-xs text-text-secondary">Important deadlines and clauses</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
               <div>
-                <p className="font-medium text-text-primary text-sm">Readiness Scoring</p>
-                <p className="text-xs text-text-secondary">"How prepared are you based on current docs?"</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-2 h-2 bg-clay-500 rounded-full mt-2" />
-              <div>
-                <p className="font-medium text-text-primary text-sm">Plain Language Explanations</p>
-                <p className="text-xs text-text-secondary">Translate complex terms for business owners</p>
+                <p className="font-medium text-text-primary text-sm">Identify Issues</p>
+                <p className="text-xs text-text-secondary">Flag concerns or unclear clauses</p>
               </div>
             </div>
           </div>
@@ -143,8 +136,8 @@ export default function DocumentsPage() {
         {/* Chatbot */}
         <Chatbot
           onSendMessage={handleDocumentMessage}
-          placeholder="Ask me to review a contract, summarize an agreement, or explain a clause..."
-          welcomeMessage="Hi! I'm your Document Reviewer. I turn documents into insights by identifying risks, extracting obligations, creating summaries with action items, detecting contradictions, and scoring your readiness - all based strictly on your uploaded documents. What would you like me to review?"
+          placeholder="Ask me to summarize a contract, compare agreements, or explain clauses..."
+          welcomeMessage="Hi! I'm your Contracts, Agreements & Policies agent. I work with your uploaded contracts, agreements, and policies to summarize key terms, compare documents, explain them in plain English, and extract renewal dates and obligations. I do not give legal advice - I only explain what's in your documents. What can I help you with?"
           agentColor="clay"
           agentType="document-reviewer"
           enableAutonomous={true}

@@ -49,45 +49,51 @@ export default function DashboardPage() {
   const agents = [
     {
       name: "Today's Priorities",
-      description: "See what needs attention today",
+      description: "Turn vague goals into concrete tasks. See what needs attention today.",
       icon: <Brain className="w-5 h-5" />,
       color: "indigo",
       href: "/dashboard/operations",
+      capabilities: ["Draft daily task lists", "Highlight urgent items", "Suggest task delegation"]
     },
     {
       name: "Customer Service",
-      description: "Handle customer questions and complaints",
+      description: "Resolve customer questions and complaints using your policies.",
       icon: <MessageSquare className="w-5 h-5" />,
       color: "sky",
       href: "/dashboard/customer-support",
+      capabilities: ["Draft email responses", "Handle refunds", "Generate FAQs"]
     },
     {
-      name: "Staff & Hiring",
-      description: "Manage your team and new hires",
+      name: "HR",
+      description: "Work with onboarding docs, schedules, and employee materials.",
       icon: <Users className="w-5 h-5" />,
       color: "lavender",
       href: "/dashboard/hr",
+      capabilities: ["Draft schedules", "Screen resumes", "Create onboarding emails"]
     },
     {
-      name: "Stock & Orders",
-      description: "Track what you have and what to order",
+      name: "Inventory",
+      description: "Track stock levels and identify what to order.",
       icon: <Package className="w-5 h-5" />,
       color: "sage",
       href: "/dashboard/inventory",
+      capabilities: ["Suggest reorder quantities", "Flag discrepancies", "Analyze usage trends"]
     },
     {
-      name: "Money & Expenses",
-      description: "See where your money goes",
+      name: "Finances",
+      description: "Summarize expenses, revenues, and financial activity.",
       icon: <TrendingUp className="w-5 h-5" />,
       color: "honey",
       href: "/dashboard/financial",
+      capabilities: ["Generate summaries", "Flag unusual trends", "Prepare forecasts"]
     },
     {
-      name: "Contracts & Papers",
-      description: "Understand important documents",
+      name: "Contracts, Agreements & Policies",
+      description: "Understand contracts, policies, and formal documents.",
       icon: <FileText className="w-5 h-5" />,
       color: "clay",
       href: "/dashboard/documents",
+      capabilities: ["Extract renewal dates", "Summarize key terms", "Compare documents"]
     },
   ];
 
@@ -109,7 +115,7 @@ export default function DashboardPage() {
             Welcome back{profile?.business_name ? `, ${profile.business_name}` : ""}
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Your daily business helper for {profile?.industry || "your business"}
+            Your daily business assistant for {profile?.industry || "your business"}
           </p>
         </div>
 
@@ -129,8 +135,8 @@ export default function DashboardPage() {
                   Get started by uploading your files
                 </h3>
                 <p className="text-sm text-text-secondary mb-4 leading-relaxed">
-                  Upload your business files - like schedules, invoices, employee handbooks, or recipes.
-                  The more you upload, the more helpful this gets.
+                  Upload your business files manually - PDFs, spreadsheets, docs, images.
+                  All files go into your shared Business Knowledge Hub. The more you upload, the more helpful your agents become.
                 </p>
                 <Link
                   href="/dashboard/uploads"
@@ -180,27 +186,39 @@ export default function DashboardPage() {
         {/* Agents Grid */}
         <div>
           <h2 className="text-base font-semibold text-text-primary mb-4">What do you need help with?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {agents.map((agent, index) => (
               <motion.div
                 key={agent.name}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -4 }}
               >
                 <Link
                   href={agent.href}
-                  className={`block p-5 rounded-2xl border transition shadow-soft hover:shadow-soft-md ${
+                  className={`block p-6 rounded-2xl border-2 transition-all shadow-soft hover:shadow-soft-lg ${
                     colorMap[agent.color]
                   }`}
                 >
-                  <div className={`inline-flex p-3 rounded-xl mb-3 bg-white/60`}>
+                  <div className={`inline-flex p-3 rounded-xl mb-4 bg-white/80`}>
                     {agent.icon}
                   </div>
-                  <h3 className="text-base font-semibold text-text-primary mb-1.5">
+                  <h3 className="text-base font-semibold text-text-primary mb-2">
                     {agent.name}
                   </h3>
-                  <p className="text-sm text-text-secondary">{agent.description}</p>
+                  <p className="text-sm text-text-secondary mb-4 leading-relaxed">{agent.description}</p>
+                  
+                  {/* Actionable capabilities */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide">Can do for you:</p>
+                    {agent.capabilities.slice(0, 3).map((capability, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <div className={`w-1 h-1 rounded-full mt-1.5 ${agent.color === 'indigo' ? 'bg-indigo-500' : agent.color === 'sky' ? 'bg-sky-500' : agent.color === 'lavender' ? 'bg-lavender-500' : agent.color === 'sage' ? 'bg-sage-500' : agent.color === 'honey' ? 'bg-honey-500' : 'bg-clay-500'}`} />
+                        <p className="text-xs text-text-secondary">{capability}</p>
+                      </div>
+                    ))}
+                  </div>
                 </Link>
               </motion.div>
             ))}
@@ -221,10 +239,11 @@ export default function DashboardPage() {
 
           <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-text-secondary">Tool Usage</h3>
+              <h3 className="text-sm font-medium text-text-secondary">Team Members</h3>
               <Activity className="w-5 h-5 text-text-tertiary" />
             </div>
-            <p className="text-2xl font-semibold text-text-primary">Unlimited</p>
+            <p className="text-2xl font-semibold text-text-primary">Up to 5</p>
+            <p className="text-xs text-text-tertiary mt-1">Shared workspace access</p>
           </div>
 
           <div className="bg-surface rounded-2xl border border-border p-6 shadow-soft">
@@ -233,7 +252,7 @@ export default function DashboardPage() {
               <div className="w-2 h-2 rounded-full bg-success"></div>
             </div>
             <p className="text-2xl font-semibold text-text-primary">Active</p>
-            <p className="text-xs text-text-tertiary mt-1">$50/month unlimited</p>
+            <p className="text-xs text-text-tertiary mt-1">$50/month</p>
           </div>
         </div>
       </div>
