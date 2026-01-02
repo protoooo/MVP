@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import WorkspaceLayout from "@/components/notion/WorkspaceLayout";
 import PageEditor from "@/components/notion/PageEditor";
 import TemplateGallery from "@/components/notion/TemplateGallery";
+import Dashboard from "@/components/Dashboard";
 import { createClient } from "@/lib/supabase/client";
 import { getOrCreateWorkspace, createPage, getPageTree, createBlock } from "@/lib/notion/page-utils";
 import type { Template } from "@/lib/notion/types";
@@ -13,7 +14,9 @@ function WorkspaceContent() {
   const [currentPageId, setCurrentPageId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [userName, setUserName] = useState("there");
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -38,6 +41,17 @@ function WorkspaceContent() {
         return;
       }
 
+      // Get user profile for name
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("business_name")
+        .eq("id", user.id)
+        .single();
+      
+      if (profile?.business_name) {
+        setUserName(profile.business_name);
+      }
+
       // Get or create workspace
       const workspace = await getOrCreateWorkspace(user.id);
       setWorkspaceId(workspace.id);
@@ -46,16 +60,16 @@ function WorkspaceContent() {
       const pageId = searchParams.get("page");
       if (pageId) {
         setCurrentPageId(pageId);
+        setShowDashboard(false);
       } else {
-        // Get first page or create one
+        // Get first page or show dashboard
         const pageTree = await getPageTree(workspace.id);
         if (pageTree.length === 0) {
-          // Show templates for first-time users
-          setShowTemplates(true);
+          // Show dashboard for first-time users
+          setShowDashboard(true);
         } else {
-          // Use first page
-          setCurrentPageId(pageTree[0].id);
-          router.push(`/workspace?page=${pageTree[0].id}`);
+          // Show dashboard instead of first page
+          setShowDashboard(true);
         }
       }
     } catch (error) {
@@ -67,7 +81,41 @@ function WorkspaceContent() {
 
   const handlePageSelect = (pageId: string) => {
     setCurrentPageId(pageId);
+    setShowDashboard(false);
     router.push(`/workspace?page=${pageId}`);
+  };
+
+  const createPageFromTemplate = async (templateType: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !workspaceId) return;
+
+    const templateNames: { [key: string]: { title: string, blockType: string } } = {
+      schedule: { title: "New Schedule", blockType: "schedule_generator" },
+      email: { title: "Draft Email", blockType: "email_drafter" },
+      invoice: { title: "New Invoice", blockType: "invoice_builder" },
+      report: { title: "New Report", blockType: "report_generator" },
+    };
+
+    const template = templateNames[templateType];
+    if (!template) return;
+
+    const newPage = await createPage(
+      workspaceId,
+      user.id,
+      template.title,
+      undefined
+    );
+
+    await createBlock(
+      newPage.id,
+      template.blockType as any,
+      {},
+      undefined
+    );
+
+    setCurrentPageId(newPage.id);
+    setShowDashboard(false);
+    router.push(`/workspace?page=${newPage.id}`);
   };
 
   const handleTemplateSelect = async (template: Template) => {
@@ -138,7 +186,16 @@ function WorkspaceContent() {
       onPageSelect={handlePageSelect}
       onShowTemplates={() => setShowTemplates(true)}
     >
-      {currentPageId ? (
+      {showDashboard ? (
+        <Dashboard
+          userName={userName}
+          onCreateSchedule={() => createPageFromTemplate('schedule')}
+          onDraftEmail={() => createPageFromTemplate('email')}
+          onCreateInvoice={() => createPageFromTemplate('invoice')}
+          onGenerateReport={() => createPageFromTemplate('report')}
+          onBrowseAutomations={() => setShowTemplates(true)}
+        />
+      ) : currentPageId ? (
         <PageEditor pageId={currentPageId} />
       ) : (
         <div className="flex items-center justify-center h-full">
