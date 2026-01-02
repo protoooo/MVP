@@ -12,7 +12,8 @@ dotenv.config();
 const app = express();
 
 // FIXED: Use PORT for Railway, fall back to BACKEND_PORT for local dev
-const PORT = process.env.PORT || process.env.BACKEND_PORT || 3001;
+// Parse as integer since process.env values are strings
+const PORT = parseInt(process.env.PORT || process.env.BACKEND_PORT || '3001', 10);
 
 // Middleware
 app.use(cors());
