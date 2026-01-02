@@ -1,7 +1,9 @@
 import Tesseract from 'tesseract.js';
 import fs from 'fs';
-import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+
+// Fix pdf-parse import - use require for CommonJS module
+const pdfParse = require('pdf-parse');
 
 export const ocrService = {
   // Extract text from image using Tesseract OCR
@@ -25,8 +27,8 @@ export const ocrService = {
   async extractTextFromPDF(pdfPath: string): Promise<string> {
     try {
       const dataBuffer = fs.readFileSync(pdfPath);
-      const data: any = await (pdfParse as any)(dataBuffer);
-      return data.text;
+      const data = await pdfParse(dataBuffer);
+      return data.text || '';
     } catch (error) {
       console.error('Error extracting text from PDF:', error);
       return '';
