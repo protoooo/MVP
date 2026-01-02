@@ -12,7 +12,12 @@ dotenv.config();
 const app = express();
 
 // FIXED: Parse PORT as integer and use Railway's PORT variable first
+// DEBUG: Log what Railway provides
+console.log('DEBUG - process.env.PORT:', process.env.PORT);
+console.log('DEBUG - process.env.BACKEND_PORT:', process.env.BACKEND_PORT);
+
 const PORT = parseInt(process.env.PORT || process.env.BACKEND_PORT || '3001', 10);
+console.log('DEBUG - Final PORT being used:', PORT);
 
 // Middleware
 app.use(cors());
