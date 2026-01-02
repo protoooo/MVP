@@ -55,7 +55,9 @@ pool.on('error', (err) => {
 });
 
 pool.on('connect', () => {
-  console.log('New database client connected to pool');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('New database client connected to pool');
+  }
 });
 
 export const query = (text: string, params?: any[]) => pool.query(text, params);
@@ -275,10 +277,6 @@ export async function initializeDatabase(): Promise<void> {
     // Provide helpful error messages
     if (error.message.includes('pgvector')) {
       throw error; // Already has helpful message
-    } else if (error.code === '42P07') {
-      // Duplicate table - this is actually OK, tables already exist
-      console.log('Tables already exist, continuing...');
-      return;
     }
     
     throw new Error(

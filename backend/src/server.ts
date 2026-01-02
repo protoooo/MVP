@@ -55,10 +55,11 @@ function setupGracefulShutdown(server: any) {
       });
       
       // Force shutdown after timeout
+      const shutdownTimeout = parseInt(process.env.SHUTDOWN_TIMEOUT || '10000', 10);
       setTimeout(() => {
         console.error('Forced shutdown after timeout');
         process.exit(1);
-      }, 10000);
+      }, shutdownTimeout);
     });
   });
 }
