@@ -1,23 +1,33 @@
-# Business Workspace - Production-Ready AI Business Assistant
+# Proto - Your Adaptive AI Business Assistant
 
-A production-ready, agent-based business workspace that automates daily tasks for small business owners. Upload your documents and let 6 specialized AI agents handle finances, HR, customer support, inventory, contracts, and daily operations.
+**"Grow with your business to grow your business"**
 
-**Not a generic AI chat app.** This is a daily business assistant with agents that **actually do work** - draft emails, analyze finances, screen resumes, manage inventory, and more.
+Proto is an adaptive AI business assistant that replaces 6 separate agents with ONE intelligent agent that morphs its capabilities based on your needs. Proto remembers everything about your business and learns as you work together.
 
-## 🚀 What Makes This Production-Ready
+**Not a generic AI chat app.** Proto is your daily business partner that **actually does work** - drafts emails, analyzes finances, creates schedules, reviews contracts, and coordinates your entire operation.
+
+## 🚀 What Makes Proto Special
+
+### Adaptive Intelligence
+- ✅ Single adaptive agent replaces 6 specialized agents
+- ✅ Morphs capabilities based on your needs (finance, HR, ops, customer service)
+- ✅ Remembers everything about your business across all conversations
+- ✅ Learns your preferences and processes over time
+- ✅ Character-by-character animated onboarding experience
+
+### Memory System
+- ✅ Unified memory storage (business context, preferences, relationships, processes, goals)
+- ✅ Intelligent memory retrieval and context awareness
+- ✅ Memory viewer to see what Proto remembers
+- ✅ Importance-based memory prioritization
+- ✅ Onboarding questionnaire stores initial business context
 
 ### Document Processing Pipeline
 - ✅ Automatic text extraction from PDFs, DOCX, CSV, TXT
 - ✅ Document chunking and embedding generation with Cohere
 - ✅ Semantic search across all uploaded documents
-- ✅ Agents automatically reference relevant documents in responses
+- ✅ Proto automatically references relevant documents in responses
 - ✅ Processing status indicators in UI
-
-### Agent Intelligence
-- ✅ Context-aware responses using uploaded documents
-- ✅ Citation of specific documents in answers
-- ✅ Missing document detection and suggestions
-- ✅ Document insights banner with smart suggestions
 
 ### User Experience
 - ✅ Toast notification system for real-time feedback
@@ -65,50 +75,42 @@ All uploads go into a shared hub accessible by your team. Embeddings enable sema
 - All files are shared between team members
 - Never implies access to external systems, emails, POS, banks, or databases
 
-## 6 Specialized Business Agents
+## What Proto Can Do
 
-### 1. Today's Priorities
-- Turn vague goals into concrete, actionable tasks
-- Highlight tradeoffs and sequencing (what first, what can wait)
-- Use only current context and uploaded files
-- Example actions: draft daily task lists, highlight urgent items, suggest task delegation
-- **Does NOT** give motivational advice or long-term planning
+Proto is a single adaptive agent that handles everything your business needs:
 
-### 2. Customer Service
-- Resolve customer questions, complaints, or disputes using uploaded materials
-- Draft professional, calm, reusable email responses or messages
-- Suggest escalation steps when needed
-- Example actions: generate email drafts for refunds, complaints, or FAQs based on uploaded policies
-- **Does NOT** invent policies or promises
+### ✓ Draft Professional Emails and Customer Responses
+- Handle customer questions, complaints, and disputes
+- Generate professional, calm, reusable responses
+- Draft follow-ups, refunds, and FAQ responses
 
-### 3. HR
-- Work with onboarding docs, training materials, schedules, and handbooks
-- Answer "How do we handle X?" using uploaded HR content
-- Rewrite, summarize, or organize internal processes
-- Example actions: draft schedules, onboarding emails, screen resumes for inconsistencies or AI usage, prepare training checklists
-- **Does NOT** give legal or compliance advice—only explains uploaded content
+### ✓ Create Staff Schedules and Manage Availability
+- Generate optimized schedules based on constraints
+- Detect conflicts and suggest shift swaps
+- Plan coverage when staff call out
 
-### 4. Inventory
-- Work with uploaded stock lists, order sheets, vendor invoices, or counts
-- Identify shortages, overstock, inconsistencies, or risks
-- Help reason about what to order or review
-- Example actions: suggest reorder quantities, flag discrepancies, analyze usage trends, provide conservative forecasts
-- **Does NOT** forecast unless explicitly requested and labeled as an estimate
+### ✓ Analyze Contracts, Invoices, and Documents for Issues
+- Review contracts and extract key terms, dates, obligations
+- Identify red flags and anomalies in financial documents
+- Compare multiple documents for discrepancies
+- Explain complex documents in plain English
 
-### 5. Finances
-- Work with uploaded expenses, invoices, revenue reports, and spreadsheets
-- Summarize financial activity clearly and concisely
-- Identify patterns, anomalies, or areas to review
-- Example actions: generate summaries for accountants or partners, flag unusual trends, prepare conservative forecasts, highlight actionable opportunities
-- **Does NOT** assume missing data or fabricate numbers
+### ✓ Help When You're Short-Staffed
+- Suggest smart solutions for coverage gaps
+- Recommend task delegation strategies
+- Provide actionable workarounds
 
-### 6. Contracts, Agreements & Policies
-- Work with uploaded contracts, agreements, policies, and formal documents
-- Summarize key terms, dates, obligations, and responsibilities
-- Compare documents when asked
-- Explain documents in plain English
-- Example actions: extract renewal dates, obligations, clauses for follow-up, compare contracts for discrepancies
-- **Does NOT** give legal conclusions or advice
+### ✓ Coordinate Between You and Your Team
+- Facilitate decision-making
+- Track tasks and action items
+- Enable collaborative workspaces with whiteboards
+
+### ✓ Work Autonomously on Complex Tasks
+- Show thinking process with progress updates
+- Execute multi-step tasks independently
+- Keep you informed with real-time status
+
+**Core Principle:** Proto remembers everything. Every detail about your business, your preferences, your team, your challenges. The more you work together, the better Proto understands your needs.
 
 ## Draft + Open App Pattern
 
