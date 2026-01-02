@@ -11,8 +11,7 @@ dotenv.config();
 
 const app = express();
 
-// FIXED: Use PORT for Railway, fall back to BACKEND_PORT for local dev
-// Parse as integer since process.env values are strings
+// FIXED: Parse PORT as integer and use Railway's PORT variable first
 const PORT = parseInt(process.env.PORT || process.env.BACKEND_PORT || '3001', 10);
 
 // Middleware
@@ -84,7 +83,7 @@ async function startServer() {
     console.log('\n=== Database Initialization ===');
     await initializeDatabase();
     
-    // Start HTTP server
+    // Start HTTP server - FIXED: Bind to 0.0.0.0 for Railway
     console.log('\n=== Starting HTTP Server ===');
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`✓ BizMemory API server running on port ${PORT}`);
