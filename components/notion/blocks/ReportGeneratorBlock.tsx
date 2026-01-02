@@ -186,6 +186,8 @@ export default function ReportGeneratorBlock({
       renderConfig={renderConfig}
       renderOutput={renderOutput}
       estimatedTime="45 seconds"
+      timeSaved="1h 30m"
+      hourlyRate={50}
     />
   );
 }

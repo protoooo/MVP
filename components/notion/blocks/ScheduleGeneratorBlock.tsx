@@ -163,6 +163,8 @@ export default function ScheduleGeneratorBlock({
       renderConfig={renderConfig}
       renderOutput={renderOutput}
       estimatedTime="30 seconds"
+      timeSaved="3h 45m"
+      hourlyRate={50}
     />
   );
 }

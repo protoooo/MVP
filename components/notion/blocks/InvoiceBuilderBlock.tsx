@@ -200,6 +200,8 @@ export default function InvoiceBuilderBlock({
       renderConfig={renderConfig}
       renderOutput={renderOutput}
       estimatedTime="15 seconds"
+      timeSaved="20 minutes"
+      hourlyRate={50}
     />
   );
 }
