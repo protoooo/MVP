@@ -1,6 +1,9 @@
 import { cohere } from "./cohere";
 import { getAgentTools, toolsToCohereFunctions, executeTool, ToolResult } from "./agent-tools";
 
+// Get chat model from environment variable
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "aya-expanse-32b";
+
 export interface AgentTask {
   id: string;
   description: string;
@@ -68,7 +71,7 @@ export class AutonomousAgent {
       try {
         // Call Cohere with tools
         const response = await cohere.chat({
-          model: "command-r-plus",
+          model: CHAT_MODEL,
           message: userMessage,
           chatHistory: this.conversationHistory
             .filter(m => m.role !== "tool")
@@ -117,7 +120,7 @@ export class AutonomousAgent {
 
           // Continue the conversation with tool results
           const followUpResponse = await cohere.chat({
-            model: "command-r-plus",
+            model: CHAT_MODEL,
             message: "",
             chatHistory: this.conversationHistory.map(m => ({
               role: m.role === "user" ? "USER" : m.role === "tool" ? "SYSTEM" : "CHATBOT",

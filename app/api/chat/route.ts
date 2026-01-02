@@ -3,6 +3,9 @@ import { AutonomousAgent } from "@/lib/autonomous-agent";
 import { createClient } from "@/lib/supabase/server";
 import { getRelevantContext } from "@/lib/document-processing";
 
+// Get chat model from environment variable
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "aya-expanse-32b";
+
 export async function POST(request: NextRequest) {
   try {
     const { message, chatHistory, systemPrompt, agentType, useAutonomous } = await request.json();
@@ -88,15 +91,15 @@ NOTE: No relevant documents were found for this query. If specific documents wou
       message: h.message,
     })) || [];
 
-    const cohereResponse = await cohere.chat({
-      model: "command-r-plus",
+    const response = await cohere.chat({
+      model: CHAT_MODEL,
       message,
       chatHistory: formattedHistory,
       preamble: enhancedPrompt,
     });
 
     return NextResponse.json({ 
-      response: cohereResponse.text,
+      response: response.text,
       documentsUsed,
     });
   } catch (error) {

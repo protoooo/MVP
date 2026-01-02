@@ -1,6 +1,10 @@
 // Enhanced Agent Tool System with Real Output Generation
 import { cohere } from "@/lib/cohere";
 
+// Get model names from environment variables
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "aya-expanse-32b";
+const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v4.0";
+
 export interface TaskOutput {
   type: 'file' | 'data' | 'action' | 'text';
   title: string;
@@ -101,7 +105,7 @@ export const hrTools = {
     const prompt = `Draft a professional ${params.tone} email for ${params.recipientType} regarding ${params.purpose}. Context: ${params.context}`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.7,
       maxTokens: 500,
@@ -126,7 +130,7 @@ export const hrTools = {
     const prompt = `Analyze this resume for legitimacy, AI-generated content detection, and quality. Resume: ${params.resumeText.slice(0, 2000)}`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.3,
       maxTokens: 800,
@@ -153,12 +157,12 @@ export const hrTools = {
     // Use Cohere embeddings for semantic matching
     const [resumeEmbedding, jobEmbedding] = await Promise.all([
       cohere.embed({
-        model: "embed-english-v3.0",
+        model: EMBED_MODEL,
         texts: [params.resumeText],
         inputType: "search_document",
       }),
       cohere.embed({
-        model: "embed-english-v3.0",
+        model: EMBED_MODEL,
         texts: [params.jobDescription],
         inputType: "search_query",
       }),
@@ -187,7 +191,7 @@ export const hrTools = {
     const prompt = `Create a comprehensive ${params.policyType} policy for a ${params.industry} business. Company context: ${params.companyContext}. Include all necessary sections, legal considerations, and best practices.`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.7,
       maxTokens: 2000,
@@ -255,7 +259,7 @@ export const inventoryTools = {
     const prompt = `Find potential suppliers for ${params.productType}${params.location ? ` in ${params.location}` : ''}. Provide company names, contact info, and estimated pricing.`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.7,
       maxTokens: 1000,
@@ -291,7 +295,7 @@ export const documentTools = {
     const prompt = `Extract all vendor/supplier information from this document including names, contact details, pricing, and terms: ${params.documentText.slice(0, 2000)}`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.3,
       maxTokens: 1000,
@@ -311,7 +315,7 @@ export const documentTools = {
     const prompt = `Provide a comprehensive summary of this contract including key terms, obligations, deadlines, and risks: ${params.documentText.slice(0, 3000)}`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.5,
       maxTokens: 1500,
@@ -365,7 +369,7 @@ export const supportTools = {
     const prompt = `Create a professional customer support response template for ${params.issueType}. Context: ${params.customerContext}. Include empathy, solution steps, and follow-up.`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.7,
       maxTokens: 600,
@@ -398,7 +402,7 @@ export const supportTools = {
     const prompt = `Create a comprehensive knowledge base article about ${params.topic} that addresses these common questions: ${params.commonQuestions.join(', ')}`;
     
     const response = await cohere.generate({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       prompt,
       temperature: 0.7,
       maxTokens: 1500,
@@ -421,7 +425,7 @@ export async function webSearch(params: {
   const prompt = `Based on current knowledge, provide research results for: ${params.query}. Include relevant companies, products, pricing, and sources.`;
   
   const response = await cohere.generate({
-    model: "command-r-plus",
+    model: CHAT_MODEL,
     prompt,
     temperature: 0.7,
     maxTokens: 1500,

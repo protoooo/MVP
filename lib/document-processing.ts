@@ -7,6 +7,9 @@ const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY || "",
 });
 
+// Get embed model from environment variable
+const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v4.0";
+
 function getSupabaseClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,7 +99,7 @@ export async function generateEmbeddings(
   try {
     const response = await cohere.embed({
       texts: texts,
-      model: "embed-english-v3.0",
+      model: EMBED_MODEL,
       inputType: inputType,
       embeddingTypes: ["float"],
     });
