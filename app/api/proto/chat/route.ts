@@ -122,8 +122,18 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Proto chat error:", error);
+    
+    // Return more detailed error information for debugging
+    const errorMessage = error instanceof Error ? error.message : "Failed to process message";
+    const errorDetails = error instanceof Error && error.stack ? error.stack : String(error);
+    
+    console.error("Full error details:", errorDetails);
+    
     return NextResponse.json(
-      { error: "Failed to process message" },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined 
+      },
       { status: 500 }
     );
   }

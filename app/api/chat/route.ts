@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getRelevantContext } from "@/lib/document-processing";
 
 // Get chat model from environment variable
-const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "aya-expanse-32b";
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "c4ai-aya-expanse-32b";
 
 export async function POST(request: NextRequest) {
   try {

@@ -2,8 +2,8 @@
 import { cohere } from "@/lib/cohere";
 
 // Get model names from environment variables
-const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "aya-expanse-32b";
-const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v4.0";
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "c4ai-aya-expanse-32b";
+const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v3.0";
 
 export interface TaskOutput {
   type: 'file' | 'data' | 'action' | 'text';

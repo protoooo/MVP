@@ -2,7 +2,7 @@ import { cohere } from "./cohere";
 import { getAgentTools, toolsToCohereFunctions, executeTool, ToolResult } from "./agent-tools";
 
 // Get chat model from environment variable
-const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "aya-expanse-32b";
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "c4ai-aya-expanse-32b";
 
 export interface AgentTask {
   id: string;
