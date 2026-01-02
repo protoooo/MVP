@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "subscription",
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?success=true`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/workspace?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?canceled=true`,
       metadata: {
         user_id: user.id,

@@ -51,7 +51,7 @@ export default function OnboardingPage() {
       .single();
 
     if (existingProfile?.setup_completed) {
-      router.push("/dashboard");
+      router.push("/workspace");
     }
   };
 
