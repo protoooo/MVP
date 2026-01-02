@@ -1,148 +1,108 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { Mail, Lock } from "lucide-react";
-import Link from "next/link";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { authAPI } from '@/app/services/api';
+import { Database } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createClient();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    setError("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      // Simple redirect to dashboard
-      router.push("/dashboard");
-      router.refresh();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to sign in");
+      await authAPI.login(email, password);
+      router.push('/home');
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
+        {/* Logo and Title */}
         <div className="text-center mb-8">
-          <h2 className="text-xl font-medium text-text-primary mb-2">
-            Welcome back
-          </h2>
-          <p className="text-sm text-text-secondary">
-            Business automation for small teams
-          </p>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-brand/10 mb-4">
+            <Database className="w-8 h-8 text-brand" />
+          </div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">BizMemory</h1>
+          <p className="text-text-secondary">Smart file storage for your business</p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-surface rounded-2xl shadow-soft-lg border border-border p-8">
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Email Field */}
+        {/* Login Form */}
+        <div className="card p-8">
+          <h2 className="text-xl font-semibold text-text-primary mb-6">Sign in to your account</h2>
+          
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
-                Email address
+                Email
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary 
-                    text-text-primary placeholder:text-text-placeholder
-                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
-                    transition duration-200"
-                  placeholder="you@example.com"
-                />
-              </div>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
+                placeholder="you@example.com"
+              />
             </div>
 
-            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
                 Password
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background-secondary
-                    text-text-primary placeholder:text-text-placeholder
-                    focus:outline-none focus:ring-2 focus:ring-sage-400 focus:border-sage-400
-                    transition duration-200"
-                  placeholder="Enter your password"
-                />
-              </div>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
+                placeholder="••••••••"
+              />
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-xl bg-error-light border border-error/20 p-4">
-                <p className="text-sm text-error-dark">{error}</p>
-              </div>
-            )}
-
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-5 rounded-full text-sm font-medium text-white 
-                bg-text-primary hover:bg-text-secondary 
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-secondary 
-                disabled:opacity-50 disabled:cursor-not-allowed 
-                transition duration-200 shadow-soft"
+              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
+          </form>
 
-            {/* Forgot Password Link */}
-            <div className="text-center">
-              <Link 
-                href="/reset-password" 
-                className="text-sm text-text-secondary hover:text-text-primary transition"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Sign Up Link */}
-            <div className="text-center text-sm pt-2">
-              <span className="text-text-secondary">Don't have an account? </span>
-              <Link 
-                href="/signup" 
-                className="font-medium text-text-primary hover:text-text-secondary transition underline"
-              >
+          <div className="mt-6 text-center">
+            <p className="text-sm text-text-secondary">
+              Don't have an account?{' '}
+              <Link href="/signup" className="text-brand hover:text-brand-400 font-medium">
                 Sign up
               </Link>
-            </div>
-          </form>
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-text-tertiary mt-8">
-          Built for small and medium businesses
+        <p className="mt-8 text-center text-xs text-text-tertiary">
+          Securely store and search your business files
         </p>
       </div>
     </div>

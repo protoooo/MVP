@@ -7,6 +7,10 @@
     @apply border-border;
   }
   
+  html {
+    color-scheme: dark;
+  }
+  
   body {
     @apply bg-background text-text-primary antialiased;
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -14,21 +18,23 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Input styles */
+  /* Input styles - Dark theme */
   input[type="text"],
   input[type="email"],
   input[type="password"],
   input[type="number"],
+  input[type="search"],
   textarea,
   select {
-    @apply bg-background border-border text-text-primary;
-    @apply focus:border-text-primary focus:ring-0 focus:ring-offset-0;
+    @apply bg-surface border-border text-text-primary;
+    @apply focus:border-brand focus:ring-1 focus:ring-brand focus:ring-offset-0;
     font-size: 14px;
   }
   
   input[type="text"]::placeholder,
   input[type="email"]::placeholder,
   input[type="password"]::placeholder,
+  input[type="search"]::placeholder,
   textarea::placeholder {
     @apply text-text-placeholder;
   }
@@ -39,7 +45,7 @@
   }
 }
 
-/* Custom scrollbar - Notion style */
+/* Custom scrollbar - Supabase dark style */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -50,36 +56,43 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-border-medium rounded-full;
+  @apply bg-gray-700 rounded-full;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-border-dark;
+  @apply bg-gray-600;
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(55, 53, 47, 0.12) transparent;
+  scrollbar-color: #3E4A56 transparent;
 }
 
 @layer components {
-  /* Button styles */
+  /* Button styles - Supabase dark theme */
   .btn-primary {
     @apply px-4 py-2 rounded-md text-sm font-medium text-white;
-    @apply bg-text-primary hover:bg-text-secondary;
-    @apply focus:outline-none focus:ring-1 focus:ring-text-primary focus:ring-offset-1;
+    @apply bg-brand hover:bg-brand-600;
+    @apply focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-background;
     @apply transition-all duration-150;
   }
 
   .btn-secondary {
     @apply px-4 py-2 rounded-md text-sm font-medium;
-    @apply bg-background-secondary text-text-primary;
-    @apply hover:bg-background-tertiary;
+    @apply bg-surface text-text-primary;
+    @apply hover:bg-surface-elevated;
     @apply border border-border;
-    @apply focus:outline-none focus:ring-1 focus:ring-text-primary focus:ring-offset-1;
+    @apply focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-background;
+    @apply transition-all duration-150;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 rounded-md text-sm font-medium;
+    @apply text-text-primary hover:bg-background-hover;
+    @apply focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-background;
     @apply transition-all duration-150;
   }
 
@@ -89,22 +102,27 @@
   }
 
   .card-hover {
-    @apply card hover:shadow-notion-sm transition-all duration-150;
+    @apply card hover:shadow-dark transition-all duration-150 hover:border-gray-600;
   }
 
   /* Badge styles */
   .badge {
     @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    @apply bg-surface-elevated text-text-secondary border border-border;
+  }
+
+  .badge-brand {
+    @apply badge bg-brand/10 text-brand border-brand/20;
   }
 }
 
 /* Selection color */
 ::selection {
-  @apply bg-text-primary/10 text-text-primary;
+  @apply bg-brand/20 text-text-primary;
 }
 
 ::-moz-selection {
-  @apply bg-text-primary/10 text-text-primary;
+  @apply bg-brand/20 text-text-primary;
 }
 
 /* Smooth scroll */
@@ -116,21 +134,10 @@
 
 /* Focus visible */
 .focus-ring {
-  @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-text-primary focus-visible:ring-offset-1;
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
-/* Print styles */
-@media print {
-  body {
-    @apply bg-white text-black;
-  }
-  
-  .no-print {
-    display: none !important;
-  }
-}
-
-/* Notion-style hover animations */
+/* Supabase-style hover animations */
 @keyframes subtleFade {
   from {
     opacity: 0;
@@ -148,7 +155,7 @@
 
 /* Better link styling */
 a {
-  @apply transition-colors duration-150;
+  @apply transition-colors duration-150 text-brand hover:text-brand-400;
 }
 
 /* Form focus improvements */
@@ -156,11 +163,10 @@ input:focus,
 textarea:focus,
 select:focus {
   @apply outline-none;
-  box-shadow: 0 0 0 1px rgba(55, 53, 47, 0.16);
 }
 
-/* Notion-style separators */
-.notion-separator {
+/* Supabase-style separators */
+.supabase-separator {
   @apply border-t border-border my-4;
 }
 
@@ -180,19 +186,35 @@ ul, ol {
 
 /* Better spacing */
 h1, h2, h3, h4, h5, h6 {
-  @apply tracking-tight;
+  @apply tracking-tight text-text-primary;
 }
 
-/* Code blocks */
+/* Code blocks - dark theme */
 code {
-  @apply text-xs font-mono bg-background-secondary px-1 py-0.5 rounded;
-  color: inherit;
+  @apply text-xs font-mono bg-surface-elevated px-1.5 py-0.5 rounded;
+  color: #3ECF8E;
 }
 
 pre {
-  @apply bg-background-secondary p-3 rounded-lg overflow-x-auto text-xs;
+  @apply bg-surface-elevated p-3 rounded-lg overflow-x-auto text-xs border border-border;
 }
 
 pre code {
   @apply bg-transparent p-0;
+}
+
+/* File upload drag area */
+.drag-active {
+  @apply border-brand bg-brand/5;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
 }
