@@ -141,6 +141,19 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'users' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE users ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
     // Add foreign key constraint for users.organization_id if it doesn't exist
     await client.query(`
       DO $$ 
@@ -169,6 +182,32 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'workspaces' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE workspaces ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add created_by column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'workspaces' AND column_name = 'created_by'
+        ) THEN
+          ALTER TABLE workspaces ADD COLUMN created_by INTEGER;
+        END IF;
+      END $$;
     `);
 
     // Add foreign key constraints for workspaces if they don't exist
@@ -210,6 +249,32 @@ export async function initializeDatabase(): Promise<void> {
         permission VARCHAR(50) DEFAULT 'view' CHECK (permission IN ('owner', 'edit', 'view')),
         added_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add workspace_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'workspace_members' AND column_name = 'workspace_id'
+        ) THEN
+          ALTER TABLE workspace_members ADD COLUMN workspace_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add user_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'workspace_members' AND column_name = 'user_id'
+        ) THEN
+          ALTER TABLE workspace_members ADD COLUMN user_id INTEGER;
+        END IF;
+      END $$;
     `);
 
     // Add unique constraint if it doesn't exist
@@ -278,6 +343,45 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add user_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'files' AND column_name = 'user_id'
+        ) THEN
+          ALTER TABLE files ADD COLUMN user_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'files' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE files ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add workspace_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'files' AND column_name = 'workspace_id'
+        ) THEN
+          ALTER TABLE files ADD COLUMN workspace_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
     // Add foreign key constraints for files if they don't exist
     await client.query(`
       DO $$ 
@@ -332,6 +436,45 @@ export async function initializeDatabase(): Promise<void> {
         granted_by INTEGER,
         granted_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add file_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'file_permissions' AND column_name = 'file_id'
+        ) THEN
+          ALTER TABLE file_permissions ADD COLUMN file_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add user_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'file_permissions' AND column_name = 'user_id'
+        ) THEN
+          ALTER TABLE file_permissions ADD COLUMN user_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add granted_by column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'file_permissions' AND column_name = 'granted_by'
+        ) THEN
+          ALTER TABLE file_permissions ADD COLUMN granted_by INTEGER;
+        END IF;
+      END $$;
     `);
 
     // Add constraints for file_permissions if they don't exist
@@ -407,6 +550,19 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add file_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'file_content' AND column_name = 'file_id'
+        ) THEN
+          ALTER TABLE file_content ADD COLUMN file_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
     await client.query(`
       DO $$ 
       BEGIN
@@ -434,6 +590,19 @@ export async function initializeDatabase(): Promise<void> {
         confidence_score FLOAT,
         created_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add file_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'file_metadata' AND column_name = 'file_id'
+        ) THEN
+          ALTER TABLE file_metadata ADD COLUMN file_id INTEGER;
+        END IF;
+      END $$;
     `);
 
     await client.query(`
@@ -467,6 +636,32 @@ export async function initializeDatabase(): Promise<void> {
         metadata JSONB,
         created_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'audit_logs' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE audit_logs ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add user_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'audit_logs' AND column_name = 'user_id'
+        ) THEN
+          ALTER TABLE audit_logs ADD COLUMN user_id INTEGER;
+        END IF;
+      END $$;
     `);
 
     await client.query(`
@@ -512,6 +707,19 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'encryption_keys' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE encryption_keys ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
     await client.query(`
       DO $$ 
       BEGIN
@@ -547,6 +755,19 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add file_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'processing_queue' AND column_name = 'file_id'
+        ) THEN
+          ALTER TABLE processing_queue ADD COLUMN file_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
     await client.query(`
       DO $$ 
       BEGIN
@@ -577,6 +798,19 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'search_cache' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE search_cache ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
     await client.query(`
       DO $$ 
       BEGIN
@@ -605,6 +839,45 @@ export async function initializeDatabase(): Promise<void> {
         used_cache BOOLEAN DEFAULT false,
         searched_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add user_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'search_logs' AND column_name = 'user_id'
+        ) THEN
+          ALTER TABLE search_logs ADD COLUMN user_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'search_logs' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE search_logs ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add clicked_file_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'search_logs' AND column_name = 'clicked_file_id'
+        ) THEN
+          ALTER TABLE search_logs ADD COLUMN clicked_file_id INTEGER;
+        END IF;
+      END $$;
     `);
 
     await client.query(`
@@ -669,6 +942,32 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'api_keys' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE api_keys ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    // Add user_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'api_keys' AND column_name = 'user_id'
+        ) THEN
+          ALTER TABLE api_keys ADD COLUMN user_id INTEGER;
+        END IF;
+      END $$;
+    `);
+
     await client.query(`
       DO $$ 
       BEGIN
@@ -709,6 +1008,19 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add organization_id column if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'sso_configurations' AND column_name = 'organization_id'
+        ) THEN
+          ALTER TABLE sso_configurations ADD COLUMN organization_id INTEGER;
+        END IF;
+      END $$;
     `);
 
     await client.query(`
