@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import WorkspaceLayout from "@/components/notion/WorkspaceLayout";
 import PageEditor from "@/components/notion/PageEditor";
@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getOrCreateWorkspace, createPage, getPageTree, createBlock } from "@/lib/notion/page-utils";
 import type { Template } from "@/lib/notion/types";
 
-export default function WorkspacePage() {
+function WorkspaceContent() {
   const [currentPageId, setCurrentPageId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -149,5 +149,20 @@ export default function WorkspacePage() {
         </div>
       )}
     </WorkspaceLayout>
+  );
+}
+
+export default function WorkspacePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-text-secondary">Loading workspace...</p>
+        </div>
+      </div>
+    }>
+      <WorkspaceContent />
+    </Suspense>
   );
 }
