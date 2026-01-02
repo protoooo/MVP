@@ -27,8 +27,8 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      // Simple redirect to dashboard
-      router.push("/dashboard");
+      // Simple redirect to workspace
+      router.push("/workspace");
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sign in");

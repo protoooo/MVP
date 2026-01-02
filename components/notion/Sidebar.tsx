@@ -224,7 +224,7 @@ export default function Sidebar({
             </button>
             
             <Link
-              href="/dashboard/settings"
+              href="/settings"
               className="p-1 hover:bg-background-secondary rounded"
             >
               <Settings className="w-4 h-4 text-text-secondary" />
@@ -328,7 +328,7 @@ export default function Sidebar({
           </button>
         )}
         <Link
-          href="/dashboard/trash"
+          href="/trash"
           className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-text-secondary
             hover:bg-background-secondary transition"
         >
