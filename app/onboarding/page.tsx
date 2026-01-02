@@ -51,7 +51,6 @@ const quickWinTasks = [
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
-  const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
   const [businessSize, setBusinessSize] = useState("");
@@ -175,10 +174,7 @@ export default function OnboardingPage() {
                 return (
                   <button
                     key={task.value}
-                    onClick={() => {
-                      setSelectedTask(task.value);
-                      setStep(1);
-                    }}
+                    onClick={() => setStep(1)}
                     className="w-full p-5 rounded-xl border-2 border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition text-left group"
                   >
                     <div className="flex items-start gap-4">

@@ -369,12 +369,15 @@ export default function TemplateGallery({ onSelect, onClose }: TemplateGalleryPr
                 <p className="text-sm text-text-secondary line-clamp-2 mb-2">
                   {template.description}
                 </p>
-                {template.template_data.blocks.some(b => b.content?.text?.includes('Time saved')) && (
-                  <div className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
-                    <Clock className="w-3.5 h-3.5" />
-                    {template.template_data.blocks.find(b => b.content?.text?.includes('Time saved'))?.content?.text || ''}
-                  </div>
-                )}
+                {(() => {
+                  const timeSavedBlock = template.template_data.blocks.find(b => b.content?.text?.includes('Time saved'));
+                  return timeSavedBlock && (
+                    <div className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
+                      <Clock className="w-3.5 h-3.5" />
+                      {timeSavedBlock.content?.text || ''}
+                    </div>
+                  );
+                })()}
               </button>
             ))}
           </div>

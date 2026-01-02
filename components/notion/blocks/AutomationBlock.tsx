@@ -86,8 +86,8 @@ export default function AutomationBlock({
     const minMatch = timeStr.match(/(\d+)\s*m/);
     
     let hours = 0;
-    if (hourMatch) hours += parseInt(hourMatch[1]);
-    if (minMatch) hours += parseInt(minMatch[1]) / 60;
+    if (hourMatch) hours += parseInt(hourMatch[1], 10);
+    if (minMatch) hours += parseInt(minMatch[1], 10) / 60;
     
     return hours;
   };
