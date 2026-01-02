@@ -22,13 +22,11 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
   ];
 
   useEffect(() => {
-    // Load search history from localStorage
     const history = localStorage.getItem('search_history');
     if (history) {
       setSearchHistory(JSON.parse(history));
     }
 
-    // Keyboard shortcut: Cmd/Ctrl + K to focus search
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -42,13 +40,13 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      // Add to history
-      const newHistory = [query, ...searchHistory.filter(h => h !== query)].slice(0, 10);
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) {
+      const newHistory = [trimmedQuery, ...searchHistory.filter(h => h !== trimmedQuery)].slice(0, 10);
       setSearchHistory(newHistory);
       localStorage.setItem('search_history', JSON.stringify(newHistory));
       
-      onSearch(query);
+      onSearch(trimmedQuery);
       setShowHistory(false);
     }
   };
@@ -91,7 +89,7 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
               setIsFocused(false);
               setTimeout(() => setShowHistory(false), 200);
             }}
-            placeholder="Search files... (⌘K)"
+            placeholder="Search files... (Cmd+K)"
             className="w-full pl-12 pr-28 py-3.5 text-sm rounded-lg border border-border bg-surface text-text-primary
                        placeholder:text-text-placeholder
                        focus:border-brand focus:outline-none
@@ -108,7 +106,6 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
         </div>
       </form>
 
-      {/* Search History Dropdown */}
       {showHistory && searchHistory.length > 0 && (
         <div className="absolute top-full mt-2 w-full bg-surface border border-border rounded-lg shadow-2xl z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface-elevated">
