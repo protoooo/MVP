@@ -24,7 +24,7 @@ export default function Home() {
         .single();
 
       if (profile?.setup_completed) {
-        router.push("/dashboard");
+        router.push("/workspace");
       } else {
         router.push("/onboarding");
       }
@@ -49,11 +49,11 @@ export default function Home() {
         {/* Headline */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h2 className="text-4xl md:text-5xl font-semibold text-text-primary mb-6 leading-tight">
-            Business Automation for Small Teams
+            Your Team's Collaborative Workspace
           </h2>
           <p className="text-xl text-text-secondary leading-relaxed">
-            A lightweight, powerful platform designed specifically for small businesses. 
-            Get AI-powered agents that actually do work, not just chat.
+            A simplified Notion-like workspace for small business teams. 
+            Write, organize, and collaborate with AI assistance baked in.
           </p>
         </div>
 
