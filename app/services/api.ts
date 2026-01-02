@@ -202,3 +202,29 @@ export const searchAPI = {
     return response.json();
   },
 };
+
+// Reports API
+export const reportsAPI = {
+  async generateReport(
+    query: string,
+    documentIds: number[],
+    reportType: 'summary' | 'analysis' | 'comparison' | 'timeline' = 'summary'
+  ): Promise<any> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_URL}/api/reports/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ query, documentIds, reportType }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate report');
+    }
+
+    return response.json();
+  },
+};
