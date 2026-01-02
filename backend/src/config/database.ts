@@ -728,6 +728,34 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add or fix key_id column to ensure it's UUID type
+    await client.query(`
+      DO $$ 
+      BEGIN
+        -- Check if column exists
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'encryption_keys' AND column_name = 'key_id'
+        ) THEN
+          -- Check if it's the wrong type (not UUID)
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'encryption_keys' 
+              AND column_name = 'key_id' 
+              AND data_type != 'uuid'
+          ) THEN
+            -- Drop the column with wrong type (this will cascade)
+            ALTER TABLE encryption_keys DROP COLUMN key_id;
+            -- Add it back with correct UUID type
+            ALTER TABLE encryption_keys ADD COLUMN key_id UUID DEFAULT uuid_generate_v4();
+          END IF;
+        ELSE
+          -- Column doesn't exist, add it
+          ALTER TABLE encryption_keys ADD COLUMN key_id UUID DEFAULT uuid_generate_v4();
+        END IF;
+      END $$;
+    `);
+
     // Add organization_id column if it doesn't exist
     await client.query(`
       DO $$ 
