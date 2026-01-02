@@ -58,7 +58,7 @@ if (!isDevelopment) {
     
     // Start server after Next.js is ready
     startHTTPServer();
-  }).catch(err => {
+  }).catch((err: any) => {
     console.error('Failed to initialize Next.js:', err);
     // Fallback: serve without Next.js
     setupFallbackRoutes();
