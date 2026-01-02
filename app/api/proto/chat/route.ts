@@ -7,6 +7,9 @@ const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY!,
 });
 
+// Get chat model from environment variable
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "command-r-plus";
+
 // Proto system prompt with memory usage
 const PROTO_SYSTEM_PROMPT = `You are Proto, an adaptive AI business assistant that grows with small businesses.
 
@@ -102,7 +105,7 @@ export async function POST(request: Request) {
 
     // Call Cohere Chat API
     const response = await cohere.chat({
-      model: "command-r-plus",
+      model: CHAT_MODEL,
       message: message,
       chatHistory: chatHistory.map((msg: any) => ({
         role: msg.role,
@@ -119,8 +122,18 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Proto chat error:", error);
+    
+    // Return more detailed error information for debugging
+    const errorMessage = error instanceof Error ? error.message : "Failed to process message";
+    const errorDetails = error instanceof Error && error.stack ? error.stack : String(error);
+    
+    console.error("Full error details:", errorDetails);
+    
     return NextResponse.json(
-      { error: "Failed to process message" },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined 
+      },
       { status: 500 }
     );
   }

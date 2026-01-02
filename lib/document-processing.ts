@@ -8,7 +8,7 @@ const cohere = new CohereClient({
 });
 
 // Get embed model from environment variable
-const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v4.0";
+const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v3.0";
 
 function getSupabaseClient() {
   return createSupabaseClient(
