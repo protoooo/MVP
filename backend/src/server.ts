@@ -7,7 +7,6 @@ import authRoutes from './routes/auth';
 import filesRoutes from './routes/files';
 import searchRoutes from './routes/search';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
@@ -22,132 +21,58 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes FIRST - before any static file serving
+// API Routes - Must be BEFORE any catch-all routes
 app.use('/api/auth', authRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/search', searchRoutes);
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'BizMemory API is running', timestamp: new Date().toISOString() });
 });
 
-// Production: Serve Next.js
+// Production: Integrate with Next.js
 if (!isDevelopment) {
-  try {
-    // Try to import the standalone Next.js server
-    const standaloneDir = path.join(__dirname, '../../.next/standalone');
-    const nextServerPath = path.join(standaloneDir, 'server.js');
+  const next = require('next');
+  
+  // Initialize Next.js
+  const nextApp = next({
+    dev: false,
+    dir: path.join(__dirname, '../..'),
+    customServer: true,
+  });
+  
+  const handle = nextApp.getRequestHandler();
+  
+  // Prepare Next.js app
+  nextApp.prepare().then(() => {
+    console.log('✓ Next.js app ready');
     
-    console.log('Looking for Next.js standalone at:', standaloneDir);
-    
-    // Serve static files
-    app.use('/_next/static', express.static(path.join(__dirname, '../../.next/static')));
+    // Serve Next.js static files
+    app.use('/_next', express.static(path.join(__dirname, '../../.next')));
     app.use('/static', express.static(path.join(__dirname, '../../public')));
     
-    // Simple fallback: serve a static HTML page for now
-    app.get('*', (req, res) => {
-      // Already handled by API routes above
-      if (req.path.startsWith('/api/') || req.path === '/health') {
-        return res.status(404).json({ error: 'Route not found' });
-      }
-      
-      // Serve a simple loading page that uses the API
-      res.send(`
-        <!DOCTYPE html>
-        <html lang="en" class="dark">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>BizMemory - Loading...</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              background: linear-gradient(135deg, #0D1117 0%, #1C2128 100%);
-              color: #E6EDF3;
-              min-height: 100vh;
-              display: flex;
-              align-items: center;
-              justify-center;
-              padding: 20px;
-            }
-            .container {
-              max-width: 600px;
-              width: 100%;
-              background: #161B22;
-              border: 1px solid #30363D;
-              border-radius: 12px;
-              padding: 60px 40px;
-              text-align: center;
-              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            }
-            h1 {
-              color: #3ECF8E;
-              font-size: 2.5rem;
-              margin-bottom: 16px;
-            }
-            .spinner {
-              width: 40px;
-              height: 40px;
-              border: 4px solid #3ECF8E20;
-              border-top-color: #3ECF8E;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
-              margin: 32px auto;
-            }
-            @keyframes spin {
-              to { transform: rotate(360deg); }
-            }
-            p { color: #7D8590; margin-bottom: 12px; line-height: 1.6; }
-            .error { color: #F85149; margin-top: 24px; display: none; }
-            .success { color: #3ECF8E; }
-            a { color: #58A6FF; text-decoration: none; }
-            a:hover { text-decoration: underline; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>🚀 BizMemory</h1>
-            <p>AI-Powered File Storage</p>
-            <div class="spinner"></div>
-            <p id="status">Initializing application...</p>
-            <p class="error" id="error"></p>
-            <p style="margin-top: 32px; font-size: 0.875rem;">
-              Backend API: <span class="success">Running</span><br>
-              <a href="/health">Health Check</a>
-            </p>
-          </div>
-          <script>
-            // Check API health
-            fetch('/health')
-              .then(r => r.json())
-              .then(data => {
-                document.getElementById('status').textContent = 'API Status: ' + data.status;
-                document.getElementById('status').className = 'success';
-                
-                // Redirect to login after a moment
-                setTimeout(() => {
-                  window.location.href = '/login';
-                }, 1500);
-              })
-              .catch(err => {
-                document.getElementById('error').textContent = 'Error: ' + err.message;
-                document.getElementById('error').style.display = 'block';
-                document.querySelector('.spinner').style.display = 'none';
-              });
-          </script>
-        </body>
-        </html>
-      `);
+    // Let Next.js handle all other routes
+    app.all('*', (req, res) => {
+      return handle(req, res);
     });
     
-  } catch (err) {
-    console.error('Error setting up Next.js:', err);
-  }
+    // Start server after Next.js is ready
+    startHTTPServer();
+  }).catch(err => {
+    console.error('Failed to initialize Next.js:', err);
+    // Fallback: serve without Next.js
+    setupFallbackRoutes();
+    startHTTPServer();
+  });
   
 } else {
-  // Development: Show API info
+  // Development mode
+  setupFallbackRoutes();
+  startHTTPServer();
+}
+
+// Fallback routes when Next.js isn't available
+function setupFallbackRoutes() {
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api/') || req.path === '/health') {
       return res.status(404).json({ error: 'Not found' });
@@ -155,41 +80,142 @@ if (!isDevelopment) {
     
     res.send(`
       <!DOCTYPE html>
-      <html>
+      <html lang="en" class="dark">
       <head>
-        <title>BizMemory API - Development</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BizMemory - AI-Powered File Storage</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: system-ui, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #0D1117 0%, #1C2128 100%);
             color: #E6EDF3;
-            padding: 40px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
           }
           .container {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 600px;
+            width: 100%;
             background: #161B22;
-            padding: 40px;
-            border-radius: 12px;
             border: 1px solid #30363D;
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
           }
-          h1 { color: #3ECF8E; margin-bottom: 20px; }
-          p { color: #7D8590; margin-bottom: 12px; line-height: 1.6; }
-          code { background: #21262D; color: #3ECF8E; padding: 4px 8px; border-radius: 4px; }
-          .warning { background: #FFA50020; border: 1px solid #FFA50040; color: #FFA500; padding: 16px; border-radius: 8px; margin: 20px 0; }
+          h1 {
+            color: #3ECF8E;
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+          }
+          .subtitle { color: #7D8590; margin-bottom: 32px; font-size: 1.1rem; }
+          .status-card {
+            background: #1C2128;
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
+          }
+          .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #30363D;
+          }
+          .status-item:last-child { border-bottom: none; }
+          .label { color: #7D8590; }
+          .value { color: #3ECF8E; font-weight: 600; }
+          .value.running::before {
+            content: '●';
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+          .info {
+            color: #7D8590;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            margin-top: 24px;
+          }
+          a {
+            color: #58A6FF;
+            text-decoration: none;
+          }
+          a:hover {
+            text-decoration: underline;
+          }
+          ${isDevelopment ? `
+          .dev-warning {
+            background: #FFA50020;
+            border: 1px solid #FFA50040;
+            color: #FFA500;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            font-size: 0.875rem;
+          }
+          code {
+            background: #21262D;
+            color: #3ECF8E;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+          }
+          ` : ''}
         </style>
       </head>
       <body>
         <div class="container">
-          <h1>🚀 BizMemory API</h1>
-          <p><strong>Development Mode</strong></p>
-          <div class="warning">
-            ⚠️ Run <code>npm run dev:frontend</code> in another terminal for the frontend.
+          <h1>🚀 BizMemory</h1>
+          <p class="subtitle">AI-Powered File Storage for Small Business</p>
+          
+          <div class="status-card">
+            <div class="status-item">
+              <span class="label">Backend API</span>
+              <span class="value running">Running</span>
+            </div>
+            <div class="status-item">
+              <span class="label">Database</span>
+              <span class="value running">Connected</span>
+            </div>
+            <div class="status-item">
+              <span class="label">Mode</span>
+              <span class="value">${isDevelopment ? 'Development' : 'Production'}</span>
+            </div>
           </div>
-          <p>Backend running on port ${PORT}</p>
-          <p>API: <code>/api/*</code></p>
-          <p>Health: <code>/health</code></p>
+          
+          ${isDevelopment ? `
+          <div class="dev-warning">
+            <strong>⚠️ Development Mode</strong><br>
+            Run <code>npm run dev:frontend</code> in another terminal to start the Next.js frontend.
+          </div>
+          ` : `
+          <div class="info">
+            <p><strong>Backend is running successfully!</strong></p>
+            <p>Frontend is being integrated. In the meantime, you can:</p>
+            <p style="margin-top: 12px;">
+              • Test the API at <a href="/health">/health</a><br>
+              • View API documentation<br>
+              • Run the frontend locally with the backend
+            </p>
+          </div>
+          `}
+          
+          <div class="info" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #30363D;">
+            <p>Powered by Cohere AI • PostgreSQL with pgvector</p>
+          </div>
         </div>
       </body>
       </html>
@@ -207,34 +233,51 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 function setupGracefulShutdown(server: any) {
   ['SIGTERM', 'SIGINT'].forEach((signal: any) => {
     process.on(signal, async () => {
-      console.log(`\n${signal} received, shutting down...`);
+      console.log(`\n${signal} received, shutting down gracefully...`);
       server.close(async () => {
         await closeDatabasePool();
+        console.log('Shutdown complete');
         process.exit(0);
       });
-      setTimeout(() => process.exit(1), 10000);
+      setTimeout(() => {
+        console.error('Forced shutdown');
+        process.exit(1);
+      }, 10000);
     });
   });
 }
 
-// Start server
+// HTTP server startup
+let httpServer: any = null;
+
+function startHTTPServer() {
+  httpServer = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✓ HTTP server running on port ${PORT}`);
+    console.log(`✓ Listening on 0.0.0.0:${PORT}`);
+    console.log('\n✅ Server ready!\n');
+  });
+  
+  setupGracefulShutdown(httpServer);
+}
+
+// Initialize database and start
 async function startServer() {
   try {
-    console.log('\nStarting BizMemory...');
+    console.log('\n🚀 Starting BizMemory...');
     console.log('=== Database Check ===');
     await checkDatabaseConnection(5, 2000);
     
     console.log('\n=== Database Init ===');
     await initializeDatabase();
     
-    console.log('\n=== Starting Server ===');
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✓ Server running on port ${PORT}`);
-      console.log(`✓ Mode: ${isDevelopment ? 'Development' : 'Production'}`);
-      console.log('\nReady!\n');
-    });
+    console.log('\n=== Server Initialization ===');
     
-    setupGracefulShutdown(server);
+    // If production and Next.js integration is enabled, it will start the server
+    // Otherwise, start immediately
+    if (isDevelopment) {
+      startHTTPServer();
+    }
+    
   } catch (error: any) {
     console.error('\n✗ Startup failed:', error.message);
     process.exit(1);
