@@ -16,6 +16,9 @@ function validateDatabaseConfig(): void {
 
 // Parse DATABASE_URL or construct from individual components
 function getDatabaseConfig(): PoolConfig {
+  // Validate configuration before creating pool config
+  validateDatabaseConfig();
+  
   // Support both DATABASE_URL and individual components for flexibility
   if (process.env.DATABASE_URL) {
     return {
@@ -44,25 +47,30 @@ function getDatabaseConfig(): PoolConfig {
   };
 }
 
-// Validate configuration on module load
-validateDatabaseConfig();
+// Create pool lazily - validation happens in getDatabaseConfig() when pool is first used
+let pool: Pool | null = null;
 
-const pool = new Pool(getDatabaseConfig());
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool(getDatabaseConfig());
+    
+    // Error handling for pool
+    pool.on('error', (err) => {
+      console.error('Unexpected error on idle database client:', err);
+    });
 
-// Error handling for pool
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle database client:', err);
-});
-
-pool.on('connect', () => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('New database client connected to pool');
+    pool.on('connect', () => {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('New database client connected to pool');
+      }
+    });
   }
-});
+  return pool;
+}
 
-export const query = (text: string, params?: any[]) => pool.query(text, params);
+export const query = (text: string, params?: any[]) => getPool().query(text, params);
 
-export const getClient = () => pool.connect();
+export const getClient = () => getPool().connect();
 
 /**
  * Check database connection health
@@ -79,7 +87,7 @@ export async function checkDatabaseConnection(
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`Checking database connection (attempt ${attempt}/${retries})...`);
-      const client = await pool.connect();
+      const client = await getPool().connect();
       
       // Test query
       await client.query('SELECT NOW()');
@@ -295,11 +303,14 @@ export async function initializeDatabase(): Promise<void> {
  */
 export async function closeDatabasePool(): Promise<void> {
   try {
-    await pool.end();
-    console.log('Database pool closed');
+    if (pool) {
+      await pool.end();
+      pool = null;
+      console.log('Database pool closed');
+    }
   } catch (error: any) {
     console.error('Error closing database pool:', error.message);
   }
 }
 
-export default pool;
+export default { getPool, query, getClient };
