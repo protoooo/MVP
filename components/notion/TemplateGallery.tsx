@@ -23,7 +23,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Production Schedule" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 2 hours/day" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "schedule-generator", content: {}, position: 3 },
+        { type: "schedule_generator", content: {}, position: 3 },
       ]
     }
   },
@@ -39,7 +39,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Staff Schedule" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 3 hours/week" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "schedule-generator", content: {}, position: 3 },
+        { type: "schedule_generator", content: {}, position: 3 },
       ]
     }
   },
@@ -55,7 +55,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Catering Quote" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 20 min/quote" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "invoice-builder", content: {}, position: 3 },
+        { type: "invoice_builder", content: {}, position: 3 },
       ]
     }
   },
@@ -73,7 +73,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Project Estimate" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 45 min/estimate" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "invoice-builder", content: {}, position: 3 },
+        { type: "invoice_builder", content: {}, position: 3 },
       ]
     }
   },
@@ -89,7 +89,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Job Schedule" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 2 hours/week" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "schedule-generator", content: {}, position: 3 },
+        { type: "schedule_generator", content: {}, position: 3 },
       ]
     }
   },
@@ -105,7 +105,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Customer Communications" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 1 hour/week" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "email-drafter", content: {}, position: 3 },
+        { type: "email_drafter", content: {}, position: 3 },
       ]
     }
   },
@@ -128,7 +128,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading2", content: { text: "Timeline" }, position: 5 },
         { type: "text", content: { text: "" }, position: 6 },
         { type: "heading2", content: { text: "Pricing" }, position: 7 },
-        { type: "invoice-builder", content: {}, position: 8 },
+        { type: "invoice_builder", content: {}, position: 8 },
       ]
     }
   },
@@ -144,7 +144,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Monthly Invoices" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 3 hours/month" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "invoice-builder", content: {}, position: 3 },
+        { type: "invoice_builder", content: {}, position: 3 },
       ]
     }
   },
@@ -160,7 +160,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Project Status Update" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 1 hour/week" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "report-generator", content: {}, position: 3 },
+        { type: "report_generator", content: {}, position: 3 },
       ]
     }
   },
@@ -178,7 +178,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Staff Schedule" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 4 hours/week" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "schedule-generator", content: {}, position: 3 },
+        { type: "schedule_generator", content: {}, position: 3 },
       ]
     }
   },
@@ -194,7 +194,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Weekend Sales Report" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 2 hours/week" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "report-generator", content: {}, position: 3 },
+        { type: "report_generator", content: {}, position: 3 },
       ]
     }
   },
@@ -212,7 +212,7 @@ const builtInTemplates: Omit<Template, "id" | "created_at" | "updated_at">[] = [
         { type: "heading1", content: { text: "Inventory Reorder List" }, position: 0 },
         { type: "text", content: { text: "⏱️ Time saved: 2 hours/week" }, position: 1 },
         { type: "divider", content: {}, position: 2 },
-        { type: "report-generator", content: {}, position: 3 },
+        { type: "report_generator", content: {}, position: 3 },
       ]
     }
   },
@@ -372,7 +372,7 @@ export default function TemplateGallery({ onSelect, onClose }: TemplateGalleryPr
                 {template.template_data.blocks.some(b => b.content?.text?.includes('Time saved')) && (
                   <div className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
                     <Clock className="w-3.5 h-3.5" />
-                    {template.template_data.blocks.find(b => b.content?.text?.includes('Time saved'))?.content.text}
+                    {template.template_data.blocks.find(b => b.content?.text?.includes('Time saved'))?.content?.text || ''}
                   </div>
                 )}
               </button>
