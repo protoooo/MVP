@@ -13,6 +13,7 @@ interface SidebarProps {
   onPageSelect?: (pageId: string) => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  onShowTemplates?: () => void;
 }
 
 export default function Sidebar({
@@ -20,7 +21,8 @@ export default function Sidebar({
   currentPageId,
   onPageSelect,
   collapsed = false,
-  onToggleCollapse
+  onToggleCollapse,
+  onShowTemplates
 }: SidebarProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [pageTree, setPageTree] = useState<PageTreeNode[]>([]);
@@ -292,7 +294,17 @@ export default function Sidebar({
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border space-y-1">
+        {onShowTemplates && (
+          <button
+            onClick={onShowTemplates}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-text-secondary
+              hover:bg-background-secondary transition"
+          >
+            <FileText className="w-4 h-4" />
+            Templates
+          </button>
+        )}
         <Link
           href="/dashboard/trash"
           className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-text-secondary

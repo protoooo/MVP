@@ -4,12 +4,16 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import WorkspaceLayout from "@/components/notion/WorkspaceLayout";
 import PageEditor from "@/components/notion/PageEditor";
+import TemplateGallery from "@/components/notion/TemplateGallery";
 import { createClient } from "@/lib/supabase/client";
-import { getOrCreateWorkspace, createPage, getPageTree } from "@/lib/notion/page-utils";
+import { getOrCreateWorkspace, createPage, getPageTree, createBlock } from "@/lib/notion/page-utils";
+import type { Template } from "@/lib/notion/types";
 
 export default function WorkspacePage() {
   const [currentPageId, setCurrentPageId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -36,6 +40,7 @@ export default function WorkspacePage() {
 
       // Get or create workspace
       const workspace = await getOrCreateWorkspace(user.id);
+      setWorkspaceId(workspace.id);
       
       // Check if there's a page ID in URL
       const pageId = searchParams.get("page");
@@ -45,10 +50,8 @@ export default function WorkspacePage() {
         // Get first page or create one
         const pageTree = await getPageTree(workspace.id);
         if (pageTree.length === 0) {
-          // Create first page
-          const newPage = await createPage(workspace.id, user.id, "Getting Started");
-          setCurrentPageId(newPage.id);
-          router.push(`/workspace?page=${newPage.id}`);
+          // Show templates for first-time users
+          setShowTemplates(true);
         } else {
           // Use first page
           setCurrentPageId(pageTree[0].id);
@@ -67,6 +70,33 @@ export default function WorkspacePage() {
     router.push(`/workspace?page=${pageId}`);
   };
 
+  const handleTemplateSelect = async (template: Template) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !workspaceId) return;
+
+    // Create page from template
+    const newPage = await createPage(
+      workspaceId,
+      user.id,
+      template.template_data.page.title || "Untitled",
+      undefined
+    );
+
+    // Add blocks from template
+    for (const blockTemplate of template.template_data.blocks) {
+      await createBlock(
+        newPage.id,
+        blockTemplate.type,
+        blockTemplate.content,
+        undefined
+      );
+    }
+
+    setShowTemplates(false);
+    setCurrentPageId(newPage.id);
+    router.push(`/workspace?page=${newPage.id}`);
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -78,10 +108,33 @@ export default function WorkspacePage() {
     );
   }
 
+  if (showTemplates) {
+    return (
+      <TemplateGallery
+        onSelect={handleTemplateSelect}
+        onClose={() => {
+          setShowTemplates(false);
+          // Create blank page if no templates selected
+          if (!currentPageId && workspaceId) {
+            supabase.auth.getUser().then(({ data: { user } }) => {
+              if (user) {
+                createPage(workspaceId, user.id, "Getting Started").then(page => {
+                  setCurrentPageId(page.id);
+                  router.push(`/workspace?page=${page.id}`);
+                });
+              }
+            });
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <WorkspaceLayout
       currentPageId={currentPageId || undefined}
       onPageSelect={handlePageSelect}
+      onShowTemplates={() => setShowTemplates(true)}
     >
       {currentPageId ? (
         <PageEditor pageId={currentPageId} />

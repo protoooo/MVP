@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Sidebar from "./Sidebar";
+import QuickFind from "./QuickFind";
 import { getOrCreateWorkspace } from "@/lib/notion/page-utils";
 import type { Workspace } from "@/lib/notion/types";
 
@@ -10,20 +11,36 @@ interface WorkspaceLayoutProps {
   children: React.ReactNode;
   currentPageId?: string;
   onPageSelect?: (pageId: string) => void;
+  onShowTemplates?: () => void;
 }
 
 export default function WorkspaceLayout({
   children,
   currentPageId,
-  onPageSelect
+  onPageSelect,
+  onShowTemplates
 }: WorkspaceLayoutProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showQuickFind, setShowQuickFind] = useState(false);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
     initializeWorkspace();
+  }, []);
+
+  useEffect(() => {
+    // Handle Cmd+K / Ctrl+K to open Quick Find
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowQuickFind(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const initializeWorkspace = async () => {
@@ -71,6 +88,7 @@ export default function WorkspaceLayout({
         workspaceId={workspace.id}
         currentPageId={currentPageId}
         onPageSelect={onPageSelect}
+        onShowTemplates={onShowTemplates}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
@@ -79,6 +97,18 @@ export default function WorkspaceLayout({
       <div className="flex-1 overflow-hidden">
         {children}
       </div>
+
+      {/* Quick Find Modal (Cmd+K) */}
+      {showQuickFind && workspace && (
+        <QuickFind
+          workspaceId={workspace.id}
+          onClose={() => setShowQuickFind(false)}
+          onPageSelect={(pageId) => {
+            if (onPageSelect) onPageSelect(pageId);
+            setShowQuickFind(false);
+          }}
+        />
+      )}
     </div>
   );
 }
