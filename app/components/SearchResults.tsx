@@ -2,20 +2,23 @@
 
 import { SearchResult } from '../types';
 import FileCard from './FileCard';
-import { Sparkles, Calendar, FileType as FileTypeIcon, Tag, Search, AlertCircle } from 'lucide-react';
+import AnswerCard from './AnswerCard';
+import { Sparkles, Calendar, FileType as FileTypeIcon, Tag, Search, AlertCircle, FileText } from 'lucide-react';
 
 interface SearchResultsProps {
   results: SearchResult | null;
+  query: string;
   loading?: boolean;
   onFileDeleted?: () => void;
 }
 
-export default function SearchResults({ results, loading, onFileDeleted }: SearchResultsProps) {
+export default function SearchResults({ results, query, loading, onFileDeleted }: SearchResultsProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <div className="animate-spin w-10 h-10 border-4 border-brand/20 border-t-brand rounded-full mb-4" />
-        <p className="text-sm text-text-secondary">Searching with AI...</p>
+        <p className="text-sm text-text-secondary mb-2">Searching with AI...</p>
+        <p className="text-xs text-text-tertiary">Analyzing documents and extracting data</p>
       </div>
     );
   }
@@ -27,17 +30,34 @@ export default function SearchResults({ results, loading, onFileDeleted }: Searc
           <Search className="w-8 h-8 text-text-tertiary" />
         </div>
         <h3 className="text-lg font-semibold text-text-primary mb-2">Start searching</h3>
-        <p className="text-text-secondary max-w-md mx-auto">
-          Use natural language to find your files. Try "tax documents from 2018" or "photos from last month"
+        <p className="text-text-secondary max-w-md mx-auto mb-4">
+          Ask questions like:
         </p>
+        <div className="flex flex-wrap gap-2 justify-center max-w-2xl mx-auto">
+          <span className="px-3 py-1.5 rounded-lg text-xs bg-surface-elevated text-text-secondary border border-border">
+            What were my capital gains in 2017?
+          </span>
+          <span className="px-3 py-1.5 rounded-lg text-xs bg-surface-elevated text-text-secondary border border-border">
+            Show me Q2 expense totals
+          </span>
+          <span className="px-3 py-1.5 rounded-lg text-xs bg-surface-elevated text-text-secondary border border-border">
+            Who approved the safety protocol?
+          </span>
+        </div>
       </div>
     );
   }
 
-  const { results: files, total, query_understanding } = results;
+  const { results: files, total, query_understanding, extractedAnswer } = results;
 
   return (
     <div className="space-y-6">
+      {/* AI Extracted Answer - Prominent Display */}
+      {extractedAnswer && (
+        <AnswerCard answer={extractedAnswer} query={query} />
+      )}
+
+      {/* Query Understanding */}
       {query_understanding && (
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="flex items-start gap-4">
@@ -46,7 +66,7 @@ export default function SearchResults({ results, loading, onFileDeleted }: Searc
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-text-primary mb-3">
-                AI Understanding
+                Query Understanding
               </h3>
               <div className="flex flex-wrap gap-2">
                 {query_understanding.intent && (
@@ -96,17 +116,23 @@ export default function SearchResults({ results, loading, onFileDeleted }: Searc
         </div>
       )}
 
+      {/* Results Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary mb-1">
-            {total} {total === 1 ? 'result' : 'results'} found
+          <h2 className="text-2xl font-bold text-text-primary mb-1 flex items-center gap-2">
+            <FileText className="w-6 h-6 text-text-tertiary" />
+            {total} {total === 1 ? 'document' : 'documents'} found
           </h2>
           <p className="text-sm text-text-secondary">
-            Ranked by relevance using AI reranking
+            {extractedAnswer 
+              ? 'Review source documents below' 
+              : 'Ranked by relevance • AI reranking applied'
+            }
           </p>
         </div>
       </div>
 
+      {/* File Results */}
       {files.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {files.map((file) => (
@@ -118,9 +144,9 @@ export default function SearchResults({ results, loading, onFileDeleted }: Searc
           <div className="w-16 h-16 rounded-full bg-surface-elevated flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-text-tertiary" />
           </div>
-          <h3 className="text-lg font-semibold text-text-primary mb-2">No files found</h3>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">No documents found</h3>
           <p className="text-text-secondary mb-6 max-w-md mx-auto">
-            We couldn't find any files matching your search. Try adjusting your query or uploading more files.
+            We couldn't find any documents matching your search. Try adjusting your query or uploading more files.
           </p>
         </div>
       )}
