@@ -2,14 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MessageSquare, Users, Package, TrendingUp, FileText, Upload, Brain, UserPlus, ChevronRight } from "lucide-react";
+import { Sparkles, Upload, FileText, Send } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import ProtoIntroduction from "@/components/ProtoIntroduction";
+import ChatbotEnhanced from "@/components/ChatbotEnhanced";
+
+interface Message {
+  role: "user" | "assistant" | "system";
+  content: string;
+  progressUpdates?: string[];
+  isAutonomous?: boolean;
+}
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [hasDocuments, setHasDocuments] = useState(false);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [documentCount, setDocumentCount] = useState(0);
   const supabase = createClient();
 
   useEffect(() => {
@@ -28,148 +38,179 @@ export default function DashboardPage() {
 
     setProfile(profileData);
 
+    // Show onboarding if user hasn't completed it
+    if (profileData && !profileData.onboarding_completed) {
+      setShowOnboarding(true);
+    }
+
     const { data: docs } = await supabase
       .from("business_documents")
       .select("id")
-      .eq("user_id", user.id)
-      .limit(1);
+      .eq("user_id", user.id);
 
-    setHasDocuments((docs?.length ?? 0) > 0);
+    const count = docs?.length ?? 0;
+    setDocumentCount(count);
+    setHasDocuments(count > 0);
   };
 
-  const agents = [
-    {
-      name: "Today's Priorities",
-      description: "See what needs your attention",
-      icon: Brain,
-      color: "indigo",
-      href: "/dashboard/operations",
-    },
-    {
-      name: "Customer Service",
-      description: "Handle questions and reviews",
-      icon: MessageSquare,
-      color: "sky",
-      href: "/dashboard/customer-support",
-    },
-    {
-      name: "Staff & Hiring",
-      description: "Manage onboarding and schedules",
-      icon: Users,
-      color: "lavender",
-      href: "/dashboard/hr",
-    },
-    {
-      name: "Stock & Orders",
-      description: "Track inventory levels",
-      icon: Package,
-      color: "sage",
-      href: "/dashboard/inventory",
-    },
-    {
-      name: "Money & Expenses",
-      description: "Review financial activity",
-      icon: TrendingUp,
-      color: "honey",
-      href: "/dashboard/financial",
-    },
-    {
-      name: "Contracts & Papers",
-      description: "Understand documents",
-      icon: FileText,
-      color: "clay",
-      href: "/dashboard/documents",
-    },
-  ];
+  const handleOnboardingComplete = async (data: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-  const getColorClasses = (color: string) => {
-    const colors: Record<string, string> = {
-      indigo: "hover:bg-indigo-50/60 group-hover:text-indigo-700",
-      sky: "hover:bg-sky-50/60 group-hover:text-sky-700",
-      lavender: "hover:bg-lavender-50/60 group-hover:text-lavender-700",
-      sage: "hover:bg-sage-50/60 group-hover:text-sage-700",
-      honey: "hover:bg-honey-50/60 group-hover:text-honey-700",
-      clay: "hover:bg-clay-50/60 group-hover:text-clay-700",
-    };
-    return colors[color] || colors.indigo;
+    // Store onboarding data as Proto memories via API
+    await fetch("/api/proto/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    // Update profile to mark onboarding as complete
+    await supabase
+      .from("user_profiles")
+      .update({ onboarding_completed: true })
+      .eq("id", user.id);
+
+    setShowOnboarding(false);
   };
+
+  const handleProtoMessage = async (message: string, history: Message[]) => {
+    const response = await fetch("/api/proto/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        chatHistory: history.map(h => ({ 
+          role: h.role === "user" ? "USER" : "CHATBOT", 
+          message: h.content 
+        })),
+      }),
+    });
+
+    const data = await response.json();
+    return data;
+  };
+
+  if (showOnboarding) {
+    return (
+      <ProtoIntroduction 
+        onComplete={handleOnboardingComplete}
+        onSkip={() => setShowOnboarding(false)}
+      />
+    );
+  }
 
   return (
     <div className="p-6 sm:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-text-primary tracking-tight">
-            {profile?.business_name || "Your Business"}
-          </h1>
-          <p className="text-sm text-text-secondary">
-            Choose what you need help with today
-          </p>
-        </div>
+        {/* Proto Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-4"
+        >
+          <div className="relative">
+            <motion.div
+              animate={{
+                boxShadow: [
+                  "0 0 0 0 rgba(99, 102, 241, 0.4)",
+                  "0 0 0 10px rgba(99, 102, 241, 0)",
+                  "0 0 0 0 rgba(99, 102, 241, 0)",
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center"
+            >
+              <Sparkles className="w-7 h-7 text-white" />
+            </motion.div>
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-text-primary tracking-tight">
+              Hi, I'm Proto 👋
+            </h1>
+            <p className="text-sm text-text-secondary">
+              Grow with your business to grow your business
+            </p>
+          </div>
+        </motion.div>
 
-        {/* Quick Actions */}
-        {!hasDocuments && (
+        {/* Document Status Banner */}
+        {!hasDocuments ? (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-background-secondary rounded-lg p-5 border border-border"
+            className="bg-indigo-50 border border-indigo-200 rounded-xl p-5"
           >
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded bg-text-primary/5 flex items-center justify-center">
-                <Upload className="w-5 h-5 text-text-primary" />
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                <Upload className="w-5 h-5 text-indigo-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-medium text-text-primary mb-1">
-                  Upload your first documents
+                  Let me learn about your business
                 </h3>
                 <p className="text-sm text-text-secondary mb-3 leading-relaxed">
-                  Add your business files to unlock personalized help from each agent
+                  Upload your business documents so I can help you better. I'll analyze contracts, invoices, schedules, and more to give you personalized insights.
                 </p>
                 <Link
                   href="/dashboard/uploads"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-text-primary hover:text-text-secondary transition"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
                 >
-                  Get started
-                  <ChevronRight className="w-4 h-4" />
+                  <Upload className="w-4 h-4" />
+                  Upload Files
                 </Link>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-indigo-50 border border-indigo-200 rounded-xl p-5"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-medium text-text-primary mb-1">
+                  Working with {documentCount} document{documentCount !== 1 ? 's' : ''}
+                </h3>
+                <p className="text-sm text-text-secondary">
+                  I remember everything about your business. The more you upload, the better I can help.
+                </p>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Agents Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {agents.map((agent, index) => (
-            <motion.div
-              key={agent.name}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.03 }}
-            >
-              <Link
-                href={agent.href}
-                className={`group block p-4 rounded-lg border border-border bg-surface transition-all hover:shadow-notion-sm ${getColorClasses(agent.color)}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-9 h-9 rounded bg-text-primary/5 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <agent.icon className="w-5 h-5 text-text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-text-primary mb-0.5 tracking-tight">
-                      {agent.name}
-                    </h3>
-                    <p className="text-xs text-text-secondary leading-relaxed">
-                      {agent.description}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {/* Proto Chat Interface */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-surface border border-border rounded-2xl shadow-notion-sm overflow-hidden"
+          style={{ height: "600px" }}
+        >
+          <ChatbotEnhanced
+            onSendMessage={handleProtoMessage}
+            placeholder="Ask me anything about your business, or tell me what you need help with..."
+            welcomeMessage={`Hi! I'm Proto, your adaptive business assistant. I can help you with:
 
-        {/* Quick Links */}
+✓ Drafting emails and customer responses
+✓ Creating staff schedules and managing availability
+✓ Analyzing contracts and documents for issues
+✓ Solving problems when you're short-staffed
+✓ Coordinating with your team on any challenge
+✓ Working autonomously on complex tasks
+
+I remember everything we discuss about your business. What can I help you with today?`}
+            agentColor="indigo"
+            agentType="proto"
+            enableAutonomous={true}
+          />
+        </motion.div>
+
+        {/* Quick Access */}
         <div className="flex items-center gap-3 pt-2">
           <Link
             href="/dashboard/uploads"
@@ -179,11 +220,10 @@ export default function DashboardPage() {
             Upload files
           </Link>
           <Link
-            href="/dashboard/team"
+            href="/dashboard/settings"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-background-secondary rounded-md transition"
           >
-            <UserPlus className="w-3.5 h-3.5" />
-            Invite team
+            View my memories
           </Link>
         </div>
       </div>
