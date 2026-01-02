@@ -174,8 +174,8 @@ export default function SchedulingTab() {
         <Calendar
           localizer={localizer}
           events={events}
-          startAccessor="start"
-          endAccessor="end"
+          startAccessor={(event: any) => event.start}
+          endAccessor={(event: any) => event.end}
           style={{ height: "100%" }}
           views={["month", "week", "day"]}
           defaultView="week"
