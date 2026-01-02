@@ -25,7 +25,7 @@ export const ocrService = {
   async extractTextFromPDF(pdfPath: string): Promise<string> {
     try {
       const dataBuffer = fs.readFileSync(pdfPath);
-      const data = await pdfParse(dataBuffer);
+      const data: any = await (pdfParse as any)(dataBuffer);
       return data.text;
     } catch (error) {
       console.error('Error extracting text from PDF:', error);

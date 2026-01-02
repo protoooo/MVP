@@ -13,7 +13,8 @@ export const cohereService = {
       inputType: 'search_document',
       embeddingTypes: ['float'],
     });
-    return response.embeddings.float![0];
+    const embeddings: any = response.embeddings;
+    return embeddings.float[0];
   },
 
   // Generate embeddings for search queries
@@ -24,7 +25,8 @@ export const cohereService = {
       inputType: 'search_query',
       embeddingTypes: ['float'],
     });
-    return response.embeddings.float![0];
+    const embeddings: any = response.embeddings;
+    return embeddings.float[0];
   },
 
   // Batch generate embeddings for multiple texts
@@ -35,7 +37,8 @@ export const cohereService = {
       inputType: 'search_document',
       embeddingTypes: ['float'],
     });
-    return response.embeddings.float!;
+    const embeddings: any = response.embeddings;
+    return embeddings.float;
   },
 
   // Parse natural language query using Command-R7b
