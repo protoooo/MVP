@@ -1,6 +1,7 @@
 import { AuthResponse, User, FileListResponse, SearchResult } from '../types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// For single-service deployment, API is on the same domain
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 // Helper function to get auth token
 const getAuthToken = (): string | null => {
