@@ -56,13 +56,14 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
   return (
     <div 
       onClick={handleClick}
-      className={`group relative bg-surface border rounded-xl overflow-hidden transition-all duration-200 cursor-pointer ${
+      className={`group relative bg-surface border rounded-xl overflow-hidden transition-all duration-200 ${
+        onPreview || selectionMode ? 'cursor-pointer' : ''
+      } ${
         isSelected 
           ? 'border-brand shadow-dark-hover ring-2 ring-brand/20' 
           : 'border-border hover:border-brand/50 hover:shadow-dark-hover'
       }`}
     >
-      {/* Selection Checkbox */}
       {selectionMode && (
         <div className="absolute top-3 left-3 z-10">
           <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
@@ -75,7 +76,6 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
         </div>
       )}
 
-      {/* Relevance Badge (if from search) */}
       {file.relevance_score && !selectionMode && (
         <div className="absolute top-3 right-3 z-10">
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand border border-brand/20">
@@ -84,7 +84,6 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
         </div>
       )}
 
-      {/* File Preview/Icon */}
       <div className="h-32 bg-surface-elevated flex items-center justify-center border-b border-border">
         {file.file_type.startsWith('image/') ? (
           <img 
@@ -97,21 +96,17 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
         )}
       </div>
 
-      {/* File Info */}
       <div className="p-4">
-        {/* Filename */}
         <h3 className="text-sm font-semibold text-text-primary mb-2 truncate group-hover:text-brand transition-colors">
           {file.original_filename}
         </h3>
 
-        {/* Description */}
         {file.ai_description && (
           <p className="text-xs text-text-secondary mb-3 line-clamp-2 leading-relaxed">
             {file.ai_description}
           </p>
         )}
 
-        {/* Tags */}
         {file.tags && file.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             {file.tags.slice(0, 3).map((tag, idx) => (
@@ -131,7 +126,6 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
           </div>
         )}
 
-        {/* Metadata */}
         <div className="flex items-center gap-3 text-xs text-text-tertiary mb-4 pb-4 border-b border-border">
           <div className="flex items-center gap-1.5">
             <HardDrive className="w-3.5 h-3.5" />
@@ -143,7 +137,6 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
           </div>
         </div>
 
-        {/* Actions */}
         {!selectionMode && (
           <div className="flex items-center gap-2">
             <a
