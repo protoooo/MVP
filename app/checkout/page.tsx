@@ -117,10 +117,10 @@ export default function CheckoutPage() {
           </p>
 
           <button
-            onClick={() => router.push("/workspace")}
+            onClick={() => router.push("/dashboard")}
             className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition"
           >
-            Back to workspace
+            Back to dashboard
           </button>
         </div>
 

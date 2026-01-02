@@ -34,8 +34,8 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect workspace routes
-  if (request.nextUrl.pathname.startsWith("/workspace")) {
+  // Protect dashboard routes
+  if (request.nextUrl.pathname.startsWith("/dashboard")) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
     user
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/workspace";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
