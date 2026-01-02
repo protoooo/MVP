@@ -24,6 +24,17 @@ export interface File {
   relevance_score?: number;
 }
 
+export interface ExtractedAnswer {
+  answer: string;
+  citations: Array<{
+    filename: string;
+    excerpt: string;
+    relevance: number;
+  }>;
+  confidence: number;
+  hasDirectAnswer: boolean;
+}
+
 export interface SearchResult {
   results: File[];
   total: number;
@@ -39,6 +50,7 @@ export interface SearchResult {
     };
     keywords: string[];
   };
+  extractedAnswer?: ExtractedAnswer | null;
 }
 
 export interface AuthResponse {
