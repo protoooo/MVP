@@ -26,7 +26,8 @@ export default function CommsTab() {
 
   useEffect(() => {
     fetchMessages();
-    setupRealtimeSubscription();
+    const cleanup = setupRealtimeSubscription();
+    return cleanup;
   }, [currentChannel]);
 
   useEffect(() => {

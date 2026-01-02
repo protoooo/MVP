@@ -15,6 +15,7 @@ import moment from "moment";
 import { momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
+// Create localizer at module level to avoid re-creation
 const localizer = momentLocalizer(moment);
 
 interface Schedule {
@@ -44,7 +45,8 @@ export default function SchedulingTab() {
   useEffect(() => {
     fetchSchedules();
     fetchStaff();
-    setupRealtimeSubscription();
+    const cleanup = setupRealtimeSubscription();
+    return cleanup;
   }, []);
 
   async function fetchSchedules() {

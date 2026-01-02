@@ -14,24 +14,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert to base64
+    // Convert to base64 for future vision API integration
     const bytes = await photo.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64 = buffer.toString("base64");
 
-    // Note: Cohere's vision API may have different requirements
-    // For now, we'll use text-based analysis as a fallback
+    // NOTE: This is a simplified version. For production, integrate Cohere's vision API
+    // when available, or use an alternative vision AI service to actually analyze the image.
+    // Current implementation provides text-based guidance as a placeholder.
     const prompt = `Analyze this task completion photo. The photo is meant to verify task completion.
     
 Based on typical task verification scenarios (like checking if a fridge is stocked, equipment is clean, or setup is complete):
 - Output "PASS: [brief reason]" if the task appears to be completed properly
 - Output "FAIL: [brief reason]" if there are issues
 
-Be specific but concise in your assessment.`;
+Be specific but concise in your assessment.
+
+Note: In production, this should use actual image analysis. For now, providing general guidance.`;
 
     const response = await chat(prompt);
 
-    return NextResponse.json({ analysis: response });
+    // For demonstration purposes, we'll append a note about actual photo analysis
+    const analysis = response + "\n\n[Note: Placeholder analysis - integrate vision API for actual photo verification]";
+
+    return NextResponse.json({ analysis });
   } catch (error) {
     console.error("Error analyzing photo:", error);
     return NextResponse.json(
