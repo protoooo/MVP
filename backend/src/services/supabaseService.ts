@@ -4,11 +4,16 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-if (!supabaseUrl || !supabaseKey) {
+const hasSupabaseCredentials = !!(supabaseUrl && supabaseKey);
+
+if (!hasSupabaseCredentials) {
   console.warn('⚠️  Supabase credentials not found. File storage will use local filesystem.');
 }
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
+// Only create client if credentials are provided
+export const supabase: SupabaseClient | null = hasSupabaseCredentials 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 export const supabaseStorageService = {
   // Upload file to Supabase Storage
@@ -18,6 +23,10 @@ export const supabaseStorageService = {
     bucketName: string = 'bizmemory-files',
     contentType: string
   ): Promise<string> {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+    
     try {
       const { data, error } = await supabase.storage
         .from(bucketName)
@@ -39,6 +48,10 @@ export const supabaseStorageService = {
 
   // Get public URL for a file
   getPublicUrl(filePath: string, bucketName: string = 'bizmemory-files'): string {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+    
     const { data } = supabase.storage
       .from(bucketName)
       .getPublicUrl(filePath);
@@ -48,6 +61,10 @@ export const supabaseStorageService = {
 
   // Download file from Supabase Storage
   async downloadFile(filePath: string, bucketName: string = 'bizmemory-files'): Promise<Blob> {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+    
     try {
       const { data, error } = await supabase.storage
         .from(bucketName)
@@ -66,6 +83,10 @@ export const supabaseStorageService = {
 
   // Delete file from Supabase Storage
   async deleteFile(filePath: string, bucketName: string = 'bizmemory-files'): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+    
     try {
       const { error } = await supabase.storage
         .from(bucketName)
@@ -82,6 +103,10 @@ export const supabaseStorageService = {
 
   // Create storage bucket if it doesn't exist
   async ensureBucketExists(bucketName: string = 'bizmemory-files'): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+    
     try {
       const { data: buckets, error: listError } = await supabase.storage.listBuckets();
 
