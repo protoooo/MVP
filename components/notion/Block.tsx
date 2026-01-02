@@ -21,7 +21,17 @@ import {
   GripVertical,
   Plus,
   MoreHorizontal,
-  Sparkles
+  Sparkles,
+  Calendar,
+  Mail,
+  Receipt,
+  DollarSign,
+  Users,
+  Package,
+  TrendingUp,
+  FileSpreadsheet,
+  Briefcase,
+  BarChart3
 } from "lucide-react";
 import ImageBlock from "./blocks/ImageBlock";
 import ToggleBlock from "./blocks/ToggleBlock";
@@ -30,6 +40,10 @@ import FileBlock from "./blocks/FileBlock";
 import VideoBlock from "./blocks/VideoBlock";
 import AudioBlock from "./blocks/AudioBlock";
 import PDFBlock from "./blocks/PDFBlock";
+import ScheduleGeneratorBlock from "./blocks/ScheduleGeneratorBlock";
+import EmailDrafterBlock from "./blocks/EmailDrafterBlock";
+import InvoiceBuilderBlock from "./blocks/InvoiceBuilderBlock";
+import ReportGeneratorBlock from "./blocks/ReportGeneratorBlock";
 
 interface BlockProps {
   block: BlockType;
@@ -91,22 +105,37 @@ export default function Block({
   };
 
   const blockTypeOptions = [
-    { type: "text" as BType, label: "Text", icon: MessageSquare },
-    { type: "heading1" as BType, label: "Heading 1", icon: Heading1 },
-    { type: "heading2" as BType, label: "Heading 2", icon: Heading2 },
-    { type: "heading3" as BType, label: "Heading 3", icon: Heading3 },
-    { type: "bullet" as BType, label: "Bulleted list", icon: List },
-    { type: "number" as BType, label: "Numbered list", icon: ListOrdered },
-    { type: "toggle" as BType, label: "Toggle list", icon: ChevronRight },
-    { type: "quote" as BType, label: "Quote", icon: Quote },
-    { type: "code" as BType, label: "Code", icon: Code },
-    { type: "image" as BType, label: "Image", icon: ImageIcon },
-    { type: "file" as BType, label: "File", icon: File },
-    { type: "video" as BType, label: "Video", icon: Video },
-    { type: "audio" as BType, label: "Audio", icon: Music },
-    { type: "pdf" as BType, label: "PDF", icon: FileText },
-    { type: "ai_writer" as BType, label: "AI Writer", icon: Sparkles },
-    { type: "divider" as BType, label: "Divider", icon: Divide },
+    // Basic blocks
+    { type: "text" as BType, label: "Text", icon: MessageSquare, category: "basic" },
+    { type: "heading1" as BType, label: "Heading 1", icon: Heading1, category: "basic" },
+    { type: "heading2" as BType, label: "Heading 2", icon: Heading2, category: "basic" },
+    { type: "heading3" as BType, label: "Heading 3", icon: Heading3, category: "basic" },
+    { type: "bullet" as BType, label: "Bulleted list", icon: List, category: "basic" },
+    { type: "number" as BType, label: "Numbered list", icon: ListOrdered, category: "basic" },
+    { type: "toggle" as BType, label: "Toggle list", icon: ChevronRight, category: "basic" },
+    { type: "quote" as BType, label: "Quote", icon: Quote, category: "basic" },
+    { type: "code" as BType, label: "Code", icon: Code, category: "basic" },
+    { type: "divider" as BType, label: "Divider", icon: Divide, category: "basic" },
+    
+    // Media blocks
+    { type: "image" as BType, label: "Image", icon: ImageIcon, category: "media" },
+    { type: "file" as BType, label: "File", icon: File, category: "media" },
+    { type: "video" as BType, label: "Video", icon: Video, category: "media" },
+    { type: "audio" as BType, label: "Audio", icon: Music, category: "media" },
+    { type: "pdf" as BType, label: "PDF", icon: FileText, category: "media" },
+    
+    // AI blocks
+    { type: "ai_writer" as BType, label: "AI Writer", icon: Sparkles, category: "ai" },
+    
+    // Automation blocks
+    { type: "schedule_generator" as BType, label: "Schedule Generator", icon: Calendar, category: "automation" },
+    { type: "email_drafter" as BType, label: "Email Drafter", icon: Mail, category: "automation" },
+    { type: "invoice_builder" as BType, label: "Invoice Builder", icon: Receipt, category: "automation" },
+    { type: "report_generator" as BType, label: "Report Generator", icon: FileText, category: "automation" },
+    { type: "quote_generator" as BType, label: "Quote Generator", icon: DollarSign, category: "automation" },
+    { type: "proposal_generator" as BType, label: "Proposal Generator", icon: Briefcase, category: "automation" },
+    { type: "job_description_generator" as BType, label: "Job Description", icon: Users, category: "automation" },
+    { type: "performance_review_drafter" as BType, label: "Performance Review", icon: TrendingUp, category: "automation" },
   ];
 
   const renderBlockContent = () => {
@@ -282,6 +311,39 @@ export default function Block({
           />
         );
 
+      // Automation blocks
+      case "schedule_generator":
+        return (
+          <ScheduleGeneratorBlock
+            content={block.content}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+          />
+        );
+
+      case "email_drafter":
+        return (
+          <EmailDrafterBlock
+            content={block.content}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+          />
+        );
+
+      case "invoice_builder":
+        return (
+          <InvoiceBuilderBlock
+            content={block.content}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+          />
+        );
+
+      case "report_generator":
+        return (
+          <ReportGeneratorBlock
+            content={block.content}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+          />
+        );
+
       case "divider":
         return <hr className="border-border my-4" />;
 
@@ -341,21 +403,75 @@ export default function Block({
 
       {/* Block Type Menu */}
       {showBlockMenu && (
-        <div className="absolute left-0 top-full mt-1 bg-surface border border-border rounded-lg shadow-lg z-50 w-64 max-h-96 overflow-y-auto">
+        <div className="absolute left-0 top-full mt-1 bg-surface border border-border rounded-lg shadow-lg z-50 w-72 max-h-96 overflow-y-auto">
           <div className="p-2">
-            <div className="text-xs font-medium text-text-tertiary uppercase tracking-wider px-2 py-1 mb-1">
-              Basic Blocks
+            {/* Basic Blocks */}
+            <div className="mb-3">
+              <div className="text-xs font-medium text-text-tertiary uppercase tracking-wider px-2 py-1 mb-1">
+                Basic Blocks
+              </div>
+              {blockTypeOptions.filter(opt => opt.category === 'basic').map(({ type, label, icon: Icon }) => (
+                <button
+                  key={type}
+                  onClick={() => selectBlockType(type)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-background-secondary text-left transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-text-secondary flex-shrink-0" />
+                  <span className="text-sm text-text-primary">{label}</span>
+                </button>
+              ))}
             </div>
-            {blockTypeOptions.map(({ type, label, icon: Icon }) => (
-              <button
-                key={type}
-                onClick={() => selectBlockType(type)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-background-secondary text-left"
-              >
-                <Icon className="w-4 h-4 text-text-secondary flex-shrink-0" />
-                <span className="text-sm text-text-primary">{label}</span>
-              </button>
-            ))}
+
+            {/* Automation */}
+            <div className="mb-3">
+              <div className="text-xs font-medium text-indigo-600 uppercase tracking-wider px-2 py-1 mb-1">
+                Automation
+              </div>
+              {blockTypeOptions.filter(opt => opt.category === 'automation').map(({ type, label, icon: Icon }) => (
+                <button
+                  key={type}
+                  onClick={() => selectBlockType(type)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-indigo-50 text-left transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                  <span className="text-sm text-text-primary">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Media */}
+            <div className="mb-3">
+              <div className="text-xs font-medium text-text-tertiary uppercase tracking-wider px-2 py-1 mb-1">
+                Media
+              </div>
+              {blockTypeOptions.filter(opt => opt.category === 'media').map(({ type, label, icon: Icon }) => (
+                <button
+                  key={type}
+                  onClick={() => selectBlockType(type)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-background-secondary text-left transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-text-secondary flex-shrink-0" />
+                  <span className="text-sm text-text-primary">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* AI */}
+            <div>
+              <div className="text-xs font-medium text-text-tertiary uppercase tracking-wider px-2 py-1 mb-1">
+                AI
+              </div>
+              {blockTypeOptions.filter(opt => opt.category === 'ai').map(({ type, label, icon: Icon }) => (
+                <button
+                  key={type}
+                  onClick={() => selectBlockType(type)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-background-secondary text-left transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-text-secondary flex-shrink-0" />
+                  <span className="text-sm text-text-primary">{label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
