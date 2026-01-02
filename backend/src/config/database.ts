@@ -124,19 +124,6 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
-    // Ensure PRIMARY KEY constraint exists on organizations.id
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'organizations_pkey' AND conrelid = 'organizations'::regclass
-        ) THEN
-          ALTER TABLE organizations ADD PRIMARY KEY (id);
-        END IF;
-      END $$;
-    `);
-
     // Users - create without foreign keys first
     console.log('Creating users table...');
     await client.query(`
@@ -152,19 +139,6 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
-
-    // Ensure PRIMARY KEY constraint exists on users.id
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'users_pkey' AND conrelid = 'users'::regclass
-        ) THEN
-          ALTER TABLE users ADD PRIMARY KEY (id);
-        END IF;
-      END $$;
     `);
 
     // Add organization_id column if it doesn't exist
@@ -208,19 +182,6 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
-
-    // Ensure PRIMARY KEY constraint exists on workspaces.id
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'workspaces_pkey' AND conrelid = 'workspaces'::regclass
-        ) THEN
-          ALTER TABLE workspaces ADD PRIMARY KEY (id);
-        END IF;
-      END $$;
     `);
 
     // Add organization_id column if it doesn't exist
@@ -403,19 +364,6 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
-    `);
-
-    // Ensure PRIMARY KEY constraint exists on files.id
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'files_pkey' AND conrelid = 'files'::regclass
-        ) THEN
-          ALTER TABLE files ADD PRIMARY KEY (id);
-        END IF;
-      END $$;
     `);
 
     // Add user_id column if it doesn't exist
