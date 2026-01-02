@@ -1,16 +1,20 @@
 'use client';
 
 import { File as FileType } from '../types';
-import { Download, Trash2, File, Image, FileText, Tag, Calendar, HardDrive } from 'lucide-react';
+import { Download, Trash2, File, Image, FileText, Tag, Calendar, HardDrive, Check } from 'lucide-react';
 import { filesAPI } from '../services/api';
 import { formatDistanceToNow } from 'date-fns';
 
 interface FileCardProps {
   file: FileType;
   onDelete?: () => void;
+  onPreview?: () => void;
+  isSelected?: boolean;
+  onSelect?: (selected: boolean) => void;
+  selectionMode?: boolean;
 }
 
-export default function FileCard({ file, onDelete }: FileCardProps) {
+export default function FileCard({ file, onDelete, onPreview, isSelected, onSelect, selectionMode }: FileCardProps) {
   const getFileIcon = () => {
     if (file.file_type.startsWith('image/')) return Image;
     if (file.file_type.includes('pdf')) return FileText;
@@ -25,7 +29,8 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (confirm('Are you sure you want to delete this file?')) {
       try {
         await filesAPI.delete(file.id);
@@ -36,10 +41,42 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
     }
   };
 
+  const handleClick = () => {
+    if (selectionMode && onSelect) {
+      onSelect(!isSelected);
+    } else if (onPreview) {
+      onPreview();
+    }
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className="group relative bg-surface border border-border rounded-xl overflow-hidden hover:border-brand/50 hover:shadow-dark-hover transition-all duration-200">
+    <div 
+      onClick={handleClick}
+      className={`group relative bg-surface border rounded-xl overflow-hidden transition-all duration-200 cursor-pointer ${
+        isSelected 
+          ? 'border-brand shadow-dark-hover ring-2 ring-brand/20' 
+          : 'border-border hover:border-brand/50 hover:shadow-dark-hover'
+      }`}
+    >
+      {/* Selection Checkbox */}
+      {selectionMode && (
+        <div className="absolute top-3 left-3 z-10">
+          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+            isSelected 
+              ? 'bg-brand border-brand' 
+              : 'bg-surface border-border group-hover:border-brand/50'
+          }`}>
+            {isSelected && <Check className="w-4 h-4 text-white" />}
+          </div>
+        </div>
+      )}
+
       {/* Relevance Badge (if from search) */}
-      {file.relevance_score && (
+      {file.relevance_score && !selectionMode && (
         <div className="absolute top-3 right-3 z-10">
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand border border-brand/20">
             {Math.round(file.relevance_score * 100)}% match
@@ -49,7 +86,15 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
 
       {/* File Preview/Icon */}
       <div className="h-32 bg-surface-elevated flex items-center justify-center border-b border-border">
-        <FileIcon className="w-12 h-12 text-text-tertiary" />
+        {file.file_type.startsWith('image/') ? (
+          <img 
+            src={filesAPI.getDownloadUrl(file.id)} 
+            alt={file.original_filename}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <FileIcon className="w-12 h-12 text-text-tertiary" />
+        )}
       </div>
 
       {/* File Info */}
@@ -99,23 +144,26 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
-          <a
-            href={filesAPI.getDownloadUrl(file.id)}
-            download
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-brand text-white hover:bg-brand-600 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Download
-          </a>
-          <button
-            onClick={handleDelete}
-            className="p-2 rounded-lg text-text-tertiary hover:text-red-400 hover:bg-red-500/10 border border-border hover:border-red-500/30 transition-colors"
-            title="Delete file"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {!selectionMode && (
+          <div className="flex items-center gap-2">
+            <a
+              href={filesAPI.getDownloadUrl(file.id)}
+              download
+              onClick={handleDownload}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-brand text-white hover:bg-brand-600 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download
+            </a>
+            <button
+              onClick={handleDelete}
+              className="p-2 rounded-lg text-text-tertiary hover:text-red-400 hover:bg-red-500/10 border border-border hover:border-red-500/30 transition-colors"
+              title="Delete file"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
