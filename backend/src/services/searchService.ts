@@ -49,10 +49,25 @@ export const searchService = {
 
       const results = await query(sqlQuery, params);
 
-      // 4. Rerank results using Cohere Rerank v4.0 Pro
+      // If no results found, return early
+      if (!results.rows || results.rows.length === 0) {
+        await query(
+          `INSERT INTO search_logs (user_id, query, results_count, searched_at)
+           VALUES ($1, $2, $3, NOW())`,
+          [userId, queryText, 0]
+        );
+
+        return {
+          results: [],
+          total: 0,
+          query_understanding: queryParsing,
+        };
+      }
+
+      // 4. Rerank results using Cohere Rerank v4.0 Pro (only if we have results)
       const documentsForRerank = results.rows.map(row => ({
         id: row.id.toString(),
-        text: `${row.original_filename} ${row.ai_description} ${row.extracted_text?.substring(0, 500) || ''} ${
+        text: `${row.original_filename} ${row.ai_description || ''} ${row.extracted_text?.substring(0, 500) || ''} ${
           row.tags?.join(' ') || ''
         }`,
       }));
