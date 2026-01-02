@@ -14,6 +14,8 @@ interface SidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onShowTemplates?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 export default function Sidebar({
@@ -22,7 +24,9 @@ export default function Sidebar({
   onPageSelect,
   collapsed = false,
   onToggleCollapse,
-  onShowTemplates
+  onShowTemplates,
+  mobileOpen = false,
+  onMobileClose
 }: SidebarProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [pageTree, setPageTree] = useState<PageTreeNode[]>([]);
@@ -181,16 +185,34 @@ export default function Sidebar({
   }
 
   return (
-    <div className="w-64 h-full bg-surface border-r border-border flex flex-col">
-      {/* Header */}
-      <div className="p-3 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <button
-            onClick={onToggleCollapse}
-            className="p-1 hover:bg-background-secondary rounded"
-          >
-            <Menu className="w-4 h-4 text-text-secondary" />
-          </button>
+    <>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        w-64 h-full bg-surface border-r border-border flex flex-col
+        fixed md:relative inset-y-0 left-0 z-50
+        transform transition-transform duration-300 md:transform-none
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {/* Header */}
+        <div className="p-3 border-b border-border">
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => {
+                onToggleCollapse?.();
+                onMobileClose?.();
+              }}
+              className="p-1 hover:bg-background-secondary rounded"
+            >
+              <Menu className="w-4 h-4 text-text-secondary" />
+            </button>
           
           <div className="flex items-center gap-1">
             <button
@@ -315,5 +337,6 @@ export default function Sidebar({
         </Link>
       </div>
     </div>
+    </>
   );
 }

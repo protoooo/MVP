@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, MoreHorizontal, Eye, Table as TableIcon, LayoutGrid, Calendar, List, ChevronDown } from "lucide-react";
+import { Plus, MoreHorizontal, Eye, Table as TableIcon, LayoutGrid, Calendar, List as ListIcon, Grid, ChevronDown } from "lucide-react";
 import type { Database, DatabaseProperty, DatabaseView, DatabaseItem } from "@/lib/notion/types";
+import BoardView from "./database-views/BoardView";
+import CalendarView from "./database-views/CalendarView";
+import ListView from "./database-views/ListView";
+import GalleryView from "./database-views/GalleryView";
 
 interface DatabaseTableProps {
   databaseId: string;
@@ -126,7 +130,8 @@ export default function DatabaseTable({ databaseId }: DatabaseTableProps) {
       case "table": return <TableIcon className="w-4 h-4" />;
       case "board": return <LayoutGrid className="w-4 h-4" />;
       case "calendar": return <Calendar className="w-4 h-4" />;
-      case "list": return <List className="w-4 h-4" />;
+      case "list": return <ListIcon className="w-4 h-4" />;
+      case "gallery": return <Grid className="w-4 h-4" />;
       default: return <TableIcon className="w-4 h-4" />;
     }
   };
@@ -172,7 +177,7 @@ export default function DatabaseTable({ databaseId }: DatabaseTableProps) {
         </div>
       </div>
 
-      {/* Table View */}
+      {/* View Content */}
       {currentView?.type === "table" && (
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -230,8 +235,44 @@ export default function DatabaseTable({ databaseId }: DatabaseTableProps) {
         </div>
       )}
 
-      {/* Add New Row Button */}
-      {items.length > 0 && (
+      {currentView?.type === "board" && (
+        <BoardView
+          databaseId={databaseId}
+          properties={properties}
+          items={items}
+          onItemsChange={loadDatabase}
+        />
+      )}
+
+      {currentView?.type === "calendar" && (
+        <CalendarView
+          databaseId={databaseId}
+          properties={properties}
+          items={items}
+          onItemsChange={loadDatabase}
+        />
+      )}
+
+      {currentView?.type === "list" && (
+        <ListView
+          databaseId={databaseId}
+          properties={properties}
+          items={items}
+          onItemsChange={loadDatabase}
+        />
+      )}
+
+      {currentView?.type === "gallery" && (
+        <GalleryView
+          databaseId={databaseId}
+          properties={properties}
+          items={items}
+          onItemsChange={loadDatabase}
+        />
+      )}
+
+      {/* Add New Row Button - only for table view */}
+      {items.length > 0 && currentView?.type === "table" && (
         <div className="border-t border-border p-2">
           <button
             onClick={addItem}

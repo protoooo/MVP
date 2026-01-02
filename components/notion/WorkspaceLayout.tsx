@@ -22,6 +22,7 @@ export default function WorkspaceLayout({
 }: WorkspaceLayoutProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showQuickFind, setShowQuickFind] = useState(false);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -83,6 +84,16 @@ export default function WorkspaceLayout({
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileMenuOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-30 p-2 bg-surface border border-border rounded-lg shadow-lg"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
       {/* Sidebar */}
       <Sidebar
         workspaceId={workspace.id}
@@ -91,10 +102,12 @@ export default function WorkspaceLayout({
         onShowTemplates={onShowTemplates}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
       />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden pt-16 md:pt-0">
         {children}
       </div>
 
