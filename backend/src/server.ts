@@ -10,7 +10,9 @@ import searchRoutes from './routes/search';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.BACKEND_PORT || 3001;
+
+// FIXED: Use PORT for Railway, fall back to BACKEND_PORT for local dev
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -83,10 +85,11 @@ async function startServer() {
     
     // Start HTTP server
     console.log('\n=== Starting HTTP Server ===');
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`✓ BizMemory API server running on port ${PORT}`);
       console.log(`  Health check: http://localhost:${PORT}/health`);
       console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`  Listening on: 0.0.0.0:${PORT}`);
       console.log('\nServer ready to accept requests!\n');
     });
     
