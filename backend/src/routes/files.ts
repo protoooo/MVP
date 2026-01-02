@@ -43,6 +43,7 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRe
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    console.log(`Processing upload: ${req.file.originalname} (${req.file.mimetype})`);
     const file = await fileService.processUploadedFile(req.file, req.user!.id);
     res.json({ file, message: 'File uploaded successfully' });
   } catch (error) {
@@ -51,11 +52,11 @@ router.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRe
   }
 });
 
-// List files
+// List files - Enhanced to show all files
 router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const limit = parseInt(req.query.limit as string) || 50; // Increased default to 50
 
     const result = await fileService.listFiles(req.user!.id, page, limit);
     res.json(result);
