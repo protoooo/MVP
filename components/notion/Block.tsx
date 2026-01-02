@@ -13,6 +13,8 @@ import {
   Image as ImageIcon,
   File,
   Video,
+  Music,
+  FileText,
   Divide,
   MessageSquare,
   ChevronRight,
@@ -24,6 +26,10 @@ import {
 import ImageBlock from "./blocks/ImageBlock";
 import ToggleBlock from "./blocks/ToggleBlock";
 import AIWriterBlock from "./blocks/AIWriterBlock";
+import FileBlock from "./blocks/FileBlock";
+import VideoBlock from "./blocks/VideoBlock";
+import AudioBlock from "./blocks/AudioBlock";
+import PDFBlock from "./blocks/PDFBlock";
 
 interface BlockProps {
   block: BlockType;
@@ -95,6 +101,10 @@ export default function Block({
     { type: "quote" as BType, label: "Quote", icon: Quote },
     { type: "code" as BType, label: "Code", icon: Code },
     { type: "image" as BType, label: "Image", icon: ImageIcon },
+    { type: "file" as BType, label: "File", icon: File },
+    { type: "video" as BType, label: "Video", icon: Video },
+    { type: "audio" as BType, label: "Audio", icon: Music },
+    { type: "pdf" as BType, label: "PDF", icon: FileText },
     { type: "ai_writer" as BType, label: "AI Writer", icon: Sparkles },
     { type: "divider" as BType, label: "Divider", icon: Divide },
   ];
@@ -222,6 +232,42 @@ export default function Block({
       case "image":
         return (
           <ImageBlock
+            content={block.content as any}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+            onDelete={() => onDelete(block.id)}
+          />
+        );
+
+      case "file":
+        return (
+          <FileBlock
+            content={block.content as any}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+            onDelete={() => onDelete(block.id)}
+          />
+        );
+
+      case "video":
+        return (
+          <VideoBlock
+            content={block.content as any}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+            onDelete={() => onDelete(block.id)}
+          />
+        );
+
+      case "audio":
+        return (
+          <AudioBlock
+            content={block.content as any}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+            onDelete={() => onDelete(block.id)}
+          />
+        );
+
+      case "pdf":
+        return (
+          <PDFBlock
             content={block.content as any}
             onUpdate={(newContent) => onUpdate(block.id, newContent)}
             onDelete={() => onDelete(block.id)}
