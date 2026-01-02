@@ -18,8 +18,12 @@ import {
   ChevronRight,
   GripVertical,
   Plus,
-  MoreHorizontal
+  MoreHorizontal,
+  Sparkles
 } from "lucide-react";
+import ImageBlock from "./blocks/ImageBlock";
+import ToggleBlock from "./blocks/ToggleBlock";
+import AIWriterBlock from "./blocks/AIWriterBlock";
 
 interface BlockProps {
   block: BlockType;
@@ -87,8 +91,11 @@ export default function Block({
     { type: "heading3" as BType, label: "Heading 3", icon: Heading3 },
     { type: "bullet" as BType, label: "Bulleted list", icon: List },
     { type: "number" as BType, label: "Numbered list", icon: ListOrdered },
+    { type: "toggle" as BType, label: "Toggle list", icon: ChevronRight },
     { type: "quote" as BType, label: "Quote", icon: Quote },
     { type: "code" as BType, label: "Code", icon: Code },
+    { type: "image" as BType, label: "Image", icon: ImageIcon },
+    { type: "ai_writer" as BType, label: "AI Writer", icon: Sparkles },
     { type: "divider" as BType, label: "Divider", icon: Divide },
   ];
 
@@ -202,6 +209,31 @@ export default function Block({
               rows={3}
             />
           </div>
+        );
+
+      case "toggle":
+        return (
+          <ToggleBlock
+            content={block.content}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+          />
+        );
+
+      case "image":
+        return (
+          <ImageBlock
+            content={block.content}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+            onDelete={() => onDelete(block.id)}
+          />
+        );
+
+      case "ai_writer":
+        return (
+          <AIWriterBlock
+            content={block.content}
+            onUpdate={(newContent) => onUpdate(block.id, newContent)}
+          />
         );
 
       case "divider":
