@@ -222,7 +222,7 @@ export default function Block({
       case "image":
         return (
           <ImageBlock
-            content={block.content}
+            content={block.content as any}
             onUpdate={(newContent) => onUpdate(block.id, newContent)}
             onDelete={() => onDelete(block.id)}
           />

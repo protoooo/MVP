@@ -84,12 +84,14 @@ export default function WorkspacePage() {
 
     // Add blocks from template
     for (const blockTemplate of template.template_data.blocks) {
-      await createBlock(
-        newPage.id,
-        blockTemplate.type,
-        blockTemplate.content,
-        undefined
-      );
+      if (blockTemplate.type) {
+        await createBlock(
+          newPage.id,
+          blockTemplate.type,
+          blockTemplate.content || {},
+          undefined
+        );
+      }
     }
 
     setShowTemplates(false);
