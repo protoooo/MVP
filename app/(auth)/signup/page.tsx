@@ -23,7 +23,8 @@ export default function SignupPage() {
       await authAPI.register(email, password, businessName);
       router.push('/home');
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -63,6 +64,7 @@ export default function SignupPage() {
                 onChange={(e) => setBusinessName(e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
                 placeholder="Acme Inc."
+                disabled={loading}
               />
             </div>
 
@@ -78,6 +80,7 @@ export default function SignupPage() {
                 required
                 className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
                 placeholder="you@example.com"
+                disabled={loading}
               />
             </div>
 
@@ -94,6 +97,7 @@ export default function SignupPage() {
                 minLength={6}
                 className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
                 placeholder="••••••••"
+                disabled={loading}
               />
               <p className="mt-1 text-xs text-text-tertiary">At least 6 characters</p>
             </div>
