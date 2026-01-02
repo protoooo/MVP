@@ -8,6 +8,7 @@ import { supabaseStorageService } from './services/supabaseService';
 import authRoutes from './routes/auth';
 import filesRoutes from './routes/files';
 import searchRoutes from './routes/search';
+import reportsRoutes from './routes/reports';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/reports', reportsRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'BizMemory API is running', timestamp: new Date().toISOString() });
