@@ -10,7 +10,8 @@
     "build:backend": "tsc -p backend/tsconfig.json",
     "build:frontend": "next build",
     "start": "node backend/dist/server.js",
-    "start:frontend": "next start",
+    "start:backend": "node backend/dist/server.js",
+    "start:frontend": "next start -p ${PORT:-3000}",
     "lint": "next lint"
   },
   "keywords": [
