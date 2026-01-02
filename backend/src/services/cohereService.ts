@@ -94,6 +94,110 @@ Now parse the query and return ONLY the JSON object, no explanation:`;
     }
   },
 
+  // NEW: Extract specific answer from documents
+  async extractAnswer(
+    query: string,
+    documents: Array<{
+      filename: string;
+      content: string;
+      metadata?: any;
+    }>
+  ): Promise<{
+    answer: string;
+    citations: Array<{
+      filename: string;
+      excerpt: string;
+      relevance: number;
+    }>;
+    confidence: number;
+    hasDirectAnswer: boolean;
+  }> {
+    // Prepare document context
+    const documentContext = documents
+      .map((doc, idx) => {
+        return `[Document ${idx + 1}: ${doc.filename}]\n${doc.content.substring(0, 3000)}\n`;
+      })
+      .join('\n---\n\n');
+
+    const prompt = `You are an expert data extraction assistant. Your job is to find and extract specific information from business documents to answer the user's question.
+
+User Question: "${query}"
+
+Documents:
+${documentContext}
+
+Instructions:
+1. Read through all documents carefully
+2. Extract the SPECIFIC data that answers the question (numbers, dates, names, amounts, etc.)
+3. If you find the answer, provide it clearly and cite which document(s) it came from
+4. If you cannot find a direct answer, say so and explain what information is missing
+5. Be precise - if asked for a specific year or value, provide exactly that
+
+Respond in JSON format:
+{
+  "answer": "Direct answer to the question with specific data points",
+  "hasDirectAnswer": true/false,
+  "confidence": 0.0-1.0 (how confident you are),
+  "citations": [
+    {
+      "documentIndex": 1,
+      "excerpt": "Relevant text excerpt from document",
+      "relevance": 0.0-1.0
+    }
+  ],
+  "reasoning": "Brief explanation of how you found the answer"
+}
+
+Examples:
+
+Question: "What were my capital gains in 2017?"
+Answer: {"answer":"Your capital gains in 2017 were $47,250, primarily from a Q2 rental property sale ($35,000) and stock dividends ($12,250).","hasDirectAnswer":true,"confidence":0.95,"citations":[{"documentIndex":1,"excerpt":"2017 Schedule D: Long-term capital gains $47,250","relevance":1.0}],"reasoning":"Found explicit capital gains data in 2017 tax return Schedule D"}
+
+Question: "Who approved the new safety protocol?"
+Answer: {"answer":"The new safety protocol was approved by Janet Martinez (Operations Director) on March 15, 2023.","hasDirectAnswer":true,"confidence":0.9,"citations":[{"documentIndex":2,"excerpt":"Approved by: J. Martinez, Ops Director, 3/15/23","relevance":0.95}],"reasoning":"Found approval signature and date on safety protocol document"}
+
+Now analyze the documents and answer the user's question:`;
+
+    try {
+      const response = await cohere.chat({
+        model: process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024',
+        message: prompt,
+        temperature: 0.1,
+      });
+
+      // Extract JSON from response
+      const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Map document indices back to filenames
+      const citations = parsed.citations.map((cit: any) => ({
+        filename: documents[cit.documentIndex - 1]?.filename || 'Unknown',
+        excerpt: cit.excerpt,
+        relevance: cit.relevance || 0.8,
+      }));
+
+      return {
+        answer: parsed.answer,
+        citations,
+        confidence: parsed.confidence || 0.7,
+        hasDirectAnswer: parsed.hasDirectAnswer || false,
+      };
+    } catch (error) {
+      console.error('Error extracting answer:', error);
+      return {
+        answer:
+          'I found relevant documents but could not extract a specific answer. Please review the documents below.',
+        citations: [],
+        confidence: 0.3,
+        hasDirectAnswer: false,
+      };
+    }
+  },
+
   // Generate auto-tags and metadata for uploaded files
   async generateFileMetadata(filename: string, extractedText: string, fileType: string): Promise<{
     category: string;
@@ -191,7 +295,7 @@ Return as JSON: {"description": "...", "tags": [...], "category": "...", "confid
       query: query,
       documents: documents.map(doc => doc.text),
       model: process.env.COHERE_RERANK_MODEL || 'rerank-v4.0-pro',
-      topN: documents.length, // Return all, sorted by relevance
+      topN: documents.length,
       returnDocuments: false,
     });
 
