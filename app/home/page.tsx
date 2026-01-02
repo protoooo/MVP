@@ -17,6 +17,7 @@ export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
+  const [currentQuery, setCurrentQuery] = useState('');
   const [allFiles, setAllFiles] = useState<File[]>([]);
   const [filteredFiles, setFilteredFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,7 @@ export default function HomePage() {
   const handleSearch = async (query: string) => {
     setLoading(true);
     setActiveView('search');
+    setCurrentQuery(query);
     try {
       const results = await searchAPI.search(query);
       console.log('Search results:', results);
@@ -70,7 +72,8 @@ export default function HomePage() {
           documentTypes: [],
           entities: { dates: [], amounts: [], names: [], locations: [] },
           keywords: []
-        }
+        },
+        extractedAnswer: null
       });
     } finally {
       setLoading(false);
@@ -226,6 +229,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-border bg-surface flex flex-col`}>
         {sidebarOpen && (
           <div className="flex flex-col h-full">
@@ -280,7 +284,7 @@ export default function HomePage() {
                 }`}
               >
                 <Search className="w-5 h-5" />
-                <span>Search</span>
+                <span>AI Search</span>
               </button>
             </nav>
 
@@ -335,7 +339,9 @@ export default function HomePage() {
         )}
       </aside>
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
         <header className="border-b border-border bg-surface px-6 py-4">
           <div className="flex items-center gap-4">
             <button
@@ -363,7 +369,9 @@ export default function HomePage() {
           </div>
         </header>
 
+        {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">
+          {/* All Files View */}
           {activeView === 'files' && (
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-6">
@@ -463,6 +471,7 @@ export default function HomePage() {
             </div>
           )}
 
+          {/* Upload View */}
           {activeView === 'upload' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
@@ -478,6 +487,7 @@ export default function HomePage() {
             </div>
           )}
 
+          {/* Search View */}
           {activeView === 'search' && (
             <div className="max-w-7xl mx-auto">
               {searchResults && searchResults.results.length > 0 && (
@@ -493,6 +503,7 @@ export default function HomePage() {
               )}
               <SearchResults 
                 results={searchResults} 
+                query={currentQuery}
                 loading={loading} 
                 onFileDeleted={refreshFiles}
               />
@@ -501,6 +512,7 @@ export default function HomePage() {
         </div>
       </main>
 
+      {/* File Preview Modal */}
       {previewFile && (
         <FilePreviewModal
           file={previewFile}
@@ -511,6 +523,7 @@ export default function HomePage() {
         />
       )}
 
+      {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcuts
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
