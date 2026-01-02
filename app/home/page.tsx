@@ -2,19 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authAPI, searchAPI } from '../services/api';
+import { authAPI, searchAPI, filesAPI } from '../services/api';
 import SearchBar from '../components/SearchBar';
 import FileUpload from '../components/FileUpload';
 import SearchResults from '../components/SearchResults';
-import { SearchResult, User } from '../types';
-import { Database, LogOut } from 'lucide-react';
+import FileCard from '../components/FileCard';
+import { SearchResult, User, File } from '../types';
+import { Database, LogOut, Files } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
+  const [allFiles, setAllFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'search' | 'upload'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'upload' | 'files'>('files');
 
   useEffect(() => {
     // Check if user is authenticated
@@ -22,6 +24,8 @@ export default function HomePage() {
       try {
         const userData = await authAPI.getMe();
         setUser(userData);
+        // Load all files on initial load
+        loadAllFiles();
       } catch (error) {
         router.push('/login');
       }
@@ -29,6 +33,18 @@ export default function HomePage() {
 
     checkAuth();
   }, [router]);
+
+  const loadAllFiles = async () => {
+    try {
+      setLoading(true);
+      const response = await filesAPI.list(1, 50);
+      setAllFiles(response.files);
+    } catch (error) {
+      console.error('Error loading files:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -48,12 +64,9 @@ export default function HomePage() {
     router.push('/login');
   };
 
-  const refreshSearch = () => {
-    if (searchResults) {
-      // Re-run the last search - but we don't have the query stored
-      // For now, just clear results. In production, store last query.
-      setSearchResults(null);
-    }
+  const refreshFiles = () => {
+    loadAllFiles();
+    setSearchResults(null);
   };
 
   if (!user) {
@@ -109,6 +122,17 @@ export default function HomePage() {
         <div className="mb-6 border-b border-border">
           <nav className="flex gap-8">
             <button
+              onClick={() => setActiveTab('files')}
+              className={`pb-3 px-1 border-b-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'files'
+                  ? 'border-brand text-brand'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <Files className="w-4 h-4" />
+              All Files ({allFiles.length})
+            </button>
+            <button
               onClick={() => setActiveTab('search')}
               className={`pb-3 px-1 border-b-2 text-sm font-medium transition-colors ${
                 activeTab === 'search'
@@ -132,14 +156,54 @@ export default function HomePage() {
         </div>
 
         {/* Content Area */}
-        {activeTab === 'search' ? (
+        {activeTab === 'files' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-text-primary">
+                Your Files
+              </h2>
+              <button 
+                onClick={loadAllFiles}
+                className="btn-secondary text-sm"
+              >
+                Refresh
+              </button>
+            </div>
+            
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="spinner w-8 h-8 border-4 border-brand/20 border-t-brand rounded-full" />
+              </div>
+            ) : allFiles.length > 0 ? (
+              <div className="grid gap-4">
+                {allFiles.map((file) => (
+                  <FileCard key={file.id} file={file} onDelete={refreshFiles} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-text-secondary mb-2">No files uploaded yet</p>
+                <p className="text-sm text-text-tertiary">
+                  Upload your first file to get started
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'search' && (
           <SearchResults 
             results={searchResults} 
             loading={loading} 
-            onFileDeleted={refreshSearch}
+            onFileDeleted={refreshFiles}
           />
-        ) : (
-          <FileUpload onUploadComplete={() => setActiveTab('search')} />
+        )}
+
+        {activeTab === 'upload' && (
+          <FileUpload onUploadComplete={() => {
+            loadAllFiles();
+            setActiveTab('files');
+          }} />
         )}
       </main>
     </div>
