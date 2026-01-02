@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Loader2, Zap, Wand2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskOutputDisplay, { TaskProgressIndicator } from "./TaskOutputDisplay";
+import ThinkingIndicator, { ThinkingState } from "./ThinkingIndicator";
 
 interface TaskOutput {
   type: 'file' | 'data' | 'action' | 'text';
@@ -40,7 +41,7 @@ export default function ChatbotEnhanced({
   onSendMessage, 
   placeholder, 
   welcomeMessage,
-  agentColor = "blue",
+  agentColor = "indigo",
   agentType,
   enableAutonomous = true,
 }: ChatbotEnhancedProps) {
@@ -48,9 +49,12 @@ export default function ChatbotEnhanced({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [executingTask, setExecutingTask] = useState(false);
+  const [thinkingState, setThinkingState] = useState<ThinkingState>({
+    isThinking: false,
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Autonomous mode is always on - no toggle needed
+  // Autonomous mode is always on
   const autonomousMode = true;
 
   useEffect(() => {
@@ -137,6 +141,11 @@ export default function ChatbotEnhanced({
 
       if (taskIntent.isTask && agentType) {
         setExecutingTask(true);
+        setThinkingState({
+          isThinking: true,
+          currentStep: "Analyzing your request...",
+          progress: 10,
+        });
         
         // Show task is starting
         const taskMessage: Message = {
@@ -147,6 +156,13 @@ export default function ChatbotEnhanced({
           ]
         };
         setMessages(prev => [...prev, taskMessage]);
+
+        // Update thinking state
+        setThinkingState({
+          isThinking: true,
+          currentStep: "Executing task...",
+          progress: 30,
+        });
 
         // Execute task via API
         const taskResponse = await fetch('/api/tasks', {
@@ -161,6 +177,12 @@ export default function ChatbotEnhanced({
         });
 
         const taskData = await taskResponse.json();
+
+        setThinkingState({
+          isThinking: true,
+          currentStep: "Finalizing results...",
+          progress: 90,
+        });
 
         if (taskData.success && taskData.outputs) {
           // Update message with outputs
@@ -180,9 +202,15 @@ export default function ChatbotEnhanced({
           throw new Error(taskData.message || 'Task failed');
         }
         
+        setThinkingState({ isThinking: false });
         setExecutingTask(false);
       } else {
         // Regular chat
+        setThinkingState({
+          isThinking: true,
+          currentStep: "Processing your message...",
+        });
+
         const response = await onSendMessage(userMessage, [...messages, newUserMessage]);
         
         let assistantContent = "";
@@ -205,6 +233,7 @@ export default function ChatbotEnhanced({
         };
 
         setMessages(prev => [...prev, assistantMessage]);
+        setThinkingState({ isThinking: false });
       }
     } catch (error) {
       console.error("Chat error:", error);
@@ -215,6 +244,7 @@ export default function ChatbotEnhanced({
           content: "Sorry, I encountered an error. Please try again.",
         },
       ]);
+      setThinkingState({ isThinking: false });
     } finally {
       setIsLoading(false);
       setExecutingTask(false);
@@ -239,15 +269,7 @@ export default function ChatbotEnhanced({
   const colorStyle = colorStyles[agentColor as keyof typeof colorStyles] || colorStyles.sky;
 
   return (
-    <div className="flex flex-col h-full bg-surface rounded-lg border border-border">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background-secondary">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-text-primary">Agent Chat</span>
-          <span className="text-xs text-text-tertiary">• Always autonomous</span>
-        </div>
-      </div>
-
+    <div className="flex flex-col h-full bg-surface">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         <AnimatePresence>
@@ -260,18 +282,18 @@ export default function ChatbotEnhanced({
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                className={`max-w-[80%] rounded-xl px-4 py-3 ${
                   message.role === "user"
-                    ? "bg-text-primary text-white"
-                    : "bg-background-tertiary text-text-primary"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-background-secondary text-text-primary border border-border"
                 }`}
               >
                 <div className="flex items-start gap-2">
                   {message.role === "assistant" && message.isAutonomous && (
-                    <Zap className="w-4 h-4 text-amber-500 flex-shrink-0 mt-1" />
+                    <Zap className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-1" />
                   )}
                   <div className="flex-1 space-y-3">
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                     
                     {message.taskProgress && message.taskProgress.length > 0 && (
                       <div className="mt-3">
@@ -302,49 +324,41 @@ export default function ChatbotEnhanced({
           ))}
         </AnimatePresence>
 
+        {/* Thinking Indicator */}
         {(isLoading || executingTask) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start"
-          >
-            <div className="bg-gray-100 rounded-lg px-4 py-3 flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
-              <span className="text-sm text-gray-600">
-                {executingTask ? "Executing task..." : "Thinking..."}
-              </span>
-            </div>
-          </motion.div>
+          <ThinkingIndicator state={thinkingState} />
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-200 p-4 bg-gray-50">
+      <div className="border-t border-border p-4 bg-background-secondary">
         <div className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={placeholder || "Type a message..."}
+            placeholder={placeholder || "Ask me anything..."}
             disabled={isLoading || executingTask}
-            className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-text-primary placeholder:text-text-tertiary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          <button
+          <motion.button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || executingTask}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+            whileHover={{ scale: !input.trim() || isLoading || executingTask ? 1 : 1.02 }}
+            whileTap={{ scale: !input.trim() || isLoading || executingTask ? 1 : 0.98 }}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-lg"
+            style={{
+              boxShadow: !input.trim() || isLoading || executingTask 
+                ? "none" 
+                : "0 4px 14px 0 rgba(99, 102, 241, 0.4)",
+            }}
           >
             <Send className="w-4 h-4" />
-            Send
-          </button>
+          </motion.button>
         </div>
-        
-        <p className="text-xs text-gray-500 mt-2">
-          Autonomous mode: I can execute tasks, generate files, and perform actions automatically
-        </p>
       </div>
     </div>
   );
