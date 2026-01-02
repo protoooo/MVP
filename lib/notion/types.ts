@@ -30,7 +30,64 @@ export type BlockType =
   | 'toc'
   | 'breadcrumb'
   | 'link'
-  | 'synced';
+  | 'synced'
+  // Automation blocks - Scheduling & Time Management
+  | 'schedule_generator'
+  | 'interview_scheduler'
+  | 'meeting_agenda_generator'
+  // Automation blocks - Communication
+  | 'email_drafter'
+  | 'newsletter_generator'
+  | 'announcement_drafter'
+  // Automation blocks - Financial
+  | 'invoice_builder'
+  | 'expense_tracker'
+  | 'quote_generator'
+  | 'pl_statement_generator'
+  | 'cash_flow_projector'
+  // Automation blocks - HR & People
+  | 'job_description_generator'
+  | 'offer_letter_generator'
+  | 'performance_review_drafter'
+  | 'onboarding_checklist_generator'
+  // Automation blocks - Customer Management
+  | 'support_ticket_responder'
+  | 'customer_survey_generator'
+  // Automation blocks - Operations
+  | 'inventory_forecaster'
+  | 'quality_checklist_generator'
+  | 'sop_generator'
+  // Automation blocks - Marketing
+  | 'blog_post_generator'
+  | 'social_media_post_generator'
+  | 'ad_copy_generator'
+  | 'seo_meta_generator'
+  // Automation blocks - Sales
+  | 'proposal_generator'
+  | 'contract_drafter'
+  | 'sales_script_generator'
+  // Automation blocks - Compliance & Legal
+  | 'nda_generator'
+  | 'policy_drafter'
+  | 'incident_report_generator'
+  // Automation blocks - Training
+  | 'training_manual_generator'
+  | 'quiz_generator'
+  // Automation blocks - Forecasting & Planning
+  | 'business_plan_generator'
+  | 'swot_analysis_generator'
+  | 'okr_generator'
+  // Automation blocks - Analytics & Reports
+  | 'report_generator'
+  | 'kpi_dashboard_generator'
+  | 'chart_generator'
+  // Automation blocks - Project Management
+  | 'project_charter_generator'
+  | 'gantt_chart_generator'
+  | 'status_report_generator'
+  // Automation blocks - Industry-Specific
+  | 'menu_engineering_calculator'
+  | 'recipe_cost_calculator';
 
 export type DatabaseViewType = 'table' | 'board' | 'calendar' | 'list' | 'gallery';
 
