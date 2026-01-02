@@ -2,7 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // Turbopack configuration (empty config to silence Next.js 16 warning)
+  // Output standalone for easier deployment
+  output: 'standalone',
+  
+  // Turbopack configuration
   turbopack: {},
   
   // Performance optimizations
