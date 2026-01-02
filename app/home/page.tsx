@@ -7,17 +7,25 @@ import SearchBar from '../components/SearchBar';
 import FileUpload from '../components/FileUpload';
 import SearchResults from '../components/SearchResults';
 import FileCard from '../components/FileCard';
+import FilePreviewModal from '../components/FilePreviewModal';
+import AdvancedFilters, { FilterOptions } from '../components/AdvancedFilters';
+import KeyboardShortcuts, { useKeyboardShortcuts } from '../components/KeyboardShortcuts';
 import { SearchResult, User, File } from '../types';
-import { Database, LogOut, Files, Upload, Search, Clock, HardDrive, Settings, Menu, X } from 'lucide-react';
+import { Database, LogOut, Files, Upload, Search, Clock, HardDrive, Menu, X, CheckSquare, Square, Download, Trash2, Keyboard as KeyboardIcon } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
   const [allFiles, setAllFiles] = useState<File[]>([]);
+  const [filteredFiles, setFilteredFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<'files' | 'upload' | 'search'>('files');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -37,6 +45,7 @@ export default function HomePage() {
       setLoading(true);
       const response = await filesAPI.list(1, 50);
       setAllFiles(response.files);
+      setFilteredFiles(response.files);
     } catch (error) {
       console.error('Error loading files:', error);
     } finally {
@@ -57,6 +66,137 @@ export default function HomePage() {
     }
   };
 
+  const handleFilterChange = (filters: FilterOptions) => {
+    let filtered = [...allFiles];
+
+    // File type filter
+    if (filters.fileTypes.length > 0) {
+      filtered = filtered.filter(file => 
+        filters.fileTypes.some(type => file.file_type.includes(type))
+      );
+    }
+
+    // Date range filter
+    if (filters.dateRange.start) {
+      filtered = filtered.filter(file => 
+        new Date(file.uploaded_at) >= new Date(filters.dateRange.start!)
+      );
+    }
+    if (filters.dateRange.end) {
+      filtered = filtered.filter(file => 
+        new Date(file.uploaded_at) <= new Date(filters.dateRange.end!)
+      );
+    }
+
+    // Size filter
+    if (filters.sizeRange.min !== undefined) {
+      filtered = filtered.filter(file => file.file_size >= filters.sizeRange.min!);
+    }
+    if (filters.sizeRange.max !== undefined) {
+      filtered = filtered.filter(file => file.file_size <= filters.sizeRange.max!);
+    }
+
+    // Tags filter
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(file => 
+        file.tags?.some(tag => filters.tags.includes(tag))
+      );
+    }
+
+    // Category filter
+    if (filters.category) {
+      filtered = filtered.filter(file => file.category === filters.category);
+    }
+
+    setFilteredFiles(filtered);
+  };
+
+  const handleExportResults = () => {
+    const filesToExport = activeView === 'search' 
+      ? searchResults?.results || [] 
+      : filteredFiles;
+
+    const csvContent = [
+      ['Filename', 'Size', 'Type', 'Uploaded', 'Category', 'Tags', 'Description'].join(','),
+      ...filesToExport.map(file => [
+        file.original_filename,
+        file.file_size,
+        file.file_type,
+        file.uploaded_at,
+        file.category || '',
+        file.tags?.join(';') || '',
+        file.ai_description?.replace(/,/g, ';') || ''
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bizmemory-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleBatchDownload = async () => {
+    for (const fileId of selectedFiles) {
+      const file = allFiles.find(f => f.id === fileId);
+      if (file) {
+        const a = document.createElement('a');
+        a.href = filesAPI.getDownloadUrl(fileId);
+        a.download = file.original_filename;
+        a.click();
+        await new Promise(resolve => setTimeout(resolve, 500)); // Delay between downloads
+      }
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedFiles.size} files?`)) return;
+    
+    try {
+      for (const fileId of selectedFiles) {
+        await filesAPI.delete(fileId);
+      }
+      setSelectedFiles(new Set());
+      setSelectionMode(false);
+      loadAllFiles();
+    } catch (error) {
+      console.error('Error deleting files:', error);
+    }
+  };
+
+  const toggleSelection = (fileId: number) => {
+    const newSelection = new Set(selectedFiles);
+    if (newSelection.has(fileId)) {
+      newSelection.delete(fileId);
+    } else {
+      newSelection.add(fileId);
+    }
+    setSelectedFiles(newSelection);
+  };
+
+  const selectAll = () => {
+    setSelectedFiles(new Set(filteredFiles.map(f => f.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedFiles(new Set());
+  };
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onNavigateFiles: () => setActiveView('files'),
+    onNavigateUpload: () => setActiveView('upload'),
+    onNavigateSearch: () => setActiveView('search'),
+    onSelectAll: selectAll,
+    onDeselectAll: deselectAll,
+    onDownload: () => selectedFiles.size > 0 && handleBatchDownload(),
+    onDelete: () => selectedFiles.size > 0 && handleBatchDelete(),
+    onExport: handleExportResults,
+    onShowShortcuts: () => setShowShortcuts(true),
+  });
+
   const handleLogout = () => {
     authAPI.logout();
     router.push('/login');
@@ -76,6 +216,8 @@ export default function HomePage() {
 
   const storageUsed = allFiles.reduce((acc, file) => acc + file.file_size, 0);
   const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(2);
+  const availableTags = Array.from(new Set(allFiles.flatMap(f => f.tags || [])));
+  const availableCategories = Array.from(new Set(allFiles.map(f => f.category).filter(Boolean))) as string[];
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -83,7 +225,6 @@ export default function HomePage() {
       <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-border bg-surface flex flex-col`}>
         {sidebarOpen && (
           <div className="flex flex-col h-full">
-            {/* Logo */}
             <div className="p-6 border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
@@ -98,7 +239,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 p-4 space-y-1">
               <button
                 onClick={() => setActiveView('files')}
@@ -140,7 +280,6 @@ export default function HomePage() {
               </button>
             </nav>
 
-            {/* Storage Info */}
             <div className="p-4 border-t border-border">
               <div className="bg-surface-elevated rounded-lg p-4 space-y-3">
                 <div className="flex items-center gap-2 text-text-secondary">
@@ -162,7 +301,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* User Section */}
             <div className="p-4 border-t border-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
@@ -212,6 +350,14 @@ export default function HomePage() {
             <div className="flex-1 max-w-2xl">
               <SearchBar onSearch={handleSearch} loading={loading} />
             </div>
+
+            <button
+              onClick={() => setShowShortcuts(true)}
+              className="p-2 hover:bg-surface-elevated rounded-lg transition-colors"
+              title="Keyboard shortcuts (?)"
+            >
+              <KeyboardIcon className="w-5 h-5 text-text-secondary" />
+            </button>
           </div>
         </header>
 
@@ -223,26 +369,69 @@ export default function HomePage() {
                 <div>
                   <h2 className="text-2xl font-bold text-text-primary mb-1">Your Files</h2>
                   <p className="text-sm text-text-secondary">
-                    {allFiles.length} {allFiles.length === 1 ? 'file' : 'files'} stored
+                    {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} 
+                    {filteredFiles.length !== allFiles.length && ` (filtered from ${allFiles.length})`}
                   </p>
                 </div>
-                <button 
-                  onClick={loadAllFiles}
-                  className="btn-secondary"
-                  disabled={loading}
-                >
-                  Refresh
-                </button>
+                <div className="flex items-center gap-2">
+                  {selectedFiles.size > 0 && (
+                    <>
+                      <button 
+                        onClick={handleBatchDownload}
+                        className="btn-secondary flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download ({selectedFiles.size})
+                      </button>
+                      <button 
+                        onClick={handleBatchDelete}
+                        className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectionMode(!selectionMode);
+                      if (selectionMode) setSelectedFiles(new Set());
+                    }}
+                    className="btn-secondary flex items-center gap-2"
+                  >
+                    {selectionMode ? <Square className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
+                    {selectionMode ? 'Cancel' : 'Select'}
+                  </button>
+                  <AdvancedFilters 
+                    onFilterChange={handleFilterChange}
+                    availableTags={availableTags}
+                    availableCategories={availableCategories}
+                  />
+                  <button 
+                    onClick={loadAllFiles}
+                    className="btn-secondary"
+                    disabled={loading}
+                  >
+                    Refresh
+                  </button>
+                </div>
               </div>
               
               {loading ? (
                 <div className="flex items-center justify-center py-20">
                   <div className="animate-spin w-8 h-8 border-4 border-brand/20 border-t-brand rounded-full" />
                 </div>
-              ) : allFiles.length > 0 ? (
+              ) : filteredFiles.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {allFiles.map((file) => (
-                    <FileCard key={file.id} file={file} onDelete={refreshFiles} />
+                  {filteredFiles.map((file) => (
+                    <FileCard 
+                      key={file.id} 
+                      file={file} 
+                      onDelete={refreshFiles}
+                      onPreview={() => setPreviewFile(file)}
+                      isSelected={selectedFiles.has(file.id)}
+                      onSelect={(selected) => toggleSelection(file.id)}
+                      selectionMode={selectionMode}
+                    />
                   ))}
                 </div>
               ) : (
@@ -250,17 +439,24 @@ export default function HomePage() {
                   <div className="w-16 h-16 rounded-full bg-surface-elevated flex items-center justify-center mx-auto mb-4">
                     <Files className="w-8 h-8 text-text-tertiary" />
                   </div>
-                  <h3 className="text-lg font-semibold text-text-primary mb-2">No files yet</h3>
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">
+                    {allFiles.length === 0 ? 'No files yet' : 'No files match filters'}
+                  </h3>
                   <p className="text-text-secondary mb-6">
-                    Upload your first file to get started with AI-powered search
+                    {allFiles.length === 0 
+                      ? 'Upload your first file to get started with AI-powered search'
+                      : 'Try adjusting your filters to see more results'
+                    }
                   </p>
-                  <button
-                    onClick={() => setActiveView('upload')}
-                    className="btn-primary"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Files
-                  </button>
+                  {allFiles.length === 0 && (
+                    <button
+                      onClick={() => setActiveView('upload')}
+                      className="btn-primary"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Files
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -283,6 +479,16 @@ export default function HomePage() {
 
           {activeView === 'search' && (
             <div className="max-w-7xl mx-auto">
+              <div className="flex justify-end mb-4">
+                <button
+                  onClick={handleExportResults}
+                  className="btn-secondary flex items-center gap-2"
+                  disabled={!searchResults || searchResults.results.length === 0}
+                >
+                  <Download className="w-4 h-4" />
+                  Export Results (⌘E)
+                </button>
+              </div>
               <SearchResults 
                 results={searchResults} 
                 loading={loading} 
@@ -292,6 +498,22 @@ export default function HomePage() {
           )}
         </div>
       </main>
+
+      {/* Modals */}
+      {previewFile && (
+        <FilePreviewModal
+          file={previewFile}
+          allFiles={filteredFiles}
+          onClose={() => setPreviewFile(null)}
+          onDelete={refreshFiles}
+          onNavigate={(file) => setPreviewFile(file)}
+        />
+      )}
+
+      <KeyboardShortcuts
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
     </div>
   );
 }
