@@ -328,6 +328,120 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Comparison Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">
+            Why Business Owners Choose Us
+          </h2>
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            We don't just organize your work — we actually complete it for you
+          </p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900"></th>
+                  <th className="px-6 py-4 text-center bg-indigo-50">
+                    <div className="font-bold text-indigo-900 text-lg mb-1">Business Workspace</div>
+                    <div className="text-xs text-indigo-600 font-normal">✓ Built for small business</div>
+                  </th>
+                  <th className="px-6 py-4 text-center">
+                    <div className="font-semibold text-gray-900">Notion</div>
+                  </th>
+                  <th className="px-6 py-4 text-center">
+                    <div className="font-semibold text-gray-900">Asana/Monday</div>
+                  </th>
+                  <th className="px-6 py-4 text-center">
+                    <div className="font-semibold text-gray-900">Hiring an Admin</div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                <tr>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">Actually completes work</td>
+                  <td className="px-6 py-4 text-center bg-indigo-50">
+                    <Check className="w-5 h-5 text-green-600 mx-auto" />
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <X className="w-5 h-5 text-gray-300 mx-auto" />
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <X className="w-5 h-5 text-gray-300 mx-auto" />
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <Check className="w-5 h-5 text-green-600 mx-auto" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">Creates schedules, invoices, emails</td>
+                  <td className="px-6 py-4 text-center bg-indigo-50">
+                    <Check className="w-5 h-5 text-green-600 mx-auto" />
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="text-xs text-gray-500">(You do it manually)</div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="text-xs text-gray-500">(You do it manually)</div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <Check className="w-5 h-5 text-green-600 mx-auto" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">Monthly cost</td>
+                  <td className="px-6 py-4 text-center bg-indigo-50">
+                    <div className="text-lg font-bold text-indigo-600">$25</div>
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">$10-15/user</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">$10-25/user</td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="text-lg font-bold text-gray-900">$2,000+</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">Setup time</td>
+                  <td className="px-6 py-4 text-center bg-indigo-50 text-sm font-semibold text-indigo-700">5 minutes</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Hours of configuration</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Hours of configuration</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Weeks to hire/train</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">Learning curve</td>
+                  <td className="px-6 py-4 text-center bg-indigo-50 text-sm font-semibold text-indigo-700">Pick task → Done</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Steep learning curve</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Steep learning curve</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Depends on person</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">Best for</td>
+                  <td className="px-6 py-4 text-center bg-indigo-50">
+                    <div className="text-sm font-bold text-indigo-900">Solo to 10 people</div>
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Tech-savvy teams</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">Project management</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-600">20+ employees</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="text-center mt-12">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">
+              Ready to get your time back?
+            </h3>
+            <Link
+              href="/signup"
+              className="inline-block px-8 py-4 bg-indigo-600 text-white rounded-lg text-lg font-semibold hover:bg-indigo-700 transition-colors mb-3"
+            >
+              Start Free Trial
+            </Link>
+            <p className="text-sm text-gray-600">No credit card required. Cancel anytime.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="py-20 px-4 bg-indigo-600">
         <div className="max-w-4xl mx-auto text-center">
