@@ -66,13 +66,13 @@ Keep the tone ${tone} and ensure the email is clear, concise, and professional.`
     const subjectMatch = generatedText.match(/SUBJECT:\s*(.+?)(?:\n|$)/i);
     const bodyMatch = generatedText.match(/BODY:\s*([\s\S]+)/i);
 
-    const subject = subjectMatch ? subjectMatch[1].trim() : "Your Email";
-    const body = bodyMatch ? bodyMatch[1].trim() : generatedText;
+    const emailSubject = subjectMatch ? subjectMatch[1].trim() : "Your Email";
+    const emailBody = bodyMatch ? bodyMatch[1].trim() : generatedText;
 
     return NextResponse.json({
       email: {
-        subject,
-        body,
+        subject: emailSubject,
+        body: emailBody,
       },
     });
   } catch (error) {

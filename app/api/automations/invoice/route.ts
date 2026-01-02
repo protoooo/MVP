@@ -93,7 +93,7 @@ Format the result as a JSON object with this structure:
         };
       });
 
-      const subtotal = parsedItems.reduce((sum, item) => sum + item.amount, 0);
+      const subtotal = parsedItems.reduce((sum: number, item: any) => sum + item.amount, 0);
       const tax = subtotal * 0.08;
       const total = subtotal + tax;
 
