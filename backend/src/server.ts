@@ -2,7 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { initializeDatabase, checkDatabaseConnection, closeDatabasePool } from './config/database';
+import { supabaseStorageService } from './services/supabaseService';
 import authRoutes from './routes/auth';
 import filesRoutes from './routes/files';
 import searchRoutes from './routes/search';
@@ -15,6 +17,13 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Port:', PORT);
+
+// Create upload directory for temporary file processing
+const uploadDir = path.resolve(process.env.UPLOAD_DIR || './uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log(`✓ Created upload directory: ${uploadDir}`);
+}
 
 // Middleware
 app.use(cors());
@@ -214,7 +223,7 @@ function setupFallbackRoutes() {
           `}
           
           <div class="info" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #30363D;">
-            <p>Powered by Cohere AI • PostgreSQL with pgvector</p>
+            <p>Powered by Cohere AI • PostgreSQL with pgvector • Supabase Storage</p>
           </div>
         </div>
       </body>
@@ -269,6 +278,20 @@ async function startServer() {
     
     console.log('\n=== Database Init ===');
     await initializeDatabase();
+    
+    // Ensure Supabase bucket exists (if configured)
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.log('\n=== Supabase Storage Init ===');
+      try {
+        await supabaseStorageService.ensureBucketExists('bizmemory-files');
+        console.log('✓ Supabase storage bucket ready');
+      } catch (error: any) {
+        console.warn('⚠️  Could not initialize Supabase bucket:', error.message);
+        console.log('   Continuing with local filesystem storage');
+      }
+    } else {
+      console.log('\n⚠️  Supabase credentials not found - using local filesystem storage');
+    }
     
     console.log('\n=== Server Initialization ===');
     
