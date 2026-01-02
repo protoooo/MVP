@@ -13,7 +13,8 @@ import {
   updatePageCover
 } from "@/lib/notion/page-utils";
 import Block from "./Block";
-import { Star, MoreHorizontal, Image as ImageIcon, Smile } from "lucide-react";
+import Comments from "./Comments";
+import { Star, MoreHorizontal, Image as ImageIcon, Smile, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface PageEditorProps {
@@ -25,6 +26,7 @@ export default function PageEditor({ pageId }: PageEditorProps) {
   const [blocks, setBlocks] = useState<BlockType[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
+  const [showComments, setShowComments] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -152,7 +154,17 @@ export default function PageEditor({ pageId }: PageEditorProps) {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-background">
+    <div className="h-full overflow-y-auto bg-background relative">
+      {/* Comments Toggle Button */}
+      <button
+        onClick={() => setShowComments(!showComments)}
+        className="fixed top-4 right-4 p-3 bg-surface border border-border rounded-full shadow-lg
+          hover:bg-background-secondary transition z-10"
+        title="Toggle comments"
+      >
+        <MessageSquare className="w-5 h-5 text-text-secondary" />
+      </button>
+
       <div className="max-w-4xl mx-auto px-8 sm:px-16 py-8">
         {/* Cover Image */}
         {page.cover_image ? (
@@ -254,6 +266,13 @@ export default function PageEditor({ pageId }: PageEditorProps) {
           >
             + Add a block
           </button>
+        )}
+
+        {/* Comments Section */}
+        {showComments && (
+          <div className="mt-12 pt-8 border-t border-border">
+            <Comments pageId={pageId} />
+          </div>
         )}
       </div>
     </div>
