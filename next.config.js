@@ -22,15 +22,17 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   
-  // Rewrites for API proxying in development
+  // Rewrites for API proxying
   async rewrites() {
-    // Only proxy API requests in development when backend runs separately
-    if (process.env.NODE_ENV === 'development') {
+    // Proxy API requests when NEXT_PUBLIC_API_URL is not set
+    // This allows the app to work in development and when frontend/backend are deployed separately
+    if (!process.env.NEXT_PUBLIC_API_URL) {
       const backendPort = process.env.BACKEND_PORT || '3001';
+      const backendUrl = process.env.BACKEND_URL || `http://localhost:${backendPort}`;
       return [
         {
           source: '/api/:path*',
-          destination: `http://localhost:${backendPort}/api/:path*`,
+          destination: `${backendUrl}/api/:path*`,
         },
       ];
     }
