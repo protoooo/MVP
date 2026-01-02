@@ -14,10 +14,10 @@ export const searchService = {
       // 3. Build SQL query with filters
       let sqlQuery = `
         SELECT f.*, fc.extracted_text, fm.tags, fm.category, fm.ai_description,
-               1 - (fc.text_embedding <=> $1::vector) AS similarity_score
+               COALESCE(1 - (fc.text_embedding <=> $1::vector), 0) AS similarity_score
         FROM files f
-        JOIN file_content fc ON f.id = fc.file_id
-        JOIN file_metadata fm ON f.id = fm.file_id
+        LEFT JOIN file_content fc ON f.id = fc.file_id
+        LEFT JOIN file_metadata fm ON f.id = fm.file_id
         WHERE f.user_id = $2
       `;
 
@@ -45,7 +45,7 @@ export const searchService = {
         paramIndex++;
       }
 
-      sqlQuery += ` ORDER BY similarity_score DESC LIMIT 50`;
+      sqlQuery += ` ORDER BY similarity_score DESC NULLS LAST LIMIT 50`;
 
       const results = await query(sqlQuery, params);
 
