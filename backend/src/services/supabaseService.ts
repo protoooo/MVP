@@ -89,7 +89,7 @@ export const supabaseStorageService = {
         throw listError;
       }
 
-      const bucketExists = buckets?.some(b => b.name === bucketName);
+      const bucketExists = buckets?.some((bucket: { name: string; id: string; public: boolean }) => bucket.name === bucketName);
 
       if (!bucketExists) {
         const { error: createError } = await supabase.storage.createBucket(bucketName, {
