@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { initializeDatabase } from './config/database';
+import { initializeDatabase, checkDatabaseConnection, closeDatabasePool } from './config/database';
 import authRoutes from './routes/auth';
 import filesRoutes from './routes/files';
 import searchRoutes from './routes/search';
@@ -35,18 +35,74 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
+// Graceful shutdown handler
+function setupGracefulShutdown(server: any) {
+  const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
+  
+  signals.forEach((signal) => {
+    process.on(signal, async () => {
+      console.log(`\n${signal} received, starting graceful shutdown...`);
+      
+      // Stop accepting new connections
+      server.close(async () => {
+        console.log('HTTP server closed');
+        
+        // Close database pool
+        await closeDatabasePool();
+        
+        console.log('Graceful shutdown complete');
+        process.exit(0);
+      });
+      
+      // Force shutdown after timeout
+      const shutdownTimeout = parseInt(process.env.SHUTDOWN_TIMEOUT || '10000', 10);
+      setTimeout(() => {
+        console.error('Forced shutdown after timeout');
+        process.exit(1);
+      }, shutdownTimeout);
+    });
+  });
+}
+
 // Initialize database and start server
 async function startServer() {
   try {
-    console.log('Initializing database...');
+    console.log('Starting BizMemory API server...');
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    // Check database connection with retry logic
+    console.log('\n=== Database Connection Check ===');
+    const maxRetries = parseInt(process.env.DB_MAX_RETRIES || '5', 10);
+    const retryDelay = parseInt(process.env.DB_RETRY_DELAY || '2000', 10);
+    
+    await checkDatabaseConnection(maxRetries, retryDelay);
+    
+    // Initialize database schema
+    console.log('\n=== Database Initialization ===');
     await initializeDatabase();
     
-    app.listen(PORT, () => {
-      console.log(`BizMemory API server running on port ${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
+    // Start HTTP server
+    console.log('\n=== Starting HTTP Server ===');
+    const server = app.listen(PORT, () => {
+      console.log(`✓ BizMemory API server running on port ${PORT}`);
+      console.log(`  Health check: http://localhost:${PORT}/health`);
+      console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('\nServer ready to accept requests!\n');
     });
-  } catch (error) {
-    console.error('Failed to start server:', error);
+    
+    // Setup graceful shutdown
+    setupGracefulShutdown(server);
+    
+  } catch (error: any) {
+    console.error('\n=== Server Startup Failed ===');
+    console.error('Failed to start server:', error.message);
+    
+    if (error.message.includes('database')) {
+      console.error('\n📚 Database Setup Help:');
+      console.error('  See docs/DATABASE_SETUP.md for detailed setup instructions');
+    }
+    
+    // Exit with error code
     process.exit(1);
   }
 }
