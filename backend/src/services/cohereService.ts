@@ -305,4 +305,15 @@ Return as JSON: {"description": "...", "tags": [...], "category": "...", "confid
       index: result.index,
     }));
   },
+
+  // Chat with Cohere for report generation
+  async chat(message: string): Promise<string> {
+    const response = await cohere.chat({
+      model: process.env.COHERE_TEXT_MODEL || 'command-r7b-12-2024',
+      message: message,
+      temperature: 0.3,
+    });
+
+    return response.text;
+  },
 };
