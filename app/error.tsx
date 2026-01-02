@@ -49,11 +49,11 @@ export default function Error({
           </button>
           
           <Link
-            href="/workspace"
+            href="/dashboard"
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-gray-300 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition active:scale-95"
           >
             <Home className="w-4 h-4" />
-            Go to Workspace
+            Go to Dashboard
           </Link>
         </div>
 

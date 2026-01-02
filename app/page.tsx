@@ -16,20 +16,11 @@ export default function Home() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("setup_completed")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.setup_completed) {
-        router.push("/workspace");
-      } else {
-        router.push("/onboarding");
-      }
+      // Redirect authenticated users to dashboard
+      router.push("/dashboard");
     } else {
-      // Redirect non-authenticated users to landing page
-      router.push("/landing");
+      // Redirect non-authenticated users to login page
+      router.push("/login");
     }
   };
 
