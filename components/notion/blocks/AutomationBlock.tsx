@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Download, Copy, RefreshCw, Edit2, Loader2, AlertCircle, Check, Clock, DollarSign, Sparkles } from "lucide-react";
 
 interface AutomationBlockProps {
@@ -36,8 +36,18 @@ export default function AutomationBlock({
   const [error, setError] = useState<string | null>(null);
   const [showConfig, setShowConfig] = useState(!content.output);
   const [showCelebration, setShowCelebration] = useState(false);
+  const celebrationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const hasOutput = content.output && !showConfig;
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleGenerate = async (inputs: Record<string, any>) => {
     if (!onGenerate) return;
@@ -57,7 +67,10 @@ export default function AutomationBlock({
       setShowCelebration(true);
       
       // Auto-hide celebration after 5 seconds
-      setTimeout(() => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      celebrationTimeoutRef.current = setTimeout(() => {
         setShowCelebration(false);
       }, 5000);
     } catch (err) {
@@ -68,7 +81,7 @@ export default function AutomationBlock({
   };
 
   const parseTimeSaved = (timeStr: string): number => {
-    // Convert time string like "2 hours" or "3h 45m" to hours
+    // Convert time string like "2h", "3h 45m", "25m" to hours
     const hourMatch = timeStr.match(/(\d+)\s*h/);
     const minMatch = timeStr.match(/(\d+)\s*m/);
     

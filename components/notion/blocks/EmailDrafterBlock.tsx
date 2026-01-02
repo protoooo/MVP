@@ -165,7 +165,7 @@ export default function EmailDrafterBlock({
       renderConfig={renderConfig}
       renderOutput={renderOutput}
       estimatedTime="20 seconds"
-      timeSaved="25 minutes"
+      timeSaved="25m"
       hourlyRate={50}
     />
   );
