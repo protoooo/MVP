@@ -1,19 +1,19 @@
 import fs from 'fs';
 import path from 'path';
-import { S3 } from 'aws-sdk';
+import { Readable } from 'stream';
 import { query } from '../config/database';
 import { cohereService } from './cohereService';
 import { ocrService } from './ocrService';
+import { supabaseStorageService } from './supabaseService';
 
-const useS3 = !!(process.env.AWS_ACCESS_KEY_ID && process.env.S3_BUCKET_NAME);
+// Use Supabase if credentials are available, otherwise use local filesystem
+const useSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-const s3 = useS3
-  ? new S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1',
-    })
-  : null;
+if (useSupabase) {
+  console.log('✓ Using Supabase Storage for file uploads');
+} else {
+  console.log('⚠️  Using local filesystem for file uploads (development mode)');
+}
 
 function isImageMimeType(mimeType: string): boolean {
   return mimeType.startsWith('image/');
@@ -46,24 +46,27 @@ export const fileService = {
         file.mimetype
       );
 
-      // 5. Upload to S3 or keep local
+      // 5. Upload to Supabase or keep local
       let storagePath = file.path;
-      if (useS3 && s3) {
-        const fileContent = fs.readFileSync(file.path);
-        const s3Key = `uploads/${userId}/${Date.now()}-${file.originalname}`;
+      
+      if (useSupabase) {
+        const fileBuffer = fs.readFileSync(file.path);
+        const supabasePath = `uploads/${userId}/${Date.now()}-${file.originalname}`;
         
-        await s3
-          .putObject({
-            Bucket: process.env.S3_BUCKET_NAME!,
-            Key: s3Key,
-            Body: fileContent,
-            ContentType: file.mimetype,
-          })
-          .promise();
+        await supabaseStorageService.uploadFile(
+          supabasePath,
+          fileBuffer,
+          'bizmemory-files',
+          file.mimetype
+        );
 
-        storagePath = s3Key;
-        // Delete local file after S3 upload
+        storagePath = supabasePath;
+        
+        // Delete local temp file after Supabase upload
         fs.unlinkSync(file.path);
+        console.log(`✓ Uploaded to Supabase: ${supabasePath}`);
+      } else {
+        console.log(`✓ Stored locally: ${file.path}`);
       }
 
       // 6. Store in database
@@ -98,6 +101,10 @@ export const fileService = {
       return fileRecord;
     } catch (error) {
       console.error('Error processing file:', error);
+      // Clean up temp file if it still exists
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
       throw error;
     }
   },
@@ -150,17 +157,14 @@ export const fileService = {
       throw new Error('File not found');
     }
 
-    // Delete from S3 or local filesystem
-    if (useS3 && s3) {
-      await s3
-        .deleteObject({
-          Bucket: process.env.S3_BUCKET_NAME!,
-          Key: file.storage_path,
-        })
-        .promise();
+    // Delete from Supabase or local filesystem
+    if (useSupabase) {
+      await supabaseStorageService.deleteFile(file.storage_path);
+      console.log(`✓ Deleted from Supabase: ${file.storage_path}`);
     } else {
       if (fs.existsSync(file.storage_path)) {
         fs.unlinkSync(file.storage_path);
+        console.log(`✓ Deleted from local: ${file.storage_path}`);
       }
     }
 
@@ -175,14 +179,18 @@ export const fileService = {
       throw new Error('File not found');
     }
 
-    if (useS3 && s3) {
-      return s3
-        .getObject({
-          Bucket: process.env.S3_BUCKET_NAME!,
-          Key: file.storage_path,
-        })
-        .createReadStream();
+    if (useSupabase) {
+      // Download from Supabase and convert to stream
+      const blob = await supabaseStorageService.downloadFile(file.storage_path);
+      const buffer = Buffer.from(await blob.arrayBuffer());
+      
+      // Create a readable stream from buffer
+      const stream = new Readable();
+      stream.push(buffer);
+      stream.push(null);
+      return stream;
     } else {
+      // Read from local filesystem
       return fs.createReadStream(file.storage_path);
     }
   },
