@@ -11,7 +11,7 @@ import FilePreviewModal from '../components/FilePreviewModal';
 import AdvancedFilters, { FilterOptions } from '../components/AdvancedFilters';
 import KeyboardShortcuts, { useKeyboardShortcuts } from '../components/KeyboardShortcuts';
 import { SearchResult, User, File } from '../types';
-import { Database, LogOut, Files, Upload, Search, Clock, HardDrive, Menu, X, CheckSquare, Square, Download, Trash2, Keyboard as KeyboardIcon } from 'lucide-react';
+import { Database, LogOut, Files, Upload, Search, HardDrive, Menu, X, CheckSquare, Square, Download, Trash2, Keyboard as KeyboardIcon } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
@@ -55,12 +55,23 @@ export default function HomePage() {
 
   const handleSearch = async (query: string) => {
     setLoading(true);
+    setActiveView('search');
     try {
       const results = await searchAPI.search(query);
+      console.log('Search results:', results);
       setSearchResults(results);
-      setActiveView('search');
     } catch (error) {
       console.error('Search error:', error);
+      setSearchResults({
+        results: [],
+        total: 0,
+        query_understanding: {
+          intent: 'retrieve',
+          documentTypes: [],
+          entities: { dates: [], amounts: [], names: [], locations: [] },
+          keywords: []
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -69,14 +80,12 @@ export default function HomePage() {
   const handleFilterChange = (filters: FilterOptions) => {
     let filtered = [...allFiles];
 
-    // File type filter
     if (filters.fileTypes.length > 0) {
       filtered = filtered.filter(file => 
         filters.fileTypes.some(type => file.file_type.includes(type))
       );
     }
 
-    // Date range filter
     if (filters.dateRange.start) {
       filtered = filtered.filter(file => 
         new Date(file.uploaded_at) >= new Date(filters.dateRange.start!)
@@ -88,7 +97,6 @@ export default function HomePage() {
       );
     }
 
-    // Size filter
     if (filters.sizeRange.min !== undefined) {
       filtered = filtered.filter(file => file.file_size >= filters.sizeRange.min!);
     }
@@ -96,14 +104,12 @@ export default function HomePage() {
       filtered = filtered.filter(file => file.file_size <= filters.sizeRange.max!);
     }
 
-    // Tags filter
     if (filters.tags.length > 0) {
       filtered = filtered.filter(file => 
         file.tags?.some(tag => filters.tags.includes(tag))
       );
     }
 
-    // Category filter
     if (filters.category) {
       filtered = filtered.filter(file => file.category === filters.category);
     }
@@ -146,7 +152,7 @@ export default function HomePage() {
         a.href = filesAPI.getDownloadUrl(fileId);
         a.download = file.original_filename;
         a.click();
-        await new Promise(resolve => setTimeout(resolve, 500)); // Delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
   };
@@ -184,7 +190,6 @@ export default function HomePage() {
     setSelectedFiles(new Set());
   };
 
-  // Keyboard shortcuts
   useKeyboardShortcuts({
     onNavigateFiles: () => setActiveView('files'),
     onNavigateUpload: () => setActiveView('upload'),
@@ -221,7 +226,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-border bg-surface flex flex-col`}>
         {sidebarOpen && (
           <div className="flex flex-col h-full">
@@ -331,9 +335,7 @@ export default function HomePage() {
         )}
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
         <header className="border-b border-border bg-surface px-6 py-4">
           <div className="flex items-center gap-4">
             <button
@@ -361,7 +363,6 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">
           {activeView === 'files' && (
             <div className="max-w-7xl mx-auto">
@@ -479,16 +480,17 @@ export default function HomePage() {
 
           {activeView === 'search' && (
             <div className="max-w-7xl mx-auto">
-              <div className="flex justify-end mb-4">
-                <button
-                  onClick={handleExportResults}
-                  className="btn-secondary flex items-center gap-2"
-                  disabled={!searchResults || searchResults.results.length === 0}
-                >
-                  <Download className="w-4 h-4" />
-                  Export Results (⌘E)
-                </button>
-              </div>
+              {searchResults && searchResults.results.length > 0 && (
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={handleExportResults}
+                    className="btn-secondary flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export Results (Cmd+E)
+                  </button>
+                </div>
+              )}
               <SearchResults 
                 results={searchResults} 
                 loading={loading} 
@@ -499,7 +501,6 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Modals */}
       {previewFile && (
         <FilePreviewModal
           file={previewFile}
