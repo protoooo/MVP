@@ -164,7 +164,7 @@ Format your response as JSON:
 
 Be specific with numbers, dates, and names. Always cite your sources.`;
 
-    const response = await cohereService.generateText(prompt);
+    const response = await cohereService.chat(prompt);
     return this.parseReportResponse(response, query, documents);
   },
 
@@ -217,7 +217,7 @@ Provide a comprehensive analytical report with:
 
 Format as JSON with title, summary, and sections with citations.`;
 
-    const response = await cohereService.generateText(prompt);
+    const response = await cohereService.chat(prompt);
     return this.parseReportResponse(response, query, documents);
   },
 
@@ -270,7 +270,7 @@ Create a detailed comparison report:
 
 Format as JSON with title, summary, and sections with citations.`;
 
-    const response = await cohereService.generateText(prompt);
+    const response = await cohereService.chat(prompt);
     return this.parseReportResponse(response, query, documents);
   },
 
@@ -327,7 +327,7 @@ Create a timeline report with:
 
 Format as JSON with title, summary, and sections with citations.`;
 
-    const response = await cohereService.generateText(prompt);
+    const response = await cohereService.chat(prompt);
     return this.parseReportResponse(response, query, documents);
   },
 
@@ -388,17 +388,4 @@ Format as JSON with title, summary, and sections with citations.`;
       };
     }
   },
-
-  // Generate text using Cohere
-  async generateText(prompt: string): Promise<string> {
-    const response = await cohereService.chat(prompt);
-    return response;
-  },
 };
-
-// Add chat method to cohereService if not exists
-declare module './cohereService' {
-  interface CohereService {
-    chat(message: string): Promise<string>;
-  }
-}
