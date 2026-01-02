@@ -57,10 +57,23 @@ npm install
 ```
 
 3. **Set up PostgreSQL with pgvector**
-```bash
-# Install pgvector extension in your PostgreSQL database
-CREATE EXTENSION IF NOT EXISTS vector;
-```
+
+   **Option A: Using Docker (Recommended)**
+   ```bash
+   # Start PostgreSQL with Docker Compose
+   docker-compose up -d postgres
+   
+   # Verify it's running
+   docker-compose ps
+   ```
+   
+   **Option B: Local Installation**
+   ```bash
+   # Install pgvector extension in your PostgreSQL database
+   CREATE EXTENSION IF NOT EXISTS vector;
+   ```
+   
+   For detailed setup instructions, see [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)
 
 4. **Configure environment variables**
 ```bash
@@ -79,7 +92,7 @@ FEATURE_COHERE=true
 FEATURE_RERANK=true
 
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/bizmemory
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bizmemory
 
 # JWT
 JWT_SECRET=your_random_secret_key_min_32_characters
@@ -100,11 +113,35 @@ npm run dev:backend  # Backend on port 3001
 npm run dev:frontend # Frontend on port 3000
 ```
 
+The backend will automatically:
+- Check database connection with retry logic
+- Initialize the database schema
+- Create all required tables and indexes
+
+If you encounter database connection errors, see the [Database Setup Guide](docs/DATABASE_SETUP.md) for troubleshooting.
+
 6. **Access the application**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 
 ### Database Setup
+
+#### Quick Start with Docker Compose
+
+The easiest way to run PostgreSQL locally:
+
+```bash
+# Start PostgreSQL with pgvector
+docker-compose up -d postgres
+
+# View logs
+docker-compose logs -f postgres
+
+# Stop
+docker-compose down
+```
+
+#### Manual Setup
 
 The database schema is automatically initialized on first run. Tables created:
 - `users` - User accounts
@@ -112,6 +149,22 @@ The database schema is automatically initialized on first run. Tables created:
 - `file_content` - Extracted text and vector embeddings
 - `file_metadata` - AI-generated tags and entities
 - `search_logs` - Search analytics
+
+For detailed setup instructions and troubleshooting, see [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)
+
+#### Connection Error Handling
+
+The application includes robust database connection handling:
+- **Automatic retry** with exponential backoff (default: 5 attempts)
+- **Helpful error messages** for common issues (ECONNREFUSED, missing database, etc.)
+- **Graceful shutdown** to properly close connections
+- **Connection pooling** with configurable settings
+
+Configure retry behavior in `.env`:
+```env
+DB_MAX_RETRIES=5        # Number of retry attempts
+DB_RETRY_DELAY=2000     # Initial delay in ms (exponential backoff)
+```
 
 ## Usage
 
