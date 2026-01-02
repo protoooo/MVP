@@ -331,7 +331,30 @@ export async function initializeDatabase(): Promise<void> {
       END $$;
     `);
 
+    // Clean up orphaned workspace_members records before adding foreign key
+    console.log('Cleaning up orphaned workspace_members records...');
+    const cleanupResult1 = await client.query(`
+      DELETE FROM workspace_members 
+      WHERE workspace_id IS NOT NULL 
+        AND workspace_id NOT IN (SELECT id FROM workspaces)
+      RETURNING id
+    `);
+    if (cleanupResult1.rowCount && cleanupResult1.rowCount > 0) {
+      console.log(`  Removed ${cleanupResult1.rowCount} workspace_members records with invalid workspace_id`);
+    }
+    
+    const cleanupResult2 = await client.query(`
+      DELETE FROM workspace_members 
+      WHERE user_id IS NOT NULL 
+        AND user_id NOT IN (SELECT id FROM users)
+      RETURNING id
+    `);
+    if (cleanupResult2.rowCount && cleanupResult2.rowCount > 0) {
+      console.log(`  Removed ${cleanupResult2.rowCount} workspace_members records with invalid user_id`);
+    }
+
     // Add foreign key constraints for workspace_members if they don't exist
+    console.log('Adding workspace_members foreign key constraints...');
     await client.query(`
       DO $$ 
       BEGIN
