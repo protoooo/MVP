@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Brain, Loader2 } from "lucide-react";
+import ProtoIcon from "./ProtoIcon";
 
 export interface ThinkingState {
   isThinking: boolean;
@@ -24,14 +24,10 @@ export default function ThinkingIndicator({ state }: ThinkingIndicatorProps) {
       exit={{ opacity: 0, y: -10 }}
       className="flex items-center gap-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200"
     >
-      {/* Animated brain icon */}
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        className="flex-shrink-0"
-      >
-        <Brain className="w-5 h-5 text-indigo-600" />
-      </motion.div>
+      {/* Animated Proto icon */}
+      <div className="flex-shrink-0 text-indigo-600">
+        <ProtoIcon className="w-5 h-5" animated={true} />
+      </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">

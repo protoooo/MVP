@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import ProtoIcon from "./ProtoIcon";
 
 interface OnboardingData {
   businessType: string;
@@ -94,9 +95,9 @@ export default function ProtoIntroduction({ onComplete, onSkip }: ProtoIntroduct
                   ],
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center"
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white"
               >
-                <Sparkles className="w-10 h-10 text-white" />
+                <ProtoIcon className="w-10 h-10" animated={true} />
               </motion.div>
             </div>
           </motion.div>

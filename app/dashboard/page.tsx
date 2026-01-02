@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, Upload, FileText, Send } from "lucide-react";
+import { Upload, FileText, Send } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import ProtoIntroduction from "@/components/ProtoIntroduction";
 import ChatbotEnhanced from "@/components/ChatbotEnhanced";
+import ProtoIcon from "@/components/ProtoIcon";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -118,9 +119,9 @@ export default function DashboardPage() {
                 ],
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center"
+              className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white"
             >
-              <Sparkles className="w-7 h-7 text-white" />
+              <ProtoIcon className="w-7 h-7" animated={true} />
             </motion.div>
           </div>
           <div>
