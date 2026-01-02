@@ -6,12 +6,11 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "nodemon backend/src/server.ts",
     "dev:frontend": "next dev",
-    "build": "npm run build:backend && npm run build:frontend",
+    "build": "npm run build:frontend && npm run build:backend",
     "build:backend": "tsc -p backend/tsconfig.json",
     "build:frontend": "next build",
-    "start": "node backend/dist/server.js",
-    "start:backend": "node backend/dist/server.js",
-    "start:frontend": "next start -p ${PORT:-3000}",
+    "start": "npm run start:combined",
+    "start:combined": "node backend/dist/server.js",
     "lint": "next lint"
   },
   "keywords": [
