@@ -1,35 +1,24 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function Home() {
+export default function RootPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (user) {
-      // Redirect authenticated users to dashboard
-      router.push("/dashboard");
+    // Check if user has a token
+    const token = localStorage.getItem('token');
+    if (token) {
+      router.push('/home');
     } else {
-      // Redirect non-authenticated users to login page
-      router.push("/login");
+      router.push('/login');
     }
-  };
+  }, [router]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm text-text-secondary">Loading...</p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="spinner w-8 h-8 border-4 border-brand/20 border-t-brand rounded-full" />
     </div>
   );
 }
