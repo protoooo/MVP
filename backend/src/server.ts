@@ -41,11 +41,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'BizMemory API is running', timestamp: new Date().toISOString() });
 });
 
-// Production: Integrate with Next.js
+// Production: Integrate with Next.js  
 if (!isDevelopment) {
   const next = require('next');
   
-  // Initialize Next.js
+  // Initialize Next.js (will be prepared by startServer)
   const nextApp = next({
     dev: false,
     dir: path.join(__dirname, '../..'),
@@ -54,32 +54,9 @@ if (!isDevelopment) {
   
   const handle = nextApp.getRequestHandler();
   
-  // Prepare Next.js app
-  nextApp.prepare().then(() => {
-    console.log('✓ Next.js app ready');
-    
-    // Serve Next.js static files
-    app.use('/_next', express.static(path.join(__dirname, '../../.next')));
-    app.use('/static', express.static(path.join(__dirname, '../../public')));
-    
-    // Let Next.js handle all other routes
-    app.all('*', (req, res) => {
-      return handle(req, res);
-    });
-    
-    // Start server after Next.js is ready
-    startHTTPServer();
-  }).catch((err: any) => {
-    console.error('Failed to initialize Next.js:', err);
-    // Fallback: serve without Next.js
-    setupFallbackRoutes();
-    startHTTPServer();
-  });
-  
-} else {
-  // Development mode
-  setupFallbackRoutes();
-  startHTTPServer();
+  // Export for use in startServer
+  (global as any).nextApp = nextApp;
+  (global as any).nextHandle = handle;
 }
 
 // Fallback routes when Next.js isn't available
@@ -297,9 +274,37 @@ async function startServer() {
     
     console.log('\n=== Server Initialization ===');
     
-    // If production and Next.js integration is enabled, it will start the server
-    // Otherwise, start immediately
-    if (isDevelopment) {
+    // Setup routes and start server based on environment
+    if (!isDevelopment) {
+      // Production: Setup Next.js integration
+      const nextApp = (global as any).nextApp;
+      const handle = (global as any).nextHandle;
+      
+      if (nextApp && handle) {
+        try {
+          await nextApp.prepare();
+          console.log('✓ Next.js app ready');
+          
+          // Serve Next.js static files
+          app.use('/_next', express.static(path.join(__dirname, '../../.next')));
+          app.use('/static', express.static(path.join(__dirname, '../../public')));
+          
+          // Let Next.js handle all other routes
+          app.all('*', (req, res) => {
+            return handle(req, res);
+          });
+        } catch (err: any) {
+          console.error('Failed to initialize Next.js:', err);
+          console.log('Falling back to basic routing');
+          setupFallbackRoutes();
+        }
+      } else {
+        setupFallbackRoutes();
+      }
+      startHTTPServer();
+    } else {
+      // Development mode
+      setupFallbackRoutes();
       startHTTPServer();
     }
     

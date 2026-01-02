@@ -124,7 +124,7 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
-    // Users
+    // Users - create without foreign keys first
     console.log('Creating users table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -132,7 +132,7 @@ export async function initializeDatabase(): Promise<void> {
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         full_name VARCHAR(255),
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        organization_id INTEGER,
         role VARCHAR(50) DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
         is_active BOOLEAN DEFAULT true,
         last_login TIMESTAMP,
@@ -141,19 +141,63 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
-    // Workspaces (team folders)
+    // Add foreign key constraint for users.organization_id if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'users_organization_id_fkey'
+        ) THEN
+          ALTER TABLE users 
+          ADD CONSTRAINT users_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    // Workspaces (team folders) - create without created_by foreign key first
     console.log('Creating workspaces table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS workspaces (
         id SERIAL PRIMARY KEY,
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        organization_id INTEGER,
         name VARCHAR(255) NOT NULL,
         description TEXT,
         is_default BOOLEAN DEFAULT false,
-        created_by INTEGER REFERENCES users(id),
+        created_by INTEGER,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add foreign key constraints for workspaces if they don't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'workspaces_organization_id_fkey'
+        ) THEN
+          ALTER TABLE workspaces 
+          ADD CONSTRAINT workspaces_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'workspaces_created_by_fkey'
+        ) THEN
+          ALTER TABLE workspaces 
+          ADD CONSTRAINT workspaces_created_by_fkey 
+          FOREIGN KEY (created_by) REFERENCES users(id);
+        END IF;
+      END $$;
     `);
 
     // Workspace members
@@ -161,12 +205,55 @@ export async function initializeDatabase(): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS workspace_members (
         id SERIAL PRIMARY KEY,
-        workspace_id INTEGER REFERENCES workspaces(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        workspace_id INTEGER,
+        user_id INTEGER,
         permission VARCHAR(50) DEFAULT 'view' CHECK (permission IN ('owner', 'edit', 'view')),
-        added_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(workspace_id, user_id)
+        added_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add unique constraint if it doesn't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'workspace_members_workspace_id_user_id_key'
+        ) THEN
+          ALTER TABLE workspace_members 
+          ADD CONSTRAINT workspace_members_workspace_id_user_id_key 
+          UNIQUE(workspace_id, user_id);
+        END IF;
+      END $$;
+    `);
+
+    // Add foreign key constraints for workspace_members if they don't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'workspace_members_workspace_id_fkey'
+        ) THEN
+          ALTER TABLE workspace_members 
+          ADD CONSTRAINT workspace_members_workspace_id_fkey 
+          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'workspace_members_user_id_fkey'
+        ) THEN
+          ALTER TABLE workspace_members 
+          ADD CONSTRAINT workspace_members_user_id_fkey 
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
     `);
 
     // Files
@@ -174,9 +261,9 @@ export async function initializeDatabase(): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS files (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
-        workspace_id INTEGER REFERENCES workspaces(id) ON DELETE SET NULL,
+        user_id INTEGER,
+        organization_id INTEGER,
+        workspace_id INTEGER,
         original_filename VARCHAR(500),
         stored_filename VARCHAR(500),
         file_type VARCHAR(50),
@@ -191,18 +278,117 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    // Add foreign key constraints for files if they don't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'files_user_id_fkey'
+        ) THEN
+          ALTER TABLE files 
+          ADD CONSTRAINT files_user_id_fkey 
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'files_organization_id_fkey'
+        ) THEN
+          ALTER TABLE files 
+          ADD CONSTRAINT files_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'files_workspace_id_fkey'
+        ) THEN
+          ALTER TABLE files 
+          ADD CONSTRAINT files_workspace_id_fkey 
+          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
+    `);
+
     // File permissions (granular access control)
     console.log('Creating file_permissions table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_permissions (
         id SERIAL PRIMARY KEY,
-        file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        file_id INTEGER,
+        user_id INTEGER,
         permission VARCHAR(50) DEFAULT 'view' CHECK (permission IN ('owner', 'edit', 'view', 'none')),
-        granted_by INTEGER REFERENCES users(id),
-        granted_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(file_id, user_id)
+        granted_by INTEGER,
+        granted_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    // Add constraints for file_permissions if they don't exist
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'file_permissions_file_id_user_id_key'
+        ) THEN
+          ALTER TABLE file_permissions 
+          ADD CONSTRAINT file_permissions_file_id_user_id_key 
+          UNIQUE(file_id, user_id);
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'file_permissions_file_id_fkey'
+        ) THEN
+          ALTER TABLE file_permissions 
+          ADD CONSTRAINT file_permissions_file_id_fkey 
+          FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'file_permissions_user_id_fkey'
+        ) THEN
+          ALTER TABLE file_permissions 
+          ADD CONSTRAINT file_permissions_user_id_fkey 
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'file_permissions_granted_by_fkey'
+        ) THEN
+          ALTER TABLE file_permissions 
+          ADD CONSTRAINT file_permissions_granted_by_fkey 
+          FOREIGN KEY (granted_by) REFERENCES users(id);
+        END IF;
+      END $$;
     `);
 
     // File content
@@ -210,7 +396,7 @@ export async function initializeDatabase(): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_content (
         id SERIAL PRIMARY KEY,
-        file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
+        file_id INTEGER,
         extracted_text TEXT,
         text_embedding vector(1536),
         image_analysis JSONB,
@@ -221,12 +407,26 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'file_content_file_id_fkey'
+        ) THEN
+          ALTER TABLE file_content 
+          ADD CONSTRAINT file_content_file_id_fkey 
+          FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
     // File metadata
     console.log('Creating file_metadata table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_metadata (
         id SERIAL PRIMARY KEY,
-        file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
+        file_id INTEGER,
         category VARCHAR(100),
         tags TEXT[],
         detected_entities JSONB,
@@ -236,6 +436,20 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'file_metadata_file_id_fkey'
+        ) THEN
+          ALTER TABLE file_metadata 
+          ADD CONSTRAINT file_metadata_file_id_fkey 
+          FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
     // === AUDIT & COMPLIANCE TABLES ===
     
     // Audit logs (immutable)
@@ -243,8 +457,8 @@ export async function initializeDatabase(): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS audit_logs (
         id SERIAL PRIMARY KEY,
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        organization_id INTEGER,
+        user_id INTEGER,
         action VARCHAR(100) NOT NULL,
         resource_type VARCHAR(50) NOT NULL,
         resource_id INTEGER,
@@ -255,12 +469,40 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'audit_logs_organization_id_fkey'
+        ) THEN
+          ALTER TABLE audit_logs 
+          ADD CONSTRAINT audit_logs_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'audit_logs_user_id_fkey'
+        ) THEN
+          ALTER TABLE audit_logs 
+          ADD CONSTRAINT audit_logs_user_id_fkey 
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
+    `);
+
     // Data encryption keys (for encryption at rest)
     console.log('Creating encryption_keys table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS encryption_keys (
         id SERIAL PRIMARY KEY,
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        organization_id INTEGER,
         key_id UUID DEFAULT uuid_generate_v4(),
         encrypted_key TEXT NOT NULL,
         algorithm VARCHAR(50) DEFAULT 'AES-256-GCM',
@@ -268,6 +510,20 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMP DEFAULT NOW(),
         rotated_at TIMESTAMP
       )
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'encryption_keys_organization_id_fkey'
+        ) THEN
+          ALTER TABLE encryption_keys 
+          ADD CONSTRAINT encryption_keys_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
     `);
 
     // === JOB QUEUE TABLES (for batch processing) ===
@@ -278,7 +534,7 @@ export async function initializeDatabase(): Promise<void> {
       CREATE TABLE IF NOT EXISTS processing_queue (
         id SERIAL PRIMARY KEY,
         job_type VARCHAR(50) NOT NULL CHECK (job_type IN ('embed', 'ocr', 'analyze', 'reindex')),
-        file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
+        file_id INTEGER,
         priority INTEGER DEFAULT 5,
         status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
         attempts INTEGER DEFAULT 0,
@@ -291,12 +547,26 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'processing_queue_file_id_fkey'
+        ) THEN
+          ALTER TABLE processing_queue 
+          ADD CONSTRAINT processing_queue_file_id_fkey 
+          FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
     // Search cache
     console.log('Creating search_cache table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS search_cache (
         id SERIAL PRIMARY KEY,
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        organization_id INTEGER,
         query_hash VARCHAR(64) UNIQUE NOT NULL,
         query_text TEXT NOT NULL,
         result_ids INTEGER[],
@@ -307,20 +577,76 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'search_cache_organization_id_fkey'
+        ) THEN
+          ALTER TABLE search_cache 
+          ADD CONSTRAINT search_cache_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
     // Search logs
     console.log('Creating search_logs table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS search_logs (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id),
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        user_id INTEGER,
+        organization_id INTEGER,
         query TEXT,
         results_count INTEGER,
-        clicked_file_id INTEGER REFERENCES files(id),
+        clicked_file_id INTEGER,
         search_duration_ms INTEGER,
         used_cache BOOLEAN DEFAULT false,
         searched_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'search_logs_user_id_fkey'
+        ) THEN
+          ALTER TABLE search_logs 
+          ADD CONSTRAINT search_logs_user_id_fkey 
+          FOREIGN KEY (user_id) REFERENCES users(id);
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'search_logs_organization_id_fkey'
+        ) THEN
+          ALTER TABLE search_logs 
+          ADD CONSTRAINT search_logs_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'search_logs_clicked_file_id_fkey'
+        ) THEN
+          ALTER TABLE search_logs 
+          ADD CONSTRAINT search_logs_clicked_file_id_fkey 
+          FOREIGN KEY (clicked_file_id) REFERENCES files(id);
+        END IF;
+      END $$;
     `);
 
     // === API & SSO TABLES ===
@@ -330,8 +656,8 @@ export async function initializeDatabase(): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS api_keys (
         id SERIAL PRIMARY KEY,
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        organization_id INTEGER,
+        user_id INTEGER,
         name VARCHAR(255) NOT NULL,
         key_hash VARCHAR(255) UNIQUE NOT NULL,
         key_prefix VARCHAR(20) NOT NULL,
@@ -343,18 +669,60 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'api_keys_organization_id_fkey'
+        ) THEN
+          ALTER TABLE api_keys 
+          ADD CONSTRAINT api_keys_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'api_keys_user_id_fkey'
+        ) THEN
+          ALTER TABLE api_keys 
+          ADD CONSTRAINT api_keys_user_id_fkey 
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
+    `);
+
     // SSO configurations
     console.log('Creating sso_configurations table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS sso_configurations (
         id SERIAL PRIMARY KEY,
-        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        organization_id INTEGER,
         provider VARCHAR(50) NOT NULL CHECK (provider IN ('saml', 'oauth', 'oidc')),
         metadata JSONB NOT NULL,
         is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'sso_configurations_organization_id_fkey'
+        ) THEN
+          ALTER TABLE sso_configurations 
+          ADD CONSTRAINT sso_configurations_organization_id_fkey 
+          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
+        END IF;
+      END $$;
     `);
 
     // === INDEXES ===
