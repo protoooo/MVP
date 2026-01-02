@@ -22,6 +22,21 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   
+  // Rewrites for API proxying in development
+  async rewrites() {
+    // Only proxy API requests in development when backend runs separately
+    if (process.env.NODE_ENV === 'development') {
+      const backendPort = process.env.BACKEND_PORT || '3001';
+      return [
+        {
+          source: '/api/:path*',
+          destination: `http://localhost:${backendPort}/api/:path*`,
+        },
+      ];
+    }
+    return [];
+  },
+  
   // Headers for security and caching
   async headers() {
     return [
