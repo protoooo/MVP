@@ -298,7 +298,6 @@ export async function initializeDatabase(): Promise<void> {
       DELETE FROM workspace_members wm
       WHERE wm.workspace_id IS NOT NULL 
         AND NOT EXISTS (SELECT 1 FROM workspaces w WHERE w.id = wm.workspace_id)
-      RETURNING id
     `);
     if (cleanupResult1.rowCount && cleanupResult1.rowCount > 0) {
       console.log(`  Removed ${cleanupResult1.rowCount} workspace_members records with invalid workspace_id`);
@@ -308,7 +307,6 @@ export async function initializeDatabase(): Promise<void> {
       DELETE FROM workspace_members wm
       WHERE wm.user_id IS NOT NULL 
         AND NOT EXISTS (SELECT 1 FROM users u WHERE u.id = wm.user_id)
-      RETURNING id
     `);
     if (cleanupResult2.rowCount && cleanupResult2.rowCount > 0) {
       console.log(`  Removed ${cleanupResult2.rowCount} workspace_members records with invalid user_id`);
