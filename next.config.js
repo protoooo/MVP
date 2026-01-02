@@ -24,11 +24,12 @@ const nextConfig = {
   
   // Rewrites for API proxying
   async rewrites() {
-    // Proxy API requests when NEXT_PUBLIC_API_URL is not set
+    // Proxy API requests when NEXT_PUBLIC_API_URL is not set or empty
     // This allows the app to work in development and when frontend/backend are deployed separately
-    if (!process.env.NEXT_PUBLIC_API_URL) {
-      const backendPort = process.env.BACKEND_PORT || '3001';
-      const backendUrl = process.env.BACKEND_URL || `http://localhost:${backendPort}`;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (!apiUrl) {
+      // Use BACKEND_URL if provided (for Railway/production), otherwise construct from port (for local dev)
+      const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || '3001'}`;
       return [
         {
           source: '/api/:path*',
