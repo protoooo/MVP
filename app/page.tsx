@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Database, Search, Sparkles, FileText, Shield, Zap, ArrowRight, Check, Lock, TrendingUp, HardDrive, Layers } from 'lucide-react';
+import { Database, Search, FileText, Shield, Zap, ArrowRight, Check, Lock, TrendingUp, HardDrive, Layers } from 'lucide-react';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -22,12 +22,12 @@ export default function LandingPage() {
   }, [router]);
 
   const features = [
-    { icon: HardDrive, text: "Unlimited Storage - Terabytes Available" },
-    { icon: Search, text: "Semantic Search - Find Anything Instantly" },
-    { icon: Sparkles, text: "Cohere AI-Powered Intelligence" },
-    { icon: FileText, text: "Advanced Document Analysis & OCR" },
-    { icon: Layers, text: "Multi-Document Summarization" },
-    { icon: Shield, text: "Enterprise Security with Cloudflare" }
+    { icon: HardDrive, text: "Unlimited Storage" },
+    { icon: Search, text: "Semantic Search" },
+    { icon: FileText, text: "Document Analysis" },
+    { icon: Layers, text: "Multi-Document Insights" },
+    { icon: Shield, text: "Enterprise Security" },
+    { icon: Zap, text: "Instant Results" }
   ];
 
   const pricing = [
@@ -35,7 +35,7 @@ export default function LandingPage() {
       name: "Personal",
       price: "$5",
       period: "/month",
-      description: "Perfect for individuals",
+      description: "For individuals",
       features: [
         "500GB storage",
         "Unlimited documents",
@@ -51,7 +51,7 @@ export default function LandingPage() {
       name: "Business",
       price: "$25",
       period: "/month",
-      description: "For teams and businesses",
+      description: "For teams",
       features: [
         "5TB storage",
         "Everything in Personal",
@@ -69,7 +69,7 @@ export default function LandingPage() {
       name: "Enterprise",
       price: "Custom",
       period: "",
-      description: "Unlimited scale and support",
+      description: "Unlimited scale",
       features: [
         "Unlimited storage",
         "Everything in Business",
@@ -87,7 +87,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
-      {/* Header */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'bg-surface/80 backdrop-blur-xl border-b border-border shadow-dark' : 'bg-transparent'
       }`}>
@@ -109,29 +108,22 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand/10 border border-brand/20 text-brand text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            <span>Powered by Cohere AI & Supabase</span>
-          </div>
-          
           <h1 className="text-5xl md:text-7xl font-bold text-text-primary mb-6 leading-tight">
-            Unlimited Storage.<br />
+            Find Any Document.<br />
             <span className="bg-gradient-to-r from-brand to-brand-400 bg-clip-text text-transparent">
-              Infinite Intelligence.
+              Ask Any Question.
             </span>
           </h1>
           
           <p className="text-xl text-text-secondary max-w-3xl mx-auto mb-10 leading-relaxed">
-            Store terabytes of documents. Find anything instantly with vague wording. 
-            Generate summaries across thousands of pages. Built for serious document workflows.
+            Store unlimited documents. Search using natural language. Get instant answers with AI-powered semantic search.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <Link href="/signup" className="btn-primary px-8 py-4 text-lg group">
-              Start 7-Day Free Trial
+              Start Free Trial
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -153,16 +145,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Grid */}
       <section id="features" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-text-primary mb-4">
-              Built for Scale and Speed
+              Built for Speed and Scale
             </h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Store terabytes. Search thousands of documents in milliseconds. 
-              Generate insights from massive datasets.
+              Ask questions in natural language. Get instant answers from thousands of documents.
             </p>
           </div>
 
@@ -184,7 +174,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Security Section */}
       <section id="security" className="py-12 px-6 bg-surface/50">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-center gap-8 text-center md:text-left">
@@ -192,7 +181,7 @@ export default function LandingPage() {
               <Lock className="w-8 h-8 text-brand" />
               <div>
                 <p className="text-sm font-semibold text-text-primary">Enterprise Security</p>
-                <p className="text-xs text-text-tertiary">Cloudflare Turnstile Protection</p>
+                <p className="text-xs text-text-tertiary">End-to-end encryption</p>
               </div>
             </div>
             <div className="hidden md:block w-px h-12 bg-border" />
@@ -200,22 +189,21 @@ export default function LandingPage() {
               <Shield className="w-8 h-8 text-brand" />
               <div>
                 <p className="text-sm font-semibold text-text-primary">Encrypted Storage</p>
-                <p className="text-xs text-text-tertiary">End-to-end encryption</p>
+                <p className="text-xs text-text-tertiary">AES-256 encryption</p>
               </div>
             </div>
             <div className="hidden md:block w-px h-12 bg-border" />
             <div className="flex items-center gap-3">
               <Database className="w-8 h-8 text-brand" />
               <div>
-                <p className="text-sm font-semibold text-text-primary">Supabase Powered</p>
-                <p className="text-xs text-text-tertiary">Unlimited scalability</p>
+                <p className="text-sm font-semibold text-text-primary">Unlimited Scale</p>
+                <p className="text-xs text-text-tertiary">Powered by Supabase</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
       <section id="pricing" className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -277,14 +265,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-brand/10 via-brand/5 to-transparent border border-brand/20 rounded-3xl p-12">
           <h2 className="text-4xl font-bold text-text-primary mb-4">
-            Stop Wasting Time Searching
+            Stop Searching. Start Finding.
           </h2>
           <p className="text-lg text-text-secondary mb-8">
-            Join professionals who find any document in seconds, not minutes.
+            Ask questions in natural language. Get instant answers from your documents.
           </p>
           <Link href="/signup" className="btn-primary px-8 py-4 text-lg inline-flex items-center gap-2">
             Start Free Trial
@@ -296,7 +283,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-surface/50 py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
