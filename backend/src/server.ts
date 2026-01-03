@@ -21,7 +21,8 @@ import apiKeysRoutes from './routes/apiKeys';
 dotenv.config();
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '3001', 10);
+// Backend port: Use BACKEND_PORT if set, otherwise fallback to PORT (for dev) or 3001
+const PORT = parseInt(process.env.BACKEND_PORT || process.env.PORT || '3001', 10);
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 console.log('='.repeat(60));

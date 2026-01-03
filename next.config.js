@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+
+// Backend port configuration
+const BACKEND_PORT = 3001;
+
 const nextConfig = {
   reactStrictMode: true,
   
@@ -24,17 +28,21 @@ const nextConfig = {
   
   // Rewrites for API proxying
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-    if (!apiUrl) {
-      const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || '3001'}`;
-      return [
-        {
-          source: '/api/:path*',
-          destination: `${backendUrl}/api/:path*`,
-        },
-      ];
-    }
-    return [];
+    // In production, always proxy to backend on port 3001
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? `http://localhost:${BACKEND_PORT}` 
+      : process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || BACKEND_PORT}`;
+    
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+      {
+        source: '/health',
+        destination: `${backendUrl}/health`,
+      },
+    ];
   },
   
   // Headers for security and caching
