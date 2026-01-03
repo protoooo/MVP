@@ -11,7 +11,7 @@ export interface File {
   original_filename: string;
   stored_filename: string;
   file_type: string;
-  file_size: number;
+  file_size: number | string; // Can be string from PostgreSQL BIGINT
   storage_path: string;
   thumbnail_path?: string;
   uploaded_at: string;
