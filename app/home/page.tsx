@@ -44,7 +44,7 @@ export default function HomePage() {
   const loadAllFiles = async () => {
     try {
       setLoading(true);
-      const response = await filesAPI.list(1, 50);
+      const response = await filesAPI.list(1, 100);
       setAllFiles(response.files);
       setFilteredFiles(response.files);
     } catch (error) {
@@ -142,7 +142,7 @@ export default function HomePage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `bizmemory-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `protocollm-export-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -223,7 +223,7 @@ export default function HomePage() {
   }
 
   const storageUsed = allFiles.reduce((acc, file) => acc + file.file_size, 0);
-  const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(2);
+  const storageUsedGB = (storageUsed / (1024 * 1024 * 1024)).toFixed(2);
   const availableTags = Array.from(new Set(allFiles.flatMap(f => f.tags || [])));
   const availableCategories = Array.from(new Set(allFiles.map(f => f.category).filter(Boolean))) as string[];
 
@@ -239,7 +239,9 @@ export default function HomePage() {
                   <Database className="w-6 h-6 text-brand" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-text-primary">BizMemory</h1>
+                  <h1 className="text-lg font-bold text-text-primary">
+                    protocol<span className="text-brand">LM</span>
+                  </h1>
                   {user.business_name && (
                     <p className="text-xs text-text-tertiary">{user.business_name}</p>
                   )}
@@ -284,7 +286,7 @@ export default function HomePage() {
                 }`}
               >
                 <Search className="w-5 h-5" />
-                <span>AI Search</span>
+                <span>Semantic Search</span>
               </button>
             </nav>
 
@@ -296,15 +298,10 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-2xl font-bold text-text-primary">{storageUsedMB}</span>
-                    <span className="text-xs text-text-tertiary">MB</span>
+                    <span className="text-2xl font-bold text-text-primary">{storageUsedGB}</span>
+                    <span className="text-xs text-text-tertiary">GB</span>
                   </div>
-                  <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-brand rounded-full transition-all"
-                      style={{ width: `${Math.min((parseFloat(storageUsedMB) / 1024) * 100, 100)}%` }}
-                    />
-                  </div>
+                  <p className="text-xs text-text-tertiary">Unlimited available</p>
                 </div>
               </div>
             </div>
@@ -376,9 +373,9 @@ export default function HomePage() {
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-text-primary mb-1">Your Files</h2>
+                  <h2 className="text-2xl font-bold text-text-primary mb-1">Your Documents</h2>
                   <p className="text-sm text-text-secondary">
-                    {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} 
+                    {filteredFiles.length} {filteredFiles.length === 1 ? 'document' : 'documents'} 
                     {filteredFiles.length !== allFiles.length && ` (filtered from ${allFiles.length})`}
                   </p>
                 </div>
@@ -449,11 +446,11 @@ export default function HomePage() {
                     <Files className="w-8 h-8 text-text-tertiary" />
                   </div>
                   <h3 className="text-lg font-semibold text-text-primary mb-2">
-                    {allFiles.length === 0 ? 'No files yet' : 'No files match filters'}
+                    {allFiles.length === 0 ? 'No documents yet' : 'No documents match filters'}
                   </h3>
                   <p className="text-text-secondary mb-6">
                     {allFiles.length === 0 
-                      ? 'Upload your first file to get started with AI-powered search'
+                      ? 'Upload your first document to get started with semantic search'
                       : 'Try adjusting your filters to see more results'
                     }
                   </p>
@@ -463,7 +460,7 @@ export default function HomePage() {
                       className="btn-primary"
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      Upload Files
+                      Upload Documents
                     </button>
                   )}
                 </div>
@@ -475,9 +472,9 @@ export default function HomePage() {
           {activeView === 'upload' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-text-primary mb-1">Upload Files</h2>
+                <h2 className="text-2xl font-bold text-text-primary mb-1">Upload Documents</h2>
                 <p className="text-sm text-text-secondary">
-                  AI will automatically extract text, generate tags, and make your files searchable
+                  AI automatically extracts text, generates tags, and enables semantic search
                 </p>
               </div>
               <FileUpload onUploadComplete={() => {
