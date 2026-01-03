@@ -2,8 +2,10 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { query } from '../config/database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { emailService } from '../services/emailService';
 
 const router = Router();
 
@@ -341,6 +343,121 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res) =>
   } catch (error: any) {
     console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+// Request Password Reset
+router.post('/request-password-reset', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Check if user exists
+    const userResult = await query(
+      'SELECT id, email FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    );
+
+    if (userResult.rows.length === 0) {
+      // Don't reveal if email exists - always return success
+      console.warn(`Password reset requested for non-existent email: ${email}`);
+      return res.json({ message: 'If that email exists, a reset link has been sent' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Store reset token
+    await query(
+      `INSERT INTO password_reset_tokens (user_id, token, expires_at)
+       VALUES ($1, $2, $3)`,
+      [user.id, resetToken, expiresAt]
+    );
+
+    // Send reset email
+    try {
+      await emailService.sendPasswordResetEmail(user.email, resetToken);
+      console.log(`✅ Password reset email sent to ${user.email}`);
+    } catch (emailError: any) {
+      console.error('Failed to send password reset email:', emailError);
+      return res.status(500).json({ error: 'Failed to send reset email' });
+    }
+
+    res.json({ message: 'If that email exists, a reset link has been sent' });
+  } catch (error: any) {
+    console.error('Request password reset error:', error);
+    res.status(500).json({ error: 'Failed to process password reset request' });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+
+    // Validate new password
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.error });
+    }
+
+    // Check token validity
+    const tokenResult = await query(
+      `SELECT id, user_id, expires_at, used
+       FROM password_reset_tokens
+       WHERE token = $1`,
+      [token]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    const resetToken = tokenResult.rows[0];
+
+    if (resetToken.used) {
+      return res.status(400).json({ error: 'Reset token has already been used' });
+    }
+
+    if (new Date(resetToken.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Reset token has expired' });
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
+
+    // Update password
+    await query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2',
+      [newPasswordHash, resetToken.user_id]
+    );
+
+    // Mark token as used
+    await query(
+      'UPDATE password_reset_tokens SET used = TRUE WHERE id = $1',
+      [resetToken.id]
+    );
+
+    console.log(`✅ Password reset successful for user ${resetToken.user_id}`);
+
+    res.json({ message: 'Password reset successful' });
+  } catch (error: any) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 
