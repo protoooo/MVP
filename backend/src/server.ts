@@ -8,6 +8,7 @@ import { supabaseStorageService } from './services/supabaseService';
 import authRoutes from './routes/auth';
 import filesRoutes from './routes/files';
 import searchRoutes from './routes/search';
+import conversationRoutes from './routes/conversation';
 import reportsRoutes from './routes/reports';
 
 dotenv.config();
