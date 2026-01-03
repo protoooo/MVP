@@ -17,6 +17,8 @@ import reportsRoutes from './routes/reports';
 import collectionsRoutes from './routes/collections';
 import analyticsRoutes from './routes/analytics';
 import apiKeysRoutes from './routes/apiKeys';
+import subscriptionRoutes from './routes/subscription';
+import webhooksRoutes from './routes/webhooks';
 
 dotenv.config();
 
@@ -139,7 +141,14 @@ app.use(cors({
 // ========================================
 // BODY PARSING MIDDLEWARE
 // ========================================
-app.use(express.json({ limit: '10mb' }));
+// Skip JSON parsing for webhooks route (it needs raw body)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/webhooks')) {
+    next();
+  } else {
+    express.json({ limit: '10mb' })(req, res, next);
+  }
+});
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ========================================
@@ -171,7 +180,11 @@ if (!fs.existsSync(uploadDir)) {
 // ========================================
 // API ROUTES
 // ========================================
+// Webhooks must be before body parsing middleware (they need raw body)
+app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhooksRoutes);
+
 app.use('/api/auth', authRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/conversation', conversationRoutes);

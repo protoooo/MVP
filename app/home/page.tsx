@@ -222,7 +222,7 @@ export default function HomePage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="animate-spin w-8 h-8 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-brand-600/20 border-t-brand-600 rounded-full" />
       </div>
     );
   }
@@ -256,8 +256,8 @@ export default function HomePage() {
             {/* Logo - Fixed at top */}
             <div className="p-4 border-b border-gray-800 flex-shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-600/10 flex items-center justify-center border border-emerald-600/20">
-                  <Database className="w-5 h-5 text-emerald-500" />
+                <div className="w-8 h-8 rounded-lg bg-brand-600/10 flex items-center justify-center border border-brand-600/20">
+                  <Database className="w-5 h-5 text-brand-500" />
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-base font-bold text-white">protocolLM</h1>
@@ -274,7 +274,7 @@ export default function HomePage() {
                 onClick={() => setActiveView('files')}
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'files'
-                    ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
+                    ? 'bg-brand-600/10 text-brand-500 border border-brand-600/20'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
@@ -289,7 +289,7 @@ export default function HomePage() {
                 onClick={() => setActiveView('upload')}
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'upload'
-                    ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
+                    ? 'bg-brand-600/10 text-brand-500 border border-brand-600/20'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
@@ -301,7 +301,7 @@ export default function HomePage() {
                 onClick={() => setActiveView('search')}
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'search'
-                    ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
+                    ? 'bg-brand-600/10 text-brand-500 border border-brand-600/20'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
@@ -330,8 +330,8 @@ export default function HomePage() {
             <div className="p-3 border-t border-gray-800 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-emerald-600/20 flex items-center justify-center flex-shrink-0 border border-emerald-600/20">
-                    <span className="text-emerald-500 text-sm font-medium">
+                  <div className="w-8 h-8 rounded-full bg-brand-600/20 flex items-center justify-center flex-shrink-0 border border-brand-600/20">
+                    <span className="text-brand-500 text-sm font-medium">
                       {user.email[0].toUpperCase()}
                     </span>
                   </div>
@@ -434,7 +434,7 @@ export default function HomePage() {
               
               {loading ? (
                 <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin w-8 h-8 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full" />
+                  <div className="animate-spin w-8 h-8 border-4 border-brand-600/20 border-t-brand-600 rounded-full" />
                 </div>
               ) : filteredFiles.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">

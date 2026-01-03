@@ -11,14 +11,14 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Database className="w-6 h-6 text-emerald-500" />
+              <Database className="w-6 h-6 text-brand-500" />
               <span className="text-xl font-bold text-white">protocolLM</span>
             </Link>
             <div className="flex items-center gap-4">
               <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
                 Sign In
               </Link>
-              <Link href="/signup" className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all">
+              <Link href="/signup" className="px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-all">
                 Get Started
               </Link>
             </div>
@@ -62,8 +62,8 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold text-white mb-12 text-center">What We Stand For</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
-              <div className="w-12 h-12 rounded-lg bg-emerald-600/10 flex items-center justify-center mb-4 border border-emerald-600/20">
-                <Shield className="w-6 h-6 text-emerald-500" />
+              <div className="w-12 h-12 rounded-lg bg-brand-600/10 flex items-center justify-center mb-4 border border-brand-600/20">
+                <Shield className="w-6 h-6 text-brand-500" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3">Security First</h3>
               <p className="text-gray-400 leading-relaxed">
@@ -139,7 +139,7 @@ export default function AboutPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a 
               href="mailto:support@protocollm.org" 
-              className="px-6 py-3 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-all"
+              className="px-6 py-3 rounded-lg bg-brand-600 text-white font-medium hover:bg-brand-700 transition-all"
             >
               Email Us
             </a>

@@ -62,60 +62,27 @@ export default function LandingPage() {
     { icon: Zap, text: "Instant Retrieval" }
   ];
 
-  const pricing = [
-    {
-      name: "Personal",
-      price: "$5",
-      period: "/month",
-      description: "For individuals",
-      features: [
-        "500GB storage capacity",
-        "Unlimited document uploads",
-        "Semantic search engine",
-        "Document generation",
-        "Mobile application access",
-        "Email support"
-      ],
-      cta: "Start 14-Day Trial",
-      popular: false
-    },
-    {
-      name: "Business",
-      price: "$25",
-      period: "/month",
-      description: "For teams",
-      features: [
-        "5TB storage capacity",
-        "All Personal features",
-        "Team workspace management",
-        "Priority technical support",
-        "Bulk operations",
-        "Advanced analytics dashboard",
-        "REST API access",
-        "Custom integrations"
-      ],
-      cta: "Start 14-Day Trial",
-      popular: true
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      period: "",
-      description: "Unlimited scale",
-      features: [
-        "Unlimited storage capacity",
-        "All Business features",
-        "SSO/SAML authentication",
-        "SOC 2 compliance",
-        "Dedicated infrastructure",
-        "24/7 technical support",
-        "SLA guarantee",
-        "On-premise deployment"
-      ],
-      cta: "Contact Sales",
-      popular: false
-    }
-  ];
+  const pricing = {
+    name: "Business Plan",
+    price: "$25",
+    period: "/month",
+    description: "Everything your business needs",
+    features: [
+      "Unlimited document storage",
+      "Advanced semantic search with AI",
+      "Document editing & management",
+      "Share documents securely via email",
+      "14-day free trial included",
+      "Team collaboration features",
+      "Priority technical support",
+      "Advanced analytics dashboard",
+      "REST API access",
+      "Virus & malware scanning",
+      "End-to-end encryption",
+      "Full audit logging"
+    ],
+    cta: "Start 14-Day Trial"
+  };
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -147,7 +114,7 @@ export default function LandingPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                   placeholder="you@company.com"
                   disabled={loading}
                 />
@@ -163,7 +130,7 @@ export default function LandingPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                   placeholder="••••••••"
                   disabled={loading}
                 />
@@ -172,7 +139,7 @@ export default function LandingPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-brand-600 to-secondary-600 text-white font-medium hover:from-brand-700 hover:to-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
@@ -180,7 +147,7 @@ export default function LandingPage() {
               <div className="text-center pt-2">
                 <p className="text-sm text-gray-400">
                   Don't have an account?{' '}
-                  <Link href="/signup" className="text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
+                  <Link href="/signup" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
                     Create Account
                   </Link>
                 </p>
@@ -206,7 +173,7 @@ export default function LandingPage() {
               <a href="#pricing" className="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
               <a href="#security" className="text-sm text-gray-400 hover:text-white transition-colors">Security</a>
               <button onClick={() => setShowSignIn(true)} className="text-sm text-gray-400 hover:text-white transition-colors">Sign In</button>
-              <Link href="/signup" className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all">
+              <Link href="/signup" className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-600 to-secondary-600 text-white text-sm font-medium hover:from-brand-700 hover:to-secondary-700 transition-all">
                 Get Started
               </Link>
             </nav>
@@ -217,16 +184,16 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
-            Enterprise-Grade Document Storage with Semantic Search
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight tracking-tight">
+            Business Document Storage with AI-Powered Search
           </h1>
           
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Securely store unlimited documents and retrieve them instantly using natural language semantic search technology.
+          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+            Store unlimited documents securely and find anything instantly using natural language semantic search.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Link href="/signup" className="px-8 py-4 rounded-lg bg-emerald-600 text-white text-lg font-medium hover:bg-emerald-700 transition-all">
+            <Link href="/signup" className="px-8 py-4 rounded-lg bg-gradient-to-r from-brand-600 to-secondary-600 text-white text-lg font-medium hover:from-brand-700 hover:to-secondary-700 transition-all">
               Start 14-Day Trial
             </Link>
             <button onClick={() => setShowSignIn(true)} className="px-8 py-4 rounded-lg border border-gray-700 text-white text-lg font-medium hover:bg-gray-900 transition-all">
@@ -236,15 +203,15 @@ export default function LandingPage() {
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-500" />
+              <Check className="w-4 h-4 text-brand-500" />
               <span>14-day trial period</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-500" />
+              <Check className="w-4 h-4 text-brand-500" />
               <span>Credit card required</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-500" />
+              <Check className="w-4 h-4 text-brand-500" />
               <span>Cancel anytime</span>
             </div>
           </div>
@@ -255,11 +222,11 @@ export default function LandingPage() {
       <section id="features" className="py-20 px-6 bg-gray-900/50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Enterprise Storage Infrastructure
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Professional Storage Infrastructure
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Professional document management with advanced semantic search capabilities.
+              Enterprise-grade document management with advanced semantic search capabilities.
             </p>
           </div>
 
@@ -267,10 +234,10 @@ export default function LandingPage() {
             {features.map((feature, idx) => (
               <div 
                 key={idx}
-                className="flex items-start gap-4 p-6 bg-gray-900 border border-gray-800 rounded-lg hover:border-emerald-600/50 transition-all"
+                className="flex items-start gap-4 p-6 bg-gray-900 border border-gray-800 rounded-lg hover:border-brand-600/50 transition-all"
               >
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-600/10 flex items-center justify-center border border-emerald-600/20">
-                  <feature.icon className="w-5 h-5 text-emerald-500" />
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-brand-600/10 to-secondary-600/10 flex items-center justify-center border border-brand-600/20">
+                  <feature.icon className="w-5 h-5 text-brand-400" />
                 </div>
                 <div>
                   <p className="text-white font-medium">{feature.text}</p>
@@ -286,7 +253,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-center gap-8 text-center md:text-left">
             <div className="flex items-center gap-3">
-              <Lock className="w-8 h-8 text-emerald-500" />
+              <Lock className="w-8 h-8 text-brand-400" />
               <div>
                 <p className="text-sm font-semibold text-white">End-to-End Encryption</p>
                 <p className="text-xs text-gray-500">AES-256 encryption standard</p>
@@ -294,18 +261,18 @@ export default function LandingPage() {
             </div>
             <div className="hidden md:block w-px h-12 bg-gray-800" />
             <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 text-emerald-500" />
+              <Shield className="w-8 h-8 text-secondary-400" />
               <div>
-                <p className="text-sm font-semibold text-white">SOC 2 Compliance</p>
-                <p className="text-xs text-gray-500">Enterprise security standards</p>
+                <p className="text-sm font-semibold text-white">Enterprise Security</p>
+                <p className="text-xs text-gray-500">Bank-grade protection</p>
               </div>
             </div>
             <div className="hidden md:block w-px h-12 bg-gray-800" />
             <div className="flex items-center gap-3">
-              <Database className="w-8 h-8 text-emerald-500" />
+              <Database className="w-8 h-8 text-brand-400" />
               <div>
-                <p className="text-sm font-semibold text-white">Unlimited Scale</p>
-                <p className="text-xs text-gray-500">Enterprise infrastructure</p>
+                <p className="text-sm font-semibold text-white">Unlimited Storage</p>
+                <p className="text-xs text-gray-500">Scale without limits</p>
               </div>
             </div>
           </div>
@@ -316,74 +283,59 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 px-6 bg-gray-900/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Transparent Pricing
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Simple, Transparent Pricing
             </h2>
             <p className="text-lg text-gray-400">
-              Start with a 14-day trial. Scale as your needs grow.
+              One plan, unlimited possibilities. Start with a 14-day free trial.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {pricing.map((plan, idx) => (
-              <div 
-                key={idx}
-                className={`relative bg-gray-900 border rounded-lg p-8 ${
-                  plan.popular 
-                    ? 'border-emerald-600 shadow-lg shadow-emerald-600/20' 
-                    : 'border-gray-800'
-                } transition-all duration-300`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-full">
-                    RECOMMENDED
-                  </div>
-                )}
-                
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-white">{plan.price}</span>
-                    {plan.period && <span className="text-gray-500">{plan.period}</span>}
-                  </div>
-                </div>
-
-                <Link 
-                  href="/signup"
-                  className={`w-full py-3 rounded-lg font-medium transition-all mb-6 block text-center ${
-                    plan.popular
-                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                      : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-700'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-
-                <ul className="space-y-3">
-                  {plan.features.map((feature, fidx) => (
-                    <li key={fidx} className="flex items-start gap-3 text-sm">
-                      <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-400">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+          <div className="max-w-2xl mx-auto">
+            <div className="relative bg-gray-900 border border-brand-600 shadow-2xl shadow-brand-600/20 rounded-lg p-8 transition-all duration-300">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-brand-600 to-secondary-600 text-white text-xs font-semibold rounded-full">
+                PROFESSIONAL BUSINESS SOLUTION
               </div>
-            ))}
+              
+              <div className="mb-6 text-center">
+                <h3 className="text-2xl font-bold text-white mb-2">{pricing.name}</h3>
+                <p className="text-gray-400 text-sm mb-4">{pricing.description}</p>
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className="text-5xl font-bold text-white">{pricing.price}</span>
+                  <span className="text-gray-500 text-lg">{pricing.period}</span>
+                </div>
+              </div>
+
+              <Link 
+                href="/signup"
+                className="w-full py-4 rounded-lg font-medium transition-all mb-6 block text-center text-lg bg-gradient-to-r from-brand-600 to-secondary-600 text-white hover:from-brand-700 hover:to-secondary-700"
+              >
+                {pricing.cta}
+              </Link>
+
+              <ul className="space-y-3">
+                {pricing.features.map((feature, fidx) => (
+                  <li key={fidx} className="flex items-start gap-3 text-sm">
+                    <Check className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center bg-gray-900 border border-gray-800 rounded-lg p-12">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Deploy Enterprise Document Storage Today
+        <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-gray-900 to-gray-900/50 border border-gray-800 rounded-lg p-12">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Start Storing Documents Securely Today
           </h2>
           <p className="text-lg text-gray-400 mb-8">
-            Secure, searchable, scalable document management for modern businesses.
+            Professional document management for modern businesses.
           </p>
-          <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-emerald-600 text-white text-lg font-medium hover:bg-emerald-700 transition-all">
+          <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-brand-600 to-secondary-600 text-white text-lg font-medium hover:from-brand-700 hover:to-secondary-700 transition-all">
             Start 14-Day Trial
           </Link>
           <p className="text-sm text-gray-500 mt-4">

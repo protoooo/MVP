@@ -14,8 +14,8 @@ export default function TermsPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-bold text-text-primary mb-4">Terms of Service</h1>
-        <p className="text-text-secondary mb-8">Last Updated: January 2, 2025</p>
+        <h1 className="text-3xl font-bold text-text-primary mb-4">Terms of Service</h1>
+        <p className="text-text-secondary mb-8">Last Updated: January 3, 2025</p>
 
         <div className="space-y-8 text-text-secondary leading-relaxed">
           <section>
@@ -30,7 +30,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold text-text-primary mb-4">2. Service Description</h2>
             <p>
               ProtocolLM provides unlimited document storage with semantic search capabilities powered by 
-              AI. We offer multiple subscription tiers with varying storage limits and features.
+              AI for businesses. Our Business Plan offers a single tier with comprehensive features.
             </p>
           </section>
 
@@ -45,81 +45,124 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">4. Acceptable Use</h2>
-            <p>You may not use ProtocolLM to:</p>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">4. Acceptable Use & Legal Content</h2>
+            <p className="font-semibold mb-2">You may ONLY use ProtocolLM for legal purposes. You may NOT:</p>
             <ul className="list-disc ml-6 mt-2 space-y-2">
-              <li>Upload illegal, harmful, or infringing content</li>
-              <li>Violate any laws or regulations</li>
+              <li><strong>Upload illegal, harmful, or infringing content of any kind</strong></li>
+              <li>Store content that violates any laws or regulations</li>
+              <li>Upload copyrighted material without proper authorization</li>
+              <li>Store content containing malware, viruses, or malicious code</li>
+              <li>Use the service to distribute spam or unsolicited communications</li>
               <li>Interfere with or disrupt our services</li>
               <li>Attempt to gain unauthorized access to our systems</li>
-              <li>Share your account with others</li>
+              <li>Share your account credentials with others</li>
             </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">5. Storage Limits</h2>
-            <ul className="list-disc ml-6 mt-2 space-y-2">
-              <li>Personal Plan: 500GB storage limit</li>
-              <li>Business Plan: 5TB storage limit</li>
-              <li>Enterprise Plan: Unlimited storage</li>
-            </ul>
-            <p className="mt-2">
-              If you exceed your plan's storage limit, you must upgrade your plan or delete files.
+            <p className="mt-4 font-semibold text-red-400">
+              ⚠️ IMPORTANT: Any illegal content will be reported to law enforcement authorities. 
+              We cooperate fully with legal investigations and may be required to disclose user data.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">6. Payment Terms</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">5. Your Responsibility for Content</h2>
+            <p>
+              You are solely responsible for all content you upload to ProtocolLM. By using our service, you certify that:
+            </p>
             <ul className="list-disc ml-6 mt-2 space-y-2">
-              <li>All plans include a 7-day free trial</li>
+              <li>All uploaded content is legal and does not violate any laws</li>
+              <li>You have the right to store and process the content</li>
+              <li>The content does not infringe on third-party rights</li>
+              <li>You will comply with all applicable data protection regulations</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">6. Storage & Features</h2>
+            <ul className="list-disc ml-6 mt-2 space-y-2">
+              <li>Business Plan: Unlimited document storage</li>
+              <li>14-day free trial included with new accounts</li>
+              <li>Advanced semantic search with AI</li>
+              <li>Document editing, sharing, and management features</li>
+            </ul>
+            <p className="mt-2">
+              We reserve the right to implement fair use policies to prevent abuse.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">7. Payment Terms</h2>
+            <ul className="list-disc ml-6 mt-2 space-y-2">
+              <li>14-day free trial for all new accounts</li>
+              <li>$25/month subscription fee after trial period</li>
               <li>Subscriptions auto-renew monthly unless canceled</li>
               <li>No refunds for partial months</li>
               <li>Prices subject to change with 30 days notice</li>
+              <li>Payment processed securely via Stripe</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">7. Intellectual Property</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">8. Intellectual Property</h2>
             <p>
               You retain all rights to your documents. ProtocolLM does not claim ownership of your content. 
-              We only use your content to provide the services you've requested.
+              We only use your content to provide the services you've requested (storage, search, analysis).
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">8. Service Availability</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">9. Security & Privacy</h2>
+            <ul className="list-disc ml-6 mt-2 space-y-2">
+              <li>End-to-end encryption (AES-256) for all stored files</li>
+              <li>Virus and malware scanning on all uploads</li>
+              <li>Full audit logging of all document operations</li>
+              <li>Secure document sharing with signed URLs</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">10. Service Availability</h2>
             <p>
               We strive for 99.9% uptime but do not guarantee uninterrupted service. We are not liable for 
-              any downtime, data loss, or service interruptions.
+              any downtime, data loss, or service interruptions beyond our control.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">9. Termination</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">11. Termination</h2>
             <p>
-              We reserve the right to suspend or terminate accounts that violate these terms. You may cancel 
-              your account at any time. Upon termination, your data will be deleted within 30 days.
+              We reserve the right to suspend or terminate accounts that violate these terms, particularly those 
+              containing illegal content. You may cancel your account at any time. Upon termination, your data 
+              will be deleted within 30 days.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">10. Limitation of Liability</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">12. Limitation of Liability</h2>
             <p>
               ProtocolLM is provided "as is" without warranties. We are not liable for any indirect, 
-              incidental, or consequential damages arising from use of our services.
+              incidental, or consequential damages arising from use of our services. Our total liability 
+              shall not exceed the amount paid by you in the last 12 months.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">11. Changes to Terms</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">13. Changes to Terms</h2>
             <p>
               We may update these terms at any time. We will notify users of significant changes via email. 
-              Continued use after changes constitutes acceptance.
+              Continued use after changes constitutes acceptance of the new terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">12. Contact</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">14. Governing Law</h2>
+            <p>
+              These terms are governed by the laws of the State of Michigan, United States. 
+              Any disputes shall be resolved in the courts of Ann Arbor, Michigan.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">15. Contact</h2>
             <p>
               For questions about these terms, contact:
               <br />Austin Northrup
