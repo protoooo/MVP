@@ -271,6 +271,19 @@ COHERE_VISION_MODEL=c4ai-aya-vision-32b
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    CLOUDFLARE_TURNSTILE_SECRET_KEY=your_secret_key
    NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
+   
+   # Stripe (Optional - for subscription features)
+   # Get these from https://dashboard.stripe.com/apikeys
+   STRIPE_SECRET_KEY=sk_test_... or sk_live_...
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_... or pk_live_...
+   STRIPE_WEBHOOK_SECRET=whsec_... (from Stripe webhook settings)
+   
+   # Note: This app creates prices dynamically using price_data.
+   # The pricing is configured in backend/src/config/stripe.ts:
+   # - PLAN_PRICE: 2500 ($25.00 in cents)
+   # - CURRENCY: 'usd'
+   # - TRIAL_PERIOD_DAYS: 14
+   # You do NOT need to set a STRIPE_PRICE_ID environment variable.
    ```
 
 4. **Deploy from GitHub**
