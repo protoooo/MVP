@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
+import jwt from 'jsonwebtoken';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { fileService } from '../services/fileService';
 
@@ -83,17 +84,32 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-// Download file
-router.get('/:id/download', authMiddleware, async (req: AuthRequest, res) => {
+// Download file - FIXED to accept token in query param or header
+router.get('/:id/download', async (req, res) => {
   try {
+    // Accept token from query param OR header
+    const token = (req.query.token as string) || req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    // Verify token
+    let decoded: { id: number; email: string };
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || '') as { id: number; email: string };
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
     const fileId = parseInt(req.params.id);
-    const file = await fileService.getFileById(fileId, req.user!.id);
+    const file = await fileService.getFileById(fileId, decoded.id);
 
     if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    const fileStream = await fileService.getFileStream(fileId, req.user!.id);
+    const fileStream = await fileService.getFileStream(fileId, decoded.id);
     
     res.setHeader('Content-Disposition', `attachment; filename="${file.original_filename}"`);
     res.setHeader('Content-Type', file.file_type);
