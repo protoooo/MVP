@@ -38,8 +38,10 @@ export default function SignupPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-brand/10 mb-4">
             <Database className="w-8 h-8 text-brand" />
           </div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">BizMemory</h1>
-          <p className="text-text-secondary">Smart file storage for your business</p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
+            protocol<span className="text-brand">LM</span>
+          </h1>
+          <p className="text-text-secondary">Start your 7-day free trial</p>
         </div>
 
         {/* Signup Form */}
@@ -107,7 +109,7 @@ export default function SignupPage() {
               disabled={loading}
               className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? 'Creating account...' : 'Start Free Trial'}
             </button>
           </form>
 
@@ -123,7 +125,7 @@ export default function SignupPage() {
 
         {/* Footer */}
         <p className="mt-8 text-center text-xs text-text-tertiary">
-          Securely store and search your business files
+          7-day free trial • No credit card required • Cancel anytime
         </p>
       </div>
     </div>
