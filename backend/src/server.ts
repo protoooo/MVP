@@ -5,11 +5,16 @@ import path from 'path';
 import fs from 'fs';
 import { initializeDatabase, checkDatabaseConnection, closeDatabasePool } from './config/database';
 import { supabaseStorageService } from './services/supabaseService';
+
+// Import all routes
 import authRoutes from './routes/auth';
 import filesRoutes from './routes/files';
 import searchRoutes from './routes/search';
 import conversationRoutes from './routes/conversation';
 import reportsRoutes from './routes/reports';
+import collectionsRoutes from './routes/collections'; // NEW
+import analyticsRoutes from './routes/analytics'; // NEW
+import apiKeysRoutes from './routes/apiKeys'; // NEW
 
 dotenv.config();
 
@@ -18,12 +23,12 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 console.log('='.repeat(60));
-console.log('🚀 Starting ProtocolLM');
+console.log('🚀 Starting ProtocolLM - Enhanced Version');
 console.log('='.repeat(60));
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Port:', PORT);
 
-// Create upload directory for temporary file processing
+// Create upload directory
 const uploadDir = path.resolve(process.env.UPLOAD_DIR || './uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -31,7 +36,6 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Middleware
-// FIXED: Secure CORS configuration
 app.use(cors({
   origin: isDevelopment 
     ? '*' 
@@ -52,18 +56,46 @@ if (isDevelopment) {
   });
 }
 
-// API Routes - Must be BEFORE any catch-all routes
+// ===== API Routes =====
+// Auth routes
 app.use('/api/auth', authRoutes);
+
+// File management routes
 app.use('/api/files', filesRoutes);
+
+// Search routes
 app.use('/api/search', searchRoutes);
+
+// Conversational search routes
 app.use('/api/conversation', conversationRoutes);
+
+// Report generation routes
 app.use('/api/reports', reportsRoutes);
 
+// 🆕 Collections/Folders routes
+app.use('/api/collections', collectionsRoutes);
+
+// 🆕 Analytics routes
+app.use('/api/analytics', analyticsRoutes);
+
+// 🆕 API Keys management routes
+app.use('/api/api-keys', apiKeysRoutes);
+
+// Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     service: 'ProtocolLM API',
-    version: '1.0.0',
+    version: '2.0.0', // Updated version
+    features: [
+      'Collections',
+      'Analytics',
+      'API Keys',
+      'Conversational Search',
+      'Advanced Search',
+      'File Management',
+      'Report Generation'
+    ],
     timestamp: new Date().toISOString() 
   });
 });
@@ -72,7 +104,6 @@ app.get('/health', (req, res) => {
 if (!isDevelopment) {
   const next = require('next');
   
-  // Initialize Next.js (will be prepared by startServer)
   const nextApp = next({
     dev: false,
     dir: path.join(__dirname, '../..'),
@@ -80,13 +111,11 @@ if (!isDevelopment) {
   });
   
   const handle = nextApp.getRequestHandler();
-  
-  // Export for use in startServer
   (global as any).nextApp = nextApp;
   (global as any).nextHandle = handle;
 }
 
-// Fallback routes when Next.js isn't available
+// Fallback routes
 function setupFallbackRoutes() {
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api/') || req.path === '/health') {
@@ -113,7 +142,7 @@ function setupFallbackRoutes() {
             padding: 20px;
           }
           .container {
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
             background: #161B22;
             border: 1px solid #30363D;
@@ -129,95 +158,51 @@ function setupFallbackRoutes() {
           }
           .brand { color: #3ECF8E; }
           .subtitle { color: #7D8590; margin-bottom: 32px; font-size: 1.1rem; }
-          .status-card {
+          .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 32px 0;
+          }
+          .feature {
             background: #1C2128;
             border: 1px solid #30363D;
+            padding: 12px;
             border-radius: 8px;
-            padding: 24px;
-            margin: 24px 0;
-          }
-          .status-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #30363D;
-          }
-          .status-item:last-child { border-bottom: none; }
-          .label { color: #7D8590; }
-          .value { color: #3ECF8E; font-weight: 600; }
-          .value.running::before {
-            content: '●';
-            margin-right: 8px;
-            animation: pulse 2s infinite;
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-          }
-          .info {
+            font-size: 0.875rem;
             color: #7D8590;
-            font-size: 0.875rem;
-            line-height: 1.6;
-            margin-top: 24px;
           }
-          ${isDevelopment ? `
-          .dev-warning {
-            background: #FFA50020;
-            border: 1px solid #FFA50040;
-            color: #FFA500;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 24px;
-            font-size: 0.875rem;
-          }
-          code {
-            background: #21262D;
+          .feature::before {
+            content: '✓';
             color: #3ECF8E;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
+            margin-right: 8px;
+            font-weight: bold;
           }
-          ` : ''}
+          .status {
+            color: #3ECF8E;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-top: 24px;
+          }
         </style>
       </head>
       <body>
         <div class="container">
           <h1>protocol<span class="brand">LM</span></h1>
-          <p class="subtitle">Unlimited Intelligent Document Storage</p>
+          <p class="subtitle">✨ Enhanced Version with Collections & Analytics</p>
           
-          <div class="status-card">
-            <div class="status-item">
-              <span class="label">Backend API</span>
-              <span class="value running">Running</span>
-            </div>
-            <div class="status-item">
-              <span class="label">Database</span>
-              <span class="value running">Connected</span>
-            </div>
-            <div class="status-item">
-              <span class="label">Storage</span>
-              <span class="value running">Supabase Ready</span>
-            </div>
-            <div class="status-item">
-              <span class="label">Mode</span>
-              <span class="value">${isDevelopment ? 'Development' : 'Production'}</span>
-            </div>
+          <div class="features">
+            <div class="feature">Collections/Folders</div>
+            <div class="feature">Usage Analytics</div>
+            <div class="feature">API Access</div>
+            <div class="feature">Conversational Search</div>
+            <div class="feature">Advanced Filters</div>
+            <div class="feature">Bulk Operations</div>
           </div>
           
-          ${isDevelopment ? `
-          <div class="dev-warning">
-            <strong>⚠️ Development Mode</strong><br>
-            Run <code>npm run dev:frontend</code> in another terminal to start the Next.js frontend.
-          </div>
-          ` : `
-          <div class="info">
-            <p><strong>Backend is running successfully!</strong></p>
-            <p>The application is now live and serving requests.</p>
-          </div>
-          `}
+          <p class="status">✅ Backend is running successfully!</p>
           
-          <div class="info" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #30363D;">
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #30363D; color: #7D8590; font-size: 0.875rem;">
             <p>Powered by Cohere AI • Supabase • PostgreSQL with pgvector</p>
           </div>
         </div>
@@ -251,24 +236,27 @@ function setupGracefulShutdown(server: any) {
   });
 }
 
-// HTTP server startup
 let httpServer: any = null;
 
 function startHTTPServer() {
   httpServer = app.listen(PORT, '0.0.0.0', () => {
     console.log('\n' + '='.repeat(60));
-    console.log('✅ ProtocolLM Server Ready!');
+    console.log('✅ ProtocolLM Enhanced Server Ready!');
     console.log('='.repeat(60));
     console.log(`🌐 HTTP server running on port ${PORT}`);
     console.log(`📡 Listening on 0.0.0.0:${PORT}`);
     console.log(`🔗 API available at http://localhost:${PORT}/api`);
+    console.log('\n🎉 New Features Available:');
+    console.log('   - Collections/Folders for organization');
+    console.log('   - Analytics Dashboard');
+    console.log('   - API Key Management');
+    console.log('   - Enhanced Conversational Search');
     console.log('='.repeat(60) + '\n');
   });
   
   setupGracefulShutdown(httpServer);
 }
 
-// Initialize database and start
 async function startServer() {
   try {
     console.log('\n=== Database Check ===');
@@ -277,26 +265,20 @@ async function startServer() {
     console.log('\n=== Database Init ===');
     await initializeDatabase();
     
-    // Ensure Supabase bucket exists
     if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       console.log('\n=== Supabase Storage Init ===');
       try {
         await supabaseStorageService.ensureBucketExists('protocollm-files');
       } catch (error: any) {
         console.warn('⚠️  Could not initialize Supabase bucket:', error.message);
-        console.log('   Please ensure your Supabase project has storage enabled');
       }
     } else {
       console.log('\n⚠️  WARNING: Supabase credentials not found!');
-      console.log('   ProtocolLM requires Supabase for unlimited storage.');
-      console.log('   Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your .env file');
     }
     
     console.log('\n=== Server Initialization ===');
     
-    // Setup routes and start server based on environment
     if (!isDevelopment) {
-      // Production: Setup Next.js integration
       const nextApp = (global as any).nextApp;
       const handle = (global as any).nextHandle;
       
@@ -305,11 +287,9 @@ async function startServer() {
           await nextApp.prepare();
           console.log('✓ Next.js app ready');
           
-          // Serve Next.js static files
           app.use('/_next', express.static(path.join(__dirname, '../../.next')));
           app.use('/static', express.static(path.join(__dirname, '../../public')));
           
-          // Let Next.js handle all other routes
           app.all('*', (req, res) => {
             return handle(req, res);
           });
@@ -323,7 +303,6 @@ async function startServer() {
       }
       startHTTPServer();
     } else {
-      // Development mode
       setupFallbackRoutes();
       startHTTPServer();
     }
