@@ -173,8 +173,8 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-emerald-600/10 mb-4 border border-emerald-600/20">
-            <Database className="w-8 h-8 text-emerald-500" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-brand-600/10 mb-4 border border-brand-600/20">
+            <Database className="w-8 h-8 text-brand-500" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">
             protocolLM
@@ -201,7 +201,7 @@ export default function SignupPage() {
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 transition-all"
                 placeholder="Company Inc."
                 disabled={loading}
               />
@@ -217,7 +217,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 transition-all"
                 placeholder="you@company.com"
                 disabled={loading}
                 autoComplete="email"
@@ -234,7 +234,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 transition-all"
                 placeholder="••••••••"
                 disabled={loading}
                 autoComplete="new-password"
@@ -252,14 +252,14 @@ export default function SignupPage() {
                   <div key={key} className="flex items-center gap-2 text-xs">
                     <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
                       passwordStrength[key as keyof typeof passwordStrength]
-                        ? 'bg-emerald-500/20 text-emerald-400'
+                        ? 'bg-brand-500/20 text-brand-400'
                         : 'bg-gray-700 text-gray-500'
                     }`}>
                       {passwordStrength[key as keyof typeof passwordStrength] && '✓'}
                     </div>
                     <span className={
                       passwordStrength[key as keyof typeof passwordStrength]
-                        ? 'text-emerald-400'
+                        ? 'text-brand-400'
                         : 'text-gray-500'
                     }>
                       {label}
@@ -282,7 +282,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || !turnstileToken || !allRequirementsMet}
-              className="w-full px-6 py-3 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full px-6 py-3 rounded-lg bg-brand-600 text-white font-medium hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
@@ -291,7 +291,7 @@ export default function SignupPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
               Already have an account?{' '}
-              <Link href="/login" className="text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
+              <Link href="/login" className="text-brand-500 hover:text-brand-400 font-medium transition-colors">
                 Sign in
               </Link>
             </p>

@@ -27,7 +27,7 @@
   textarea,
   select {
     @apply bg-gray-800 border-gray-700 text-white;
-    @apply focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20;
+    @apply focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
     font-size: 14px;
   }
   
@@ -72,8 +72,8 @@
 @layer components {
   .btn-primary {
     @apply px-4 py-2 rounded-lg text-sm font-medium text-white;
-    @apply bg-emerald-600 hover:bg-emerald-700;
-    @apply focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 focus:ring-offset-gray-950;
+    @apply bg-gradient-to-r from-brand-600 to-secondary-600 hover:from-brand-700 hover:to-secondary-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-950;
     @apply transition-all duration-150;
   }
 
@@ -82,7 +82,7 @@
     @apply bg-gray-800 text-white;
     @apply hover:bg-gray-700;
     @apply border border-gray-700;
-    @apply focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 focus:ring-offset-gray-950;
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-950;
     @apply transition-all duration-150;
   }
 
@@ -96,16 +96,16 @@
   }
 
   .badge-brand {
-    @apply badge bg-emerald-600/10 text-emerald-500 border-emerald-600/20;
+    @apply badge bg-brand-600/10 text-brand-400 border-brand-600/20;
   }
 }
 
 ::selection {
-  @apply bg-emerald-600/20 text-white;
+  @apply bg-brand-600/20 text-white;
 }
 
 ::-moz-selection {
-  @apply bg-emerald-600/20 text-white;
+  @apply bg-brand-600/20 text-white;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -125,9 +125,24 @@ h1, h2, h3, h4, h5, h6 {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+h1 {
+  font-size: 1.875rem; /* Reduced from larger */
+  line-height: 2.25rem;
+}
+
+h2 {
+  font-size: 1.5rem; /* Reduced */
+  line-height: 2rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
 code {
   @apply text-xs font-mono bg-gray-800 px-1.5 py-0.5 rounded;
-  color: #10b981;
+  color: #22d3ee;
 }
 
 pre {
