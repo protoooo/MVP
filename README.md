@@ -242,11 +242,52 @@ COHERE_VISION_MODEL=c4ai-aya-vision-32b
 
 ### Railway (Recommended)
 
-1. Create a Railway project
-2. Add PostgreSQL with pgvector
-3. Set environment variables
-4. Deploy from GitHub
-5. Railway auto-detects `nixpacks.toml`
+**Single Deployment Setup** (Frontend + Backend on one service):
+
+1. **Create a Railway project**
+   - Go to [Railway](https://railway.app) and create a new project
+   
+2. **Add PostgreSQL with pgvector**
+   - Add PostgreSQL from Railway marketplace
+   - The `DATABASE_URL` will be automatically set
+   - After deployment, enable pgvector extension in your database
+
+3. **Set environment variables** (in Railway dashboard):
+   ```bash
+   # Port (Railway provides this automatically, defaults to 3000)
+   PORT=3000
+   
+   # Backend will run on internal port 3001 (hardcoded in start script)
+   
+   # Required
+   JWT_SECRET=your_32_character_or_longer_secret_key
+   COHERE_API_KEY=your_cohere_api_key
+   
+   # Database (automatically set by Railway PostgreSQL)
+   DATABASE_URL=postgresql://...
+   
+   # Optional but recommended
+   SUPABASE_URL=https://xxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   CLOUDFLARE_TURNSTILE_SECRET_KEY=your_secret_key
+   NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
+   ```
+
+4. **Deploy from GitHub**
+   - Connect your GitHub repository
+   - Railway will automatically detect `nixpacks.toml`
+   - Both frontend and backend will build and start together
+
+5. **Access your app**
+   - Frontend: Your Railway URL (e.g., `https://yourapp.railway.app`)
+   - Backend API: Same URL + `/api` (e.g., `https://yourapp.railway.app/api`)
+   - Health check: `https://yourapp.railway.app/health`
+
+**How it works:**
+- The app uses a single deployment with both services running
+- Frontend (Next.js) runs on the public PORT
+- Backend (Express) runs on internal port 3001
+- Next.js automatically proxies `/api/*` requests to the backend
 
 ### Manual Deployment
 
