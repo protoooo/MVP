@@ -1,5 +1,5 @@
-// backend/src/routes/files.ts - PROPERLY FIXED
-import { Router, Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+// backend/src/routes/files.ts - FINAL FIX
+import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import jwt from 'jsonwebtoken';
@@ -48,44 +48,42 @@ const upload = multer({
   },
 });
 
-// Handle multer errors - USING EXPRESS ERROR HANDLER TYPE
-const handleMulterError: ErrorRequestHandler = (err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      res.status(400).json({ 
-        error: 'File too large. Maximum size is 50MB.' 
-      });
-      return;
-    }
-    if (err.code === 'LIMIT_FILE_COUNT') {
-      res.status(400).json({ 
-        error: 'Too many files. Upload one file at a time.' 
-      });
-      return;
-    }
-    res.status(400).json({ error: `Upload error: ${err.message}` });
-    return;
-  }
-  
-  if (err) {
-    console.error('Upload error:', err);
-    res.status(400).json({ error: err.message || 'Upload failed' });
-    return;
-  }
-  
-  next();
-};
-
 // ========================================
 // ROUTE: Upload File
 // ========================================
 router.post(
   '/upload',
-  authMiddleware,           // Must be authenticated
-  uploadLimiter,            // Rate limit uploads
-  upload.single('file'),    // Handle file upload
-  handleMulterError,        // Handle upload errors
-  validateFileMiddleware,   // Validate file security
+  authMiddleware,
+  uploadLimiter,
+  upload.single('file'),
+  // Handle multer errors inline with explicit types
+  ((err: any, req: Request, res: Response, next: NextFunction): void => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        res.status(400).json({ 
+          error: 'File too large. Maximum size is 50MB.' 
+        });
+        return;
+      }
+      if (err.code === 'LIMIT_FILE_COUNT') {
+        res.status(400).json({ 
+          error: 'Too many files. Upload one file at a time.' 
+        });
+        return;
+      }
+      res.status(400).json({ error: `Upload error: ${err.message}` });
+      return;
+    }
+    
+    if (err) {
+      console.error('Upload error:', err);
+      res.status(400).json({ error: err.message || 'Upload failed' });
+      return;
+    }
+    
+    next();
+  }) as any,
+  validateFileMiddleware,
   async (req: AuthRequest, res) => {
     try {
       if (!req.file) {
@@ -192,17 +190,14 @@ router.get('/:id', authMiddleware, apiLimiter, async (req: AuthRequest, res) => 
 // ========================================
 // ROUTE: Download File
 // ========================================
-// SECURITY: Accepts token in query param OR header
 router.get('/:id/download', async (req, res) => {
   try {
-    // Get token from query param OR Authorization header
     const token = (req.query.token as string) || req.headers.authorization?.split(' ')[1];
     
     if (!token) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Verify JWT token
     let decoded: { id: number; email: string };
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET || '') as { id: number; email: string };
@@ -217,22 +212,18 @@ router.get('/:id/download', async (req, res) => {
       return res.status(400).json({ error: 'Invalid file ID' });
     }
 
-    // Get file metadata
     const file = await fileService.getFileById(fileId, decoded.id);
 
     if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Get file stream
     const fileStream = await fileService.getFileStream(fileId, decoded.id);
     
-    // Set headers for download
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.original_filename)}"`);
     res.setHeader('Content-Type', file.file_type);
     res.setHeader('Content-Length', file.file_size);
     
-    // Stream file to response
     fileStream.pipe(res);
     
     console.log(`📥 File downloaded: ${file.original_filename} by user ${decoded.id}`);
