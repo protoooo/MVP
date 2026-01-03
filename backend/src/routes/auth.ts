@@ -83,9 +83,15 @@ function validatePassword(password: string): { valid: boolean; error?: string } 
 function validateEmail(email: string): boolean {
   // Robust email validation matching PostgreSQL standards
   // Local part: letters, numbers, dots, underscores, percent signs, plus signs, hyphens
-  // Domain: letters, numbers, dots, hyphens
+  // Domain: letters, numbers, dots, hyphens (no consecutive dots)
   // TLD: at least 2 letters
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  
+  // Additional validation: no consecutive dots
+  if (email.includes('..')) {
+    return false;
+  }
+  
   return emailRegex.test(email);
 }
 
