@@ -1,6 +1,6 @@
 {
   "name": "protocollm",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Unlimited intelligent document storage with powerful semantic search and retrieval",
   "main": "backend/dist/server.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit && tsc -p backend/tsconfig.json --noEmit",
     "clean": "rm -rf .next backend/dist node_modules/.cache",
-    "postinstall": "prisma generate || true"
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
     "document-storage",
@@ -64,7 +64,9 @@
     "date-fns": "^3.0.6",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^7.1.5",
     "framer-motion": "^11.0.3",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.453.0",
     "mammoth": "^1.11.0",
@@ -104,17 +106,5 @@
     "env": {
       "NODE_ENV": "development"
     }
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
   }
 }
