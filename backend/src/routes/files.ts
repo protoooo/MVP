@@ -1,9 +1,8 @@
-// backend/src/routes/files.ts - FIXED VERSION
-import { Router } from 'express';
+// backend/src/routes/files.ts - COMPLETE SECURE VERSION - FIXED
+import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';  // ADD THIS LINE
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validateFileMiddleware, FileValidator } from '../middleware/fileValidation';
 import { uploadLimiter, apiLimiter } from '../middleware/rateLimiter';
@@ -49,34 +48,38 @@ const upload = multer({
   },
 });
 
-// Handle multer errors - FIXED WITH EXPLICIT TYPES
-function handleMulterError(
+// Handle multer errors - FIXED
+const handleMulterError: (
   err: any,
   req: Request,
   res: Response,
   next: NextFunction
-): void {
+) => void = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         error: 'File too large. Maximum size is 50MB.' 
-      }) as any;
+      });
+      return;
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         error: 'Too many files. Upload one file at a time.' 
-      }) as any;
+      });
+      return;
     }
-    return res.status(400).json({ error: `Upload error: ${err.message}` }) as any;
+    res.status(400).json({ error: `Upload error: ${err.message}` });
+    return;
   }
   
   if (err) {
     console.error('Upload error:', err);
-    return res.status(400).json({ error: err.message || 'Upload failed' }) as any;
+    res.status(400).json({ error: err.message || 'Upload failed' });
+    return;
   }
   
   next();
-}
+};
 
 // ========================================
 // ROUTE: Upload File
