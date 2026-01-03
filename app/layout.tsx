@@ -3,12 +3,12 @@ import "./globals.css";
 import { ToastContainer } from "@/components/Toast";
 
 export const metadata: Metadata = {
-  title: "BizMemory - Smart File Storage for Small Business",
-  description: "AI-powered file and photo storage with natural language search. Find documents using simple questions like 'show me tax documents from 2018'",
-  keywords: ["file storage", "document management", "AI search", "small business", "natural language search"],
+  title: "ProtocolLM - Unlimited Intelligent Document Storage",
+  description: "Store terabytes of documents with powerful semantic search. Find anything instantly using vague wording. Generate summaries across thousands of pages with Cohere AI.",
+  keywords: ["document storage", "semantic search", "unlimited storage", "AI search", "document retrieval", "Cohere AI", "Supabase"],
   openGraph: {
-    title: "BizMemory - Smart File Storage",
-    description: "AI-powered file and photo storage with natural language search",
+    title: "ProtocolLM - Unlimited Intelligent Storage",
+    description: "Store unlimited documents. Find anything instantly with semantic search powered by Cohere AI.",
     type: "website",
   },
 };
