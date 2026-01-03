@@ -34,7 +34,7 @@ export default function FilePreviewModal({ file, allFiles = [], onClose, onDelet
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [file, allFiles, currentIndex, onClose, onNavigate]);
+  }, [file, allFiles, currentIndex, onClose, onNavigate, hasPrevious, hasNext]);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this file?')) return;
@@ -50,10 +50,13 @@ export default function FilePreviewModal({ file, allFiles = [], onClose, onDelet
     }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  const formatFileSize = (bytes: number | string): string => {
+    const size = typeof bytes === 'string' ? parseInt(bytes, 10) : bytes;
+    
+    if (!size || size < 0 || isNaN(size)) return '0 B';
+    if (size < 1024) return size + ' B';
+    if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
+    return (size / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   const isImage = file.file_type.startsWith('image/');
@@ -76,7 +79,7 @@ export default function FilePreviewModal({ file, allFiles = [], onClose, onDelet
           </div>
           
           <div className="flex items-center gap-2">
-            <a
+            
               href={filesAPI.getDownloadUrl(file.id)}
               download
               className="p-2 hover:bg-surface rounded-lg transition-colors"
@@ -141,7 +144,7 @@ export default function FilePreviewModal({ file, allFiles = [], onClose, onDelet
               <div className="text-center">
                 <FileText className="w-24 h-24 text-text-tertiary mx-auto mb-4" />
                 <p className="text-text-secondary mb-4">Preview not available for this file type</p>
-                <a
+                
                   href={filesAPI.getDownloadUrl(file.id)}
                   download
                   className="btn-primary"
