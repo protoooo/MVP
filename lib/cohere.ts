@@ -6,8 +6,8 @@ export const cohere = new CohereClient({
 });
 
 // Get model names from environment variables with fallbacks
-const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "aya-expanse-32b";
-const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v4.0";
+const CHAT_MODEL = process.env.COHERE_CHAT_MODEL || "c4ai-aya-expanse-32b";
+const EMBED_MODEL = process.env.COHERE_EMBED_MODEL || "embed-english-v3.0";
 const RERANK_MODEL = process.env.COHERE_RERANK_MODEL || "rerank-v3.5";
 
 // Generate text response

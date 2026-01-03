@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ['nodejs', 'graphicsmagick', 'ghostscript']
+
+[phases.build]
+cmds = ['npm install', 'npm run build']
+
+[start]
+cmd = 'BACKEND_PORT=3001 npm start'

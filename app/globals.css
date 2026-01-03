@@ -4,12 +4,16 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-gray-800;
+  }
+  
+  html {
+    color-scheme: dark;
   }
   
   body {
-    @apply bg-background text-text-primary antialiased;
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    @apply bg-gray-950 text-white antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -19,27 +23,28 @@
   input[type="email"],
   input[type="password"],
   input[type="number"],
+  input[type="search"],
   textarea,
   select {
-    @apply bg-background border-border text-text-primary;
-    @apply focus:border-text-primary focus:ring-0 focus:ring-offset-0;
+    @apply bg-gray-800 border-gray-700 text-white;
+    @apply focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
     font-size: 14px;
   }
   
   input[type="text"]::placeholder,
   input[type="email"]::placeholder,
   input[type="password"]::placeholder,
+  input[type="search"]::placeholder,
   textarea::placeholder {
-    @apply text-text-placeholder;
+    @apply text-gray-500;
   }
 
-  /* Remove blue highlight on mobile */
   * {
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Custom scrollbar - Notion style */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -50,147 +55,98 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-border-medium rounded-full;
+  @apply bg-gray-700 rounded-full;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-border-dark;
+  @apply bg-gray-600;
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(55, 53, 47, 0.12) transparent;
+  scrollbar-color: #374151 transparent;
 }
 
 @layer components {
-  /* Button styles */
   .btn-primary {
-    @apply px-4 py-2 rounded-md text-sm font-medium text-white;
-    @apply bg-text-primary hover:bg-text-secondary;
-    @apply focus:outline-none focus:ring-1 focus:ring-text-primary focus:ring-offset-1;
+    @apply px-4 py-2 rounded-lg text-sm font-medium text-white;
+    @apply bg-gradient-to-r from-brand-600 to-secondary-600 hover:from-brand-700 hover:to-secondary-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-950;
     @apply transition-all duration-150;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 rounded-md text-sm font-medium;
-    @apply bg-background-secondary text-text-primary;
-    @apply hover:bg-background-tertiary;
-    @apply border border-border;
-    @apply focus:outline-none focus:ring-1 focus:ring-text-primary focus:ring-offset-1;
+    @apply px-4 py-2 rounded-lg text-sm font-medium;
+    @apply bg-gray-800 text-white;
+    @apply hover:bg-gray-700;
+    @apply border border-gray-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-950;
     @apply transition-all duration-150;
   }
 
-  /* Card styles */
   .card {
-    @apply bg-surface rounded-lg border border-border p-4;
+    @apply bg-gray-900 rounded-lg border border-gray-800 p-4;
   }
 
-  .card-hover {
-    @apply card hover:shadow-notion-sm transition-all duration-150;
-  }
-
-  /* Badge styles */
   .badge {
     @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    @apply bg-gray-800 text-gray-400 border border-gray-700;
+  }
+
+  .badge-brand {
+    @apply badge bg-brand-600/10 text-brand-400 border-brand-600/20;
   }
 }
 
-/* Selection color */
 ::selection {
-  @apply bg-text-primary/10 text-text-primary;
+  @apply bg-brand-600/20 text-white;
 }
 
 ::-moz-selection {
-  @apply bg-text-primary/10 text-text-primary;
+  @apply bg-brand-600/20 text-white;
 }
 
-/* Smooth scroll */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* Focus visible */
-.focus-ring {
-  @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-text-primary focus-visible:ring-offset-1;
-}
-
-/* Print styles */
-@media print {
-  body {
-    @apply bg-white text-black;
-  }
-  
-  .no-print {
-    display: none !important;
-  }
-}
-
-/* Notion-style hover animations */
-@keyframes subtleFade {
-  from {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-subtle-fade {
-  animation: subtleFade 0.15s ease-out;
-}
-
-/* Better link styling */
-a {
-  @apply transition-colors duration-150;
-}
-
-/* Form focus improvements */
 input:focus,
 textarea:focus,
 select:focus {
   @apply outline-none;
-  box-shadow: 0 0 0 1px rgba(55, 53, 47, 0.16);
 }
 
-/* Notion-style separators */
-.notion-separator {
-  @apply border-t border-border my-4;
-}
-
-/* Subtle hover states */
-.hover-lift {
-  @apply transition-transform duration-150;
-}
-
-.hover-lift:hover {
-  transform: translateY(-1px);
-}
-
-/* Clean list styles */
-ul, ol {
-  @apply list-none;
-}
-
-/* Better spacing */
 h1, h2, h3, h4, h5, h6 {
-  @apply tracking-tight;
+  @apply tracking-tight text-white;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Code blocks */
+h1 {
+  font-size: 1.875rem; /* Reduced from larger */
+  line-height: 2.25rem;
+}
+
+h2 {
+  font-size: 1.5rem; /* Reduced */
+  line-height: 2rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
 code {
-  @apply text-xs font-mono bg-background-secondary px-1 py-0.5 rounded;
-  color: inherit;
+  @apply text-xs font-mono bg-gray-800 px-1.5 py-0.5 rounded;
+  color: #22d3ee;
 }
 
 pre {
-  @apply bg-background-secondary p-3 rounded-lg overflow-x-auto text-xs;
+  @apply bg-gray-800 p-3 rounded-lg overflow-x-auto text-xs border border-gray-700;
 }
 
 pre code {

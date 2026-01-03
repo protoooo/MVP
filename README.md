@@ -1,330 +1,336 @@
-# Business Workspace - Production-Ready AI Business Assistant
+# ProtocolLM - Unlimited Intelligent Document Storage
 
-A production-ready, agent-based business workspace that automates daily tasks for small business owners. Upload your documents and let 6 specialized AI agents handle finances, HR, customer support, inventory, contracts, and daily operations.
+ProtocolLM is a powerful document storage and retrieval system that enables you to store unlimited documents and find anything instantly using semantic search. Built with Cohere, Supabase, and advanced security features.
 
-**Not a generic AI chat app.** This is a daily business assistant with agents that **actually do work** - draft emails, analyze finances, screen resumes, manage inventory, and more.
+## 🚀 Key Features
 
-## 🚀 What Makes This Production-Ready
+- **Unlimited Storage** - Store terabytes of documents with Supabase
+- **Semantic Search** - Find documents using vague wording and natural language
+- **Advanced Retrieval** - Cohere Rerank ensures you find exactly what you need
+- **Document Generation** - Summarize and generate reports from thousands of pages
+- **Multi-Format Support** - PDFs, images, Word docs, Excel, text files, and more
+- **OCR Processing** - Automatic text extraction from images and scanned documents
+- **Enterprise Security** - Cloudflare Turnstile protection and encryption
+- **Powered Intelligence** - Cohere Embed, Rerank, AYA Vision, and Command models
 
-### Document Processing Pipeline
-- ✅ Automatic text extraction from PDFs, DOCX, CSV, TXT
-- ✅ Document chunking and embedding generation with Cohere
-- ✅ Semantic search across all uploaded documents
-- ✅ Agents automatically reference relevant documents in responses
-- ✅ Processing status indicators in UI
+## 📋 Use Cases
 
-### Agent Intelligence
-- ✅ Context-aware responses using uploaded documents
-- ✅ Citation of specific documents in answers
-- ✅ Missing document detection and suggestions
-- ✅ Document insights banner with smart suggestions
+### Legal & Financial
+- Quickly find specific clauses across thousands of contracts
+- Search tax documents from specific years with exact figures
+- Retrieve financial statements and invoices by amount or date
 
-### User Experience
-- ✅ Toast notification system for real-time feedback
-- ✅ Loading states with skeleton screens
-- ✅ Empty states with clear CTAs
-- ✅ Trial banner with ROI calculations
-- ✅ Payment failed banner with recovery options
-- ✅ Value tracking (track time/money saved)
+### Business Operations
+- Find procedures and SOPs using natural language
+- Search through employee handbooks for specific policies
+- Locate safety protocols and compliance documents
 
-### Error Handling & Security
-- ✅ Global error boundaries
-- ✅ Middleware for auth protection
-- ✅ Rate limiting foundation (ready for Redis)
-- ✅ Graceful error messages (no technical jargon)
-- ✅ Input validation and sanitization
+### Property Management
+- Find before/after photos by property name
+- Retrieve inspection reports and maintenance records
+- Search invoices by vendor, amount, or time period
 
-### Output Generation
-- ✅ OutputActionBar (copy, email, download, share)
-- ✅ "Mark as Used" tracking for value demonstration
-- ✅ Automatic value event tracking
-- ✅ Export outputs as files
+## 🛠️ Tech Stack
 
-## 💎 Core Features
+### Frontend
+- **Next.js 16** with App Router and React 19
+- **TypeScript** for type safety
+- **Tailwind CSS** with custom dark theme
+- **Radix UI** components
 
-### Real Actions, Not Just Suggestions
-Agents draft outputs you can review and use - emails, schedules, reports. No copy-paste required.
+### Backend
+- **Node.js** with Express and TypeScript
+- **PostgreSQL** with pgvector extension
+- **Supabase** for unlimited scalable storage
+- **JWT** authentication with bcrypt
 
-### Knows Your Business
-Upload files manually (PDFs, spreadsheets, docs) - agents learn your specific operations and reference them in responses.
+### ML (Cohere)
+- **Embed v4** - 1536-dimension text embeddings for semantic search
+- **Rerank v4.0 Pro** - Advanced result reranking
+- **Command-R7b** - Natural language understanding and metadata generation
+- **AYA Vision** - Image analysis and understanding
+- **Tesseract.js** - OCR for text extraction
 
-### Shared Business Knowledge Hub
-All uploads go into a shared hub accessible by your team. Embeddings enable semantic search.
+### Security
+- **Cloudflare Turnstile** - Bot protection
+- **Encryption** - At rest and in transit
+- **Secure authentication** - JWT tokens with httpOnly cookies
 
-### Pricing
-- **Base**: $25/month for workspace owner
-- **Team**: $10/month per additional member (up to 5 total)
-- **Trial**: 14 days free with full feature access
-
-## CORE CONSTRAINTS
-
-- **No direct integrations of any kind**
-- Users upload all files manually (PDFs, spreadsheets, docs, images)
-- Agents only know what the user uploads or types
-- Shared Business Knowledge Hub where all uploads accumulate
-- All files are shared between team members
-- Never implies access to external systems, emails, POS, banks, or databases
-
-## 6 Specialized Business Agents
-
-### 1. Today's Priorities
-- Turn vague goals into concrete, actionable tasks
-- Highlight tradeoffs and sequencing (what first, what can wait)
-- Use only current context and uploaded files
-- Example actions: draft daily task lists, highlight urgent items, suggest task delegation
-- **Does NOT** give motivational advice or long-term planning
-
-### 2. Customer Service
-- Resolve customer questions, complaints, or disputes using uploaded materials
-- Draft professional, calm, reusable email responses or messages
-- Suggest escalation steps when needed
-- Example actions: generate email drafts for refunds, complaints, or FAQs based on uploaded policies
-- **Does NOT** invent policies or promises
-
-### 3. HR
-- Work with onboarding docs, training materials, schedules, and handbooks
-- Answer "How do we handle X?" using uploaded HR content
-- Rewrite, summarize, or organize internal processes
-- Example actions: draft schedules, onboarding emails, screen resumes for inconsistencies or AI usage, prepare training checklists
-- **Does NOT** give legal or compliance advice—only explains uploaded content
-
-### 4. Inventory
-- Work with uploaded stock lists, order sheets, vendor invoices, or counts
-- Identify shortages, overstock, inconsistencies, or risks
-- Help reason about what to order or review
-- Example actions: suggest reorder quantities, flag discrepancies, analyze usage trends, provide conservative forecasts
-- **Does NOT** forecast unless explicitly requested and labeled as an estimate
-
-### 5. Finances
-- Work with uploaded expenses, invoices, revenue reports, and spreadsheets
-- Summarize financial activity clearly and concisely
-- Identify patterns, anomalies, or areas to review
-- Example actions: generate summaries for accountants or partners, flag unusual trends, prepare conservative forecasts, highlight actionable opportunities
-- **Does NOT** assume missing data or fabricate numbers
-
-### 6. Contracts, Agreements & Policies
-- Work with uploaded contracts, agreements, policies, and formal documents
-- Summarize key terms, dates, obligations, and responsibilities
-- Compare documents when asked
-- Explain documents in plain English
-- Example actions: extract renewal dates, obligations, clauses for follow-up, compare contracts for discrepancies
-- **Does NOT** give legal conclusions or advice
-
-## Draft + Open App Pattern
-
-For any actionable output (emails, schedules, invoices, reports, documents):
-
-1. The agent **drafts the output automatically** using uploaded files and context
-2. Agent displays the draft to the user for review
-3. Agent provides an **"Open in App / Copy to Clipboard" button** that:
-   - Opens the user's local application (email client, calendar, spreadsheet, or document editor)
-   - Copies the draft content into a new message, event, or document
-4. User reviews the draft and finalizes it manually by sending, posting, or saving
-
-This pattern is applied **consistently across all actionable tasks**.
-
-## Team Sharing & Collaboration
-
-- Send up to 5 invite codes to share workspace access
-- All uploaded files go into shared Business Knowledge Hub
-- Team members can access all documents and agents
-- Collaborate on outputs and business decisions
-- **Pricing**: $25/month base plan + $10/month per team member invited
-
-## Pricing
-
-- **Base Plan**: $25/month for the workspace owner
-- **Team Members**: $10/month per additional member invited (up to 5 members total)
-- **Example**: Owner + 2 team members = $25 + $20 = $45/month
-- **Example**: Owner + 4 team members = $25 + $40 = $65/month
-
-## Tech Stack
-
-- **Frontend**: Next.js 16 with React 19, TypeScript
-- **Styling**: TailwindCSS with custom design system (Notion/Supabase-inspired)
-- **Database**: Supabase (PostgreSQL + pgvector)
-- **Authentication**: Supabase Auth
-- **Storage**: Supabase Storage
-- **AI**: Cohere (Command-R-Plus, Embed v3, Rerank v3, Aya Vision)
-- **Payments**: Stripe
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-
-## 📦 Project Structure
-
-```
-.
-├── app/
-│   ├── api/              # API routes
-│   │   ├── chat/        # Customer support chat endpoint
-│   │   ├── hr/          # HR agent endpoint
-│   │   ├── inventory/   # Inventory management endpoint
-│   │   ├── financial/   # Financial analysis endpoint
-│   │   └── document/    # Document review endpoint
-│   ├── globals.css      # Global styles and animations
-│   ├── layout.tsx       # Root layout
-│   └── page.tsx         # Main dashboard page
-├── components/
-│   ├── AgentCard.tsx    # Reusable agent card component
-│   ├── Chatbot.tsx      # Chat interface component
-│   └── ThemeToggle.tsx  # Dark/light mode toggle
-├── lib/
-│   └── cohere.ts        # Cohere API utilities
-└── public/              # Static assets
-```
-
-## 🚀 Quick Start
+## 🚦 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Supabase account (free tier works)
-- Cohere API account (free tier works)
-- Stripe account (for payments)
+- Node.js 18+
+- PostgreSQL 14+ with pgvector extension
+- Cohere API key ([get one here](https://cohere.com))
+- Supabase account ([sign up here](https://supabase.com))
+- Cloudflare Turnstile keys ([get them here](https://dash.cloudflare.com))
 
-### Setup
+### Quick Start
 
-1. **Clone and install**:
+1. **Clone the repository**
+```bash
+git clone https://github.com/yourusername/protocollm.git
+cd protocollm
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Set up environment variables**
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
+```env
+# Cohere
+COHERE_API_KEY=your_cohere_api_key
+
+# Supabase
+DATABASE_URL=postgresql://user:password@db.xxx.supabase.co:5432/postgres
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Cloudflare Turnstile
+CLOUDFLARE_TURNSTILE_SECRET_KEY=your_secret_key
+NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
+
+# JWT
+JWT_SECRET=your_random_secret_min_32_chars
+```
+
+4. **Start the development servers**
+```bash
+npm run dev
+```
+
+The application will:
+- Backend: http://localhost:3001
+- Frontend: http://localhost:3000
+- Auto-initialize database schema
+- Set up Supabase storage bucket
+
+5. **Create your account and start uploading!**
+
+## 📖 Documentation
+
+### How Semantic Search Works
+
+ProtocolLM uses advanced semantic search to understand what you're looking for, even with vague wording:
+
+1. **Upload** - Documents are processed with OCR and analysis
+2. **Embed** - Text is converted to 1536-dimension vectors using Cohere Embed v4
+3. **Store** - Vectors are stored in PostgreSQL with pgvector
+4. **Search** - Your query is converted to a vector and compared
+5. **Rerank** - Results are reranked using Cohere Rerank v4.0 Pro for maximum relevance
+6. **Retrieve** - Get exactly what you need with relevance scores
+
+### Search Examples
+
+```
+"What were my capital gains in 2017?"
+→ Finds tax documents, extracts specific figures
+
+"Show me before photos of Johnson property"
+→ Finds images tagged with property name and "before"
+
+"Find invoices over $5000 from Q2 2023"
+→ Searches by amount and time period
+
+"What are our safety procedures for equipment?"
+→ Finds SOPs and manuals with semantic understanding
+```
+
+### Document Generation
+
+Generate comprehensive reports from your documents:
+
+```javascript
+// Summarize multiple documents
+"Summarize my last 10 tax returns"
+
+// Compare across time periods
+"Compare Q1 and Q2 expenses"
+
+// Extract insights
+"What are the key takeaways from all safety reports?"
+```
+
+## 🏗️ Architecture
+
+### Storage System
+
+- **Supabase Storage** - Unlimited scalable file storage
+- **PostgreSQL** - Metadata and vector embeddings
+- **pgvector** - High-performance vector similarity search
+
+### Processing Pipeline
+
+```
+Upload → OCR (Tesseract) → Text Extraction → 
+Cohere Embed v4 → Vector Storage → 
+Cohere Rerank → Results
+```
+
+### Security Layers
+
+1. **Cloudflare Turnstile** - Bot protection on forms
+2. **JWT Authentication** - Secure token-based auth
+3. **Encryption** - All data encrypted at rest and in transit
+4. **Rate Limiting** - Prevent abuse
+5. **Input Validation** - Sanitize all inputs
+
+## 💰 Pricing
+
+### Personal - $5/month
+- 500GB storage
+- Unlimited documents
+- Semantic search
+- Document generation
+- Mobile app access
+- Email support
+
+### Business - $25/month
+- 5TB storage
+- Everything in Personal
+- Team workspaces
+- Priority support
+- Bulk operations
+- Advanced analytics
+- API access
+
+### Enterprise - Custom
+- Unlimited storage
+- Everything in Business
+- SSO/SAML
+- Custom models
+- Dedicated support
+- SLA guarantee
+- On-premise option
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```env
+# Required
+COHERE_API_KEY=           # Cohere API key
+DATABASE_URL=             # PostgreSQL connection string
+SUPABASE_URL=             # Supabase project URL
+SUPABASE_SERVICE_ROLE_KEY= # Supabase service role key
+JWT_SECRET=               # JWT signing secret (min 32 chars)
+
+# Optional
+CLOUDFLARE_TURNSTILE_SECRET_KEY=     # Turnstile secret
+NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY= # Turnstile site key
+MAX_FILE_SIZE=524288000   # Max file size (500MB default)
+```
+
+### Cohere Models
+
+```env
+COHERE_EMBED_MODEL=embed-v4.0
+COHERE_RERANK_MODEL=rerank-v4.0-pro
+COHERE_TEXT_MODEL=command-r7b-12-2024
+COHERE_VISION_MODEL=c4ai-aya-vision-32b
+```
+
+## 🚀 Deployment
+
+### Railway (Recommended)
+
+**Single Deployment Setup** (Frontend + Backend on one service):
+
+1. **Create a Railway project**
+   - Go to [Railway](https://railway.app) and create a new project
+   
+2. **Add PostgreSQL with pgvector**
+   - Add PostgreSQL from Railway marketplace
+   - The `DATABASE_URL` will be automatically set
+   - After deployment, enable pgvector extension in your database
+
+3. **Set environment variables** (in Railway dashboard):
    ```bash
-   git clone <repository-url>
-   cd MVP
-   npm install
+   # Port (Railway provides this automatically, defaults to 3000)
+   PORT=3000
+   
+   # Backend will run on internal port 3001 (hardcoded in start script)
+   
+   # Required
+   JWT_SECRET=your_32_character_or_longer_secret_key
+   COHERE_API_KEY=your_cohere_api_key
+   
+   # Database (automatically set by Railway PostgreSQL)
+   DATABASE_URL=postgresql://...
+   
+   # Optional but recommended
+   SUPABASE_URL=https://xxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   CLOUDFLARE_TURNSTILE_SECRET_KEY=your_secret_key
+   NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
+   
+   # Stripe (Optional - for subscription features)
+   # Get these from https://dashboard.stripe.com/apikeys
+   STRIPE_SECRET_KEY=sk_test_... or sk_live_...
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_... or pk_live_...
+   STRIPE_WEBHOOK_SECRET=whsec_... (from Stripe webhook settings)
+   
+   # Note: This app creates prices dynamically using price_data.
+   # The pricing is configured in backend/src/config/stripe.ts:
+   # - PLAN_PRICE: 2500 ($25.00 in cents)
+   # - CURRENCY: 'usd'
+   # - TRIAL_PERIOD_DAYS: 14
+   # You do NOT need to set a STRIPE_PRICE_ID environment variable.
    ```
 
-2. **Set up Supabase**:
-   - Create a new project at [supabase.com](https://supabase.com)
-   - Go to Project Settings → API and copy your URL and keys
-   - Run the database migrations (see `SETUP_GUIDE.md`)
-   - Create a storage bucket named `business-documents`
-   - Enable pgvector extension
+4. **Deploy from GitHub**
+   - Connect your GitHub repository
+   - Railway will automatically detect `nixpacks.toml`
+   - Both frontend and backend will build and start together
 
-3. **Get API Keys**:
-   - **Cohere**: Get API key from [dashboard.cohere.com](https://dashboard.cohere.com)
-   - **Stripe**: Get keys from [dashboard.stripe.com](https://dashboard.stripe.com)
-   - Create a $50/month subscription product in Stripe
+5. **Access your app**
+   - Frontend: Your Railway URL (e.g., `https://yourapp.railway.app`)
+   - Backend API: Same URL + `/api` (e.g., `https://yourapp.railway.app/api`)
+   - Health check: `https://yourapp.railway.app/health`
 
-4. **Configure environment variables**:
-   Create a `.env.local` file (see `.env.example` for all required variables):
-   ```env
-   # Cohere
-   COHERE_API_KEY=your_key_here
+**How it works:**
+- The app uses a single deployment with both services running
+- Frontend (Next.js) runs on the public PORT
+- Backend (Express) runs on internal port 3001
+- Next.js automatically proxies `/api/*` requests to the backend
 
-   # Supabase
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_key
-
-   # Stripe
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-   STRIPE_SECRET_KEY=sk_test_...
-   STRIPE_WEBHOOK_SECRET=whsec_...
-   STRIPE_PRICE_ID=price_...
-
-   # App
-   NEXT_PUBLIC_BASE_URL=http://localhost:3000
-   ```
-
-5. **Run the development server**:
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser**:
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-For detailed setup instructions, see [`SETUP_GUIDE.md`](./SETUP_GUIDE.md)
-
-### Production Build
+### Manual Deployment
 
 ```bash
 npm run build
-npm start
+npm run start
 ```
-
-## 🎨 UI/UX Design
-
-The interface is inspired by Cohere and Notion's design philosophy:
-
-- **Clean and minimalist**: Focus on functionality without clutter
-- **Professional yet playful**: Balanced use of colors and animations
-- **Dark mode support**: Automatic theme detection with manual toggle
-- **Responsive design**: Works seamlessly on all devices
-- **Smooth animations**: Subtle transitions for better UX
-- **Accessible**: Built with accessibility in mind
-
-### Color Palette
-
-- Primary: Blue shades for main actions and branding
-- Secondary: Purple accents for emphasis
-- Agent-specific colors: Each agent has its unique color scheme
-
-## 🔗 API Integration
-
-The app integrates with the following Cohere APIs:
-
-- **Generate**: Text generation for responses and summaries
-- **Chat**: Conversational interface for agent interactions
-- **Embed**: Semantic search and embeddings (v3.0)
-- **Rerank**: Document reranking for better search results (v3.0)
-- **Classify**: Text classification for categorization
-
-## 🚢 Railway Deployment
-
-This project is optimized for Railway deployment:
-
-1. **Connect your repository** to Railway
-2. **Set environment variables**:
-   - `COHERE_API_KEY`: Your Cohere API key
-3. **Deploy**: Railway will automatically build and deploy
-
-Railway will:
-- Detect Next.js automatically
-- Run `npm install` and `npm run build`
-- Start the production server
-
-## 📡 API Endpoints
-
-### Customer Support
-- `POST /api/chat` - Send messages to the support chatbot
-
-### HR
-- `POST /api/hr` - Resume search and candidate analysis
-
-### Inventory
-- `POST /api/inventory` - Inventory management and predictions
-- `GET /api/inventory` - Get all inventory data
-
-### Financial
-- `POST /api/financial` - Expense categorization and analysis
-- `GET /api/financial` - Get all transactions
-
-### Document Review
-- `POST /api/document` - Document summarization and analysis
-
-## 🎯 Example Use Cases
-
-1. **Customer Support**: Handle customer inquiries automatically, categorize support tickets
-2. **HR**: Screen resumes for job openings, find best candidates using semantic search
-3. **Inventory**: Get alerts for low stock, receive intelligent restocking recommendations
-4. **Finance**: Categorize expenses, generate budget reports with insights
-5. **Documents**: Summarize contracts, extract key clauses, identify risks
-
-## 🔐 Environment Variables
-
-Required:
-- `COHERE_API_KEY`: Your Cohere API key
-
-Optional:
-- `NEXT_PUBLIC_BASE_URL`: Your application URL (for production)
-
-## 📄 License
-
-MIT License - Feel free to use this project for your business needs.
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 📝 License
+
+ISC License - See LICENSE file for details
+
+## 👤 Author
+
+**Austin Northrup**
+- Location: Ann Arbor, Michigan
+- Email: support@protocollm.org
+- Phone: (734) 216-4836
+
+## 🙏 Acknowledgments
+
+- Built with [Cohere](https://cohere.com) for intelligent document understanding
+- Powered by [Supabase](https://supabase.com) for unlimited storage
+- Secured with [Cloudflare](https://cloudflare.com) Turnstile
+- Vector search with [pgvector](https://github.com/pgvector/pgvector)
+
 ---
 
-**Built with ❤️ using Cohere and Next.js**
+**ProtocolLM** - Because finding documents shouldn't waste your time.

@@ -13,6 +13,7 @@ package-lock.json
 
 # Production
 /build
+backend/dist/
 
 # Misc
 .DS_Store
@@ -59,51 +60,15 @@ service-account-key.json
 logs/
 *.log
 
-# Sentry
-.sentryclirc
-sentry.properties
-
 # Backup files
 *.backup
 *.bak
 *.tmp
 
-# Generated branding assets
-public/icon-192.png
-public/icon-512.png
-public/apple-touch-icon.png
-app/apple-icon.png
-
-# PDFKit font files (auto-generated during postinstall)
-app/api/upload/processSession/data/*.afm
+# Uploads
+uploads/
+/uploads
 
 # Local test data
 test-uploads/
 temp/
-
-# Stripe CLI
-.stripe/
-.backup/
-.env.local
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-*.egg-info/
-dist/
-build/
-
-# Inspection scraper outputs
-# Sample data is committed for testing, actual scrapes are excluded
-inspection_scraper/outputs/inspections_*.json
-inspection_scraper/outputs/inspections_*.csv
-inspection_scraper/outputs/pdfs/
-
-# Flask app scraped data
-inspections.json

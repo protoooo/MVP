@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
+
+// Backend port configuration
+const BACKEND_PORT = 3001;
+
 const nextConfig = {
   reactStrictMode: true,
   
-  // Turbopack configuration (empty config to silence Next.js 16 warning)
+  // Output standalone for easier deployment
+  output: 'standalone',
+  
+  // Turbopack configuration
   turbopack: {},
   
   // Performance optimizations
@@ -17,6 +24,25 @@ const nextConfig = {
       },
     ],
     formats: ['image/avif', 'image/webp'],
+  },
+  
+  // Rewrites for API proxying
+  async rewrites() {
+    // In production, always proxy to backend on port 3001
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? `http://localhost:${BACKEND_PORT}` 
+      : process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || BACKEND_PORT}`;
+    
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+      {
+        source: '/health',
+        destination: `${backendUrl}/health`,
+      },
+    ];
   },
   
   // Headers for security and caching
@@ -40,6 +66,10 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
           },
         ],
       },
