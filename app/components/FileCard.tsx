@@ -60,7 +60,7 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
   return (
     <div 
       onClick={handleClick}
-      className={`group relative bg-surface border rounded-xl overflow-hidden transition-all duration-200 ${
+      className={`group relative bg-surface border rounded-xl overflow-hidden transition-all duration-200 flex flex-col h-full ${
         onPreview || selectionMode ? 'cursor-pointer' : ''
       } ${
         isSelected 
@@ -88,7 +88,7 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
         </div>
       )}
 
-      <div className="h-32 bg-surface-elevated flex items-center justify-center border-b border-border">
+      <div className="h-32 bg-surface-elevated flex items-center justify-center border-b border-border flex-shrink-0">
         {file.file_type.startsWith('image/') ? (
           <img 
             src={filesAPI.getDownloadUrl(file.id)} 
@@ -100,7 +100,8 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
         )}
       </div>
 
-      <div className="p-4">
+      {/* Content area - flex-grow to push buttons down */}
+      <div className="p-4 flex flex-col flex-grow">
         <h3 className="text-sm font-semibold text-text-primary mb-2 truncate group-hover:text-brand transition-colors">
           {file.original_filename}
         </h3>
@@ -141,8 +142,9 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
           </div>
         </div>
 
+        {/* Buttons - margin-top auto pushes to bottom */}
         {!selectionMode && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-auto">
             <a href={filesAPI.getDownloadUrl(file.id)} download onClick={handleDownload} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-brand text-white hover:bg-brand-600 transition-colors">
               <Download className="w-3.5 h-3.5" />
               Download
