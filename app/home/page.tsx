@@ -100,11 +100,18 @@ export default function HomePage() {
       );
     }
 
+    // FIXED: Convert file_size to number before comparison
     if (filters.sizeRange.min !== undefined) {
-      filtered = filtered.filter(file => file.file_size >= filters.sizeRange.min!);
+      filtered = filtered.filter(file => {
+        const size = typeof file.file_size === 'string' ? parseInt(file.file_size, 10) : file.file_size;
+        return size >= filters.sizeRange.min!;
+      });
     }
     if (filters.sizeRange.max !== undefined) {
-      filtered = filtered.filter(file => file.file_size <= filters.sizeRange.max!);
+      filtered = filtered.filter(file => {
+        const size = typeof file.file_size === 'string' ? parseInt(file.file_size, 10) : file.file_size;
+        return size <= filters.sizeRange.max!;
+      });
     }
 
     if (filters.tags.length > 0) {
