@@ -31,7 +31,16 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Middleware
-app.use(cors());
+// FIXED: Secure CORS configuration
+app.use(cors({
+  origin: isDevelopment 
+    ? '*' 
+    : (process.env.FRONTEND_URL || process.env.RAILWAY_STATIC_URL || 'https://protocollm.org'),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -204,7 +213,7 @@ function setupFallbackRoutes() {
           ` : `
           <div class="info">
             <p><strong>Backend is running successfully!</strong></p>
-            <p>Visit the app at <a href="https://protocollm.org" style="color: #3ECF8E;">protocollm.org</a></p>
+            <p>The application is now live and serving requests.</p>
           </div>
           `}
           
