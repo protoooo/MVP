@@ -118,8 +118,13 @@ nixPkgs = ['nodejs', 'graphicsmagick', 'ghostscript']
 cmds = ['npm install', 'npm run build']
 
 [start]
-cmd = 'npm start'
+cmd = 'BACKEND_PORT=3001 npm start'
 ```
+
+This configures Railway to:
+- Install system dependencies (Node.js, GraphicsMagick, Ghostscript)
+- Install npm packages and build both services
+- Start with `BACKEND_PORT=3001` environment variable set
 
 ### Start Command (`package.json`)
 
@@ -127,23 +132,26 @@ cmd = 'npm start'
 {
   "scripts": {
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "PORT=3001 node backend/dist/server.js",
-    "start:frontend": "next start -p ${PORT:-3000}"
+    "start:backend": "node backend/dist/server.js",
+    "start:frontend": "next start"
   }
 }
 ```
 
 This uses `concurrently` to run both services simultaneously:
-- Backend starts on port 3001
-- Frontend starts on Railway's PORT (default 3000)
+- Backend reads `BACKEND_PORT` (3001) set by nixpacks.toml
+- Frontend uses Railway's `PORT` environment variable (default 3000)
 
 ### API Proxying (`next.config.js`)
 
 ```javascript
+// Backend port configuration
+const BACKEND_PORT = 3001;
+
 async rewrites() {
   const backendUrl = process.env.NODE_ENV === 'production' 
-    ? 'http://localhost:3001' 
-    : process.env.BACKEND_URL || 'http://localhost:3001';
+    ? `http://localhost:${BACKEND_PORT}` 
+    : process.env.BACKEND_URL || `http://localhost:${BACKEND_PORT}`;
   
   return [
     {
