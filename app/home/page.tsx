@@ -60,7 +60,6 @@ export default function HomePage() {
     setCurrentQuery(query);
     try {
       const results = await searchAPI.search(query);
-      console.log('Search results:', results);
       setSearchResults(results);
     } catch (error) {
       console.error('Search error:', error);
@@ -167,7 +166,7 @@ export default function HomePage() {
   };
 
   const handleBatchDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedFiles.size} files?`)) return;
+    if (!confirm(`Delete ${selectedFiles.size} files?`)) return;
     
     try {
       for (const fileId of selectedFiles) {
@@ -213,7 +212,7 @@ export default function HomePage() {
 
   const handleLogout = () => {
     authAPI.logout();
-    router.push('/'); // Redirect to landing page
+    router.push('/');
   };
 
   const refreshFiles = () => {
@@ -222,36 +221,22 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin w-8 h-8 border-4 border-blue-400/20 border-t-blue-400 rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="animate-spin w-8 h-8 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full" />
       </div>
     );
   }
 
-  // Calculate storage with validation
   const storageUsedBytes = allFiles.reduce((acc, file) => {
     const fileSize = parseInt(String(file.file_size || 0), 10);
-    
-    // Sanity check: ignore any file claiming to be > 10GB (likely corrupt data)
-    if (fileSize > 10 * 1024 * 1024 * 1024) {
-      console.warn(`Ignoring corrupt file size for ${file.original_filename}: ${fileSize} bytes`);
+    if (fileSize > 10 * 1024 * 1024 * 1024 || fileSize < 0 || isNaN(fileSize)) {
       return acc;
     }
-    
-    // Additional validation for negative or NaN values
-    if (fileSize < 0 || isNaN(fileSize)) {
-      console.warn(`Invalid file size for ${file.original_filename}: ${fileSize}`);
-      return acc;
-    }
-    
     return acc + fileSize;
   }, 0);
 
   const formatStorage = (bytes: number): string => {
-    if (!bytes || bytes < 0 || !isFinite(bytes)) {
-      return '0 B';
-    }
-    
+    if (!bytes || bytes < 0 || !isFinite(bytes)) return '0 B';
     if (bytes < 1024) return bytes.toFixed(0) + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
@@ -263,23 +248,19 @@ export default function HomePage() {
   const availableCategories = Array.from(new Set(allFiles.map(f => f.category).filter(Boolean))) as string[];
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-border bg-surface flex flex-col`}>
+    <div className="min-h-screen bg-gray-950 flex">
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-gray-800 bg-gray-900 flex flex-col`}>
         {sidebarOpen && (
           <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-border">
+            <div className="p-6 border-b border-gray-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center border border-blue-500/20">
-                  <Database className="w-6 h-6 text-blue-400" />
+                <div className="w-10 h-10 rounded-lg bg-emerald-600/10 flex items-center justify-center border border-emerald-600/20">
+                  <Database className="w-6 h-6 text-emerald-500" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold">
-                    <span className="text-text-primary">protocol</span>
-                    <span className="bg-gradient-to-r from-blue-400 via-purple-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">LM</span>
-                  </h1>
+                  <h1 className="text-lg font-bold text-white">protocolLM</h1>
                   {user.business_name && (
-                    <p className="text-xs text-text-tertiary">{user.business_name}</p>
+                    <p className="text-xs text-gray-400">{user.business_name}</p>
                   )}
                 </div>
               </div>
@@ -290,13 +271,13 @@ export default function HomePage() {
                 onClick={() => setActiveView('files')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'files'
-                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-elevated'
+                    ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
                 <Files className="w-5 h-5" />
                 <span>All Files</span>
-                <span className="ml-auto text-xs bg-surface-elevated px-2 py-0.5 rounded-full">
+                <span className="ml-auto text-xs bg-gray-800 px-2 py-0.5 rounded-full">
                   {allFiles.length}
                 </span>
               </button>
@@ -305,8 +286,8 @@ export default function HomePage() {
                 onClick={() => setActiveView('upload')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'upload'
-                    ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-elevated'
+                    ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
                 <Upload className="w-5 h-5" />
@@ -317,8 +298,8 @@ export default function HomePage() {
                 onClick={() => setActiveView('search')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'search'
-                    ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-elevated'
+                    ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
                 <Search className="w-5 h-5" />
@@ -326,44 +307,44 @@ export default function HomePage() {
               </button>
             </nav>
 
-            <div className="p-4 border-t border-border">
-              <div className="bg-surface-elevated rounded-lg p-4 space-y-3">
-                <div className="flex items-center gap-2 text-text-secondary">
+            <div className="p-4 border-t border-gray-800">
+              <div className="bg-gray-800 rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-2 text-gray-400">
                   <HardDrive className="w-4 h-4" />
                   <span className="text-xs font-medium">Storage Used</span>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-text-primary">
+                  <div className="text-lg font-bold text-white">
                     {formatStorage(storageUsedBytes)}
                   </div>
-                  <p className="text-xs text-text-tertiary mt-1">Unlimited available</p>
+                  <p className="text-xs text-gray-500 mt-1">Unlimited available</p>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-gray-800">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0 border border-blue-500/20">
-                    <span className="text-blue-400 text-sm font-medium">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600/20 flex items-center justify-center flex-shrink-0 border border-emerald-600/20">
+                    <span className="text-emerald-500 text-sm font-medium">
                       {user.email[0].toUpperCase()}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">
+                    <p className="text-sm font-medium text-white truncate">
                       {user.email.split('@')[0]}
                     </p>
-                    <p className="text-xs text-text-tertiary truncate">
+                    <p className="text-xs text-gray-500 truncate">
                       {user.email}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-2 hover:bg-surface-elevated rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
                   title="Sign out"
                 >
-                  <LogOut className="w-4 h-4 text-text-tertiary" />
+                  <LogOut className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
             </div>
@@ -371,19 +352,17 @@ export default function HomePage() {
         )}
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="border-b border-border bg-surface px-6 py-4">
+        <header className="border-b border-gray-800 bg-gray-900 px-6 py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-surface-elevated rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
             >
               {sidebarOpen ? (
-                <X className="w-5 h-5 text-text-secondary" />
+                <X className="w-5 h-5 text-gray-400" />
               ) : (
-                <Menu className="w-5 h-5 text-text-secondary" />
+                <Menu className="w-5 h-5 text-gray-400" />
               )}
             </button>
 
@@ -393,23 +372,21 @@ export default function HomePage() {
 
             <button
               onClick={() => setShowShortcuts(true)}
-              className="p-2 hover:bg-surface-elevated rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
               title="Keyboard shortcuts"
             >
-              <KeyboardIcon className="w-5 h-5 text-text-secondary" />
+              <KeyboardIcon className="w-5 h-5 text-gray-400" />
             </button>
           </div>
         </header>
 
-        {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">
-          {/* All Files View */}
           {activeView === 'files' && (
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-text-primary mb-1">Your Documents</h2>
-                  <p className="text-sm text-text-secondary">
+                  <h2 className="text-2xl font-bold text-white mb-1">Documents</h2>
+                  <p className="text-sm text-gray-400">
                     {filteredFiles.length} {filteredFiles.length === 1 ? 'document' : 'documents'} 
                     {filteredFiles.length !== allFiles.length && ` (filtered from ${allFiles.length})`}
                   </p>
@@ -417,17 +394,11 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   {selectedFiles.size > 0 && (
                     <>
-                      <button 
-                        onClick={handleBatchDownload}
-                        className="btn-secondary flex items-center gap-2"
-                      >
+                      <button onClick={handleBatchDownload} className="btn-secondary flex items-center gap-2">
                         <Download className="w-4 h-4" />
                         Download ({selectedFiles.size})
                       </button>
-                      <button 
-                        onClick={handleBatchDelete}
-                        className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors"
-                      >
+                      <button onClick={handleBatchDelete} className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </>
@@ -447,11 +418,7 @@ export default function HomePage() {
                     availableTags={availableTags}
                     availableCategories={availableCategories}
                   />
-                  <button 
-                    onClick={loadAllFiles}
-                    className="btn-secondary"
-                    disabled={loading}
-                  >
+                  <button onClick={loadAllFiles} className="btn-secondary" disabled={loading}>
                     Refresh
                   </button>
                 </div>
@@ -459,7 +426,7 @@ export default function HomePage() {
               
               {loading ? (
                 <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin w-8 h-8 border-4 border-blue-400/20 border-t-blue-400 rounded-full" />
+                  <div className="animate-spin w-8 h-8 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full" />
                 </div>
               ) : filteredFiles.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -470,30 +437,27 @@ export default function HomePage() {
                       onDelete={refreshFiles}
                       onPreview={() => setPreviewFile(file)}
                       isSelected={selectedFiles.has(file.id)}
-                      onSelect={(selected) => toggleSelection(file.id)}
+                      onSelect={() => toggleSelection(file.id)}
                       selectionMode={selectionMode}
                     />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-20">
-                  <div className="w-16 h-16 rounded-full bg-surface-elevated flex items-center justify-center mx-auto mb-4 border border-border">
-                    <Files className="w-8 h-8 text-text-tertiary" />
+                  <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 border border-gray-700">
+                    <Files className="w-8 h-8 text-gray-500" />
                   </div>
-                  <h3 className="text-lg font-semibold text-text-primary mb-2">
-                    {allFiles.length === 0 ? 'No documents yet' : 'No documents match filters'}
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    {allFiles.length === 0 ? 'No documents' : 'No matches'}
                   </h3>
-                  <p className="text-text-secondary mb-6">
+                  <p className="text-gray-400 mb-6">
                     {allFiles.length === 0 
-                      ? 'Upload your first document to get started'
-                      : 'Try adjusting your filters to see more results'
+                      ? 'Upload your first document'
+                      : 'Adjust filters to see results'
                     }
                   </p>
                   {allFiles.length === 0 && (
-                    <button
-                      onClick={() => setActiveView('upload')}
-                      className="btn-primary"
-                    >
+                    <button onClick={() => setActiveView('upload')} className="btn-primary">
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Documents
                     </button>
@@ -503,13 +467,12 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Upload View */}
           {activeView === 'upload' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-text-primary mb-1">Upload Documents</h2>
-                <p className="text-sm text-text-secondary">
-                  Upload any document and search it instantly with natural language
+                <h2 className="text-2xl font-bold text-white mb-1">Upload Documents</h2>
+                <p className="text-sm text-gray-400">
+                  Upload documents for instant semantic search
                 </p>
               </div>
               <FileUpload onUploadComplete={() => {
@@ -519,15 +482,11 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Search View */}
           {activeView === 'search' && (
             <div className="max-w-7xl mx-auto">
               {searchResults && searchResults.results.length > 0 && (
                 <div className="flex justify-end mb-4">
-                  <button
-                    onClick={handleExportResults}
-                    className="btn-secondary flex items-center gap-2"
-                  >
+                  <button onClick={handleExportResults} className="btn-secondary flex items-center gap-2">
                     <Download className="w-4 h-4" />
                     Export Results
                   </button>
@@ -544,7 +503,6 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* File Preview Modal */}
       {previewFile && (
         <FilePreviewModal
           file={previewFile}
@@ -555,7 +513,6 @@ export default function HomePage() {
         />
       )}
 
-      {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcuts
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
