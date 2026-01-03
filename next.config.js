@@ -24,17 +24,21 @@ const nextConfig = {
   
   // Rewrites for API proxying
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-    if (!apiUrl) {
-      const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || '3001'}`;
-      return [
-        {
-          source: '/api/:path*',
-          destination: `${backendUrl}/api/:path*`,
-        },
-      ];
-    }
-    return [];
+    // In production, always proxy to backend on port 3001
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? 'http://localhost:3001' 
+      : process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || '3001'}`;
+    
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+      {
+        source: '/health',
+        destination: `${backendUrl}/health`,
+      },
+    ];
   },
   
   // Headers for security and caching
