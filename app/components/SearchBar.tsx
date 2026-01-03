@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, Sparkles, Clock, X } from 'lucide-react';
+import { Search, Clock, X } from 'lucide-react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -14,12 +14,6 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  
-  const suggestions = [
-    "tax documents from 2018",
-    "before photos Johnson property",
-    "invoices over $5000",
-  ];
 
   useEffect(() => {
     const history = localStorage.getItem('search_history');
@@ -89,7 +83,7 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
               setIsFocused(false);
               setTimeout(() => setShowHistory(false), 200);
             }}
-            placeholder="Search files... (Cmd+K)"
+            placeholder="Search documents... (Cmd+K)"
             className="w-full pl-12 pr-28 py-3.5 text-sm rounded-lg border border-border bg-surface text-text-primary
                        placeholder:text-text-placeholder
                        focus:border-brand focus:outline-none
@@ -137,29 +131,6 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
                 >
                   <X className="w-3.5 h-3.5 text-text-tertiary" />
                 </button>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {!isFocused && !query && (
-        <div className="mt-3 flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-1.5 text-text-tertiary">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Try:</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((suggestion, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setQuery(suggestion);
-                  onSearch(suggestion);
-                }}
-                className="px-2.5 py-1 rounded-md text-text-secondary bg-surface-elevated border border-border hover:border-brand/50 hover:text-brand transition-all"
-              >
-                {suggestion}
               </button>
             ))}
           </div>
