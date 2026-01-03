@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             <ul className="list-disc ml-6 mt-2 space-y-2">
               <li>Provide, maintain, and improve our services</li>
               <li>Process and store your documents securely</li>
-              <li>Enable semantic search and powered features</li>
+              <li>Enable semantic search and powerful features</li>
               <li>Communicate with you about your account and our services</li>
               <li>Ensure security and prevent fraud</li>
             </ul>
