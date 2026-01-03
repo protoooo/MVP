@@ -1,7 +1,7 @@
 'use client';
 
 import { ExtractedAnswer } from '../types';
-import { Sparkles, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
+import { FileText, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface AnswerCardProps {
   answer: ExtractedAnswer;
@@ -27,24 +27,19 @@ export default function AnswerCard({ answer, query }: AnswerCardProps) {
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-brand/20 flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-brand" />
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-brand">Answer</h3>
+            <ConfidenceIcon className={`w-4 h-4 ${getConfidenceColor(answer.confidence)}`} />
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-brand flex items-center gap-2">
-              AI Extracted Answer
-              <ConfidenceIcon className={`w-4 h-4 ${getConfidenceColor(answer.confidence)}`} />
-            </h3>
-            <p className="text-xs text-text-tertiary mt-0.5">
-              Confidence: {Math.round(answer.confidence * 100)}%
-            </p>
-          </div>
+        </div>
+        <div className="text-xs text-text-tertiary">
+          {Math.round(answer.confidence * 100)}% confidence
         </div>
       </div>
 
       {/* Answer */}
       <div className="mb-4">
-        <p className="text-base text-text-primary leading-relaxed font-medium">
+        <p className="text-base text-text-primary leading-relaxed">
           {answer.answer}
         </p>
       </div>
