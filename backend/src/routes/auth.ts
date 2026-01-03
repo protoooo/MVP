@@ -1,4 +1,4 @@
-// backend/src/routes/auth.ts - COMPLETE SECURE VERSION
+// backend/src/routes/auth.ts - TYPESCRIPT FIXED
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -7,9 +7,7 @@ import { authMiddleware, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// ========================================
-// CRITICAL: Validate JWT_SECRET at startup
-// ========================================
+// Validate JWT_SECRET at startup
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error('❌ CRITICAL: JWT_SECRET must be set and at least 32 characters long!');
   console.error('Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
@@ -18,11 +16,16 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 
 console.log('✅ JWT_SECRET validated');
 
-// ========================================
+// Turnstile response type
+interface TurnstileResponse {
+  success: boolean;
+  'error-codes'?: string[];
+  challenge_ts?: string;
+  hostname?: string;
+}
+
 // Helper: Validate Cloudflare Turnstile
-// ========================================
 async function validateTurnstile(token: string, ip: string): Promise<boolean> {
-  // If Turnstile is not configured, log warning but allow (for development)
   if (!process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY) {
     if (process.env.NODE_ENV === 'production') {
       console.error('❌ CRITICAL: Turnstile not configured in production!');
@@ -43,7 +46,7 @@ async function validateTurnstile(token: string, ip: string): Promise<boolean> {
       }),
     });
     
-    const data = await response.json();
+    const data = await response.json() as TurnstileResponse;
     
     if (!data.success) {
       console.warn('Turnstile validation failed:', data['error-codes']);
@@ -52,14 +55,11 @@ async function validateTurnstile(token: string, ip: string): Promise<boolean> {
     return data.success === true;
   } catch (error) {
     console.error('Turnstile validation error:', error);
-    // In production, fail closed (reject). In dev, fail open (allow).
     return process.env.NODE_ENV !== 'production';
   }
 }
 
-// ========================================
 // Helper: Validate password strength
-// ========================================
 function validatePassword(password: string): { valid: boolean; error?: string } {
   if (password.length < 8) {
     return { valid: false, error: 'Password must be at least 8 characters' };
@@ -77,17 +77,13 @@ function validatePassword(password: string): { valid: boolean; error?: string } 
   return { valid: true };
 }
 
-// ========================================
 // Helper: Validate email format
-// ========================================
 function validateEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-// ========================================
 // Helper: Get client IP address
-// ========================================
 function getClientIP(req: any): string {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) {
@@ -96,16 +92,13 @@ function getClientIP(req: any): string {
   return req.socket.remoteAddress || 'unknown';
 }
 
-// ========================================
-// Register - WITH TURNSTILE REQUIRED
-// ========================================
+// Register
 router.post('/register', async (req, res) => {
   try {
     const { email, password, businessName, turnstileToken } = req.body;
 
     console.log(`Registration attempt for: ${email}`);
 
-    // 1. VALIDATE TURNSTILE - NO BYPASS ALLOWED
     if (!turnstileToken) {
       console.warn(`Registration blocked: No Turnstile token for ${email}`);
       return res.status(400).json({ 
@@ -123,7 +116,6 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // 2. VALIDATE INPUT - Email
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
@@ -132,31 +124,26 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // 3. VALIDATE PASSWORD STRENGTH
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
       return res.status(400).json({ error: passwordValidation.error });
     }
 
-    // 4. CHECK IF USER EXISTS
     const existingUser = await query(
       'SELECT id FROM users WHERE email = $1', 
       [email.toLowerCase()]
     );
     
     if (existingUser.rows.length > 0) {
-      // Don't reveal that email exists, but log it
       console.warn(`Registration attempt with existing email: ${email}`);
       return res.status(400).json({ 
         error: 'An account with this email already exists' 
       });
     }
 
-    // 5. HASH PASSWORD (12 rounds for security)
     console.log('Hashing password...');
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // 6. CREATE USER
     const result = await query(
       `INSERT INTO users (email, password_hash, business_name, created_at) 
        VALUES ($1, $2, $3, NOW()) 
@@ -167,14 +154,12 @@ router.post('/register', async (req, res) => {
     const user = result.rows[0];
     console.log(`✅ User registered: ${user.id} - ${user.email}`);
 
-    // 7. GENERATE JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
 
-    // 8. LOG REGISTRATION FOR AUDIT
     await query(
       `INSERT INTO search_logs (user_id, query, results_count, searched_at)
        VALUES ($1, $2, $3, NOW())`,
@@ -195,16 +180,13 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ========================================
-// Login - WITH TURNSTILE AND RATE LIMITING
-// ========================================
+// Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password, turnstileToken } = req.body;
 
     console.log(`Login attempt for: ${email}`);
 
-    // 1. VALIDATE TURNSTILE
     if (!turnstileToken) {
       console.warn(`Login blocked: No Turnstile token for ${email}`);
       return res.status(400).json({ 
@@ -222,7 +204,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 2. VALIDATE INPUT
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
@@ -231,21 +212,18 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // 3. FIND USER
     const result = await query(
       'SELECT id, email, password_hash, business_name, created_at FROM users WHERE email = $1',
       [email.toLowerCase()]
     );
 
     if (result.rows.length === 0) {
-      // Don't reveal whether email exists
       console.warn(`Login failed: User not found - ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const user = result.rows[0];
 
-    // 4. VERIFY PASSWORD
     const validPassword = await bcrypt.compare(password, user.password_hash);
     
     if (!validPassword) {
@@ -253,14 +231,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // 5. GENERATE JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
 
-    // 6. LOG LOGIN FOR AUDIT
     await query(
       `INSERT INTO search_logs (user_id, query, results_count, searched_at)
        VALUES ($1, $2, $3, NOW())`,
@@ -283,9 +259,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ========================================
 // Get Current User
-// ========================================
 router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const result = await query(
@@ -304,12 +278,9 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-// ========================================
-// Logout (client-side token removal)
-// ========================================
+// Logout
 router.post('/logout', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    // Log logout for audit
     await query(
       `INSERT INTO search_logs (user_id, query, results_count, searched_at)
        VALUES ($1, $2, $3, NOW())`,
@@ -323,9 +294,7 @@ router.post('/logout', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-// ========================================
-// Change Password (Optional - for future)
-// ========================================
+// Change Password
 router.post('/change-password', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -334,13 +303,11 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res) =>
       return res.status(400).json({ error: 'Current and new passwords are required' });
     }
 
-    // Validate new password strength
     const passwordValidation = validatePassword(newPassword);
     if (!passwordValidation.valid) {
       return res.status(400).json({ error: passwordValidation.error });
     }
 
-    // Get current user
     const userResult = await query(
       'SELECT password_hash FROM users WHERE id = $1',
       [req.user!.id]
@@ -350,22 +317,18 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res) =>
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Verify current password
     const validPassword = await bcrypt.compare(currentPassword, userResult.rows[0].password_hash);
     if (!validPassword) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
 
-    // Hash new password
     const newPasswordHash = await bcrypt.hash(newPassword, 12);
 
-    // Update password
     await query(
       'UPDATE users SET password_hash = $1 WHERE id = $2',
       [newPasswordHash, req.user!.id]
     );
 
-    // Log password change
     await query(
       `INSERT INTO search_logs (user_id, query, results_count, searched_at)
        VALUES ($1, $2, $3, NOW())`,
