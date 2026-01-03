@@ -1,3 +1,4 @@
+// app/(auth)/signup/page.tsx - SECURE VERSION
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +22,25 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
-  const [turnstileError, setTurnstileError] = useState(false);
+  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+
+  // Password strength indicator
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+  });
+
+  useEffect(() => {
+    // Validate password requirements
+    setPasswordStrength({
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+    });
+  }, [password]);
 
   useEffect(() => {
     // Load Turnstile script
@@ -34,51 +53,52 @@ export default function SignupPage() {
       console.log('Turnstile script loaded');
       setTurnstileReady(true);
       
-      // Check if we have the site key
       const siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY;
       
       if (!siteKey) {
-        console.error('Missing NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY');
-        setTurnstileError(true);
+        console.error('CRITICAL: NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY not set!');
+        setError('Security verification not configured. Please contact support.');
         return;
       }
 
       if (window.turnstile) {
         try {
-          window.turnstile.render('#turnstile-widget', {
+          const widgetId = window.turnstile.render('#turnstile-widget', {
             sitekey: siteKey,
             theme: 'dark',
             size: 'normal',
             callback: (token: string) => {
-              console.log('Turnstile token received');
+              console.log('Turnstile verified');
               setTurnstileToken(token);
-              setTurnstileError(false);
+              setError(''); // Clear any turnstile errors
             },
             'error-callback': (error: any) => {
               console.error('Turnstile error:', error);
-              setError('Security verification failed. Please refresh the page and try again.');
-              setTurnstileError(true);
+              setError('Security verification failed. Please refresh and try again.');
+              setTurnstileToken('');
             },
             'expired-callback': () => {
-              console.log('Turnstile token expired');
+              console.log('Turnstile expired');
               setTurnstileToken('');
+              setError('Security verification expired. Please complete it again.');
             },
             'timeout-callback': () => {
               console.log('Turnstile timeout');
+              setTurnstileToken('');
               setError('Security verification timed out. Please try again.');
-              setTurnstileError(true);
             },
           });
+          setTurnstileWidgetId(widgetId);
         } catch (err) {
           console.error('Error rendering Turnstile:', err);
-          setTurnstileError(true);
+          setError('Failed to load security verification. Please refresh the page.');
         }
       }
     };
 
     script.onerror = () => {
       console.error('Failed to load Turnstile script');
-      setTurnstileError(true);
+      setError('Failed to load security verification. Please check your connection and refresh.');
     };
 
     document.head.appendChild(script);
@@ -94,41 +114,49 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    // Validation
+    // Client-side validation
     if (!email || !password) {
       setError('Email and password are required');
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
 
-    // Check Turnstile token
-    if (!turnstileToken && !turnstileError) {
+    // Password validation
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+    if (!Object.values(passwordStrength).every(v => v)) {
+      setError('Password must meet all requirements');
+      return;
+    }
+
+    // CRITICAL: Check Turnstile token - NO BYPASS
+    if (!turnstileToken) {
       setError('Please complete the security verification');
       return;
-    }
-
-    // If Turnstile had an error, allow signup anyway (fallback)
-    if (turnstileError) {
-      console.warn('Proceeding with signup despite Turnstile error');
     }
 
     setLoading(true);
 
     try {
-      await authAPI.register(email, password, businessName);
+      // Send turnstile token to backend
+      await authAPI.register(email, password, businessName, turnstileToken);
       router.push('/home');
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err.message || 'Registration failed. Please try again.');
       
       // Reset Turnstile on error
-      if (window.turnstile && !turnstileError) {
+      if (window.turnstile && turnstileWidgetId) {
         try {
-          window.turnstile.reset();
+          window.turnstile.reset(turnstileWidgetId);
         } catch (e) {
           console.error('Error resetting Turnstile:', e);
         }
@@ -138,6 +166,8 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+
+  const allRequirementsMet = Object.values(passwordStrength).every(v => v);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4 py-8">
@@ -149,7 +179,7 @@ export default function SignupPage() {
           <h1 className="text-3xl font-bold text-white mb-2">
             protocolLM
           </h1>
-          <p className="text-gray-400">Create your account</p>
+          <p className="text-gray-400">Create your secure account</p>
         </div>
 
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
@@ -204,29 +234,54 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
                 className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
                 placeholder="••••••••"
                 disabled={loading}
                 autoComplete="new-password"
               />
-              <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
+              
+              {/* Password Requirements */}
+              <div className="mt-3 space-y-1.5">
+                <p className="text-xs text-gray-500 mb-1">Password must contain:</p>
+                {[
+                  { key: 'length', label: 'At least 8 characters' },
+                  { key: 'uppercase', label: 'One uppercase letter' },
+                  { key: 'lowercase', label: 'One lowercase letter' },
+                  { key: 'number', label: 'One number' },
+                ].map(({ key, label }) => (
+                  <div key={key} className="flex items-center gap-2 text-xs">
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      passwordStrength[key as keyof typeof passwordStrength]
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-gray-700 text-gray-500'
+                    }`}>
+                      {passwordStrength[key as keyof typeof passwordStrength] && '✓'}
+                    </div>
+                    <span className={
+                      passwordStrength[key as keyof typeof passwordStrength]
+                        ? 'text-emerald-400'
+                        : 'text-gray-500'
+                    }>
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Turnstile Widget */}
+            {/* Turnstile Widget - REQUIRED */}
             <div className="flex justify-center py-2">
               <div id="turnstile-widget"></div>
-              {turnstileError && (
+              {!turnstileReady && (
                 <div className="text-center">
-                  <p className="text-xs text-yellow-400 mb-2">Security verification unavailable</p>
-                  <p className="text-xs text-gray-500">You can still create an account</p>
+                  <p className="text-xs text-gray-400">Loading security verification...</p>
                 </div>
               )}
             </div>
 
             <button
               type="submit"
-              disabled={loading || (!turnstileToken && !turnstileError)}
+              disabled={loading || !turnstileToken || !allRequirementsMet}
               className="w-full px-6 py-3 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? 'Creating account...' : 'Create Account'}
