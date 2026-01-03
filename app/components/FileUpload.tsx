@@ -44,6 +44,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   }, []);
 
   const uploadFiles = async (filesToUpload: File[]) => {
+    // Add files to state immediately
     const newFiles = filesToUpload.map(file => ({
       file,
       progress: 0,
@@ -52,11 +53,13 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
 
     setFiles(prev => [...prev, ...newFiles]);
 
+    // Upload each file
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       const fileIndex = files.length + i;
 
       try {
+        // Upload with real progress tracking
         await filesAPI.upload(file, (progress) => {
           setFiles(prev => {
             const updated = [...prev];
@@ -67,6 +70,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
           });
         });
 
+        // Mark as complete
         setFiles(prev => {
           const updated = [...prev];
           if (updated[fileIndex]) {
@@ -146,7 +150,10 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold text-text-primary">
-              Uploading {files.filter(f => f.status !== 'complete').length} of {files.length} files
+              {files.filter(f => f.status === 'uploading').length > 0 
+                ? `Uploading ${files.filter(f => f.status === 'uploading').length} of ${files.length} files`
+                : `Uploaded ${files.filter(f => f.status === 'complete').length} files`
+              }
             </h4>
             {files.every(f => f.status === 'complete') && (
               <button
@@ -158,7 +165,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-96 overflow-y-auto">
             {files.map((item, index) => {
               const FileIcon = getFileIcon(item.file);
               return (
@@ -210,7 +217,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                       
                       {item.status === 'complete' && (
                         <p className="text-xs text-text-secondary mt-1">
-                          Uploaded successfully
+                          Uploaded successfully • Processing...
                         </p>
                       )}
                     </div>
