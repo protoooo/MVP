@@ -249,33 +249,36 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-gray-800 bg-gray-900 flex flex-col`}>
+      {/* Sidebar - Fixed with scroll */}
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-gray-800 bg-gray-900 fixed left-0 top-0 bottom-0 z-30 flex flex-col`}>
         {sidebarOpen && (
-          <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-gray-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-600/10 flex items-center justify-center border border-emerald-600/20">
-                  <Database className="w-6 h-6 text-emerald-500" />
+          <>
+            {/* Logo - Fixed at top */}
+            <div className="p-4 border-b border-gray-800 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600/10 flex items-center justify-center border border-emerald-600/20">
+                  <Database className="w-5 h-5 text-emerald-500" />
                 </div>
-                <div>
-                  <h1 className="text-lg font-bold text-white">protocolLM</h1>
+                <div className="min-w-0">
+                  <h1 className="text-base font-bold text-white">protocolLM</h1>
                   {user.business_name && (
-                    <p className="text-xs text-gray-400">{user.business_name}</p>
+                    <p className="text-xs text-gray-400 truncate">{user.business_name}</p>
                   )}
                 </div>
               </div>
             </div>
 
-            <nav className="flex-1 p-4 space-y-1">
+            {/* Navigation - Scrollable */}
+            <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
               <button
                 onClick={() => setActiveView('files')}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'files'
                     ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
-                <Files className="w-5 h-5" />
+                <Files className="w-4 h-4" />
                 <span>All Files</span>
                 <span className="ml-auto text-xs bg-gray-800 px-2 py-0.5 rounded-full">
                   {allFiles.length}
@@ -284,47 +287,49 @@ export default function HomePage() {
 
               <button
                 onClick={() => setActiveView('upload')}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'upload'
                     ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
-                <Upload className="w-5 h-5" />
+                <Upload className="w-4 h-4" />
                 <span>Upload</span>
               </button>
 
               <button
                 onClick={() => setActiveView('search')}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'search'
                     ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-600/20'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4" />
                 <span>Search</span>
               </button>
             </nav>
 
-            <div className="p-4 border-t border-gray-800">
-              <div className="bg-gray-800 rounded-lg p-4 space-y-3">
+            {/* Storage - Fixed above user */}
+            <div className="p-3 border-t border-gray-800 flex-shrink-0">
+              <div className="bg-gray-800 rounded-lg p-3 space-y-2">
                 <div className="flex items-center gap-2 text-gray-400">
                   <HardDrive className="w-4 h-4" />
                   <span className="text-xs font-medium">Storage Used</span>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-white">
+                  <div className="text-base font-bold text-white">
                     {formatStorage(storageUsedBytes)}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Unlimited available</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Unlimited available</p>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-800">
+            {/* User - Fixed at bottom */}
+            <div className="p-3 border-t border-gray-800 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-emerald-600/20 flex items-center justify-center flex-shrink-0 border border-emerald-600/20">
                     <span className="text-emerald-500 text-sm font-medium">
                       {user.email[0].toUpperCase()}
@@ -341,23 +346,25 @@ export default function HomePage() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
                   title="Sign out"
                 >
                   <LogOut className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
             </div>
-          </div>
+          </>
         )}
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-gray-800 bg-gray-900 px-6 py-4">
-          <div className="flex items-center gap-4">
+      {/* Main content */}
+      <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+        {/* Header - Compact */}
+        <header className="border-b border-gray-800 bg-gray-900 px-4 py-3 flex-shrink-0">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors lg:hidden"
             >
               {sidebarOpen ? (
                 <X className="w-5 h-5 text-gray-400" />
@@ -372,7 +379,7 @@ export default function HomePage() {
 
             <button
               onClick={() => setShowShortcuts(true)}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors hidden md:block"
               title="Keyboard shortcuts"
             >
               <KeyboardIcon className="w-5 h-5 text-gray-400" />
@@ -380,12 +387,13 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-6">
+        {/* Content area - Scrollable */}
+        <div className="flex-1 overflow-auto p-4">
           {activeView === 'files' && (
             <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Documents</h2>
+                  <h2 className="text-xl font-bold text-white mb-1">Documents</h2>
                   <p className="text-sm text-gray-400">
                     {filteredFiles.length} {filteredFiles.length === 1 ? 'document' : 'documents'} 
                     {filteredFiles.length !== allFiles.length && ` (filtered from ${allFiles.length})`}
@@ -394,11 +402,11 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   {selectedFiles.size > 0 && (
                     <>
-                      <button onClick={handleBatchDownload} className="btn-secondary flex items-center gap-2">
+                      <button onClick={handleBatchDownload} className="btn-secondary flex items-center gap-2 text-sm">
                         <Download className="w-4 h-4" />
                         Download ({selectedFiles.size})
                       </button>
-                      <button onClick={handleBatchDelete} className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors">
+                      <button onClick={handleBatchDelete} className="px-3 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </>
@@ -408,7 +416,7 @@ export default function HomePage() {
                       setSelectionMode(!selectionMode);
                       if (selectionMode) setSelectedFiles(new Set());
                     }}
-                    className="btn-secondary flex items-center gap-2"
+                    className="btn-secondary flex items-center gap-2 text-sm"
                   >
                     {selectionMode ? <Square className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
                     {selectionMode ? 'Cancel' : 'Select'}
@@ -418,7 +426,7 @@ export default function HomePage() {
                     availableTags={availableTags}
                     availableCategories={availableCategories}
                   />
-                  <button onClick={loadAllFiles} className="btn-secondary" disabled={loading}>
+                  <button onClick={loadAllFiles} className="btn-secondary text-sm" disabled={loading}>
                     Refresh
                   </button>
                 </div>
@@ -470,7 +478,7 @@ export default function HomePage() {
           {activeView === 'upload' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white mb-1">Upload Documents</h2>
+                <h2 className="text-xl font-bold text-white mb-1">Upload Documents</h2>
                 <p className="text-sm text-gray-400">
                   Upload documents for instant semantic search
                 </p>
@@ -486,7 +494,7 @@ export default function HomePage() {
             <div className="max-w-7xl mx-auto">
               {searchResults && searchResults.results.length > 0 && (
                 <div className="flex justify-end mb-4">
-                  <button onClick={handleExportResults} className="btn-secondary flex items-center gap-2">
+                  <button onClick={handleExportResults} className="btn-secondary flex items-center gap-2 text-sm">
                     <Download className="w-4 h-4" />
                     Export Results
                   </button>
