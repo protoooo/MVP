@@ -36,8 +36,10 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-brand/10 mb-4">
             <Database className="w-8 h-8 text-brand" />
           </div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">BizMemory</h1>
-          <p className="text-text-secondary">Smart file storage for your business</p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
+            protocol<span className="text-brand">LM</span>
+          </h1>
+          <p className="text-text-secondary">Unlimited intelligent document storage</p>
         </div>
 
         {/* Login Form */}
@@ -102,7 +104,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="mt-8 text-center text-xs text-text-tertiary">
-          Securely store and search your business files
+          Find any document instantly with semantic search
         </p>
       </div>
     </div>
