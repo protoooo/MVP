@@ -6,25 +6,69 @@ import { cohereService } from './cohereService';
 import { ocrService } from './ocrService';
 import { supabaseStorageService } from './supabaseService';
 
-// Use Supabase if credentials are available, otherwise use local filesystem
+// Always use Supabase for ProtocolLM
 const useSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-if (useSupabase) {
-  console.log('✓ Using Supabase Storage for file uploads');
-} else {
-  console.log('⚠️  Using local filesystem for file uploads (development mode)');
+if (!useSupabase) {
+  console.warn('⚠️  WARNING: Supabase not configured! Using local filesystem (not recommended for production)');
 }
+
+// Storage limits by plan (in bytes)
+const STORAGE_LIMITS = {
+  personal: 500 * 1024 * 1024 * 1024, // 500GB
+  business: 5 * 1024 * 1024 * 1024 * 1024, // 5TB
+  enterprise: Infinity, // Unlimited
+};
 
 function isImageMimeType(mimeType: string): boolean {
   return mimeType.startsWith('image/');
 }
 
 export const fileService = {
+  // Check storage limit before upload
+  async checkStorageLimit(userId: number, fileSize: number): Promise<void> {
+    // Get user's plan
+    const userResult = await query(
+      `SELECT o.plan 
+       FROM users u 
+       LEFT JOIN organizations o ON u.organization_id = o.id 
+       WHERE u.id = $1`,
+      [userId]
+    );
+
+    const userPlan = userResult.rows[0]?.plan || 'personal';
+    const storageLimit = STORAGE_LIMITS[userPlan as keyof typeof STORAGE_LIMITS];
+
+    // Calculate current usage
+    const usageResult = await query(
+      `SELECT COALESCE(SUM(file_size), 0) as total_size 
+       FROM files 
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    const currentUsage = parseInt(usageResult.rows[0]?.total_size || '0');
+    const newTotal = currentUsage + fileSize;
+
+    if (newTotal > storageLimit) {
+      const limitGB = storageLimit / (1024 * 1024 * 1024);
+      const usedGB = (currentUsage / (1024 * 1024 * 1024)).toFixed(2);
+      throw new Error(
+        `Storage limit exceeded. Your ${userPlan} plan includes ${limitGB}GB. ` +
+        `You've used ${usedGB}GB. Please upgrade your plan or delete some files.`
+      );
+    }
+  },
+
   // Process uploaded file with AI pipeline
   async processUploadedFile(file: Express.Multer.File, userId: number) {
     try {
       console.log(`\n=== Processing file: ${file.originalname} ===`);
       
+      // ✅ Check storage limit BEFORE processing
+      await this.checkStorageLimit(userId, file.size);
+      console.log('✓ Storage limit check passed');
+
       // 1. Extract text content (OCR if needed)
       const { text: extractedText, confidence: ocrConfidence } = await ocrService.extractTextFromFile(
         file.path,
@@ -54,7 +98,7 @@ export const fileService = {
       );
       console.log('✓ Metadata generated');
 
-      // 5. Upload to Supabase or keep local
+      // 5. Upload to Supabase
       let storagePath = file.path;
       
       if (useSupabase) {
@@ -64,7 +108,7 @@ export const fileService = {
         await supabaseStorageService.uploadFile(
           supabasePath,
           fileBuffer,
-          'bizmemory-files',
+          'protocollm-files',
           file.mimetype
         );
 
@@ -88,7 +132,7 @@ export const fileService = {
 
       const fileRecord = fileResult.rows[0];
 
-      // ✅ FIX: Convert embedding array to pgvector format '[1,2,3,...]'
+      // Convert embedding array to pgvector format
       const embeddingString = `[${textEmbedding.join(',')}]`;
       
       await query(
@@ -120,6 +164,44 @@ export const fileService = {
       }
       throw error;
     }
+  },
+
+  // Get storage usage for user
+  async getStorageUsage(userId: number): Promise<{
+    used: number;
+    limit: number;
+    plan: string;
+    percentUsed: number;
+  }> {
+    // Get user's plan
+    const userResult = await query(
+      `SELECT o.plan 
+       FROM users u 
+       LEFT JOIN organizations o ON u.organization_id = o.id 
+       WHERE u.id = $1`,
+      [userId]
+    );
+
+    const plan = userResult.rows[0]?.plan || 'personal';
+    const limit = STORAGE_LIMITS[plan as keyof typeof STORAGE_LIMITS];
+
+    // Get current usage
+    const usageResult = await query(
+      `SELECT COALESCE(SUM(file_size), 0) as total_size 
+       FROM files 
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    const used = parseInt(usageResult.rows[0]?.total_size || '0');
+    const percentUsed = limit === Infinity ? 0 : (used / limit) * 100;
+
+    return {
+      used,
+      limit,
+      plan,
+      percentUsed,
+    };
   },
 
   // Get file by ID
@@ -172,7 +254,7 @@ export const fileService = {
 
     // Delete from Supabase or local filesystem
     if (useSupabase) {
-      await supabaseStorageService.deleteFile(file.storage_path);
+      await supabaseStorageService.deleteFile(file.storage_path, 'protocollm-files');
       console.log(`✓ Deleted from Supabase: ${file.storage_path}`);
     } else {
       if (fs.existsSync(file.storage_path)) {
@@ -194,7 +276,7 @@ export const fileService = {
 
     if (useSupabase) {
       // Download from Supabase and convert to stream
-      const blob = await supabaseStorageService.downloadFile(file.storage_path);
+      const blob = await supabaseStorageService.downloadFile(file.storage_path, 'protocollm-files');
       const buffer = Buffer.from(await blob.arrayBuffer());
       
       // Create a readable stream from buffer
