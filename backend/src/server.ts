@@ -19,6 +19,10 @@ import analyticsRoutes from './routes/analytics';
 import apiKeysRoutes from './routes/apiKeys';
 import subscriptionRoutes from './routes/subscription';
 import webhooksRoutes from './routes/webhooks';
+import emailRoutes from './routes/email';
+import invoiceRoutes from './routes/invoices';
+import customerRoutes from './routes/customers';
+import teamRoutes from './routes/team';
 
 dotenv.config();
 
@@ -192,6 +196,10 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/collections', collectionsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/api-keys', apiKeysRoutes);
+app.use('/api/email', emailRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/team', teamRoutes);
 
 // ========================================
 // HEALTH CHECK
