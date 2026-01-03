@@ -2,8 +2,7 @@ import Tesseract from 'tesseract.js';
 import fs from 'fs';
 import mammoth from 'mammoth';
 import { fromPath } from 'pdf2pic';
-
-const pdfParse = require('pdf-parse');
+import PDFParser from 'pdf-parse';
 
 export const ocrService = {
   async extractTextFromImage(imagePath: string): Promise<{ text: string; confidence: number }> {
@@ -32,7 +31,9 @@ export const ocrService = {
     try {
       console.log(`Attempting text extraction from PDF: ${pdfPath}`);
       const dataBuffer = fs.readFileSync(pdfPath);
-      const data = await pdfParse(dataBuffer);
+      
+      // Correct usage of pdf-parse
+      const data = await PDFParser(dataBuffer);
       
       const extractedText = data.text || '';
       console.log(`PDF text extraction: ${extractedText.length} characters`);
@@ -46,7 +47,6 @@ export const ocrService = {
       return extractedText;
     } catch (error) {
       console.error('Error extracting text from PDF:', error);
-      // Fallback to OCR if pdf-parse fails
       console.log('Falling back to OCR for PDF...');
       return await this.extractTextFromScannedPDF(pdfPath);
     }
@@ -56,9 +56,8 @@ export const ocrService = {
     try {
       console.log(`Starting OCR on scanned PDF: ${pdfPath}`);
       
-      // Convert PDF pages to images
       const options = {
-        density: 300,           // DPI
+        density: 300,
         saveFilename: 'page',
         savePath: '/tmp',
         format: 'png',
@@ -68,7 +67,6 @@ export const ocrService = {
 
       const convert = fromPath(pdfPath, options);
       
-      // Process first 5 pages max (to avoid timeout)
       const maxPages = 5;
       let allText = '';
       
@@ -82,11 +80,9 @@ export const ocrService = {
             break;
           }
           
-          // OCR the page image
           const pageText = await this.extractTextFromImage(result.path);
           allText += pageText.text + '\n\n';
           
-          // Clean up temp image
           try {
             fs.unlinkSync(result.path);
           } catch (e) {
@@ -133,8 +129,7 @@ export const ocrService = {
     let confidence = 1.0;
 
     try {
-      console.log(`\n=== Starting text extraction ===`);
-      console.log(`File: ${filePath}`);
+      console.log(`\nExtracting text from: ${filePath}`);
       console.log(`MIME Type: ${mimeType}`);
       
       if (mimeType.startsWith('image/')) {
@@ -143,7 +138,7 @@ export const ocrService = {
         confidence = result.confidence;
       } else if (mimeType === 'application/pdf') {
         text = await this.extractTextFromPDF(filePath);
-        confidence = text.length > 50 ? 0.9 : 0.7; // Lower confidence for OCR'd PDFs
+        confidence = text.length > 50 ? 0.9 : 0.7;
       } else if (
         mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
         mimeType === 'application/msword'
@@ -155,10 +150,7 @@ export const ocrService = {
         console.log(`Unsupported file type for text extraction: ${mimeType}`);
       }
 
-      console.log(`\n=== Extraction Summary ===`);
-      console.log(`Total characters extracted: ${text.length}`);
-      console.log(`Confidence: ${confidence}`);
-      console.log(`First 200 chars: ${text.substring(0, 200)}`);
+      console.log(`Extraction complete: ${text.length} characters (confidence: ${confidence})`);
     } catch (error) {
       console.error('Error in extractTextFromFile:', error);
     }
