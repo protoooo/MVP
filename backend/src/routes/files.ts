@@ -3,6 +3,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import jwt from 'jsonwebtoken';
+import express from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validateFileMiddleware, FileValidator } from '../middleware/fileValidation';
 import { uploadLimiter, apiLimiter } from '../middleware/rateLimiter';
@@ -48,8 +49,13 @@ const upload = multer({
   },
 });
 
-// Handle multer errors
-function handleMulterError(err: any, req: any, res: any, next: any) {
+// Handle multer errors - FIXED TYPE ANNOTATIONS
+function handleMulterError(
+  err: any,
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ 
