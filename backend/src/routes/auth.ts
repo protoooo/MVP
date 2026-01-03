@@ -184,6 +184,27 @@ router.post('/register', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Registration error:', error);
+    
+    // Provide more specific error messages based on error code
+    if (error.code === '23505') {
+      // Unique violation
+      return res.status(400).json({ 
+        error: 'An account with this email already exists' 
+      });
+    } else if (error.code === '23514') {
+      // Check constraint violation
+      console.error('CHECK constraint violation:', error.message);
+      return res.status(400).json({ 
+        error: 'Invalid data format. Please check your email address and try again.' 
+      });
+    } else if (error.message && error.message.includes('pattern')) {
+      // Pattern matching error
+      console.error('Pattern matching error:', error.message);
+      return res.status(400).json({ 
+        error: 'Invalid email format. Please use a standard email address.' 
+      });
+    }
+    
     res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
 });
@@ -263,6 +284,22 @@ router.post('/login', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Login error:', error);
+    
+    // Provide more specific error messages based on error code
+    if (error.code === '23514') {
+      // Check constraint violation
+      console.error('CHECK constraint violation:', error.message);
+      return res.status(400).json({ 
+        error: 'Invalid email format. Please use a standard email address.' 
+      });
+    } else if (error.message && error.message.includes('pattern')) {
+      // Pattern matching error
+      console.error('Pattern matching error:', error.message);
+      return res.status(400).json({ 
+        error: 'Invalid email format. Please use a standard email address.' 
+      });
+    }
+    
     res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 });

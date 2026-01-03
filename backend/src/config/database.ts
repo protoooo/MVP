@@ -292,14 +292,25 @@ export async function runMigrations(client?: any): Promise<void> {
   try {
     console.log('  - Running additional migrations...');
     
-    const migrationPath = path.join(__dirname, '..', 'migrations', 'add_subscriptions_and_tos.sql');
+    // List of migrations to run in order
+    const migrations = [
+      'add_subscriptions_and_tos.sql',
+      'fix_email_constraints.sql'
+    ];
     
-    if (fs.existsSync(migrationPath)) {
-      const migrationSQL = fs.readFileSync(migrationPath, 'utf-8');
-      await migrationClient.query(migrationSQL);
-      console.log('  ✓ Subscriptions and ToS migration completed');
-    } else {
-      console.log('  ℹ No additional migrations found');
+    for (const migrationFile of migrations) {
+      const migrationPath = path.join(__dirname, '..', 'migrations', migrationFile);
+      
+      if (fs.existsSync(migrationPath)) {
+        try {
+          const migrationSQL = fs.readFileSync(migrationPath, 'utf-8');
+          await migrationClient.query(migrationSQL);
+          console.log(`  ✓ Migration completed: ${migrationFile}`);
+        } catch (error: any) {
+          console.error(`  ✗ Migration failed: ${migrationFile}`, error.message);
+          // Continue with other migrations
+        }
+      }
     }
   } catch (error: any) {
     console.error('  ✗ Migration error:', error.message);
