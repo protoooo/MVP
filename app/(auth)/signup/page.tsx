@@ -1,10 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authAPI } from '@/app/services/api';
 import { Database } from 'lucide-react';
+
+declare global {
+  interface Window {
+    turnstile: any;
+  }
+}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -13,10 +19,49 @@ export default function SignupPage() {
   const [businessName, setBusinessName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileReady, setTurnstileReady] = useState(false);
+
+  useEffect(() => {
+    // Load CloudFlare Turnstile script
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      setTurnstileReady(true);
+      
+      // Render Turnstile widget
+      if (window.turnstile && process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY) {
+        window.turnstile.render('#turnstile-widget', {
+          sitekey: process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY,
+          callback: (token: string) => {
+            setTurnstileToken(token);
+          },
+          'error-callback': () => {
+            setError('Verification failed. Please try again.');
+          },
+        });
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!turnstileToken) {
+      setError('Please complete the security verification');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -25,27 +70,34 @@ export default function SignupPage() {
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err.message || 'Registration failed. Please try again.');
+      
+      // Reset Turnstile on error
+      if (window.turnstile) {
+        window.turnstile.reset();
+        setTurnstileToken('');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 px-4">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-brand/10 mb-4">
-            <Database className="w-8 h-8 text-brand" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 mb-4 border border-blue-500/20">
+            <Database className="w-8 h-8 text-blue-400" />
           </div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
-            protocol<span className="text-brand">LM</span>
+          <h1 className="text-3xl font-bold mb-2">
+            <span className="text-text-primary">protocol</span>
+            <span className="bg-gradient-to-r from-blue-400 via-purple-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">LM</span>
           </h1>
-          <p className="text-text-secondary">Start your 7-day free trial</p>
+          <p className="text-text-secondary">Start your 14-day free trial</p>
         </div>
 
         {/* Signup Form */}
-        <div className="card p-8">
+        <div className="bg-surface border border-border rounded-2xl p-8 shadow-dark">
           <h2 className="text-xl font-semibold text-text-primary mb-6">Create your account</h2>
           
           {error && (
@@ -64,7 +116,7 @@ export default function SignupPage() {
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
+                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-text-primary focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
                 placeholder="Acme Inc."
                 disabled={loading}
               />
@@ -80,7 +132,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
+                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-text-primary focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
                 placeholder="you@example.com"
                 disabled={loading}
               />
@@ -97,17 +149,20 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-3 py-2 rounded-md border border-border bg-surface text-text-primary focus:border-brand focus:ring-1 focus:ring-brand"
+                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-text-primary focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 transition-all"
                 placeholder="••••••••"
                 disabled={loading}
               />
               <p className="mt-1 text-xs text-text-tertiary">At least 6 characters</p>
             </div>
 
+            {/* CloudFlare Turnstile */}
+            <div id="turnstile-widget" className="flex justify-center"></div>
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || !turnstileToken}
+              className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500 text-white font-medium hover:shadow-lg hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? 'Creating account...' : 'Start Free Trial'}
             </button>
@@ -116,7 +171,7 @@ export default function SignupPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-text-secondary">
               Already have an account?{' '}
-              <Link href="/login" className="text-brand hover:text-brand-400 font-medium">
+              <Link href="/" onClick={(e) => { e.preventDefault(); window.history.back(); }} className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
                 Sign in
               </Link>
             </p>
@@ -125,7 +180,7 @@ export default function SignupPage() {
 
         {/* Footer */}
         <p className="mt-8 text-center text-xs text-text-tertiary">
-          7-day free trial • No credit card required • Cancel anytime
+          14-day free trial • Credit card required • Cancel anytime
         </p>
       </div>
     </div>
