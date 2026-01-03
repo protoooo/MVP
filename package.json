@@ -1,7 +1,7 @@
 {
-  "name": "bizmemory",
+  "name": "protocollm",
   "version": "1.0.0",
-  "description": "AI-Powered File and Photo Storage for Small Businesses",
+  "description": "Unlimited intelligent document storage with powerful semantic search and retrieval",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "nodemon backend/src/server.ts",
@@ -14,13 +14,13 @@
     "lint": "next lint"
   },
   "keywords": [
-    "file-storage",
+    "document-storage",
+    "semantic-search",
     "ai",
-    "search",
     "cohere",
-    "small-business"
+    "unlimited-storage"
   ],
-  "author": "",
+  "author": "Austin Northrup",
   "license": "ISC",
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -36,7 +36,6 @@
     "@types/multer": "^1.4.11",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "aws-sdk": "^2.1691.0",
     "bcrypt": "^5.1.1",
     "clsx": "^2.1.1",
     "cohere-ai": "^7.20.0",
