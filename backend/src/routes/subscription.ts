@@ -6,12 +6,10 @@ import { authMiddleware, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-if (!stripe) {
+const isStripeConfigured = !!stripe;
+
+if (!isStripeConfigured) {
   console.error('❌ Stripe not configured - subscription routes disabled');
-  router.all('*', (req, res) => {
-    res.status(503).json({ error: 'Subscription service not available' });
-  });
-  export default router;
 }
 
 // Get current subscription status
@@ -61,6 +59,10 @@ router.get('/status', authMiddleware, async (req: AuthRequest, res) => {
 
 // Create checkout session
 router.post('/create-checkout-session', authMiddleware, async (req: AuthRequest, res) => {
+  if (!isStripeConfigured) {
+    return res.status(503).json({ error: 'Subscription service not available' });
+  }
+
   try {
     const { successUrl, cancelUrl } = req.body;
 
@@ -151,6 +153,10 @@ router.post('/create-checkout-session', authMiddleware, async (req: AuthRequest,
 
 // Create customer portal session
 router.post('/create-portal-session', authMiddleware, async (req: AuthRequest, res) => {
+  if (!isStripeConfigured) {
+    return res.status(503).json({ error: 'Subscription service not available' });
+  }
+
   try {
     const { returnUrl } = req.body;
 
@@ -186,7 +192,7 @@ router.post('/create-portal-session', authMiddleware, async (req: AuthRequest, r
 // Accept Terms of Service
 router.post('/accept-terms', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const tosVersion = '2025-01-03'; // Update this when ToS changes
+    const tosVersion = '2025-01-03';
 
     await query(
       `UPDATE users 
