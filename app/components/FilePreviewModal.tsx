@@ -79,7 +79,7 @@ export default function FilePreviewModal({ file, allFiles = [], onClose, onDelet
           </div>
           
           <div className="flex items-center gap-2">
-            
+            <a
               href={filesAPI.getDownloadUrl(file.id)}
               download
               className="p-2 hover:bg-surface rounded-lg transition-colors"
@@ -144,7 +144,7 @@ export default function FilePreviewModal({ file, allFiles = [], onClose, onDelet
               <div className="text-center">
                 <FileText className="w-24 h-24 text-text-tertiary mx-auto mb-4" />
                 <p className="text-text-secondary mb-4">Preview not available for this file type</p>
-                
+                <a
                   href={filesAPI.getDownloadUrl(file.id)}
                   download
                   className="btn-primary"
