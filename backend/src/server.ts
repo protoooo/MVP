@@ -17,6 +17,9 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
+console.log('='.repeat(60));
+console.log('🚀 Starting ProtocolLM');
+console.log('='.repeat(60));
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Port:', PORT);
 
@@ -32,6 +35,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Request logging in development
+if (isDevelopment) {
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+  });
+}
+
 // API Routes - Must be BEFORE any catch-all routes
 app.use('/api/auth', authRoutes);
 app.use('/api/files', filesRoutes);
@@ -39,7 +50,12 @@ app.use('/api/search', searchRoutes);
 app.use('/api/reports', reportsRoutes);
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'BizMemory API is running', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    service: 'ProtocolLM API',
+    version: '1.0.0',
+    timestamp: new Date().toISOString() 
+  });
 });
 
 // Production: Integrate with Next.js  
@@ -73,7 +89,7 @@ function setupFallbackRoutes() {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>BizMemory - AI-Powered File Storage</title>
+        <title>ProtocolLM - Unlimited Intelligent Document Storage</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
@@ -97,14 +113,11 @@ function setupFallbackRoutes() {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
           }
           h1 {
-            color: #3ECF8E;
+            color: #E6EDF3;
             font-size: 2.5rem;
             margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
           }
+          .brand { color: #3ECF8E; }
           .subtitle { color: #7D8590; margin-bottom: 32px; font-size: 1.1rem; }
           .status-card {
             background: #1C2128;
@@ -138,13 +151,6 @@ function setupFallbackRoutes() {
             line-height: 1.6;
             margin-top: 24px;
           }
-          a {
-            color: #58A6FF;
-            text-decoration: none;
-          }
-          a:hover {
-            text-decoration: underline;
-          }
           ${isDevelopment ? `
           .dev-warning {
             background: #FFA50020;
@@ -167,8 +173,8 @@ function setupFallbackRoutes() {
       </head>
       <body>
         <div class="container">
-          <h1>🚀 BizMemory</h1>
-          <p class="subtitle">AI-Powered File Storage for Small Business</p>
+          <h1>protocol<span class="brand">LM</span></h1>
+          <p class="subtitle">Unlimited Intelligent Document Storage</p>
           
           <div class="status-card">
             <div class="status-item">
@@ -178,6 +184,10 @@ function setupFallbackRoutes() {
             <div class="status-item">
               <span class="label">Database</span>
               <span class="value running">Connected</span>
+            </div>
+            <div class="status-item">
+              <span class="label">Storage</span>
+              <span class="value running">Supabase Ready</span>
             </div>
             <div class="status-item">
               <span class="label">Mode</span>
@@ -193,17 +203,12 @@ function setupFallbackRoutes() {
           ` : `
           <div class="info">
             <p><strong>Backend is running successfully!</strong></p>
-            <p>Frontend is being integrated. In the meantime, you can:</p>
-            <p style="margin-top: 12px;">
-              • Test the API at <a href="/health">/health</a><br>
-              • View API documentation<br>
-              • Run the frontend locally with the backend
-            </p>
+            <p>Visit the app at <a href="https://protocollm.org" style="color: #3ECF8E;">protocollm.org</a></p>
           </div>
           `}
           
           <div class="info" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #30363D;">
-            <p>Powered by Cohere AI • PostgreSQL with pgvector • Supabase Storage</p>
+            <p>Powered by Cohere AI • Supabase • PostgreSQL with pgvector</p>
           </div>
         </div>
       </body>
@@ -241,9 +246,13 @@ let httpServer: any = null;
 
 function startHTTPServer() {
   httpServer = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✓ HTTP server running on port ${PORT}`);
-    console.log(`✓ Listening on 0.0.0.0:${PORT}`);
-    console.log('\n✅ Server ready!\n');
+    console.log('\n' + '='.repeat(60));
+    console.log('✅ ProtocolLM Server Ready!');
+    console.log('='.repeat(60));
+    console.log(`🌐 HTTP server running on port ${PORT}`);
+    console.log(`📡 Listening on 0.0.0.0:${PORT}`);
+    console.log(`🔗 API available at http://localhost:${PORT}/api`);
+    console.log('='.repeat(60) + '\n');
   });
   
   setupGracefulShutdown(httpServer);
@@ -252,25 +261,25 @@ function startHTTPServer() {
 // Initialize database and start
 async function startServer() {
   try {
-    console.log('\n🚀 Starting BizMemory...');
-    console.log('=== Database Check ===');
+    console.log('\n=== Database Check ===');
     await checkDatabaseConnection(5, 2000);
     
     console.log('\n=== Database Init ===');
     await initializeDatabase();
     
-    // Ensure Supabase bucket exists (if configured)
+    // Ensure Supabase bucket exists
     if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       console.log('\n=== Supabase Storage Init ===');
       try {
-        await supabaseStorageService.ensureBucketExists('bizmemory-files');
-        console.log('✓ Supabase storage bucket ready');
+        await supabaseStorageService.ensureBucketExists('protocollm-files');
       } catch (error: any) {
         console.warn('⚠️  Could not initialize Supabase bucket:', error.message);
-        console.log('   Continuing with local filesystem storage');
+        console.log('   Please ensure your Supabase project has storage enabled');
       }
     } else {
-      console.log('\n⚠️  Supabase credentials not found - using local filesystem storage');
+      console.log('\n⚠️  WARNING: Supabase credentials not found!');
+      console.log('   ProtocolLM requires Supabase for unlimited storage.');
+      console.log('   Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your .env file');
     }
     
     console.log('\n=== Server Initialization ===');
