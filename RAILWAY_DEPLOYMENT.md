@@ -75,8 +75,11 @@ NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
 #### Automatically Set by Railway
 
 ```bash
-# Railway sets this automatically - DO NOT override
+# Railway sets this automatically - used by Next.js frontend
 PORT=3000
+
+# Backend port is set in nixpacks.toml - DO NOT override
+BACKEND_PORT=3001
 
 # Node environment - Railway sets this automatically
 NODE_ENV=production

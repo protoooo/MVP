@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+
+// Backend port configuration
+const BACKEND_PORT = 3001;
+
 const nextConfig = {
   reactStrictMode: true,
   
@@ -26,8 +30,8 @@ const nextConfig = {
   async rewrites() {
     // In production, always proxy to backend on port 3001
     const backendUrl = process.env.NODE_ENV === 'production' 
-      ? 'http://localhost:3001' 
-      : process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || '3001'}`;
+      ? `http://localhost:${BACKEND_PORT}` 
+      : process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || BACKEND_PORT}`;
     
     return [
       {
