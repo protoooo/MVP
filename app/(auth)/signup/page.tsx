@@ -21,27 +21,66 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
+  const [turnstileError, setTurnstileError] = useState(false);
 
   useEffect(() => {
+    // Load Turnstile script
     const script = document.createElement('script');
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
     script.async = true;
     script.defer = true;
+    
     script.onload = () => {
+      console.log('Turnstile script loaded');
       setTurnstileReady(true);
       
-      if (window.turnstile && process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY) {
-        window.turnstile.render('#turnstile-widget', {
-          sitekey: process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY,
-          callback: (token: string) => {
-            setTurnstileToken(token);
-          },
-          'error-callback': () => {
-            setError('Verification failed. Please try again.');
-          },
-        });
+      // Check if we have the site key
+      const siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY;
+      
+      if (!siteKey) {
+        console.error('Missing NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY');
+        setTurnstileError(true);
+        return;
+      }
+
+      if (window.turnstile) {
+        try {
+          window.turnstile.render('#turnstile-widget', {
+            sitekey: siteKey,
+            theme: 'dark',
+            size: 'normal',
+            callback: (token: string) => {
+              console.log('Turnstile token received');
+              setTurnstileToken(token);
+              setTurnstileError(false);
+            },
+            'error-callback': (error: any) => {
+              console.error('Turnstile error:', error);
+              setError('Security verification failed. Please refresh the page and try again.');
+              setTurnstileError(true);
+            },
+            'expired-callback': () => {
+              console.log('Turnstile token expired');
+              setTurnstileToken('');
+            },
+            'timeout-callback': () => {
+              console.log('Turnstile timeout');
+              setError('Security verification timed out. Please try again.');
+              setTurnstileError(true);
+            },
+          });
+        } catch (err) {
+          console.error('Error rendering Turnstile:', err);
+          setTurnstileError(true);
+        }
       }
     };
+
+    script.onerror = () => {
+      console.error('Failed to load Turnstile script');
+      setTurnstileError(true);
+    };
+
     document.head.appendChild(script);
 
     return () => {
@@ -55,9 +94,26 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    if (!turnstileToken) {
+    // Validation
+    if (!email || !password) {
+      setError('Email and password are required');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    // Check Turnstile token
+    if (!turnstileToken && !turnstileError) {
       setError('Please complete the security verification');
       return;
+    }
+
+    // If Turnstile had an error, allow signup anyway (fallback)
+    if (turnstileError) {
+      console.warn('Proceeding with signup despite Turnstile error');
     }
 
     setLoading(true);
@@ -69,8 +125,13 @@ export default function SignupPage() {
       console.error('Registration error:', err);
       setError(err.message || 'Registration failed. Please try again.');
       
-      if (window.turnstile) {
-        window.turnstile.reset();
+      // Reset Turnstile on error
+      if (window.turnstile && !turnstileError) {
+        try {
+          window.turnstile.reset();
+        } catch (e) {
+          console.error('Error resetting Turnstile:', e);
+        }
         setTurnstileToken('');
       }
     } finally {
@@ -79,7 +140,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-emerald-600/10 mb-4 border border-emerald-600/20">
@@ -129,6 +190,7 @@ export default function SignupPage() {
                 className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
                 placeholder="you@company.com"
                 disabled={loading}
+                autoComplete="email"
               />
             </div>
 
@@ -146,15 +208,25 @@ export default function SignupPage() {
                 className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
                 placeholder="••••••••"
                 disabled={loading}
+                autoComplete="new-password"
               />
               <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
             </div>
 
-            <div id="turnstile-widget" className="flex justify-center"></div>
+            {/* Turnstile Widget */}
+            <div className="flex justify-center py-2">
+              <div id="turnstile-widget"></div>
+              {turnstileError && (
+                <div className="text-center">
+                  <p className="text-xs text-yellow-400 mb-2">Security verification unavailable</p>
+                  <p className="text-xs text-gray-500">You can still create an account</p>
+                </div>
+              )}
+            </div>
 
             <button
               type="submit"
-              disabled={loading || !turnstileToken}
+              disabled={loading || (!turnstileToken && !turnstileError)}
               className="w-full px-6 py-3 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? 'Creating account...' : 'Create Account'}
@@ -164,7 +236,7 @@ export default function SignupPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
               Already have an account?{' '}
-              <Link href="/" onClick={(e) => { e.preventDefault(); window.history.back(); }} className="text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
+              <Link href="/login" className="text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
                 Sign in
               </Link>
             </p>
