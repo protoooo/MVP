@@ -1,4 +1,6 @@
 import { Pool, PoolConfig } from 'pg';
+import fs from 'fs';
+import path from 'path';
 
 function validateDatabaseConfig(): void {
   const required = ['DATABASE_URL'];
@@ -259,6 +261,9 @@ export async function initializeDatabase(): Promise<void> {
 
     await client.query('COMMIT');
     console.log('✓ Database schema created successfully');
+    
+    // Run additional migrations
+    await runMigrations(client);
   } catch (error: any) {
     if (client) {
       try {
@@ -273,6 +278,36 @@ export async function initializeDatabase(): Promise<void> {
     if (client) {
       try {
         client.release();
+      } catch (e) {
+        // Ignore release errors
+      }
+    }
+  }
+}
+
+export async function runMigrations(client?: any): Promise<void> {
+  const migrationClient = client || await pool.connect();
+  const shouldRelease = !client;
+  
+  try {
+    console.log('  - Running additional migrations...');
+    
+    const migrationPath = path.join(__dirname, '..', 'migrations', 'add_subscriptions_and_tos.sql');
+    
+    if (fs.existsSync(migrationPath)) {
+      const migrationSQL = fs.readFileSync(migrationPath, 'utf-8');
+      await migrationClient.query(migrationSQL);
+      console.log('  ✓ Subscriptions and ToS migration completed');
+    } else {
+      console.log('  ℹ No additional migrations found');
+    }
+  } catch (error: any) {
+    console.error('  ✗ Migration error:', error.message);
+    // Don't throw - migrations are optional enhancements
+  } finally {
+    if (shouldRelease && migrationClient) {
+      try {
+        migrationClient.release();
       } catch (e) {
         // Ignore release errors
       }
