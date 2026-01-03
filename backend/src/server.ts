@@ -332,7 +332,7 @@ async function startServer() {
       console.log(`   ✓ JWT Authentication`);
       console.log(`   ${process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY ? '✓' : '✗'} Cloudflare Turnstile`);
       console.log(`   ${process.env.SUPABASE_URL ? '✓' : '✗'} Supabase Storage`);
-      console.log(`   ✓ Cohere AI Processing`);
+      console.log(`   ✓ Cohere Processing`);
       console.log(`   ✓ Rate Limiting`);
       console.log(`   ✓ Security Headers`);
       console.log('='.repeat(60) + '\n');

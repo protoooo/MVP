@@ -166,7 +166,7 @@ export const queueService = {
     console.log(`Processed OCR for file ${fileId}`);
   },
 
-  // Process AI analysis
+  // Process analysis
   async processAnalysis(fileId: number): Promise<void> {
     const fileResult = await query(
       `SELECT f.original_filename, f.file_type, fc.extracted_text
@@ -209,7 +209,7 @@ export const queueService = {
       ]
     );
 
-    console.log(`Processed AI analysis for file ${fileId}`);
+    console.log(`Processed analysis for file ${fileId}`);
   },
 
   // Process reindexing
