@@ -8,11 +8,17 @@ export const searchService = {
       console.log(`\n=== Starting search: "${queryText}" ===`);
       
       // 1. Parse query using Command-R7b
+      console.log('Parsing query...');
       const queryParsing = await cohereService.parseSearchQuery(queryText);
       console.log('Query parsed:', JSON.stringify(queryParsing, null, 2));
 
       // 2. Generate query embedding
+      console.log('Generating query embedding...');
       const queryEmbedding = await cohereService.generateQueryEmbedding(queryText);
+      console.log(`✓ Query embedding generated: ${queryEmbedding.length} dimensions`);
+
+      // ✅ FIX: Convert embedding array to pgvector format '[1,2,3,...]'
+      const embeddingString = `[${queryEmbedding.join(',')}]`;
 
       // 3. Build HYBRID SQL query (vector + keyword + metadata)
       let sqlQuery = `
@@ -43,7 +49,7 @@ export const searchService = {
       const searchTags = [...new Set(keywords.concat(queryParsing.documentTypes))];
 
       const params: any[] = [
-        JSON.stringify(queryEmbedding),
+        embeddingString,  // ✅ Now using proper pgvector format
         userId,
         keywordPattern,
         searchTags,
@@ -74,11 +80,15 @@ export const searchService = {
       sqlQuery += ` ORDER BY hybrid_score DESC NULLS LAST LIMIT 50`;
 
       console.log('Executing hybrid search query...');
+      console.log('SQL Query:', sqlQuery);
+      console.log('Params:', params.map((p, i) => i === 0 ? '[EMBEDDING_VECTOR]' : p));
+      
       const results = await query(sqlQuery, params);
-      console.log(`Found ${results.rows.length} documents`);
+      console.log(`✓ Found ${results.rows.length} documents`);
 
       // If no results found, return early
       if (!results.rows || results.rows.length === 0) {
+        console.log('No results found');
         await query(
           `INSERT INTO search_logs (user_id, query, results_count, searched_at)
            VALUES ($1, $2, $3, NOW())`,
@@ -93,6 +103,12 @@ export const searchService = {
         };
       }
 
+      // Log first few results for debugging
+      console.log('\nTop 3 results:');
+      results.rows.slice(0, 3).forEach((row, idx) => {
+        console.log(`  ${idx + 1}. ${row.original_filename} (score: ${row.hybrid_score?.toFixed(3)})`);
+      });
+
       // 4. Rerank results using Cohere Rerank v4.0 Pro
       const documentsForRerank = results.rows.map(row => ({
         id: row.id.toString(),
@@ -101,8 +117,9 @@ export const searchService = {
         }`,
       }));
 
-      console.log('Reranking results...');
+      console.log('\nReranking results...');
       const rerankedResults = await cohereService.rerankResults(queryText, documentsForRerank);
+      console.log('✓ Reranking complete');
 
       // 5. Reorder results based on rerank scores
       const finalResults = rerankedResults
@@ -115,8 +132,13 @@ export const searchService = {
           };
         });
 
-      // 6. NEW: Extract answer from top documents
-      console.log('Extracting answer from top documents...');
+      console.log('\nTop 3 after reranking:');
+      finalResults.slice(0, 3).forEach((row, idx) => {
+        console.log(`  ${idx + 1}. ${row.original_filename} (relevance: ${row.relevance_score?.toFixed(3)})`);
+      });
+
+      // 6. Extract answer from top documents
+      console.log('\nExtracting answer from top documents...');
       const topDocsForExtraction = finalResults.slice(0, 5).map(doc => ({
         filename: doc.original_filename,
         content: doc.extracted_text || doc.ai_description || '',
@@ -128,7 +150,10 @@ export const searchService = {
       }));
 
       const extractedAnswer = await cohereService.extractAnswer(queryText, topDocsForExtraction);
-      console.log('Answer extracted:', extractedAnswer.hasDirectAnswer ? 'Yes' : 'No');
+      console.log(`✓ Answer extracted (has direct answer: ${extractedAnswer.hasDirectAnswer})`);
+      if (extractedAnswer.hasDirectAnswer) {
+        console.log(`  Answer: ${extractedAnswer.answer.substring(0, 100)}...`);
+      }
 
       // 7. Log search for analytics
       await query(
@@ -136,6 +161,8 @@ export const searchService = {
          VALUES ($1, $2, $3, NOW())`,
         [userId, queryText, finalResults.length]
       );
+
+      console.log(`\n=== Search complete: ${finalResults.length} results ===\n`);
 
       return {
         results: finalResults.slice(0, 20), // Return top 20
