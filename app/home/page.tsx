@@ -222,8 +222,15 @@ export default function HomePage() {
     );
   }
 
-  const storageUsed = allFiles.reduce((acc, file) => acc + file.file_size, 0);
-  const storageUsedGB = (storageUsed / (1024 * 1024 * 1024)).toFixed(2);
+  // FIXED: Calculate storage correctly (bytes to MB/GB)
+  const storageUsedBytes = allFiles.reduce((acc, file) => acc + file.file_size, 0);
+  const formatStorage = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  };
+
   const availableTags = Array.from(new Set(allFiles.flatMap(f => f.tags || [])));
   const availableCategories = Array.from(new Set(allFiles.map(f => f.category).filter(Boolean))) as string[];
 
@@ -286,7 +293,7 @@ export default function HomePage() {
                 }`}
               >
                 <Search className="w-5 h-5" />
-                <span>Semantic Search</span>
+                <span>Search</span>
               </button>
             </nav>
 
@@ -297,11 +304,10 @@ export default function HomePage() {
                   <span className="text-xs font-medium">Storage Used</span>
                 </div>
                 <div>
-                  <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-2xl font-bold text-text-primary">{storageUsedGB}</span>
-                    <span className="text-xs text-text-tertiary">GB</span>
+                  <div className="text-lg font-bold text-text-primary">
+                    {formatStorage(storageUsedBytes)}
                   </div>
-                  <p className="text-xs text-text-tertiary">Unlimited available</p>
+                  <p className="text-xs text-text-tertiary mt-1">Unlimited available</p>
                 </div>
               </div>
             </div>
@@ -359,7 +365,7 @@ export default function HomePage() {
             <button
               onClick={() => setShowShortcuts(true)}
               className="p-2 hover:bg-surface-elevated rounded-lg transition-colors"
-              title="Keyboard shortcuts (?)"
+              title="Keyboard shortcuts"
             >
               <KeyboardIcon className="w-5 h-5 text-text-secondary" />
             </button>
@@ -450,7 +456,7 @@ export default function HomePage() {
                   </h3>
                   <p className="text-text-secondary mb-6">
                     {allFiles.length === 0 
-                      ? 'Upload your first document to get started with semantic search'
+                      ? 'Upload your first document to get started'
                       : 'Try adjusting your filters to see more results'
                     }
                   </p>
@@ -474,7 +480,7 @@ export default function HomePage() {
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-text-primary mb-1">Upload Documents</h2>
                 <p className="text-sm text-text-secondary">
-                  AI automatically extracts text, generates tags, and enables semantic search
+                  Upload any document and search it instantly with natural language
                 </p>
               </div>
               <FileUpload onUploadComplete={() => {
@@ -494,7 +500,7 @@ export default function HomePage() {
                     className="btn-secondary flex items-center gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    Export Results (Cmd+E)
+                    Export Results
                   </button>
                 </div>
               )}
