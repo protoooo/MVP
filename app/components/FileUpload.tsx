@@ -210,7 +210,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                       
                       {item.status === 'complete' && (
                         <p className="text-xs text-text-secondary mt-1">
-                          ✓ Uploaded • AI processing complete
+                          Uploaded successfully
                         </p>
                       )}
                     </div>
