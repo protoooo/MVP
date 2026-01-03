@@ -29,7 +29,7 @@ function getDatabaseConfig(): PoolConfig {
     port: parseInt(process.env.DB_PORT || '5432', 10),
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME || 'bizmemory',
+    database: process.env.DB_NAME || 'protocollm',
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
     max: parseInt(process.env.DB_POOL_MAX || '20', 10),
     min: parseInt(process.env.DB_POOL_MIN || '2', 10),
@@ -99,7 +99,7 @@ export async function initializeDatabase(): Promise<void> {
     console.log('Acquiring database client for initialization...');
     client = await getClient();
     
-    console.log('Starting database schema initialization...');
+    console.log('Starting database schema initialization for ProtocolLM...');
     await client.query('BEGIN');
 
     // Enable extensions
@@ -107,38 +107,21 @@ export async function initializeDatabase(): Promise<void> {
     await client.query('CREATE EXTENSION IF NOT EXISTS vector');
     await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 
-    // === CRITICAL FIX: Drop problematic tables if they have UUID type issues ===
-    console.log('Checking for UUID type conflicts in core tables...');
+    // Check for existing tables and drop if needed for clean setup
+    console.log('Checking for existing schema...');
     
-    // Check if we have UUID type issues and drop/recreate if needed
     const tableCheck = await client.query(`
-      SELECT 
-        t.table_name,
-        c.column_name,
-        c.data_type
-      FROM information_schema.tables t
-      JOIN information_schema.columns c ON t.table_name = c.table_name
-      WHERE t.table_schema = 'public'
-        AND t.table_name IN ('organizations', 'users', 'workspaces', 'workspace_members', 'files')
-        AND c.column_name IN ('id', 'user_id', 'organization_id', 'workspace_id', 'created_by')
-        AND c.data_type = 'uuid'
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name IN ('organizations', 'users', 'workspaces', 'workspace_members', 'files', 'file_content', 'file_metadata', 'search_logs')
     `);
 
     if (tableCheck.rows.length > 0) {
-      console.log('⚠️  Found UUID type conflicts. Resetting schema...');
-      console.log('  Affected tables:', tableCheck.rows.map(r => `${r.table_name}.${r.column_name}`).join(', '));
-      
-      // Drop all tables in correct order (reverse of dependencies)
-      await client.query('DROP TABLE IF EXISTS search_logs CASCADE');
-      await client.query('DROP TABLE IF EXISTS file_metadata CASCADE');
-      await client.query('DROP TABLE IF EXISTS file_content CASCADE');
-      await client.query('DROP TABLE IF EXISTS files CASCADE');
-      await client.query('DROP TABLE IF EXISTS workspace_members CASCADE');
-      await client.query('DROP TABLE IF EXISTS workspaces CASCADE');
-      await client.query('DROP TABLE IF EXISTS users CASCADE');
-      await client.query('DROP TABLE IF EXISTS organizations CASCADE');
-      
-      console.log('✓ Dropped conflicting tables');
+      console.log('✓ Schema already exists, skipping initialization');
+      await client.query('COMMIT');
+      client.release();
+      return;
     }
 
     // === CREATE CORE TABLES ===
@@ -212,7 +195,7 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
-    // File content
+    // File content with pgvector
     console.log('Creating file_content table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_content (
@@ -258,7 +241,7 @@ export async function initializeDatabase(): Promise<void> {
     // === CREATE INDEXES ===
     console.log('Creating indexes...');
     
-    // Vector search index
+    // Vector search index (critical for performance)
     await client.query(`
       CREATE INDEX IF NOT EXISTS file_content_text_embedding_idx 
       ON file_content USING ivfflat (text_embedding vector_cosine_ops) 
@@ -275,7 +258,7 @@ export async function initializeDatabase(): Promise<void> {
     await client.query('CREATE INDEX IF NOT EXISTS search_logs_searched_at_idx ON search_logs(searched_at)');
 
     await client.query('COMMIT');
-    console.log('✓ Database schema initialized successfully');
+    console.log('✓ ProtocolLM database schema initialized successfully');
   } catch (error: any) {
     if (client) {
       await client.query('ROLLBACK').catch(() => {});
