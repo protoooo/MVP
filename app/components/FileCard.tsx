@@ -23,10 +23,15 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
 
   const FileIcon = getFileIcon();
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  // FIXED: Handle both string and number for file_size
+  const formatFileSize = (bytes: number | string): string => {
+    const size = typeof bytes === 'string' ? parseInt(bytes, 10) : bytes;
+    
+    if (!size || size < 0 || isNaN(size)) return '0 B';
+    if (size < 1024) return size + ' B';
+    if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
+    if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)).toFixed(1) + ' MB';
+    return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -139,7 +144,7 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
 
         {!selectionMode && (
           <div className="flex items-center gap-2">
-            <a
+            
               href={filesAPI.getDownloadUrl(file.id)}
               download
               onClick={handleDownload}
