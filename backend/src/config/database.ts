@@ -107,64 +107,65 @@ export async function initializeDatabase(): Promise<void> {
     await client.query('CREATE EXTENSION IF NOT EXISTS vector');
     await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 
-    // === CORE TABLES ===
+    // === CRITICAL FIX: Drop problematic tables if they have UUID type issues ===
+    console.log('Checking for UUID type conflicts in core tables...');
     
-    // Organizations/Workspaces
+    // Check if we have UUID type issues and drop/recreate if needed
+    const tableCheck = await client.query(`
+      SELECT 
+        t.table_name,
+        c.column_name,
+        c.data_type
+      FROM information_schema.tables t
+      JOIN information_schema.columns c ON t.table_name = c.table_name
+      WHERE t.table_schema = 'public'
+        AND t.table_name IN ('organizations', 'users', 'workspaces', 'workspace_members', 'files')
+        AND c.column_name IN ('id', 'user_id', 'organization_id', 'workspace_id', 'created_by')
+        AND c.data_type = 'uuid'
+    `);
+
+    if (tableCheck.rows.length > 0) {
+      console.log('⚠️  Found UUID type conflicts. Resetting schema...');
+      console.log('  Affected tables:', tableCheck.rows.map(r => `${r.table_name}.${r.column_name}`).join(', '));
+      
+      // Drop all tables in correct order (reverse of dependencies)
+      await client.query('DROP TABLE IF EXISTS search_logs CASCADE');
+      await client.query('DROP TABLE IF EXISTS file_metadata CASCADE');
+      await client.query('DROP TABLE IF EXISTS file_content CASCADE');
+      await client.query('DROP TABLE IF EXISTS files CASCADE');
+      await client.query('DROP TABLE IF EXISTS workspace_members CASCADE');
+      await client.query('DROP TABLE IF EXISTS workspaces CASCADE');
+      await client.query('DROP TABLE IF EXISTS users CASCADE');
+      await client.query('DROP TABLE IF EXISTS organizations CASCADE');
+      
+      console.log('✓ Dropped conflicting tables');
+    }
+
+    // === CREATE CORE TABLES ===
+    
+    // Organizations
     console.log('Creating organizations table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS organizations (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         slug VARCHAR(255) UNIQUE NOT NULL,
-        plan VARCHAR(50) DEFAULT 'personal' CHECK (plan IN ('personal', 'business', 'enterprise')),
-        max_users INTEGER DEFAULT 1,
-        max_storage BIGINT DEFAULT 53687091200,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        plan VARCHAR(50) DEFAULT 'personal',
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
-    // Users - create without foreign keys first
+    // Users
     console.log('Creating users table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        full_name VARCHAR(255),
-        organization_id INTEGER,
-        role VARCHAR(50) DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
-        is_active BOOLEAN DEFAULT true,
-        last_login TIMESTAMP,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        business_name VARCHAR(255),
+        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW()
       )
-    `);
-
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'users' AND column_name = 'organization_id'
-        ) THEN
-          ALTER TABLE users ADD COLUMN organization_id INTEGER;
-        END IF;
-      END $$;
-    `);
-
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'users_organization_id_fkey'
-        ) THEN
-          ALTER TABLE users 
-          ADD CONSTRAINT users_organization_id_fkey 
-          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
-        END IF;
-      END $$;
     `);
 
     // Workspaces
@@ -172,262 +173,51 @@ export async function initializeDatabase(): Promise<void> {
     await client.query(`
       CREATE TABLE IF NOT EXISTS workspaces (
         id SERIAL PRIMARY KEY,
-        organization_id INTEGER,
+        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        is_default BOOLEAN DEFAULT false,
-        created_by INTEGER,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'workspaces' AND column_name = 'organization_id'
-        ) THEN
-          ALTER TABLE workspaces ADD COLUMN organization_id INTEGER;
-        END IF;
-      END $$;
-    `);
-
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'workspaces' AND column_name = 'created_by'
-        ) THEN
-          ALTER TABLE workspaces ADD COLUMN created_by INTEGER;
-        END IF;
-      END $$;
-    `);
-
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'workspaces_organization_id_fkey'
-        ) THEN
-          ALTER TABLE workspaces 
-          ADD CONSTRAINT workspaces_organization_id_fkey 
-          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
-        END IF;
-      END $$;
-    `);
-
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'workspaces_created_by_fkey'
-        ) THEN
-          ALTER TABLE workspaces 
-          ADD CONSTRAINT workspaces_created_by_fkey 
-          FOREIGN KEY (created_by) REFERENCES users(id);
-        END IF;
-      END $$;
-    `);
-
-    // Workspace members - FIX TYPE ISSUES BEFORE CLEANUP
+    // Workspace members
     console.log('Creating workspace_members table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS workspace_members (
         id SERIAL PRIMARY KEY,
-        workspace_id INTEGER,
-        user_id INTEGER,
-        permission VARCHAR(50) DEFAULT 'view' CHECK (permission IN ('owner', 'edit', 'view')),
-        added_at TIMESTAMP DEFAULT NOW()
+        workspace_id INTEGER REFERENCES workspaces(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        permission VARCHAR(50) DEFAULT 'view',
+        added_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(workspace_id, user_id)
       )
     `);
 
-    // FIX: Ensure workspace_id and user_id are INTEGER type
-    console.log('Fixing workspace_members column types...');
-    await client.query(`
-      DO $$ 
-      BEGIN
-        -- Fix workspace_id type
-        IF EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_schema = 'public' 
-            AND table_name = 'workspace_members' 
-            AND column_name = 'workspace_id'
-            AND data_type != 'integer'
-        ) THEN
-          ALTER TABLE workspace_members DROP COLUMN workspace_id CASCADE;
-          ALTER TABLE workspace_members ADD COLUMN workspace_id INTEGER;
-        ELSIF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'workspace_members' AND column_name = 'workspace_id'
-        ) THEN
-          ALTER TABLE workspace_members ADD COLUMN workspace_id INTEGER;
-        END IF;
-
-        -- Fix user_id type
-        IF EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_schema = 'public' 
-            AND table_name = 'workspace_members' 
-            AND column_name = 'user_id'
-            AND data_type != 'integer'
-        ) THEN
-          ALTER TABLE workspace_members DROP COLUMN user_id CASCADE;
-          ALTER TABLE workspace_members ADD COLUMN user_id INTEGER;
-        ELSIF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'workspace_members' AND column_name = 'user_id'
-        ) THEN
-          ALTER TABLE workspace_members ADD COLUMN user_id INTEGER;
-        END IF;
-      END $$;
-    `);
-
-    // Add unique constraint if it doesn't exist
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'workspace_members_workspace_id_user_id_key'
-        ) THEN
-          ALTER TABLE workspace_members 
-          ADD CONSTRAINT workspace_members_workspace_id_user_id_key 
-          UNIQUE(workspace_id, user_id);
-        END IF;
-      END $$;
-    `);
-
-    // NOW safe to clean up orphaned records
-    console.log('Cleaning up orphaned workspace_members records...');
-    const cleanupResult1 = await client.query(`
-      DELETE FROM workspace_members
-      WHERE workspace_id IS NOT NULL 
-        AND NOT EXISTS (SELECT 1 FROM workspaces WHERE id = workspace_members.workspace_id)
-    `);
-    if (cleanupResult1.rowCount !== null && cleanupResult1.rowCount > 0) {
-      console.log(`  Removed ${cleanupResult1.rowCount} workspace_members records with invalid workspace_id`);
-    }
-    
-    const cleanupResult2 = await client.query(`
-      DELETE FROM workspace_members
-      WHERE user_id IS NOT NULL 
-        AND NOT EXISTS (SELECT 1 FROM users WHERE id = workspace_members.user_id)
-    `);
-    if (cleanupResult2.rowCount !== null && cleanupResult2.rowCount > 0) {
-      console.log(`  Removed ${cleanupResult2.rowCount} workspace_members records with invalid user_id`);
-    }
-
-    // Add foreign key constraints
-    console.log('Adding workspace_members foreign key constraints...');
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'workspace_members_workspace_id_fkey'
-        ) THEN
-          ALTER TABLE workspace_members 
-          ADD CONSTRAINT workspace_members_workspace_id_fkey 
-          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE;
-        END IF;
-      END $$;
-    `);
-
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'workspace_members_user_id_fkey'
-        ) THEN
-          ALTER TABLE workspace_members 
-          ADD CONSTRAINT workspace_members_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-        END IF;
-      END $$;
-    `);
-
-    // Files table
+    // Files
     console.log('Creating files table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS files (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER,
-        organization_id INTEGER,
-        workspace_id INTEGER,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        organization_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+        workspace_id INTEGER REFERENCES workspaces(id) ON DELETE SET NULL,
         original_filename VARCHAR(500),
         stored_filename VARCHAR(500),
         file_type VARCHAR(50),
         file_size BIGINT,
         storage_path TEXT,
-        thumbnail_path TEXT,
-        is_deleted BOOLEAN DEFAULT false,
-        deleted_at TIMESTAMP,
         uploaded_at TIMESTAMP DEFAULT NOW(),
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
-    // Add missing columns to files table
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'files' AND column_name = 'user_id'
-        ) THEN
-          ALTER TABLE files ADD COLUMN user_id INTEGER;
-        END IF;
-        
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'files' AND column_name = 'organization_id'
-        ) THEN
-          ALTER TABLE files ADD COLUMN organization_id INTEGER;
-        END IF;
-        
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'files' AND column_name = 'workspace_id'
-        ) THEN
-          ALTER TABLE files ADD COLUMN workspace_id INTEGER;
-        END IF;
-      END $$;
-    `);
-
-    // Add foreign keys for files
-    await client.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'files_user_id_fkey') THEN
-          ALTER TABLE files ADD CONSTRAINT files_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-        END IF;
-        
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'files_organization_id_fkey') THEN
-          ALTER TABLE files ADD CONSTRAINT files_organization_id_fkey 
-          FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE;
-        END IF;
-        
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'files_workspace_id_fkey') THEN
-          ALTER TABLE files ADD CONSTRAINT files_workspace_id_fkey 
-          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL;
-        END IF;
-      END $$;
-    `);
-
-    // File content table
+    // File content
     console.log('Creating file_content table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_content (
         id SERIAL PRIMARY KEY,
-        file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
+        file_id INTEGER UNIQUE REFERENCES files(id) ON DELETE CASCADE,
         extracted_text TEXT,
         text_embedding vector(1536),
         image_analysis JSONB,
@@ -438,7 +228,7 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
-    // File metadata table
+    // File metadata
     console.log('Creating file_metadata table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_metadata (
@@ -465,17 +255,24 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
-    // Indexes
+    // === CREATE INDEXES ===
     console.log('Creating indexes...');
+    
+    // Vector search index
     await client.query(`
       CREATE INDEX IF NOT EXISTS file_content_text_embedding_idx 
       ON file_content USING ivfflat (text_embedding vector_cosine_ops) 
       WITH (lists = 100)
     `);
 
+    // Regular indexes
     await client.query('CREATE INDEX IF NOT EXISTS files_user_id_idx ON files(user_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS files_organization_id_idx ON files(organization_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS files_uploaded_at_idx ON files(uploaded_at)');
     await client.query('CREATE INDEX IF NOT EXISTS file_metadata_tags_idx ON file_metadata USING GIN(tags)');
+    await client.query('CREATE INDEX IF NOT EXISTS file_metadata_category_idx ON file_metadata(category)');
     await client.query('CREATE INDEX IF NOT EXISTS search_logs_user_id_idx ON search_logs(user_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS search_logs_searched_at_idx ON search_logs(searched_at)');
 
     await client.query('COMMIT');
     console.log('✓ Database schema initialized successfully');
