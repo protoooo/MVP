@@ -222,13 +222,37 @@ export default function HomePage() {
     );
   }
 
-  // FIXED: Calculate storage correctly (bytes to MB/GB)
-  const storageUsedBytes = allFiles.reduce((acc, file) => acc + file.file_size, 0);
+  // FIXED: Calculate storage correctly with validation
+  const storageUsedBytes = allFiles.reduce((acc, file) => {
+    // Ensure file_size is a valid number and not null/undefined
+    const fileSize = parseInt(String(file.file_size || 0), 10);
+    
+    // Sanity check: ignore any file claiming to be > 10GB (likely corrupt data)
+    if (fileSize > 10 * 1024 * 1024 * 1024) {
+      console.warn(`Ignoring corrupt file size for ${file.original_filename}: ${fileSize} bytes`);
+      return acc;
+    }
+    
+    // Additional validation for negative or NaN values
+    if (fileSize < 0 || isNaN(fileSize)) {
+      console.warn(`Invalid file size for ${file.original_filename}: ${fileSize}`);
+      return acc;
+    }
+    
+    return acc + fileSize;
+  }, 0);
+
   const formatStorage = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
+    // Additional validation
+    if (!bytes || bytes < 0 || !isFinite(bytes)) {
+      return '0 B';
+    }
+    
+    if (bytes < 1024) return bytes.toFixed(0) + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    if (bytes < 1024 * 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    return (bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2) + ' TB';
   };
 
   const availableTags = Array.from(new Set(allFiles.flatMap(f => f.tags || [])));
