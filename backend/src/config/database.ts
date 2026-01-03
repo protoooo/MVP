@@ -59,23 +59,19 @@ export async function checkDatabaseConnection(
   retries: number = 5,
   delayMs: number = 2000
 ): Promise<void> {
-  let lastError: Error | null = null;
-  
   for (let attempt = 1; attempt <= retries; attempt++) {
+    let client = null;
     try {
       console.log(`Checking database connection (attempt ${attempt}/${retries})...`);
-      const client = await pool.connect();
+      client = await pool.connect();
       await client.query('SELECT NOW()');
-      client.release();
       console.log('✓ Database connection successful');
       return;
     } catch (error: any) {
-      lastError = error;
-      
       if (error.code === 'ECONNREFUSED') {
         console.error(
           `✗ Database connection refused (attempt ${attempt}/${retries}):\n` +
-          `  Unable to connect to PostgreSQL at ${error.address}:${error.port}`
+          `  Unable to connect to PostgreSQL`
         );
       } else {
         console.error(`✗ Database connection error (attempt ${attempt}/${retries}):`, error.message);
@@ -85,49 +81,53 @@ export async function checkDatabaseConnection(
         const waitTime = delayMs * Math.pow(1.5, attempt - 1);
         console.log(`  Retrying in ${Math.round(waitTime / 1000)}s...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
+      } else {
+        throw new Error(`Failed to connect to database after ${retries} attempts: ${error.message}`);
+      }
+    } finally {
+      if (client) {
+        try {
+          client.release();
+        } catch (e) {
+          // Ignore release errors
+        }
       }
     }
   }
-  
-  throw new Error(`Failed to connect to database after ${retries} attempts.`);
 }
 
 export async function initializeDatabase(): Promise<void> {
-  let client;
+  let client = null;
   
   try {
-    console.log('Acquiring database client for initialization...');
-    client = await getClient();
+    console.log('Initializing database schema...');
+    client = await pool.connect();
     
-    console.log('Starting database schema initialization for ProtocolLM...');
-    await client.query('BEGIN');
-
-    // Enable extensions
-    console.log('Enabling pgvector extension...');
-    await client.query('CREATE EXTENSION IF NOT EXISTS vector');
-    await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
-
-    // Check for existing tables and drop if needed for clean setup
-    console.log('Checking for existing schema...');
-    
+    // First check if schema exists (no transaction)
     const tableCheck = await client.query(`
-      SELECT table_name 
+      SELECT COUNT(*) as count
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name IN ('organizations', 'users', 'workspaces', 'workspace_members', 'files', 'file_content', 'file_metadata', 'search_logs')
+      AND table_name = 'users'
     `);
 
-    if (tableCheck.rows.length > 0) {
-      console.log('✓ Schema already exists, skipping initialization');
-      await client.query('COMMIT');
-      client.release();
+    if (parseInt(tableCheck.rows[0].count) > 0) {
+      console.log('✓ Database schema already initialized');
       return;
     }
 
-    // === CREATE CORE TABLES ===
+    console.log('Creating database schema...');
     
+    // Now start transaction for creation
+    await client.query('BEGIN');
+
+    // Enable extensions
+    console.log('  - Enabling extensions...');
+    await client.query('CREATE EXTENSION IF NOT EXISTS vector');
+    await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+
     // Organizations
-    console.log('Creating organizations table...');
+    console.log('  - Creating organizations table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS organizations (
         id SERIAL PRIMARY KEY,
@@ -139,7 +139,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     // Users
-    console.log('Creating users table...');
+    console.log('  - Creating users table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -152,7 +152,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     // Workspaces
-    console.log('Creating workspaces table...');
+    console.log('  - Creating workspaces table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS workspaces (
         id SERIAL PRIMARY KEY,
@@ -165,7 +165,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     // Workspace members
-    console.log('Creating workspace_members table...');
+    console.log('  - Creating workspace_members table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS workspace_members (
         id SERIAL PRIMARY KEY,
@@ -178,7 +178,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     // Files
-    console.log('Creating files table...');
+    console.log('  - Creating files table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS files (
         id SERIAL PRIMARY KEY,
@@ -196,7 +196,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     // File content with pgvector
-    console.log('Creating file_content table...');
+    console.log('  - Creating file_content table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_content (
         id SERIAL PRIMARY KEY,
@@ -212,7 +212,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     // File metadata
-    console.log('Creating file_metadata table...');
+    console.log('  - Creating file_metadata table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS file_metadata (
         id SERIAL PRIMARY KEY,
@@ -227,7 +227,7 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     // Search logs
-    console.log('Creating search_logs table...');
+    console.log('  - Creating search_logs table...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS search_logs (
         id SERIAL PRIMARY KEY,
@@ -238,10 +238,10 @@ export async function initializeDatabase(): Promise<void> {
       )
     `);
 
-    // === CREATE INDEXES ===
-    console.log('Creating indexes...');
+    // Create indexes
+    console.log('  - Creating indexes...');
     
-    // Vector search index (critical for performance)
+    // Vector search index
     await client.query(`
       CREATE INDEX IF NOT EXISTS file_content_text_embedding_idx 
       ON file_content USING ivfflat (text_embedding vector_cosine_ops) 
@@ -258,16 +258,24 @@ export async function initializeDatabase(): Promise<void> {
     await client.query('CREATE INDEX IF NOT EXISTS search_logs_searched_at_idx ON search_logs(searched_at)');
 
     await client.query('COMMIT');
-    console.log('✓ ProtocolLM database schema initialized successfully');
+    console.log('✓ Database schema created successfully');
   } catch (error: any) {
     if (client) {
-      await client.query('ROLLBACK').catch(() => {});
+      try {
+        await client.query('ROLLBACK');
+      } catch (e) {
+        // Ignore rollback errors
+      }
     }
     console.error('✗ Database initialization failed:', error.message);
     throw error;
   } finally {
     if (client) {
-      client.release();
+      try {
+        client.release();
+      } catch (e) {
+        // Ignore release errors
+      }
     }
   }
 }
