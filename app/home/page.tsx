@@ -35,7 +35,7 @@ export default function HomePage() {
         setUser(userData);
         loadAllFiles();
       } catch (error) {
-        router.push('/login');
+        router.push('/');
       }
     };
     checkAuth();
@@ -100,7 +100,6 @@ export default function HomePage() {
       );
     }
 
-    // FIXED: Convert file_size to number before comparison
     if (filters.sizeRange.min !== undefined) {
       filtered = filtered.filter(file => {
         const size = typeof file.file_size === 'string' ? parseInt(file.file_size, 10) : file.file_size;
@@ -214,7 +213,7 @@ export default function HomePage() {
 
   const handleLogout = () => {
     authAPI.logout();
-    router.push('/login');
+    router.push('/'); // Redirect to landing page
   };
 
   const refreshFiles = () => {
@@ -224,14 +223,13 @@ export default function HomePage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin w-8 h-8 border-4 border-brand/20 border-t-brand rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-blue-400/20 border-t-blue-400 rounded-full" />
       </div>
     );
   }
 
-  // FIXED: Calculate storage correctly with validation
+  // Calculate storage with validation
   const storageUsedBytes = allFiles.reduce((acc, file) => {
-    // Ensure file_size is a valid number and not null/undefined
     const fileSize = parseInt(String(file.file_size || 0), 10);
     
     // Sanity check: ignore any file claiming to be > 10GB (likely corrupt data)
@@ -250,7 +248,6 @@ export default function HomePage() {
   }, 0);
 
   const formatStorage = (bytes: number): string => {
-    // Additional validation
     if (!bytes || bytes < 0 || !isFinite(bytes)) {
       return '0 B';
     }
@@ -273,12 +270,13 @@ export default function HomePage() {
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
-                  <Database className="w-6 h-6 text-brand" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center border border-blue-500/20">
+                  <Database className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-text-primary">
-                    protocol<span className="text-brand">LM</span>
+                  <h1 className="text-lg font-bold">
+                    <span className="text-text-primary">protocol</span>
+                    <span className="bg-gradient-to-r from-blue-400 via-purple-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">LM</span>
                   </h1>
                   {user.business_name && (
                     <p className="text-xs text-text-tertiary">{user.business_name}</p>
@@ -292,7 +290,7 @@ export default function HomePage() {
                 onClick={() => setActiveView('files')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'files'
-                    ? 'bg-brand/10 text-brand'
+                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                     : 'text-text-secondary hover:text-text-primary hover:bg-surface-elevated'
                 }`}
               >
@@ -307,7 +305,7 @@ export default function HomePage() {
                 onClick={() => setActiveView('upload')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'upload'
-                    ? 'bg-brand/10 text-brand'
+                    ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
                     : 'text-text-secondary hover:text-text-primary hover:bg-surface-elevated'
                 }`}
               >
@@ -319,7 +317,7 @@ export default function HomePage() {
                 onClick={() => setActiveView('search')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeView === 'search'
-                    ? 'bg-brand/10 text-brand'
+                    ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
                     : 'text-text-secondary hover:text-text-primary hover:bg-surface-elevated'
                 }`}
               >
@@ -346,8 +344,8 @@ export default function HomePage() {
             <div className="p-4 border-t border-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-brand text-sm font-medium">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0 border border-blue-500/20">
+                    <span className="text-blue-400 text-sm font-medium">
                       {user.email[0].toUpperCase()}
                     </span>
                   </div>
@@ -461,7 +459,7 @@ export default function HomePage() {
               
               {loading ? (
                 <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin w-8 h-8 border-4 border-brand/20 border-t-brand rounded-full" />
+                  <div className="animate-spin w-8 h-8 border-4 border-blue-400/20 border-t-blue-400 rounded-full" />
                 </div>
               ) : filteredFiles.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -479,7 +477,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="text-center py-20">
-                  <div className="w-16 h-16 rounded-full bg-surface-elevated flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full bg-surface-elevated flex items-center justify-center mx-auto mb-4 border border-border">
                     <Files className="w-8 h-8 text-text-tertiary" />
                   </div>
                   <h3 className="text-lg font-semibold text-text-primary mb-2">
