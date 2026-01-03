@@ -295,7 +295,11 @@ export async function runMigrations(client?: any): Promise<void> {
     // List of migrations to run in order
     const migrations = [
       'add_subscriptions_and_tos.sql',
-      'fix_email_constraints.sql'
+      'fix_email_constraints.sql',
+      'add_business_email_schema.sql',
+      'add_invoicing_schema.sql',
+      'add_customer_crm_schema.sql',
+      'add_team_workspace_schema.sql'
     ];
     
     for (const migrationFile of migrations) {
