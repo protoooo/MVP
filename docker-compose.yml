@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  # PostgreSQL with pgvector extension
+  # PostgreSQL with pgvector extension (for local development)
   postgres:
     image: ankane/pgvector:v0.5.1
-    container_name: bizmemory-postgres
+    container_name: protocollm-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: bizmemory
+      POSTGRES_DB: protocollm
     ports:
       - "5432:5432"
     volumes:
@@ -19,14 +19,14 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - bizmemory-network
+      - protocollm-network
 
   # pgAdmin (optional - for database management UI)
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: bizmemory-pgadmin
+    container_name: protocollm-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@bizmemory.local
+      PGADMIN_DEFAULT_EMAIL: admin@protocollm.local
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
@@ -34,7 +34,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - bizmemory-network
+      - protocollm-network
     profiles:
       - tools  # Only start with: docker-compose --profile tools up
 
@@ -43,5 +43,5 @@ volumes:
     driver: local
 
 networks:
-  bizmemory-network:
+  protocollm-network:
     driver: bridge
