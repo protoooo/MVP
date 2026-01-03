@@ -6,18 +6,20 @@ import Stripe from 'stripe';
 
 const router = Router();
 
-if (!stripe) {
+const isStripeConfigured = !!stripe;
+
+if (!isStripeConfigured) {
   console.error('❌ Stripe not configured - webhooks disabled');
-  router.all('*', (req, res) => {
-    res.status(503).json({ error: 'Webhook service not available' });
-  });
-  export default router;
 }
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 // Webhook endpoint - must use raw body
 router.post('/stripe', async (req: Request, res: Response) => {
+  if (!isStripeConfigured) {
+    return res.status(503).json({ error: 'Webhook service not available' });
+  }
+
   const sig = req.headers['stripe-signature'];
 
   if (!sig) {
@@ -29,14 +31,12 @@ router.post('/stripe', async (req: Request, res: Response) => {
 
   try {
     if (WEBHOOK_SECRET) {
-      // Verify webhook signature in production
       event = stripe!.webhooks.constructEvent(
         req.body,
         sig as string,
         WEBHOOK_SECRET
       );
     } else {
-      // Development mode - no signature verification
       console.warn('⚠️  Webhook signature verification disabled (no STRIPE_WEBHOOK_SECRET)');
       event = req.body as Stripe.Event;
     }
@@ -45,7 +45,6 @@ router.post('/stripe', async (req: Request, res: Response) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Check for duplicate events (idempotency)
   try {
     const existingEvent = await query(
       'SELECT id FROM stripe_webhook_events WHERE event_id = $1',
@@ -57,7 +56,6 @@ router.post('/stripe', async (req: Request, res: Response) => {
       return res.json({ received: true, duplicate: true });
     }
 
-    // Store event for idempotency
     await query(
       `INSERT INTO stripe_webhook_events (event_id, event_type, payload)
        VALUES ($1, $2, $3)`,
@@ -65,7 +63,6 @@ router.post('/stripe', async (req: Request, res: Response) => {
     );
   } catch (error: any) {
     console.error('Error checking/storing webhook event:', error);
-    // Continue processing - storage is for idempotency only
   }
 
   console.log(`Received webhook: ${event.type}`);
@@ -119,7 +116,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
 
-  // Update or create subscription record
   await query(
     `INSERT INTO subscriptions (
       user_id, stripe_customer_id, stripe_subscription_id, status
@@ -141,7 +137,6 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 
   const customerId = subscription.customer as string;
 
-  // Find user by customer ID
   const result = await query(
     'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
     [customerId]
@@ -163,7 +158,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const customerId = subscription.customer as string;
 
-  // Find user by customer ID
   const result = await query(
     'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
     [customerId]
@@ -185,7 +179,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   const customerId = subscription.customer as string;
 
-  // Find user by customer ID
   const result = await query(
     'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
     [customerId]
@@ -215,7 +208,6 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   const customerId = invoice.customer as string;
 
-  // Find user by customer ID
   const result = await query(
     'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
     [customerId]
@@ -228,7 +220,6 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   const userId = result.rows[0].user_id;
 
-  // Mark subscription as past_due
   await query(
     `UPDATE subscriptions
      SET status = 'past_due',
@@ -238,8 +229,6 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   );
 
   console.log(`⚠️  Payment failed for user ${userId}`);
-  
-  // TODO: Send payment failed email
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -247,7 +236,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   const customerId = invoice.customer as string;
 
-  // Find user by customer ID
   const result = await query(
     'SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1',
     [customerId]
@@ -260,7 +248,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   const userId = result.rows[0].user_id;
 
-  // Ensure subscription is active
   await query(
     `UPDATE subscriptions
      SET status = 'active',
