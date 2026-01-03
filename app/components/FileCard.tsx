@@ -143,20 +143,11 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
 
         {!selectionMode && (
           <div className="flex items-center gap-2">
-            
-              href={filesAPI.getDownloadUrl(file.id)}
-              download
-              onClick={handleDownload}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-brand text-white hover:bg-brand-600 transition-colors"
-            >
+            <a href={filesAPI.getDownloadUrl(file.id)} download onClick={handleDownload} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-brand text-white hover:bg-brand-600 transition-colors">
               <Download className="w-3.5 h-3.5" />
               Download
             </a>
-            <button
-              onClick={handleDelete}
-              className="p-2 rounded-lg text-text-tertiary hover:text-red-400 hover:bg-red-500/10 border border-border hover:border-red-500/30 transition-colors"
-              title="Delete file"
-            >
+            <button onClick={handleDelete} className="p-2 rounded-lg text-text-tertiary hover:text-red-400 hover:bg-red-500/10 border border-border hover:border-red-500/30 transition-colors" title="Delete file">
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
