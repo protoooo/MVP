@@ -1,6 +1,6 @@
+// app/services/api.ts - UPDATED to support Turnstile
 import { AuthResponse, User, FileListResponse, SearchResult } from '../types';
 
-// For single-service deployment, API is on the same domain
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 // Helper function to get auth token
@@ -27,11 +27,22 @@ export const clearAuthToken = () => {
 
 // Auth API
 export const authAPI = {
-  async register(email: string, password: string, businessName?: string): Promise<AuthResponse> {
+  // UPDATED: Now requires turnstileToken
+  async register(
+    email: string, 
+    password: string, 
+    businessName?: string,
+    turnstileToken?: string
+  ): Promise<AuthResponse> {
     const response = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, businessName }),
+      body: JSON.stringify({ 
+        email, 
+        password, 
+        businessName,
+        turnstileToken  // <-- ADD THIS
+      }),
     });
     
     if (!response.ok) {
@@ -44,11 +55,20 @@ export const authAPI = {
     return data;
   },
 
-  async login(email: string, password: string): Promise<AuthResponse> {
+  // UPDATED: Now requires turnstileToken
+  async login(
+    email: string, 
+    password: string,
+    turnstileToken?: string
+  ): Promise<AuthResponse> {
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ 
+        email, 
+        password,
+        turnstileToken  // <-- ADD THIS
+      }),
     });
     
     if (!response.ok) {
@@ -82,7 +102,7 @@ export const authAPI = {
   },
 };
 
-// Files API
+// Files API (unchanged)
 export const filesAPI = {
   async upload(file: File, onProgress?: (progress: number) => void): Promise<any> {
     const token = getAuthToken();
@@ -105,7 +125,8 @@ export const filesAPI = {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(JSON.parse(xhr.responseText));
         } else {
-          reject(new Error(JSON.parse(xhr.responseText).error || 'Upload failed'));
+          const error = JSON.parse(xhr.responseText);
+          reject(new Error(error.error || 'Upload failed'));
         }
       });
 
@@ -167,7 +188,7 @@ export const filesAPI = {
   },
 };
 
-// Search API
+// Search API (unchanged)
 export const searchAPI = {
   async search(query: string): Promise<SearchResult> {
     const token = getAuthToken();
@@ -203,7 +224,7 @@ export const searchAPI = {
   },
 };
 
-// Reports API
+// Reports API (unchanged)
 export const reportsAPI = {
   async generateReport(
     query: string,
