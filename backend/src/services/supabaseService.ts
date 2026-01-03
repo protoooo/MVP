@@ -7,7 +7,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const hasSupabaseCredentials = !!(supabaseUrl && supabaseKey);
 
 if (!hasSupabaseCredentials) {
-  console.warn('⚠️  Supabase credentials not found. File storage will use local filesystem.');
+  console.warn('⚠️  Supabase credentials not found. ProtocolLM requires Supabase for unlimited storage.');
 }
 
 // Only create client if credentials are provided
@@ -20,11 +20,11 @@ export const supabaseStorageService = {
   async uploadFile(
     filePath: string,
     fileBuffer: Buffer,
-    bucketName: string = 'bizmemory-files',
+    bucketName: string = 'protocollm-files',
     contentType: string
   ): Promise<string> {
     if (!supabase) {
-      throw new Error('Supabase is not configured');
+      throw new Error('Supabase is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
     }
     
     try {
@@ -47,7 +47,7 @@ export const supabaseStorageService = {
   },
 
   // Get public URL for a file
-  getPublicUrl(filePath: string, bucketName: string = 'bizmemory-files'): string {
+  getPublicUrl(filePath: string, bucketName: string = 'protocollm-files'): string {
     if (!supabase) {
       throw new Error('Supabase is not configured');
     }
@@ -60,7 +60,7 @@ export const supabaseStorageService = {
   },
 
   // Download file from Supabase Storage
-  async downloadFile(filePath: string, bucketName: string = 'bizmemory-files'): Promise<Blob> {
+  async downloadFile(filePath: string, bucketName: string = 'protocollm-files'): Promise<Blob> {
     if (!supabase) {
       throw new Error('Supabase is not configured');
     }
@@ -82,7 +82,7 @@ export const supabaseStorageService = {
   },
 
   // Delete file from Supabase Storage
-  async deleteFile(filePath: string, bucketName: string = 'bizmemory-files'): Promise<void> {
+  async deleteFile(filePath: string, bucketName: string = 'protocollm-files'): Promise<void> {
     if (!supabase) {
       throw new Error('Supabase is not configured');
     }
@@ -102,7 +102,7 @@ export const supabaseStorageService = {
   },
 
   // Create storage bucket if it doesn't exist
-  async ensureBucketExists(bucketName: string = 'bizmemory-files'): Promise<void> {
+  async ensureBucketExists(bucketName: string = 'protocollm-files'): Promise<void> {
     if (!supabase) {
       throw new Error('Supabase is not configured');
     }
@@ -119,7 +119,7 @@ export const supabaseStorageService = {
       if (!bucketExists) {
         const { error: createError } = await supabase.storage.createBucket(bucketName, {
           public: false,
-          fileSizeLimit: 52428800, // 50MB
+          fileSizeLimit: 524288000, // 500MB per file
         });
 
         if (createError) {
@@ -127,10 +127,42 @@ export const supabaseStorageService = {
         }
 
         console.log(`✓ Created Supabase storage bucket: ${bucketName}`);
+      } else {
+        console.log(`✓ Supabase storage bucket exists: ${bucketName}`);
       }
     } catch (error) {
       console.error('Error ensuring bucket exists:', error);
       throw error;
+    }
+  },
+
+  // Get storage statistics
+  async getStorageStats(bucketName: string = 'protocollm-files'): Promise<{
+    totalFiles: number;
+    totalSize: number;
+  }> {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    try {
+      // Note: This is a simplified version. In production, you'd want to
+      // track this in your database for better performance
+      const { data: files, error } = await supabase.storage
+        .from(bucketName)
+        .list();
+
+      if (error) {
+        throw error;
+      }
+
+      const totalFiles = files?.length || 0;
+      const totalSize = files?.reduce((acc: number, file: any) => acc + (file.metadata?.size || 0), 0) || 0;
+
+      return { totalFiles, totalSize };
+    } catch (error) {
+      console.error('Error getting storage stats:', error);
+      return { totalFiles: 0, totalSize: 0 };
     }
   },
 };
