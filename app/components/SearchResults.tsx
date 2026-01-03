@@ -3,7 +3,7 @@
 import { SearchResult } from '../types';
 import FileCard from './FileCard';
 import AnswerCard from './AnswerCard';
-import { Sparkles, Calendar, FileType as FileTypeIcon, Tag, Search, AlertCircle, FileText } from 'lucide-react';
+import { Calendar, FileType as FileTypeIcon, Tag, Search, AlertCircle, FileText } from 'lucide-react';
 
 interface SearchResultsProps {
   results: SearchResult | null;
@@ -17,8 +17,8 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <div className="animate-spin w-10 h-10 border-4 border-brand/20 border-t-brand rounded-full mb-4" />
-        <p className="text-sm text-text-secondary mb-2">Searching with AI...</p>
-        <p className="text-xs text-text-tertiary">Analyzing documents and extracting data</p>
+        <p className="text-sm text-text-secondary mb-2">Analyzing documents...</p>
+        <p className="text-xs text-text-tertiary">Processing your query with AI</p>
       </div>
     );
   }
@@ -29,21 +29,10 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
         <div className="w-16 h-16 rounded-full bg-surface-elevated flex items-center justify-center mx-auto mb-4">
           <Search className="w-8 h-8 text-text-tertiary" />
         </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">Start searching</h3>
-        <p className="text-text-secondary max-w-md mx-auto mb-4">
-          Ask questions like:
+        <h3 className="text-lg font-semibold text-text-primary mb-2">Search your documents</h3>
+        <p className="text-text-secondary max-w-md mx-auto">
+          Ask questions in natural language to find specific information across all your documents.
         </p>
-        <div className="flex flex-wrap gap-2 justify-center max-w-2xl mx-auto">
-          <span className="px-3 py-1.5 rounded-lg text-xs bg-surface-elevated text-text-secondary border border-border">
-            What were my capital gains in 2017?
-          </span>
-          <span className="px-3 py-1.5 rounded-lg text-xs bg-surface-elevated text-text-secondary border border-border">
-            Show me Q2 expense totals
-          </span>
-          <span className="px-3 py-1.5 rounded-lg text-xs bg-surface-elevated text-text-secondary border border-border">
-            Who approved the safety protocol?
-          </span>
-        </div>
       </div>
     );
   }
@@ -52,26 +41,20 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
 
   return (
     <div className="space-y-6">
-      {/* AI Extracted Answer - Prominent Display */}
       {extractedAnswer && (
         <AnswerCard answer={extractedAnswer} query={query} />
       )}
 
-      {/* Query Understanding */}
       {query_understanding && (
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-brand" />
-            </div>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-text-primary mb-3">
-                Query Understanding
+                Query Analysis
               </h3>
               <div className="flex flex-wrap gap-2">
                 {query_understanding.intent && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-brand/10 text-brand border border-brand/20">
-                    <Sparkles className="w-3 h-3" />
                     {query_understanding.intent}
                   </span>
                 )}
@@ -116,7 +99,6 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
         </div>
       )}
 
-      {/* Results Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-text-primary mb-1 flex items-center gap-2">
@@ -126,13 +108,12 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
           <p className="text-sm text-text-secondary">
             {extractedAnswer 
               ? 'Review source documents below' 
-              : 'Ranked by relevance • AI reranking applied'
+              : 'Ranked by relevance with AI reranking'
             }
           </p>
         </div>
       </div>
 
-      {/* File Results */}
       {files.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {files.map((file) => (
@@ -146,7 +127,7 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
           </div>
           <h3 className="text-lg font-semibold text-text-primary mb-2">No documents found</h3>
           <p className="text-text-secondary mb-6 max-w-md mx-auto">
-            We couldn't find any documents matching your search. Try adjusting your query or uploading more files.
+            No documents matched your search. Try adjusting your query or upload more files.
           </p>
         </div>
       )}
