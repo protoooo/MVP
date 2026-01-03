@@ -7,7 +7,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 export const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2025-01-27.acacia', // Updated to latest stable version
+      apiVersion: '2025-12-15.clover', // Updated to match Stripe package v20.1.0
     })
   : null;
 
