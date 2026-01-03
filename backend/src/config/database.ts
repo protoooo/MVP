@@ -735,12 +735,15 @@ export async function initializeDatabase(): Promise<void> {
         -- Check if column exists
         IF EXISTS (
           SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'encryption_keys' AND column_name = 'key_id'
+          WHERE table_schema = 'public' 
+            AND table_name = 'encryption_keys' 
+            AND column_name = 'key_id'
         ) THEN
           -- Check if it's the wrong type (not UUID)
           IF EXISTS (
             SELECT 1 FROM information_schema.columns 
-            WHERE table_name = 'encryption_keys' 
+            WHERE table_schema = 'public' 
+              AND table_name = 'encryption_keys' 
               AND column_name = 'key_id' 
               AND data_type != 'uuid'
           ) THEN
