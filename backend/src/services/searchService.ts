@@ -2,7 +2,6 @@ import { query } from '../config/database';
 import { cohereService } from './cohereService';
 
 export const searchService = {
-  // Perform natural language search with answer extraction
   async search(queryText: string, userId: number) {
     try {
       console.log(`\n=== Starting search: "${queryText}" ===`);
@@ -17,10 +16,9 @@ export const searchService = {
       const queryEmbedding = await cohereService.generateQueryEmbedding(queryText);
       console.log(`✓ Query embedding generated: ${queryEmbedding.length} dimensions`);
 
-      // ✅ FIX: Convert embedding array to pgvector format '[1,2,3,...]'
       const embeddingString = `[${queryEmbedding.join(',')}]`;
 
-      // 3. Build HYBRID SQL query (vector + keyword + metadata)
+      // 3. Build SQL query - MORE PERMISSIVE
       let sqlQuery = `
         SELECT DISTINCT f.*, fc.extracted_text, fm.tags, fm.category, fm.ai_description,
                COALESCE(1 - (fc.text_embedding <=> $1::vector), 0) AS vector_score,
@@ -46,17 +44,17 @@ export const searchService = {
       // Extract keywords for hybrid search
       const keywords = queryParsing.keywords.concat(queryText.toLowerCase().split(' ').filter(w => w.length > 2));
       const keywordPattern = `%${keywords.join('%')}%`;
-      const searchTags = [...new Set(keywords.concat(queryParsing.documentTypes))];
+      const searchTags = [...new Set(keywords)]; // Just use keywords, not document types
 
       const params: any[] = [
-        embeddingString,  // ✅ Now using proper pgvector format
+        embeddingString,
         userId,
         keywordPattern,
         searchTags,
       ];
       let paramIndex = 5;
 
-      // Add time range filter
+      // Add time range filter (ONLY if specified)
       if (queryParsing.timeRange) {
         if (queryParsing.timeRange.start) {
           sqlQuery += ` AND f.uploaded_at >= $${paramIndex}`;
@@ -70,13 +68,16 @@ export const searchService = {
         }
       }
 
-      // Add document type filter
-      if (queryParsing.documentTypes.length > 0) {
+      // CRITICAL FIX: Only filter by document types if they're very specific
+      // Don't filter on generic searches like "Food"
+      if (queryParsing.documentTypes.length > 0 && queryParsing.intent !== 'retrieve') {
+        // Only apply this filter for specific document type searches
         sqlQuery += ` AND (fm.tags && $${paramIndex}::text[] OR fm.category = ANY($${paramIndex}::text[]))`;
         params.push(queryParsing.documentTypes);
         paramIndex++;
       }
 
+      // Order by hybrid score (vector + keyword + tag matching)
       sqlQuery += ` ORDER BY hybrid_score DESC NULLS LAST LIMIT 50`;
 
       console.log('Executing hybrid search query...');
@@ -176,9 +177,7 @@ export const searchService = {
     }
   },
 
-  // Get search suggestions
   async getSuggestions(userId: number) {
-    // Get recent searches
     const recentSearches = await query(
       `SELECT DISTINCT query FROM search_logs
        WHERE user_id = $1
@@ -189,13 +188,7 @@ export const searchService = {
 
     return {
       recent: recentSearches.rows.map(r => r.query),
-      examples: [
-        'What were my capital gains in 2017?',
-        'Show me expense totals for Q2 2023',
-        'Who approved the safety protocol?',
-        'What are our hours according to the employee handbook?',
-        'Find all invoices over $5000',
-      ],
+      examples: [], // No cheesy examples
     };
   },
 };
