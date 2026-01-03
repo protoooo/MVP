@@ -1,22 +1,24 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const hasSupabaseCredentials = !!(supabaseUrl && supabaseKey);
 
 if (!hasSupabaseCredentials) {
-  console.warn('⚠️  Supabase credentials not found. ProtocolLM requires Supabase for unlimited storage.');
+  console.warn('Supabase credentials not found. Storage will use local filesystem.');
 }
 
-// Only create client if credentials are provided
 export const supabase: SupabaseClient | null = hasSupabaseCredentials 
-  ? createClient(supabaseUrl, supabaseKey)
+  ? createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
   : null;
 
 export const supabaseStorageService = {
-  // Upload file to Supabase Storage
   async uploadFile(
     filePath: string,
     fileBuffer: Buffer,
@@ -24,7 +26,7 @@ export const supabaseStorageService = {
     contentType: string
   ): Promise<string> {
     if (!supabase) {
-      throw new Error('Supabase is not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+      throw new Error('Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your environment.');
     }
     
     try {
@@ -46,7 +48,6 @@ export const supabaseStorageService = {
     }
   },
 
-  // Get public URL for a file
   getPublicUrl(filePath: string, bucketName: string = 'protocollm-files'): string {
     if (!supabase) {
       throw new Error('Supabase is not configured');
@@ -59,7 +60,6 @@ export const supabaseStorageService = {
     return data.publicUrl;
   },
 
-  // Download file from Supabase Storage
   async downloadFile(filePath: string, bucketName: string = 'protocollm-files'): Promise<Blob> {
     if (!supabase) {
       throw new Error('Supabase is not configured');
@@ -81,7 +81,6 @@ export const supabaseStorageService = {
     }
   },
 
-  // Delete file from Supabase Storage
   async deleteFile(filePath: string, bucketName: string = 'protocollm-files'): Promise<void> {
     if (!supabase) {
       throw new Error('Supabase is not configured');
@@ -101,42 +100,60 @@ export const supabaseStorageService = {
     }
   },
 
-  // Create storage bucket if it doesn't exist
   async ensureBucketExists(bucketName: string = 'protocollm-files'): Promise<void> {
     if (!supabase) {
       throw new Error('Supabase is not configured');
     }
     
     try {
+      // First, try to list buckets to see if it exists
       const { data: buckets, error: listError } = await supabase.storage.listBuckets();
 
       if (listError) {
+        console.error('Error listing buckets:', listError);
         throw listError;
       }
 
-      const bucketExists = buckets?.some((bucket: { name: string; id: string; public: boolean }) => bucket.name === bucketName);
+      const bucketExists = buckets?.some((bucket: { name: string }) => bucket.name === bucketName);
 
       if (!bucketExists) {
-        const { error: createError } = await supabase.storage.createBucket(bucketName, {
+        console.log(`Creating Supabase bucket: ${bucketName}...`);
+        
+        const { data, error: createError } = await supabase.storage.createBucket(bucketName, {
           public: false,
-          fileSizeLimit: 524288000, // 500MB per file
+          fileSizeLimit: 52428800, // 50MB per file
+          allowedMimeTypes: [
+            'image/*',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/plain'
+          ]
         });
 
         if (createError) {
+          // Check if error is because bucket already exists
+          if (createError.message.includes('already exists')) {
+            console.log(`Bucket ${bucketName} already exists`);
+            return;
+          }
+          console.error('Error creating bucket:', createError);
           throw createError;
         }
 
-        console.log(`✓ Created Supabase storage bucket: ${bucketName}`);
+        console.log(`Supabase bucket created: ${bucketName}`);
       } else {
-        console.log(`✓ Supabase storage bucket exists: ${bucketName}`);
+        console.log(`Supabase bucket ready: ${bucketName}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error ensuring bucket exists:', error);
-      throw error;
+      // Don't throw - allow the app to continue with local storage if bucket creation fails
+      console.warn('Continuing with local filesystem storage');
     }
   },
 
-  // Get storage statistics
   async getStorageStats(bucketName: string = 'protocollm-files'): Promise<{
     totalFiles: number;
     totalSize: number;
@@ -146,8 +163,6 @@ export const supabaseStorageService = {
     }
 
     try {
-      // Note: This is a simplified version. In production, you'd want to
-      // track this in your database for better performance
       const { data: files, error } = await supabase.storage
         .from(bucketName)
         .list();
