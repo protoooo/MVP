@@ -23,6 +23,8 @@ export const fileService = {
   // Process uploaded file with AI pipeline
   async processUploadedFile(file: Express.Multer.File, userId: number) {
     try {
+      console.log(`\n=== Processing file: ${file.originalname} ===`);
+      
       // 1. Extract text content (OCR if needed)
       const { text: extractedText, confidence: ocrConfidence } = await ocrService.extractTextFromFile(
         file.path,
@@ -30,21 +32,27 @@ export const fileService = {
       );
 
       // 2. Generate Cohere embedding for text content
+      console.log('Generating embedding...');
       const textEmbedding = await cohereService.generateEmbedding(extractedText || file.originalname);
+      console.log(`✓ Embedding generated: ${textEmbedding.length} dimensions`);
 
       // 3. For images: analyze with Aya Vision
       let imageAnalysis = null;
       if (isImageMimeType(file.mimetype)) {
+        console.log('Analyzing image with Aya Vision...');
         const imageBase64 = fs.readFileSync(file.path, { encoding: 'base64' });
         imageAnalysis = await cohereService.analyzeImage(imageBase64, file.originalname);
+        console.log('✓ Image analysis complete');
       }
 
       // 4. Generate metadata using Command-R7b
+      console.log('Generating metadata...');
       const metadata = await cohereService.generateFileMetadata(
         file.originalname,
         extractedText || '',
         file.mimetype
       );
+      console.log('✓ Metadata generated');
 
       // 5. Upload to Supabase or keep local
       let storagePath = file.path;
@@ -70,6 +78,7 @@ export const fileService = {
       }
 
       // 6. Store in database
+      console.log('Saving to database...');
       const fileResult = await query(
         `INSERT INTO files (user_id, original_filename, stored_filename, file_type, file_size, storage_path, uploaded_at, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
@@ -79,10 +88,13 @@ export const fileService = {
 
       const fileRecord = fileResult.rows[0];
 
+      // ✅ FIX: Convert embedding array to pgvector format '[1,2,3,...]'
+      const embeddingString = `[${textEmbedding.join(',')}]`;
+      
       await query(
         `INSERT INTO file_content (file_id, extracted_text, text_embedding, image_analysis, ocr_confidence)
          VALUES ($1, $2, $3, $4, $5)`,
-        [fileRecord.id, extractedText, JSON.stringify(textEmbedding), imageAnalysis, ocrConfidence]
+        [fileRecord.id, extractedText, embeddingString, imageAnalysis, ocrConfidence]
       );
 
       await query(
@@ -98,6 +110,7 @@ export const fileService = {
         ]
       );
 
+      console.log(`✓ File processed successfully: ID ${fileRecord.id}`);
       return fileRecord;
     } catch (error) {
       console.error('Error processing file:', error);
