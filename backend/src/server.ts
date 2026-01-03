@@ -47,6 +47,7 @@ if (isDevelopment) {
 app.use('/api/auth', authRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/conversation', conversationRoutes);
 app.use('/api/reports', reportsRoutes);
 
 app.get('/health', (req, res) => {
