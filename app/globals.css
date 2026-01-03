@@ -1,12 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-gray-800;
   }
   
   html {
@@ -14,14 +12,13 @@
   }
   
   body {
-    @apply bg-background text-text-primary antialiased;
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    @apply bg-gray-950 text-white antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
-  /* Input styles - Dark theme */
+  /* Input styles */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -29,7 +26,8 @@
   input[type="search"],
   textarea,
   select {
-    @apply bg-surface border-border text-text-primary;
+    @apply bg-gray-800 border-gray-700 text-white;
+    @apply focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20;
     font-size: 14px;
   }
   
@@ -38,16 +36,15 @@
   input[type="password"]::placeholder,
   input[type="search"]::placeholder,
   textarea::placeholder {
-    @apply text-text-placeholder;
+    @apply text-gray-500;
   }
 
-  /* Remove blue highlight on mobile */
   * {
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Custom scrollbar - Dark style */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -67,180 +64,76 @@
   @apply bg-gray-600;
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3E4A56 transparent;
+  scrollbar-color: #374151 transparent;
 }
 
 @layer components {
-  /* Button styles - Multi-color theme */
   .btn-primary {
-    @apply px-4 py-2 rounded-md text-sm font-medium text-white;
-    @apply bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500;
-    @apply hover:shadow-lg hover:scale-[1.02];
-    @apply focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-background;
+    @apply px-4 py-2 rounded-lg text-sm font-medium text-white;
+    @apply bg-emerald-600 hover:bg-emerald-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 focus:ring-offset-gray-950;
     @apply transition-all duration-150;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 rounded-md text-sm font-medium;
-    @apply bg-surface text-text-primary;
-    @apply hover:bg-surface-elevated;
-    @apply border border-border;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-background;
+    @apply px-4 py-2 rounded-lg text-sm font-medium;
+    @apply bg-gray-800 text-white;
+    @apply hover:bg-gray-700;
+    @apply border border-gray-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 focus:ring-offset-gray-950;
     @apply transition-all duration-150;
   }
 
-  .btn-ghost {
-    @apply px-4 py-2 rounded-md text-sm font-medium;
-    @apply text-text-primary hover:bg-background-hover;
-    @apply focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-background;
-    @apply transition-all duration-150;
-  }
-
-  /* Card styles */
   .card {
-    @apply bg-surface rounded-lg border border-border p-4;
+    @apply bg-gray-900 rounded-lg border border-gray-800 p-4;
   }
 
-  .card-hover {
-    @apply card hover:shadow-dark transition-all duration-150 hover:border-gray-600;
-  }
-
-  /* Badge styles */
   .badge {
     @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
-    @apply bg-surface-elevated text-text-secondary border border-border;
+    @apply bg-gray-800 text-gray-400 border border-gray-700;
   }
 
   .badge-brand {
-    @apply badge bg-blue-500/10 text-blue-400 border-blue-500/20;
+    @apply badge bg-emerald-600/10 text-emerald-500 border-emerald-600/20;
   }
 }
 
-/* Selection color */
 ::selection {
-  @apply bg-purple-500/20 text-text-primary;
+  @apply bg-emerald-600/20 text-white;
 }
 
 ::-moz-selection {
-  @apply bg-purple-500/20 text-text-primary;
+  @apply bg-emerald-600/20 text-white;
 }
 
-/* Smooth scroll */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* Focus visible */
-.focus-ring {
-  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
-}
-
-/* Multi-color hover animations */
-@keyframes subtleFade {
-  from {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-subtle-fade {
-  animation: subtleFade 0.15s ease-out;
-}
-
-/* Better link styling */
-a {
-  @apply transition-colors duration-150;
-}
-
-/* Form focus improvements */
 input:focus,
 textarea:focus,
 select:focus {
   @apply outline-none;
 }
 
-/* Separator */
-.separator {
-  @apply border-t border-border my-4;
-}
-
-/* Subtle hover states */
-.hover-lift {
-  @apply transition-transform duration-150;
-}
-
-.hover-lift:hover {
-  transform: translateY(-1px);
-}
-
-/* Clean list styles */
-ul, ol {
-  @apply list-none;
-}
-
-/* Better spacing */
 h1, h2, h3, h4, h5, h6 {
-  @apply tracking-tight text-text-primary;
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  @apply tracking-tight text-white;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Code blocks - dark theme */
 code {
-  @apply text-xs font-mono bg-surface-elevated px-1.5 py-0.5 rounded;
-  color: #3ECF8E;
+  @apply text-xs font-mono bg-gray-800 px-1.5 py-0.5 rounded;
+  color: #10b981;
 }
 
 pre {
-  @apply bg-surface-elevated p-3 rounded-lg overflow-x-auto text-xs border border-border;
+  @apply bg-gray-800 p-3 rounded-lg overflow-x-auto text-xs border border-gray-700;
 }
 
 pre code {
   @apply bg-transparent p-0;
-}
-
-/* File upload drag area */
-.drag-active {
-  @apply border-blue-400 bg-blue-500/5;
-}
-
-/* Loading spinner */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spinner {
-  animation: spin 1s linear infinite;
-}
-
-/* Multi-color gradient text */
-.gradient-text {
-  @apply bg-gradient-to-r from-blue-400 via-purple-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent;
-}
-
-/* Multi-color border gradient */
-.gradient-border {
-  position: relative;
-}
-
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(to right, #3b82f6, #a855f7, #f97316, #eab308);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
 }
