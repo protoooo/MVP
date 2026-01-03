@@ -1,54 +1,77 @@
-# BizMemory - AI-Powered File Storage for Small Business
+# ProtocolLM - Unlimited Intelligent Document Storage
 
-BizMemory is an intelligent file and photo storage application that allows small businesses to store documents and retrieve them using natural language queries. Built with Cohere AI APIs for advanced semantic search, auto-tagging, and image analysis.
+ProtocolLM is a powerful document storage and retrieval system that enables you to store unlimited documents and find anything instantly using semantic search. Built with Cohere AI, Supabase, and advanced security features.
 
-## Features
+## 🚀 Key Features
 
-- **Natural Language Search**: Find files using conversational queries like "show me tax documents from 2018" or "find before photos of the Johnson property"
-- **AI-Powered Auto-Tagging**: Automatic categorization and metadata extraction using Cohere Command-R7b
-- **Image Analysis**: Visual understanding of photos using Cohere Aya Vision
-- **Vector Similarity Search**: Fast semantic search with PostgreSQL pgvector and Cohere Embed v4 (1536 dimensions)
-- **Result Reranking**: Improved relevance with Cohere Rerank v4.0 Pro
-- **OCR Support**: Automatic text extraction from images and PDFs using Tesseract.js
-- **Dark Theme UI**: Modern Supabase-inspired dark interface
-- **Secure Authentication**: JWT-based auth with bcrypt password hashing
+- **Unlimited Storage** - Store terabytes of documents with Supabase
+- **Semantic Search** - Find documents using vague wording and natural language
+- **Advanced Retrieval** - Cohere Rerank ensures you find exactly what you need
+- **Document Generation** - Summarize and generate reports from thousands of pages
+- **Multi-Format Support** - PDFs, images, Word docs, Excel, text files, and more
+- **OCR Processing** - Automatic text extraction from images and scanned documents
+- **Enterprise Security** - Cloudflare Turnstile protection and encryption
+- **AI-Powered Intelligence** - Cohere Embed, Rerank, AYA Vision, and Command models
 
-## Tech Stack
+## 📋 Use Cases
+
+### Legal & Financial
+- Quickly find specific clauses across thousands of contracts
+- Search tax documents from specific years with exact figures
+- Retrieve financial statements and invoices by amount or date
+
+### Business Operations
+- Find procedures and SOPs using natural language
+- Search through employee handbooks for specific policies
+- Locate safety protocols and compliance documents
+
+### Property Management
+- Find before/after photos by property name
+- Retrieve inspection reports and maintenance records
+- Search invoices by vendor, amount, or time period
+
+## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 16 with App Router
-- **UI**: React 19, TypeScript, Tailwind CSS
-- **Components**: Radix UI primitives
-- **Styling**: Dark Supabase-inspired theme
+- **Next.js 16** with App Router and React 19
+- **TypeScript** for type safety
+- **Tailwind CSS** with custom dark theme
+- **Radix UI** components
 
 ### Backend
-- **Server**: Node.js with Express and TypeScript
-- **Database**: PostgreSQL with pgvector extension
-- **File Storage**: AWS S3 or local filesystem (configurable)
-- **Authentication**: JWT with bcrypt
+- **Node.js** with Express and TypeScript
+- **PostgreSQL** with pgvector extension
+- **Supabase** for unlimited scalable storage
+- **JWT** authentication with bcrypt
 
-### AI/ML
-- **Cohere Command-R7b** (`command-r7b-12-2024`) - Natural language query parsing and metadata generation
-- **Cohere Embed v4** (`embed-v4.0`) - Text embeddings (1536 dimensions)
-- **Cohere Aya Vision** (`c4ai-aya-vision-32b`) - Image understanding
-- **Cohere Rerank v4.0 Pro** (`rerank-v4.0-pro`) - Search result reranking
+### AI/ML (Cohere)
+- **Embed v4** - 1536-dimension text embeddings for semantic search
+- **Rerank v4.0 Pro** - Advanced result reranking
+- **Command-R7b** - Natural language understanding and metadata generation
+- **AYA Vision** - Image analysis and understanding
 - **Tesseract.js** - OCR for text extraction
 
-## Getting Started
+### Security
+- **Cloudflare Turnstile** - Bot protection
+- **Encryption** - At rest and in transit
+- **Secure authentication** - JWT tokens with httpOnly cookies
+
+## 🚦 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 18+
 - PostgreSQL 14+ with pgvector extension
-- Cohere API key (from [cohere.com](https://cohere.com))
-- (Optional) AWS account for S3 storage
+- Cohere API key ([get one here](https://cohere.com))
+- Supabase account ([sign up here](https://supabase.com))
+- Cloudflare Turnstile keys ([get them here](https://dash.cloudflare.com))
 
-### Installation
+### Quick Start
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/protoooo/MVP.git
-cd MVP
+git clone https://github.com/yourusername/protocollm.git
+cd protocollm
 ```
 
 2. **Install dependencies**
@@ -56,26 +79,7 @@ cd MVP
 npm install
 ```
 
-3. **Set up PostgreSQL with pgvector**
-
-   **Option A: Using Docker (Recommended)**
-   ```bash
-   # Start PostgreSQL with Docker Compose
-   docker-compose up -d postgres
-   
-   # Verify it's running
-   docker-compose ps
-   ```
-   
-   **Option B: Local Installation**
-   ```bash
-   # Install pgvector extension in your PostgreSQL database
-   CREATE EXTENSION IF NOT EXISTS vector;
-   ```
-   
-   For detailed setup instructions, see [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)
-
-4. **Configure environment variables**
+3. **Set up environment variables**
 ```bash
 cp .env.example .env
 ```
@@ -84,188 +88,195 @@ Edit `.env` with your credentials:
 ```env
 # Cohere AI
 COHERE_API_KEY=your_cohere_api_key
+
+# Supabase
+DATABASE_URL=postgresql://user:password@db.xxx.supabase.co:5432/postgres
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Cloudflare Turnstile
+CLOUDFLARE_TURNSTILE_SECRET_KEY=your_secret_key
+NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
+
+# JWT
+JWT_SECRET=your_random_secret_min_32_chars
+```
+
+4. **Start the development servers**
+```bash
+npm run dev
+```
+
+The application will:
+- Backend: http://localhost:3001
+- Frontend: http://localhost:3000
+- Auto-initialize database schema
+- Set up Supabase storage bucket
+
+5. **Create your account and start uploading!**
+
+## 📖 Documentation
+
+### How Semantic Search Works
+
+ProtocolLM uses advanced semantic search to understand what you're looking for, even with vague wording:
+
+1. **Upload** - Documents are processed with OCR and AI analysis
+2. **Embed** - Text is converted to 1536-dimension vectors using Cohere Embed v4
+3. **Store** - Vectors are stored in PostgreSQL with pgvector
+4. **Search** - Your query is converted to a vector and compared
+5. **Rerank** - Results are reranked using Cohere Rerank v4.0 Pro for maximum relevance
+6. **Retrieve** - Get exactly what you need with relevance scores
+
+### Search Examples
+
+```
+"What were my capital gains in 2017?"
+→ Finds tax documents, extracts specific figures
+
+"Show me before photos of Johnson property"
+→ Finds images tagged with property name and "before"
+
+"Find invoices over $5000 from Q2 2023"
+→ Searches by amount and time period
+
+"What are our safety procedures for equipment?"
+→ Finds SOPs and manuals with semantic understanding
+```
+
+### Document Generation
+
+Generate comprehensive reports from your documents:
+
+```javascript
+// Summarize multiple documents
+"Summarize my last 10 tax returns"
+
+// Compare across time periods
+"Compare Q1 and Q2 expenses"
+
+// Extract insights
+"What are the key takeaways from all safety reports?"
+```
+
+## 🏗️ Architecture
+
+### Storage System
+
+- **Supabase Storage** - Unlimited scalable file storage
+- **PostgreSQL** - Metadata and vector embeddings
+- **pgvector** - High-performance vector similarity search
+
+### AI Pipeline
+
+```
+Upload → OCR (Tesseract) → Text Extraction → 
+Cohere Embed v4 → Vector Storage → 
+Cohere Rerank → Results
+```
+
+### Security Layers
+
+1. **Cloudflare Turnstile** - Bot protection on forms
+2. **JWT Authentication** - Secure token-based auth
+3. **Encryption** - All data encrypted at rest and in transit
+4. **Rate Limiting** - Prevent abuse
+5. **Input Validation** - Sanitize all inputs
+
+## 💰 Pricing
+
+### Personal - $5/month
+- 500GB storage
+- Unlimited documents
+- Semantic search
+- Document generation
+- Mobile app access
+- Email support
+
+### Business - $25/month
+- 5TB storage
+- Everything in Personal
+- Team workspaces
+- Priority support
+- Bulk operations
+- Advanced analytics
+- API access
+
+### Enterprise - Custom
+- Unlimited storage
+- Everything in Business
+- SSO/SAML
+- Custom AI models
+- Dedicated support
+- SLA guarantee
+- On-premise option
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```env
+# Required
+COHERE_API_KEY=           # Cohere AI API key
+DATABASE_URL=             # PostgreSQL connection string
+SUPABASE_URL=             # Supabase project URL
+SUPABASE_SERVICE_ROLE_KEY= # Supabase service role key
+JWT_SECRET=               # JWT signing secret (min 32 chars)
+
+# Optional
+CLOUDFLARE_TURNSTILE_SECRET_KEY=     # Turnstile secret
+NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY= # Turnstile site key
+MAX_FILE_SIZE=524288000   # Max file size (500MB default)
+```
+
+### Cohere Models
+
+```env
 COHERE_EMBED_MODEL=embed-v4.0
 COHERE_RERANK_MODEL=rerank-v4.0-pro
 COHERE_TEXT_MODEL=command-r7b-12-2024
 COHERE_VISION_MODEL=c4ai-aya-vision-32b
-FEATURE_COHERE=true
-FEATURE_RERANK=true
-
-# Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bizmemory
-
-# JWT
-JWT_SECRET=your_random_secret_key_min_32_characters
-
-# App
-PORT=3000
-BACKEND_PORT=3001
-NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-5. **Start the development servers**
-```bash
-# Start both backend and frontend
-npm run dev
-
-# Or start separately:
-npm run dev:backend  # Backend on port 3001
-npm run dev:frontend # Frontend on port 3000
-```
-
-The backend will automatically:
-- Check database connection with retry logic
-- Initialize the database schema
-- Create all required tables and indexes
-
-If you encounter database connection errors, see the [Database Setup Guide](docs/DATABASE_SETUP.md) for troubleshooting.
-
-6. **Access the application**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001
-
-### Database Setup
-
-#### Quick Start with Docker Compose
-
-The easiest way to run PostgreSQL locally:
-
-```bash
-# Start PostgreSQL with pgvector
-docker-compose up -d postgres
-
-# View logs
-docker-compose logs -f postgres
-
-# Stop
-docker-compose down
-```
-
-#### Manual Setup
-
-The database schema is automatically initialized on first run. Tables created:
-- `users` - User accounts
-- `files` - File metadata
-- `file_content` - Extracted text and vector embeddings
-- `file_metadata` - AI-generated tags and entities
-- `search_logs` - Search analytics
-
-For detailed setup instructions and troubleshooting, see [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)
-
-#### Connection Error Handling
-
-The application includes robust database connection handling:
-- **Automatic retry** with exponential backoff (default: 5 attempts)
-- **Helpful error messages** for common issues (ECONNREFUSED, missing database, etc.)
-- **Graceful shutdown** to properly close connections
-- **Connection pooling** with configurable settings
-
-Configure retry behavior in `.env`:
-```env
-DB_MAX_RETRIES=5        # Number of retry attempts
-DB_RETRY_DELAY=2000     # Initial delay in ms (exponential backoff)
-```
-
-## Usage
-
-### Upload Files
-
-1. Sign up or log in
-2. Click "Upload Files" tab
-3. Drag and drop files or click to browse
-4. Files are automatically processed with:
-   - OCR text extraction
-   - AI metadata generation
-   - Vector embeddings
-   - Image analysis (for photos)
-
-### Search Files
-
-Use natural language queries in the search bar:
-
-- `"Show me tax documents from 2018"`
-- `"Find before photos of the Johnson property"`
-- `"Get all invoices over $5000"`
-- `"Find employee training documents"`
-- `"Show me expense receipts from last quarter"`
-
-The AI will:
-1. Parse your query intent
-2. Extract date ranges, entities, and keywords
-3. Perform vector similarity search
-4. Rerank results for relevance
-5. Display matches with relevance scores
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Create account
-- `POST /api/auth/login` - Sign in
-- `GET /api/auth/me` - Get current user
-- `POST /api/auth/logout` - Sign out
-
-### Files
-- `POST /api/files/upload` - Upload file with AI processing
-- `GET /api/files` - List files (paginated)
-- `GET /api/files/:id` - Get file details
-- `GET /api/files/:id/download` - Download file
-- `DELETE /api/files/:id` - Delete file
-
-### Search
-- `POST /api/search` - Natural language search
-- `GET /api/search/suggestions` - Get search suggestions
-
-## Deployment
+## 🚀 Deployment
 
 ### Railway (Recommended)
 
-1. Create a new project on [Railway](https://railway.app)
-2. Add PostgreSQL service with pgvector
-3. Set environment variables in Railway dashboard
+1. Create a Railway project
+2. Add PostgreSQL with pgvector
+3. Set environment variables
 4. Deploy from GitHub
+5. Railway auto-detects `nixpacks.toml`
 
 ### Manual Deployment
 
-1. **Build the application**
 ```bash
 npm run build
-```
-
-2. **Set environment to production**
-```env
-NODE_ENV=production
-```
-
-3. **Start the server**
-```bash
 npm run start
 ```
 
-## Architecture
+## 🤝 Contributing
 
-### AI Processing Pipeline
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-When a file is uploaded:
-1. **Text Extraction**: OCR for images/PDFs, direct read for text files
-2. **Embedding Generation**: Convert text to 1536-dim vector using Cohere Embed v4
-3. **Image Analysis**: (For images) Analyze with Cohere Aya Vision
-4. **Metadata Generation**: Extract tags, categories, entities with Command-R7b
-5. **Storage**: Save to S3/filesystem + PostgreSQL
+## 📝 License
 
-### Search Flow
+ISC License - See LICENSE file for details
 
-When a user searches:
-1. **Query Parsing**: Extract intent, dates, entities with Command-R7b
-2. **Query Embedding**: Convert search to vector with Cohere Embed v4
-3. **Vector Search**: Find top 50 similar files using pgvector cosine similarity
-4. **Filtering**: Apply date range and document type filters
-5. **Reranking**: Reorder top results with Cohere Rerank v4.0 Pro
-6. **Results**: Return top 20 with relevance scores
+## 👤 Author
 
-## License
+**Austin Northrup**
+- Location: Ann Arbor, Michigan
+- Email: support@protocollm.org
+- Phone: (734) 216-4836
 
-ISC
+## 🙏 Acknowledgments
 
-## Support
+- Built with [Cohere AI](https://cohere.com) for intelligent document understanding
+- Powered by [Supabase](https://supabase.com) for unlimited storage
+- Secured with [Cloudflare](https://cloudflare.com) Turnstile
+- Vector search with [pgvector](https://github.com/pgvector/pgvector)
 
-For issues or questions, please open an issue on GitHub.
+---
+
+**ProtocolLM** - Because finding documents shouldn't waste your time.
