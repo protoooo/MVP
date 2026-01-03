@@ -765,7 +765,9 @@ export async function initializeDatabase(): Promise<void> {
       BEGIN
         IF NOT EXISTS (
           SELECT 1 FROM information_schema.columns 
-          WHERE table_name = 'encryption_keys' AND column_name = 'organization_id'
+          WHERE table_schema = 'public' 
+            AND table_name = 'encryption_keys' 
+            AND column_name = 'organization_id'
         ) THEN
           ALTER TABLE encryption_keys ADD COLUMN organization_id INTEGER;
         END IF;
