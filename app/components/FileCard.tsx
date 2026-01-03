@@ -23,7 +23,6 @@ export default function FileCard({ file, onDelete, onPreview, isSelected, onSele
 
   const FileIcon = getFileIcon();
 
-  // FIXED: Handle both string and number for file_size
   const formatFileSize = (bytes: number | string): string => {
     const size = typeof bytes === 'string' ? parseInt(bytes, 10) : bytes;
     
