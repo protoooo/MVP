@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,9 +15,10 @@
   
   body {
     @apply bg-background text-text-primary antialiased;
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   /* Input styles - Dark theme */
@@ -27,7 +30,6 @@
   textarea,
   select {
     @apply bg-surface border-border text-text-primary;
-    @apply focus:border-brand focus:ring-1 focus:ring-brand focus:ring-offset-0;
     font-size: 14px;
   }
   
@@ -45,7 +47,7 @@
   }
 }
 
-/* Custom scrollbar - Supabase dark style */
+/* Custom scrollbar - Dark style */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -72,11 +74,12 @@
 }
 
 @layer components {
-  /* Button styles - Supabase dark theme */
+  /* Button styles - Multi-color theme */
   .btn-primary {
     @apply px-4 py-2 rounded-md text-sm font-medium text-white;
-    @apply bg-brand hover:bg-brand-600;
-    @apply focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-background;
+    @apply bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500;
+    @apply hover:shadow-lg hover:scale-[1.02];
+    @apply focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-background;
     @apply transition-all duration-150;
   }
 
@@ -85,14 +88,14 @@
     @apply bg-surface text-text-primary;
     @apply hover:bg-surface-elevated;
     @apply border border-border;
-    @apply focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-background;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-background;
     @apply transition-all duration-150;
   }
 
   .btn-ghost {
     @apply px-4 py-2 rounded-md text-sm font-medium;
     @apply text-text-primary hover:bg-background-hover;
-    @apply focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-background;
+    @apply focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-background;
     @apply transition-all duration-150;
   }
 
@@ -112,17 +115,17 @@
   }
 
   .badge-brand {
-    @apply badge bg-brand/10 text-brand border-brand/20;
+    @apply badge bg-blue-500/10 text-blue-400 border-blue-500/20;
   }
 }
 
 /* Selection color */
 ::selection {
-  @apply bg-brand/20 text-text-primary;
+  @apply bg-purple-500/20 text-text-primary;
 }
 
 ::-moz-selection {
-  @apply bg-brand/20 text-text-primary;
+  @apply bg-purple-500/20 text-text-primary;
 }
 
 /* Smooth scroll */
@@ -134,10 +137,10 @@
 
 /* Focus visible */
 .focus-ring {
-  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
-/* Supabase-style hover animations */
+/* Multi-color hover animations */
 @keyframes subtleFade {
   from {
     opacity: 0;
@@ -155,7 +158,7 @@
 
 /* Better link styling */
 a {
-  @apply transition-colors duration-150 text-brand hover:text-brand-400;
+  @apply transition-colors duration-150;
 }
 
 /* Form focus improvements */
@@ -165,8 +168,8 @@ select:focus {
   @apply outline-none;
 }
 
-/* Supabase-style separators */
-.supabase-separator {
+/* Separator */
+.separator {
   @apply border-t border-border my-4;
 }
 
@@ -187,6 +190,7 @@ ul, ol {
 /* Better spacing */
 h1, h2, h3, h4, h5, h6 {
   @apply tracking-tight text-text-primary;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Code blocks - dark theme */
@@ -205,7 +209,7 @@ pre code {
 
 /* File upload drag area */
 .drag-active {
-  @apply border-brand bg-brand/5;
+  @apply border-blue-400 bg-blue-500/5;
 }
 
 /* Loading spinner */
@@ -217,4 +221,26 @@ pre code {
 
 .spinner {
   animation: spin 1s linear infinite;
+}
+
+/* Multi-color gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-400 via-purple-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent;
+}
+
+/* Multi-color border gradient */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(to right, #3b82f6, #a855f7, #f97316, #eab308);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
