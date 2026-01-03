@@ -63,7 +63,7 @@ export default function LandingPage() {
   ];
 
   const pricing = {
-    name: "Small Business Plan",
+    name: "Business Plan",
     price: "$25",
     period: "/month",
     description: "Everything your business needs",
@@ -294,7 +294,7 @@ export default function LandingPage() {
           <div className="max-w-2xl mx-auto">
             <div className="relative bg-gray-900 border border-brand-600 shadow-2xl shadow-brand-600/20 rounded-lg p-8 transition-all duration-300">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-brand-600 to-secondary-600 text-white text-xs font-semibold rounded-full">
-                BEST FOR SMALL BUSINESSES
+                PROFESSIONAL BUSINESS SOLUTION
               </div>
               
               <div className="mb-6 text-center">
@@ -333,7 +333,7 @@ export default function LandingPage() {
             Start Storing Documents Securely Today
           </h2>
           <p className="text-lg text-gray-400 mb-8">
-            Professional document management for modern small businesses.
+            Professional document management for modern businesses.
           </p>
           <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-brand-600 to-secondary-600 text-white text-lg font-medium hover:from-brand-700 hover:to-secondary-700 transition-all">
             Start 14-Day Trial

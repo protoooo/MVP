@@ -15,7 +15,7 @@ export const stripe = process.env.STRIPE_SECRET_KEY
 export const STRIPE_CONFIG = {
   PRICE_LOOKUP_KEY: 'small_business_monthly_25',
   TRIAL_PERIOD_DAYS: 14,
-  PLAN_NAME: 'Small Business Plan',
+  PLAN_NAME: 'Business Plan',
   PLAN_PRICE: 2500, // $25.00 in cents
   CURRENCY: 'usd',
 };

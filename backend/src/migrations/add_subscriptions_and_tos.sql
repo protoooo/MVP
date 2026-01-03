@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   stripe_customer_id VARCHAR(255) UNIQUE NOT NULL,
   stripe_subscription_id VARCHAR(255) UNIQUE,
   status VARCHAR(50) NOT NULL DEFAULT 'incomplete',
-  plan_name VARCHAR(100) DEFAULT 'Small Business Plan',
+  plan_name VARCHAR(100) DEFAULT 'Business Plan',
   trial_start TIMESTAMP,
   trial_end TIMESTAMP,
   current_period_start TIMESTAMP,
