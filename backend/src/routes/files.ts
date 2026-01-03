@@ -1,5 +1,5 @@
-// backend/src/routes/files.ts - COMPLETE SECURE VERSION - FIXED
-import { Router, Request, Response, NextFunction } from 'express';
+// backend/src/routes/files.ts - PROPERLY FIXED
+import { Router, Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import multer from 'multer';
 import path from 'path';
 import jwt from 'jsonwebtoken';
@@ -48,13 +48,8 @@ const upload = multer({
   },
 });
 
-// Handle multer errors - FIXED
-const handleMulterError: (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => void = (err, req, res, next) => {
+// Handle multer errors - USING EXPRESS ERROR HANDLER TYPE
+const handleMulterError: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       res.status(400).json({ 
