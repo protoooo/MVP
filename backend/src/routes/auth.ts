@@ -81,9 +81,10 @@ function validatePassword(password: string): { valid: boolean; error?: string } 
 
 // Helper: Validate email format
 function validateEmail(email: string): boolean {
-  // More robust email validation that matches PostgreSQL standards
-  // Allows: letters, numbers, dots, hyphens, underscores, plus signs before @
-  // Requires: valid domain with at least 2 characters in TLD
+  // Robust email validation matching PostgreSQL standards
+  // Local part: letters, numbers, dots, underscores, percent signs, plus signs, hyphens
+  // Domain: letters, numbers, dots, hyphens
+  // TLD: at least 2 letters
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
 }
@@ -149,8 +150,8 @@ router.post('/register', async (req, res) => {
     console.log('Hashing password...');
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Normalize businessName: convert empty string to null
-    const normalizedBusinessName = businessName?.trim() || null;
+    // Normalize businessName: convert empty/whitespace strings to null
+    const normalizedBusinessName = businessName && businessName.trim() ? businessName.trim() : null;
 
     const result = await query(
       `INSERT INTO users (email, password_hash, business_name, created_at) 
