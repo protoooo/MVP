@@ -260,14 +260,28 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function updateSubscriptionRecord(userId: number, subscription: Stripe.Subscription) {
-  const trialStart = subscription.trial_start 
-    ? new Date(subscription.trial_start * 1000) 
+  // CRITICAL FIX: Access properties correctly with proper null checks
+  const subscriptionData: any = subscription;
+  
+  const trialStart = subscriptionData.trial_start 
+    ? new Date(subscriptionData.trial_start * 1000) 
     : null;
-  const trialEnd = subscription.trial_end 
-    ? new Date(subscription.trial_end * 1000) 
+  const trialEnd = subscriptionData.trial_end 
+    ? new Date(subscriptionData.trial_end * 1000) 
     : null;
-  const currentPeriodStart = new Date(subscription.current_period_start * 1000);
-  const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+  
+  // Use currentPeriodStart and currentPeriodEnd (camelCase in newer Stripe versions)
+  const currentPeriodStart = subscriptionData.currentPeriodStart 
+    ? new Date(subscriptionData.currentPeriodStart * 1000)
+    : subscriptionData.current_period_start
+    ? new Date(subscriptionData.current_period_start * 1000)
+    : new Date();
+    
+  const currentPeriodEnd = subscriptionData.currentPeriodEnd
+    ? new Date(subscriptionData.currentPeriodEnd * 1000)
+    : subscriptionData.current_period_end
+    ? new Date(subscriptionData.current_period_end * 1000)
+    : new Date();
 
   await query(
     `UPDATE subscriptions
@@ -287,7 +301,7 @@ async function updateSubscriptionRecord(userId: number, subscription: Stripe.Sub
       trialEnd,
       currentPeriodStart,
       currentPeriodEnd,
-      subscription.cancel_at_period_end,
+      subscription.cancel_at_period_end || false,
       userId,
     ]
   );
