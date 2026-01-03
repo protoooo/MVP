@@ -33,7 +33,7 @@ export default function SecurityPage() {
     {
       icon: Eye,
       title: "Privacy by Design",
-      description: "We don't sell your data. Your documents are yours. We use AI processing only to improve search and never train models on your data."
+      description: "We don't sell your data. Your documents are yours. We use processing only to improve search and never train models on your data."
     }
   ];
 
@@ -254,11 +254,11 @@ export default function SecurityPage() {
               <div>
                 <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
                   <Server className="w-5 h-5 text-brand" />
-                  AI Processing
+                  Document Processing
                 </h3>
                 <p className="text-text-secondary text-sm leading-relaxed">
-                  We use Cohere AI for document understanding and semantic search. Your documents are processed
-                  securely and never used to train AI models. All AI processing happens in isolated environments
+                  We use Cohere for document understanding and semantic search. Your documents are processed
+                  securely and never used to train models. All processing happens in isolated environments
                   with no data retention by Cohere.
                 </p>
               </div>

@@ -30,7 +30,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold text-text-primary mb-4">2. Service Description</h2>
             <p>
               ProtocolLM provides unlimited document storage with semantic search capabilities powered by 
-              AI for businesses. Our Business Plan offers a single tier with comprehensive features.
+              for businesses. Our Business Plan offers a single tier with comprehensive features.
             </p>
           </section>
 
@@ -81,7 +81,7 @@ export default function TermsPage() {
             <ul className="list-disc ml-6 mt-2 space-y-2">
               <li>Business Plan: Unlimited document storage</li>
               <li>14-day free trial included with new accounts</li>
-              <li>Advanced semantic search with AI</li>
+              <li>Advanced semantic search</li>
               <li>Document editing, sharing, and management features</li>
             </ul>
             <p className="mt-2">

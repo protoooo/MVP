@@ -24,7 +24,7 @@ export default function PrivacyPage() {
             <ul className="list-disc ml-6 mt-2 space-y-2">
               <li>Create an account (email, password, business name)</li>
               <li>Upload documents and files</li>
-              <li>Use our search and AI features</li>
+              <li>Use our search features</li>
               <li>Contact our support team</li>
             </ul>
           </section>
@@ -35,17 +35,17 @@ export default function PrivacyPage() {
             <ul className="list-disc ml-6 mt-2 space-y-2">
               <li>Provide, maintain, and improve our services</li>
               <li>Process and store your documents securely</li>
-              <li>Enable semantic search and AI-powered features</li>
+              <li>Enable semantic search and powered features</li>
               <li>Communicate with you about your account and our services</li>
               <li>Ensure security and prevent fraud</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">3. AI Processing</h2>
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">3. Document Processing</h2>
             <p>
-              We use Cohere AI to process your documents for search and retrieval purposes. Your documents are 
-              processed to generate embeddings and metadata but are never used to train AI models. All processing 
+              We use Cohere to process your documents for search and retrieval purposes. Your documents are 
+              processed to generate embeddings and metadata but are never used to train models. All processing 
               is done securely with no data retention by Cohere.
             </p>
           </section>
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-semibold text-text-primary mb-4">5. Data Sharing</h2>
             <p>We do not sell your data. We only share your information with:</p>
             <ul className="list-disc ml-6 mt-2 space-y-2">
-              <li>Service providers (Supabase for storage, Cohere for AI processing)</li>
+              <li>Service providers (Supabase for storage, Cohere for processing)</li>
               <li>Legal authorities when required by law</li>
             </ul>
           </section>

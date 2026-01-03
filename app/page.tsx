@@ -69,7 +69,7 @@ export default function LandingPage() {
     description: "Everything your business needs",
     features: [
       "Unlimited document storage",
-      "Advanced semantic search with AI",
+      "Advanced semantic search",
       "Document editing & management",
       "Share documents securely via email",
       "14-day free trial included",
@@ -185,7 +185,7 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight tracking-tight">
-            Business Document Storage with AI-Powered Search
+            Business Document Storage with Powerful Search
           </h1>
           
           <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">

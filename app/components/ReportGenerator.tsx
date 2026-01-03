@@ -170,7 +170,7 @@ export default function ReportGenerator({ files, query, onClose }: ReportGenerat
               <Sparkles className="w-5 h-5 text-brand" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">Generate AI Report</h2>
+              <h2 className="text-lg font-semibold text-text-primary">Generate Report</h2>
               <p className="text-xs text-text-tertiary mt-0.5">
                 {report ? 'Report generated successfully' : 'Comprehensive analysis from your documents'}
               </p>

@@ -4,11 +4,11 @@ import { ToastContainer } from "@/components/Toast";
 
 export const metadata: Metadata = {
   title: "ProtocolLM - Unlimited Intelligent Document Storage",
-  description: "Store terabytes of documents with powerful semantic search. Find anything instantly using vague wording. Generate summaries across thousands of pages with Cohere AI.",
-  keywords: ["document storage", "semantic search", "unlimited storage", "AI search", "document retrieval", "Cohere AI", "Supabase"],
+  description: "Store terabytes of documents with powerful semantic search. Find anything instantly using vague wording. Generate summaries across thousands of pages with Cohere.",
+  keywords: ["document storage", "semantic search", "unlimited storage", "search", "document retrieval", "Cohere", "Supabase"],
   openGraph: {
     title: "ProtocolLM - Unlimited Intelligent Storage",
-    description: "Store unlimited documents. Find anything instantly with semantic search powered by Cohere AI.",
+    description: "Store unlimited documents. Find anything instantly with semantic search powered by Cohere.",
     type: "website",
   },
 };

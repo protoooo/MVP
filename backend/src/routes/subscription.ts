@@ -120,7 +120,7 @@ router.post('/create-checkout-session', authMiddleware, async (req: AuthRequest,
             currency: STRIPE_CONFIG.CURRENCY,
             product_data: {
               name: STRIPE_CONFIG.PLAN_NAME,
-              description: 'Unlimited document storage with AI-powered semantic search',
+              description: 'Unlimited document storage with semantic search',
             },
             recurring: {
               interval: 'month',

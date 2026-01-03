@@ -18,7 +18,7 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
       <div className="flex flex-col items-center justify-center py-20">
         <div className="animate-spin w-10 h-10 border-4 border-brand/20 border-t-brand rounded-full mb-4" />
         <p className="text-sm text-text-secondary mb-2">Analyzing documents...</p>
-        <p className="text-xs text-text-tertiary">Processing your query with AI</p>
+        <p className="text-xs text-text-tertiary">Processing your query</p>
       </div>
     );
   }
@@ -108,7 +108,7 @@ export default function SearchResults({ results, query, loading, onFileDeleted }
           <p className="text-sm text-text-secondary">
             {extractedAnswer 
               ? 'Review source documents below' 
-              : 'Ranked by relevance with AI reranking'
+              : 'Ranked by relevance with reranking'
             }
           </p>
         </div>

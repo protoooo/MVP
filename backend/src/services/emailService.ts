@@ -47,7 +47,7 @@ export const emailService = {
                   
                   <div class="feature">
                     <strong>📤 Upload Documents</strong>
-                    <p style="margin: 5px 0 0 0; color: #6b7280;">Store unlimited documents with automatic AI processing and OCR</p>
+                    <p style="margin: 5px 0 0 0; color: #6b7280;">Store unlimited documents with automatic processing and OCR</p>
                   </div>
                   
                   <div class="feature">
@@ -70,7 +70,7 @@ export const emailService = {
                 
                 <div class="footer">
                   <p style="margin: 0 0 10px 0;"><strong>ProtocolLM</strong></p>
-                  <p style="margin: 0;">Enterprise document storage with AI-powered search</p>
+                  <p style="margin: 0;">Enterprise document storage with powered search</p>
                   <p style="margin: 15px 0 0 0; font-size: 12px;">
                     <a href="https://protocollm.org/privacy" style="color: #9ca3af; text-decoration: none;">Privacy Policy</a> • 
                     <a href="https://protocollm.org/terms" style="color: #9ca3af; text-decoration: none;">Terms of Service</a>

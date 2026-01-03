@@ -33,7 +33,7 @@ export default function AboutPage() {
             About ProtocolLM
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Enterprise-grade document storage with AI-powered semantic search, built for modern businesses.
+            Enterprise-grade document storage with semantic search, built for modern businesses.
           </p>
         </div>
       </section>
@@ -45,11 +45,11 @@ export default function AboutPage() {
           <p className="text-lg text-gray-300 leading-relaxed mb-6">
             ProtocolLM was created to solve a fundamental problem: finding the right document at the right time. 
             Traditional search relies on exact keyword matches and manual organization. We leverage cutting-edge 
-            AI technology to understand the meaning behind your queries, making document retrieval as natural as 
+            technology to understand the meaning behind your queries, making document retrieval as natural as 
             having a conversation.
           </p>
           <p className="text-lg text-gray-300 leading-relaxed">
-            Our platform combines unlimited storage capacity with semantic search powered by Cohere AI, allowing 
+            Our platform combines unlimited storage capacity with semantic search powered by Cohere, allowing 
             businesses to store terabytes of documents and find exactly what they need in seconds—even with vague 
             or natural language queries.
           </p>
@@ -67,7 +67,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-3">Security First</h3>
               <p className="text-gray-400 leading-relaxed">
-                Your data is encrypted at rest with AES-256 and in transit with TLS 1.3. We never train AI models 
+                Your data is encrypted at rest with AES-256 and in transit with TLS 1.3. We never train models 
                 on your documents, and we never sell your data.
               </p>
             </div>
@@ -89,7 +89,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-3">Accessibility</h3>
               <p className="text-gray-400 leading-relaxed">
-                Powerful AI search should be accessible to businesses of all sizes. That's why we offer flexible 
+                Powerful search should be accessible to businesses of all sizes. That's why we offer flexible 
                 pricing from personal use to enterprise scale.
               </p>
             </div>
@@ -103,7 +103,7 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold text-white mb-8 text-center">Technology Stack</h2>
           <div className="space-y-6">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-2">Cohere AI</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">Cohere</h3>
               <p className="text-gray-400">
                 We use Cohere's Command-R7b for natural language understanding and Embed v4.0 for semantic embeddings, 
                 providing industry-leading search accuracy.

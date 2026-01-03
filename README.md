@@ -1,6 +1,6 @@
 # ProtocolLM - Unlimited Intelligent Document Storage
 
-ProtocolLM is a powerful document storage and retrieval system that enables you to store unlimited documents and find anything instantly using semantic search. Built with Cohere AI, Supabase, and advanced security features.
+ProtocolLM is a powerful document storage and retrieval system that enables you to store unlimited documents and find anything instantly using semantic search. Built with Cohere, Supabase, and advanced security features.
 
 ## 🚀 Key Features
 
@@ -11,7 +11,7 @@ ProtocolLM is a powerful document storage and retrieval system that enables you 
 - **Multi-Format Support** - PDFs, images, Word docs, Excel, text files, and more
 - **OCR Processing** - Automatic text extraction from images and scanned documents
 - **Enterprise Security** - Cloudflare Turnstile protection and encryption
-- **AI-Powered Intelligence** - Cohere Embed, Rerank, AYA Vision, and Command models
+- **Powered Intelligence** - Cohere Embed, Rerank, AYA Vision, and Command models
 
 ## 📋 Use Cases
 
@@ -44,7 +44,7 @@ ProtocolLM is a powerful document storage and retrieval system that enables you 
 - **Supabase** for unlimited scalable storage
 - **JWT** authentication with bcrypt
 
-### AI/ML (Cohere)
+### ML (Cohere)
 - **Embed v4** - 1536-dimension text embeddings for semantic search
 - **Rerank v4.0 Pro** - Advanced result reranking
 - **Command-R7b** - Natural language understanding and metadata generation
@@ -86,7 +86,7 @@ cp .env.example .env
 
 Edit `.env` with your credentials:
 ```env
-# Cohere AI
+# Cohere
 COHERE_API_KEY=your_cohere_api_key
 
 # Supabase
@@ -121,7 +121,7 @@ The application will:
 
 ProtocolLM uses advanced semantic search to understand what you're looking for, even with vague wording:
 
-1. **Upload** - Documents are processed with OCR and AI analysis
+1. **Upload** - Documents are processed with OCR and analysis
 2. **Embed** - Text is converted to 1536-dimension vectors using Cohere Embed v4
 3. **Store** - Vectors are stored in PostgreSQL with pgvector
 4. **Search** - Your query is converted to a vector and compared
@@ -167,7 +167,7 @@ Generate comprehensive reports from your documents:
 - **PostgreSQL** - Metadata and vector embeddings
 - **pgvector** - High-performance vector similarity search
 
-### AI Pipeline
+### Processing Pipeline
 
 ```
 Upload → OCR (Tesseract) → Text Extraction → 
@@ -206,7 +206,7 @@ Cohere Rerank → Results
 - Unlimited storage
 - Everything in Business
 - SSO/SAML
-- Custom AI models
+- Custom models
 - Dedicated support
 - SLA guarantee
 - On-premise option
@@ -217,7 +217,7 @@ Cohere Rerank → Results
 
 ```env
 # Required
-COHERE_API_KEY=           # Cohere AI API key
+COHERE_API_KEY=           # Cohere API key
 DATABASE_URL=             # PostgreSQL connection string
 SUPABASE_URL=             # Supabase project URL
 SUPABASE_SERVICE_ROLE_KEY= # Supabase service role key
@@ -326,7 +326,7 @@ ISC License - See LICENSE file for details
 
 ## 🙏 Acknowledgments
 
-- Built with [Cohere AI](https://cohere.com) for intelligent document understanding
+- Built with [Cohere](https://cohere.com) for intelligent document understanding
 - Powered by [Supabase](https://supabase.com) for unlimited storage
 - Secured with [Cloudflare](https://cloudflare.com) Turnstile
 - Vector search with [pgvector](https://github.com/pgvector/pgvector)
